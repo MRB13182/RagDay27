@@ -1,0 +1,6 @@
+{
+  "name": "RD27 - Rag Day 27 Official Portal",
+  "description": "Official modern web portal for Rag Day 27 (RD27). Featuring live jersey customization, single-page gender-adaptive registration, and VIP invitation card verification.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

@@ -1,0 +1,40 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200" width="100%" height="100%">
+  <defs>
+    <linearGradient id="nagad-orange-grad" x1="0%" y1="100%" x2="100%" y2="0%">
+      <stop offset="0%" stopColor="#FF7A00"/>
+      <stop offset="50%" stopColor="#FF5000"/>
+      <stop offset="100%" stopColor="#E62500"/>
+    </linearGradient>
+    <linearGradient id="nagad-petal1" x1="0%" y1="100%" x2="100%" y2="0%">
+      <stop offset="0%" stopColor="#FFA000"/>
+      <stop offset="100%" stopColor="#FF7A00"/>
+    </linearGradient>
+    <linearGradient id="nagad-petal2" x1="0%" y1="100%" x2="100%" y2="0%">
+      <stop offset="0%" stopColor="#FF5722"/>
+      <stop offset="100%" stopColor="#F4511E"/>
+    </linearGradient>
+    <linearGradient id="nagad-petal3" x1="0%" y1="100%" x2="100%" y2="0%">
+      <stop offset="0%" stopColor="#E51C24"/>
+      <stop offset="100%" stopColor="#C62828"/>
+    </linearGradient>
+  </defs>
+
+  <!-- Main Swirling Loop -->
+  <path d="M 52 108 C 52 144 78 174 114 174 C 150 174 172 146 172 120 C 172 90 144 76 128 76 C 146 88 152 104 152 120 C 152 138 136 156 114 156 C 88 156 70 134 70 108 C 70 82 86 64 106 58 C 92 64 80 76 72 90 C 58 96 52 102 52 108 Z" fill="url(#nagad-orange-grad)" />
+
+  <!-- Inner Swirl Arc -->
+  <path d="M 64 96 C 54 112 58 136 74 152 C 90 168 114 174 136 164 C 158 154 172 134 172 110 C 168 128 152 144 132 148 C 112 152 92 144 80 130 C 68 116 66 102 70 90 Z" fill="url(#nagad-orange-grad)" opacity="0.95"/>
+
+  <!-- Three Top-Right Dynamic Flame Petals (matching images.png) -->
+  <!-- Petal 1: Inner yellow-orange -->
+  <path d="M 60 108 C 56 86 70 54 94 30 C 102 36 108 46 106 60 C 94 68 76 86 60 108 Z" fill="url(#nagad-petal1)" />
+
+  <!-- Petal 2: Middle bright orange -->
+  <path d="M 76 90 C 80 62 104 36 142 26 C 148 38 148 52 140 64 C 120 74 94 82 76 90 Z" fill="url(#nagad-petal2)" />
+
+  <!-- Petal 3: Outermost crimson ribbon -->
+  <path d="M 94 76 C 112 56 146 44 184 52 C 174 72 158 84 136 90 C 118 88 104 82 94 76 Z" fill="url(#nagad-petal3)" />
+
+  <!-- Center Circle Opening -->
+  <circle cx="100" cy="112" r="32" fill="#ffffff" opacity="0.01"/>
+</svg>

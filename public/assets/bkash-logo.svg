@@ -1,0 +1,24 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200" width="100%" height="100%">
+  <defs>
+    <filter id="shadow" x="-10%" y="-10%" width="120%" height="120%">
+      <feDropShadow dx="0" dy="2" stdDeviation="2" flood-opacity="0.2"/>
+    </filter>
+  </defs>
+  <!-- bKash Origami Bird Facing Right matching images (1).png -->
+  <g stroke="#ffffff" stroke-width="1.5" stroke-linejoin="round" stroke-linecap="round">
+    <!-- Top Wing Main Facet -->
+    <polygon points="97,48 37,42 60,73 83,98" fill="#E2136E"/>
+    <!-- Top Wing Lower Fold -->
+    <polygon points="37,42 36,51 60,73" fill="#B30D52"/>
+    <!-- Upper Body / Wing Inner Facet -->
+    <polygon points="97,48 138,105 83,98" fill="#F0267F"/>
+    <!-- Head / Neck Facet -->
+    <polygon points="124,81 151,77 140,86 138,105" fill="#D40F63"/>
+    <!-- Beak -->
+    <polygon points="140,86 163,88 147,105" fill="#E2136E"/>
+    <!-- Lower Belly Facet -->
+    <polygon points="83,98 138,105 98,131" fill="#E2136E"/>
+    <!-- Tail Polygon -->
+    <polygon points="83,98 98,131 64,158" fill="#96002A"/>
+  </g>
+</svg>

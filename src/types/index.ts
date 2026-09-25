@@ -1,0 +1,114 @@
+export type GenderType = 'choose_one' | 'male' | 'female';
+
+export type JerseySize = 'S' | 'M' | 'L' | 'XL' | '2XL' | '3XL' | '4XL';
+
+export type PaymentMethod = 'bkash' | 'nagad';
+
+export type InvitationStatus = 'pending' | 'approved' | 'rejected';
+
+export interface RegistrationFormData {
+  gender: GenderType;
+  name: string;
+  roll: string;
+  id: string;
+  group: string;
+  section: string;
+  contactNumber: string;
+  photoUrl: string | null;
+  amount: number;
+  paymentMethod: PaymentMethod;
+  senderNumber: string;
+  paymentTime: string;
+  transactionId: string;
+  jerseyName: string;
+  jerseyNumber: string;
+  jerseySize: JerseySize;
+}
+
+export interface InvitationRecord {
+  registrationNo: string;
+  name: string;
+  roll: string;
+  id: string;
+  group: string;
+  section: string;
+  status: InvitationStatus;
+  gender: 'male' | 'female';
+  photoUrl: string;
+  jerseyName: string;
+  jerseyNumber: string;
+  jerseySize: string;
+  seatZone?: string;
+  gate?: string;
+  issuedAt?: string;
+  rejectionReason?: string;
+  senderNumber?: string;
+  paymentTime?: string;
+  transactionId?: string;
+}
+
+export interface EventCard {
+  id: string;
+  icon: string; // 'calendar' | 'map-pin' | 'credit-card' | 'clock' | 'sparkles' | 'award' | 'shirt' | 'users' | 'music'
+  title: string;
+  description: string;
+  subDetail?: string;
+  customColor: string; // 'indigo' | 'cyan' | 'emerald' | 'amber' | 'rose' | 'purple' | 'blue'
+  order: number;
+  visible: boolean;
+}
+
+export interface WebsiteSettings {
+  eventName: string;
+  eventDescription: string;
+  eventDate: string;
+  eventTime: string;
+  eventDay?: number;
+  eventMonth?: string;
+  eventYear?: number;
+  venue: string;
+  registrationFee: string;
+  lastRegDate: string;
+  footerText: string;
+  copyrightText: string;
+  bannerText: string;
+  bannerActive: boolean;
+}
+
+export interface BrandingSettings {
+  websiteLogo: string;
+  favicon: string;
+  heroBanner: string;
+  heroBackground: string;
+  jerseyFrontImage: string;
+  jerseyBackImage: string;
+  invitationCardBackground: string;
+  footerLogo: string;
+}
+
+export interface PaymentSettings {
+  registrationFee: number;
+  currency: string;
+  bkashEnabled: boolean;
+  nagadEnabled: boolean;
+  maleBkashNumber: string;
+  maleNagadNumber: string;
+  femaleBkashNumber: string;
+  femaleNagadNumber: string;
+  instructions?: string;
+  paymentInstructions?: string;
+}
+
+export interface PdfSettings {
+  pdfLogo?: string;
+  pdfHeader: string;
+  pdfSubHeader: string;
+  watermarkLogo: string;
+  watermarkOpacity: number;
+  footerText: string;
+  signatureArea: string;
+  signatureTitle: string;
+  approvalText: string;
+  invitationCardTitle: string;
+  customNotes: string;
+}
