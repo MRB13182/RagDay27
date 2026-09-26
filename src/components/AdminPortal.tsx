@@ -516,14 +516,6 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
     onClose();
   };
 
-
-    setCurrentRole(null);
-    setPasscode('');
-    setAuthError(false);
-    setIsMobileDrawerOpen(false);
-    onClose();
-  };
-
   const showSaveSuccess = (message: string = 'Updated & applied instantly!') => {
     setSaveToastMessage(message);
     setSaveToast(true);
