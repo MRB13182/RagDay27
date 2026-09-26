@@ -126,7 +126,11 @@ export default function App() {
         const res = await fetchRegistrationsFromSupabase();
         if (res && res.data) setInvitations(res.data);
       })
-            .on('postgres_changes', { event: '*', schema: 'public', table: 'branding_settings' }, async () => {
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'website_settings' }, async () => {
+        const res = await fetchEventSettingsFromSupabase();
+        if (res) setWebsiteSettings(res);
+      })
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'branding_settings' }, async () => {
         const res = await fetchBrandingSettingsFromSupabase();
         if (res) setBrandingSettings(res);
       })
