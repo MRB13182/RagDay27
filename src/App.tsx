@@ -183,64 +183,76 @@ export default function App() {
   // ============================================================================
 
   const handleUpdateWebsiteSettings = async (newSettings: WebsiteSettings) => {
-    setWebsiteSettings(newSettings);
     const res = await saveEventSettingsToSupabase(newSettings);
-    if (res.success) {
-      showToast('Event settings saved to Supabase database!', 'success');
+    if (!res.success) {
+      showToast(res.error || 'Event settings update failed.', 'error');
+      return;
     }
+    const fresh = await fetchEventSettingsFromSupabase();
+    if (fresh) setWebsiteSettings(fresh);
+    showToast('Event settings saved to Supabase database!', 'success');
   };
 
   const handleUpdateBrandingSettings = async (newSettings: BrandingSettings) => {
-    setBrandingSettings(newSettings);
     const res = await saveBrandingSettingsToSupabase(newSettings);
-    if (res.success) {
-      showToast('Visual branding assets saved to Supabase database!', 'success');
+    if (!res.success) {
+      showToast(res.error || 'Branding update failed.', 'error');
+      return;
     }
+    const fresh = await fetchBrandingSettingsFromSupabase();
+    if (fresh) setBrandingSettings(fresh);
+    showToast('Visual branding assets saved to Supabase database!', 'success');
   };
 
   const handleUpdatePaymentSettings = async (newPaymentSettings: PaymentSettings) => {
-    setPaymentSettings(newPaymentSettings);
+    const res = await savePaymentSettingsToSupabase(newPaymentSettings);
+    if (!res.success) {
+      showToast(res.error || 'Payment settings update failed.', 'error');
+      return;
+    }
+    const fresh = await fetchPaymentSettingsFromSupabase();
+    if (fresh) setPaymentSettings(fresh);
     const formattedFee = `${newPaymentSettings.registrationFee} ${newPaymentSettings.currency}`;
     const updatedWebsite = { ...websiteSettings, registrationFee: formattedFee };
-    setWebsiteSettings(updatedWebsite);
-
-    const updatedCards = eventCards.map(c =>
-      c.id === 'card-3' || c.title.toLowerCase().includes('fee')
-        ? { ...c, description: formattedFee }
-        : c
-    );
-    setEventCards(updatedCards);
-
-    await Promise.all([
-      savePaymentSettingsToSupabase(newPaymentSettings),
-      saveEventSettingsToSupabase(updatedWebsite),
-      saveEventCardsToSupabase(updatedCards),
-    ]);
-    showToast('Payment settings and fee synchronized in Supabase!', 'success');
+    const feeRes = await saveEventSettingsToSupabase(updatedWebsite);
+    if (feeRes.success) {
+      const freshWebsite = await fetchEventSettingsFromSupabase();
+      if (freshWebsite) setWebsiteSettings(freshWebsite);
+    }
+    showToast('Payment settings saved to Supabase database!', 'success');
   };
 
   const handleUpdatePdfSettings = async (newSettings: PdfSettings) => {
-    setPdfSettings(newSettings);
     const res = await savePdfSettingsToSupabase(newSettings);
-    if (res.success) {
-      showToast('PDF Ledger settings saved to Supabase database!', 'success');
+    if (!res.success) {
+      showToast(res.error || 'PDF settings update failed.', 'error');
+      return;
     }
+    const fresh = await fetchPdfSettingsFromSupabase();
+    if (fresh) setPdfSettings(fresh);
+    showToast('PDF Ledger settings saved to Supabase database!', 'success');
   };
 
   const handleUpdateEventCards = async (cards: EventCard[]) => {
-    setEventCards(cards);
     const res = await saveEventCardsToSupabase(cards);
-    if (res.success) {
-      showToast('Event cards saved to Supabase database!', 'success');
+    if (!res.success) {
+      showToast(res.error || 'Event card update failed.', 'error');
+      return;
     }
+    const fresh = await fetchEventCardsFromSupabase();
+    if (fresh) setEventCards(fresh);
+    showToast('Event cards saved to Supabase database!', 'success');
   };
 
   const handleUpdateJerseyShowcase = async (newSettings: JerseyShowcaseSettings) => {
-    setJerseyShowcaseSettings(newSettings);
     const res = await saveJerseyShowcaseToSupabase(newSettings);
-    if (res.success) {
-      showToast('Jersey Showcase settings saved to Supabase database!', 'success');
+    if (!res.success) {
+      showToast(res.error || 'Jersey showcase update failed.', 'error');
+      return;
     }
+    const fresh = await fetchJerseyShowcaseFromSupabase();
+    if (fresh) setJerseyShowcaseSettings(fresh);
+    showToast('Jersey Showcase settings saved to Supabase database!', 'success');
   };
 
   // ============================================================================
