@@ -480,7 +480,6 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
       setAuthLoading(false);
       return;
     }
-
     const { data: profile, error: profileError } = await supabase
       .from('admin_profiles')
       .select('role, active')
@@ -785,6 +784,24 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
                     setAuthError('');
                   }}
                   autoFocus
+                  autoComplete="username"
+                  className="w-full px-4 py-3 rounded-xl text-sm bg-slate-50 border border-slate-300 text-slate-900 outline-none focus:border-indigo-600 focus:ring-2 focus:ring-indigo-600/20"
+                />
+              </div>
+
+              <div>
+                <label className="block text-xs font-bold uppercase tracking-wider text-slate-700 mb-1.5">
+                  Admin Password
+                </label>
+                <input
+                  type="password"
+                  placeholder="Enter password..."
+                  value={adminPassword}
+                  onChange={e => {
+                    setAdminPassword(e.target.value);
+                    setAuthError('');
+                  }}
+                  autoComplete="current-password"
                   className="w-full px-4 py-3 rounded-xl text-sm bg-slate-50 border border-slate-300 text-slate-900 outline-none focus:border-indigo-600 focus:ring-2 focus:ring-indigo-600/20"
                 />
               </div>
