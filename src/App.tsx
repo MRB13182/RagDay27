@@ -295,10 +295,12 @@ export default function App() {
   };
 
   const handleDeleteRegistration = async (registrationNo: string) => {
-    setInvitations(prev => prev.filter(item => item.registrationNo !== registrationNo));
     const res = await deleteRegistrationFromSupabase(registrationNo);
     if (res.success) {
-      showToast(`Registration ${registrationNo} deleted from Supabase. Number is now available for reuse.`, 'success');
+      setInvitations(prev => prev.filter(item => item.registrationNo !== registrationNo));
+      showToast(`Registration ${registrationNo} permanently deleted from Supabase. Registration numbers are never reused.`, 'success');
+    } else {
+      showToast(res.error || 'Delete failed.', 'error');
     }
   };
 
