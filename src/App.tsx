@@ -126,11 +126,7 @@ export default function App() {
         const res = await fetchRegistrationsFromSupabase();
         if (res && res.data) setInvitations(res.data);
       })
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'event_settings' }, async () => {
-        const res = await fetchEventSettingsFromSupabase();
-        if (res) setWebsiteSettings(res);
-      })
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'branding_settings' }, async () => {
+            .on('postgres_changes', { event: '*', schema: 'public', table: 'branding_settings' }, async () => {
         const res = await fetchBrandingSettingsFromSupabase();
         if (res) setBrandingSettings(res);
       })
@@ -149,8 +145,7 @@ export default function App() {
       .on('postgres_changes', { event: '*', schema: 'public', table: 'jersey_showcase' }, async () => {
         const res = await fetchJerseyShowcaseFromSupabase();
         if (res) setJerseyShowcaseSettings(res);
-      })
-      .subscribe();
+      })      .subscribe();
 
     return () => {
       isMounted = false;
