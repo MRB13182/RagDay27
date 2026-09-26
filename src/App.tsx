@@ -304,14 +304,19 @@ export default function App() {
     registrationNo: string,
     updates: Partial<InvitationRecord>
   ) => {
-    setInvitations(prev =>
-      prev.map(item => (item.registrationNo === registrationNo ? { ...item, ...updates } : item))
-    );
     const res = await updateRegistrationDetailsInSupabase(registrationNo, updates);
-    if (res.success) {
-      showToast(`Registration ${registrationNo} updated in Supabase database!`, 'success');
+    if (!res.success) {
+      showToast(res.error || 'Registration update failed.', 'error');
+      return;
     }
+    setInvitations(prev =>
+      prev.map(item =>
+        item.registrationNo === registrationNo ? { ...item, ...(res.data || updates) } : item
+      )
+    );
+    showToast(`Registration ${registrationNo} updated in Supabase database.`, 'success');
   };
+
 
   return (
     <div className="min-h-screen flex flex-col bg-[#F8F9FC] text-[#111827] selection:bg-[#5B5FEF] selection:text-white relative">
