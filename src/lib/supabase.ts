@@ -98,7 +98,10 @@ export async function saveRegistrationToSupabase(rec:InvitationRecord){
 }
 
 export async function fetchRegistrationsFromSupabase(){
-  const {data,error}=await supabase.from('registrations').select('*, groups(name), sections(code)').order('registration_no',{ascending:true});
+  const {data,error}=await supabase
+    .from('registrations')
+    .select('*, groups(name), sections(code)')
+    .order('registration_no',{ascending:true});
   if(error) return {data:[] as InvitationRecord[],fromDb:false,error:error.message};
   return {data:(data||[]).map(mapRow),fromDb:true};
 }
