@@ -145,7 +145,8 @@ export default function App() {
       .on('postgres_changes', { event: '*', schema: 'public', table: 'jersey_showcase' }, async () => {
         const res = await fetchJerseyShowcaseFromSupabase();
         if (res) setJerseyShowcaseSettings(res);
-      })      .subscribe();
+      })
+      .subscribe();
 
     return () => {
       isMounted = false;
