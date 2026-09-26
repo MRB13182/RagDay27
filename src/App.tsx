@@ -6,6 +6,7 @@ import { RegistrationForm } from './components/RegistrationForm';
 import { InvitationCardPage } from './components/InvitationCardPage';
 import { Footer } from './components/Footer';
 import { AdminPortal } from './components/AdminPortal';
+import { JerseyShowcaseSection } from './components/JerseyShowcaseSection';
 import {
   INITIAL_INVITATIONS,
   DEFAULT_EVENT_CARDS,
@@ -13,6 +14,7 @@ import {
   DEFAULT_BRANDING_SETTINGS,
   DEFAULT_PDF_SETTINGS,
   DEFAULT_PAYMENT_SETTINGS,
+  DEFAULT_JERSEY_SHOWCASE_SETTINGS,
 } from './data/mockData';
 import {
   InvitationRecord,
@@ -22,6 +24,7 @@ import {
   BrandingSettings,
   PdfSettings,
   PaymentSettings,
+  JerseyShowcaseSettings,
 } from './types';
 import { ArrowRight, Bell } from 'lucide-react';
 
@@ -37,6 +40,9 @@ export default function App() {
   const [pdfSettings, setPdfSettings] = useState<PdfSettings>(DEFAULT_PDF_SETTINGS);
   const [paymentSettings, setPaymentSettings] = useState<PaymentSettings>(DEFAULT_PAYMENT_SETTINGS);
   const [eventCards, setEventCards] = useState<EventCard[]>(DEFAULT_EVENT_CARDS);
+  const [jerseyShowcaseSettings, setJerseyShowcaseSettings] = useState<JerseyShowcaseSettings>(
+    DEFAULT_JERSEY_SHOWCASE_SETTINGS
+  );
 
   // Sync document title with Admin Controlled Website Name
   useEffect(() => {
@@ -143,8 +149,7 @@ export default function App() {
 
         <main className="flex-1">
           {/* ======================================================== */}
-          {/* HOMEPAGE STRUCTURE: */}
-          {/* Navbar -> Hero -> Event Information Cards -> Register Button -> Footer */}
+          {/* HOMEPAGE STRUCTURE (Super Admin Controlled Reordering) */}
           {/* ======================================================== */}
           {activeTab === 'home' && (
             <div className="animate-fadeIn">
@@ -160,10 +165,39 @@ export default function App() {
                 }}
                 websiteSettings={websiteSettings}
                 brandingSettings={brandingSettings}
+                jerseySettings={jerseyShowcaseSettings}
               />
 
-              {/* 2. Event Information Cards (Admin Controlled) */}
-              <EventInformationSection cards={eventCards} />
+              {/* Dynamic Section Ordering between Jersey Showcase & Event Cards */}
+              {jerseyShowcaseSettings.sectionOrder === 'showcase_first' ? (
+                <>
+                  {/* Option A: Hero -> Jersey Showcase -> Event Cards */}
+                  {jerseyShowcaseSettings.enabled && (
+                    <JerseyShowcaseSection
+                      settings={jerseyShowcaseSettings}
+                      onRegisterClick={() => {
+                        setActiveTab('register');
+                        window.scrollTo({ top: 0, behavior: 'smooth' });
+                      }}
+                    />
+                  )}
+                  <EventInformationSection cards={eventCards} />
+                </>
+              ) : (
+                <>
+                  {/* Option B: Hero -> Event Cards -> Jersey Showcase */}
+                  <EventInformationSection cards={eventCards} />
+                  {jerseyShowcaseSettings.enabled && (
+                    <JerseyShowcaseSection
+                      settings={jerseyShowcaseSettings}
+                      onRegisterClick={() => {
+                        setActiveTab('register');
+                        window.scrollTo({ top: 0, behavior: 'smooth' });
+                      }}
+                    />
+                  )}
+                </>
+              )}
 
               {/* 3. Register Now Button Section */}
               <section className="py-8 sm:py-12 text-center">
@@ -243,6 +277,8 @@ export default function App() {
         onUpdatePaymentSettings={handleUpdatePaymentSettings}
         eventCards={eventCards}
         onUpdateEventCards={setEventCards}
+        jerseyShowcaseSettings={jerseyShowcaseSettings}
+        onUpdateJerseyShowcase={setJerseyShowcaseSettings}
       />
     </div>
   );

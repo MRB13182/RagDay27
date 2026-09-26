@@ -7,8 +7,11 @@ import {
   BrandingSettings,
   PdfSettings,
   PaymentSettings,
+  JerseyShowcaseSettings,
+  JerseyItem,
+  SectionOrder,
 } from '../types';
-import { DEFAULT_PAYMENT_SETTINGS } from '../data/mockData';
+import { DEFAULT_PAYMENT_SETTINGS, DEFAULT_JERSEY_SHOWCASE_SETTINGS } from '../data/mockData';
 import {
   Lock,
   X,
@@ -74,6 +77,8 @@ interface AdminPortalProps {
   onUpdatePaymentSettings: (newSettings: PaymentSettings) => void;
   eventCards: EventCard[];
   onUpdateEventCards: (cards: EventCard[]) => void;
+  jerseyShowcaseSettings?: JerseyShowcaseSettings;
+  onUpdateJerseyShowcase?: (newSettings: JerseyShowcaseSettings) => void;
 }
 
 export const AdminPortal: React.FC<AdminPortalProps> = ({
@@ -92,6 +97,8 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
   onUpdatePaymentSettings,
   eventCards,
   onUpdateEventCards,
+  jerseyShowcaseSettings = DEFAULT_JERSEY_SHOWCASE_SETTINGS,
+  onUpdateJerseyShowcase,
 }) => {
   const [passcode, setPasscode] = useState('');
   const [authError, setAuthError] = useState(false);
@@ -99,7 +106,7 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
 
   // Super Admin active section
   const [activeTab, setActiveTab] = useState<
-    'overview' | 'event_settings' | 'content' | 'builder' | 'cards' | 'payment' | 'pdf' | 'registrations'
+    'overview' | 'event_settings' | 'content' | 'builder' | 'cards' | 'jersey_showcase' | 'payment' | 'pdf' | 'registrations'
   >('overview');
 
   // Mobile drawer state
@@ -111,6 +118,9 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
   const [localPdf, setLocalPdf] = useState<PdfSettings>(pdfSettings);
   const [localPayment, setLocalPayment] = useState<PaymentSettings>(paymentSettings || DEFAULT_PAYMENT_SETTINGS);
   const [localCards, setLocalCards] = useState<EventCard[]>(eventCards);
+  const [localJerseyShowcase, setLocalJerseyShowcase] = useState<JerseyShowcaseSettings>(
+    jerseyShowcaseSettings || DEFAULT_JERSEY_SHOWCASE_SETTINGS
+  );
   const [saveToast, setSaveToast] = useState(false);
   const [saveToastMessage, setSaveToastMessage] = useState('Updated & applied instantly!');
 
@@ -123,6 +133,134 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
       setLocalPayment(paymentSettings);
     }
   }, [paymentSettings]);
+
+  useEffect(() => {
+    if (jerseyShowcaseSettings) {
+      setLocalJerseyShowcase(jerseyShowcaseSettings);
+    }
+  }, [jerseyShowcaseSettings]);
+
+  const handleSaveJerseyShowcase = (e?: React.FormEvent) => {
+    if (e) e.preventDefault();
+    if (onUpdateJerseyShowcase) {
+      onUpdateJerseyShowcase(localJerseyShowcase);
+    }
+    showSaveSuccess('Jersey Showcase settings saved & applied live to website!');
+  };
+
+  const handleToggleShowcaseEnabled = () => {
+    const updated = {
+      ...localJerseyShowcase,
+      enabled: !localJerseyShowcase.enabled,
+    };
+    setLocalJerseyShowcase(updated);
+    if (onUpdateJerseyShowcase) {
+      onUpdateJerseyShowcase(updated);
+    }
+    showSaveSuccess(updated.enabled ? 'Jersey Showcase is now Visible on Homepage' : 'Jersey Showcase is now Hidden from Homepage');
+  };
+
+  const handleSetSectionOrder = (order: SectionOrder) => {
+    const updated = {
+      ...localJerseyShowcase,
+      sectionOrder: order,
+    };
+    setLocalJerseyShowcase(updated);
+    if (onUpdateJerseyShowcase) {
+      onUpdateJerseyShowcase(updated);
+    }
+    showSaveSuccess(
+      order === 'showcase_first'
+        ? 'Section Order: Hero → Jersey Showcase → Event Cards'
+        : 'Section Order: Hero → Event Cards → Jersey Showcase'
+    );
+  };
+
+  const handleAddJersey = () => {
+    const newId = `jersey-${Date.now()}`;
+    const newJersey: JerseyItem = {
+      id: newId,
+      name: `Batch 2027 Kit ${localJerseyShowcase.jerseys.length + 1}`,
+      badgeText: 'Official Rag Day Jersey',
+      tagText: 'RD27',
+      frontImage: '',
+      backImage: '',
+      subtitle: 'Custom Squad Kit',
+      title: 'Back Name & Number Print Included',
+      badge1: 'Custom Fit',
+      badge1Sub: 'Sizes S to 4XL',
+      badge2: '100% Cotton & Mesh',
+    };
+    const updated = {
+      ...localJerseyShowcase,
+      jerseys: [...localJerseyShowcase.jerseys, newJersey],
+    };
+    setLocalJerseyShowcase(updated);
+    if (onUpdateJerseyShowcase) {
+      onUpdateJerseyShowcase(updated);
+    }
+    showSaveSuccess('New jersey added to showcase! Carousel active on frontend.');
+  };
+
+  const handleUpdateJersey = (index: number, updates: Partial<JerseyItem>) => {
+    const updatedJerseys = [...localJerseyShowcase.jerseys];
+    updatedJerseys[index] = { ...updatedJerseys[index], ...updates };
+    const updated = {
+      ...localJerseyShowcase,
+      jerseys: updatedJerseys,
+    };
+    setLocalJerseyShowcase(updated);
+    if (onUpdateJerseyShowcase) {
+      onUpdateJerseyShowcase(updated);
+    }
+  };
+
+  const handleDeleteJersey = (index: number) => {
+    if (localJerseyShowcase.jerseys.length <= 1) {
+      showSaveSuccess('At least one jersey must remain. Toggle Show/Hide to disable the section instead.');
+      return;
+    }
+    const updatedJerseys = localJerseyShowcase.jerseys.filter((_, i) => i !== index);
+    const updated = {
+      ...localJerseyShowcase,
+      jerseys: updatedJerseys,
+    };
+    setLocalJerseyShowcase(updated);
+    if (onUpdateJerseyShowcase) {
+      onUpdateJerseyShowcase(updated);
+    }
+    showSaveSuccess('Jersey removed from showcase.');
+  };
+
+  const handleMoveJersey = (index: number, direction: 'up' | 'down') => {
+    const targetIndex = direction === 'up' ? index - 1 : index + 1;
+    if (targetIndex < 0 || targetIndex >= localJerseyShowcase.jerseys.length) return;
+    const updatedJerseys = [...localJerseyShowcase.jerseys];
+    const temp = updatedJerseys[index];
+    updatedJerseys[index] = updatedJerseys[targetIndex];
+    updatedJerseys[targetIndex] = temp;
+    const updated = {
+      ...localJerseyShowcase,
+      jerseys: updatedJerseys,
+    };
+    setLocalJerseyShowcase(updated);
+    if (onUpdateJerseyShowcase) {
+      onUpdateJerseyShowcase(updated);
+    }
+    showSaveSuccess('Jersey order updated!');
+  };
+
+  const handleJerseyImageUpload = (index: number, side: 'front' | 'back', file: File | null) => {
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onloadend = () => {
+      const result = reader.result as string;
+      const field = side === 'front' ? 'frontImage' : 'backImage';
+      handleUpdateJersey(index, { [field]: result });
+      showSaveSuccess(`${side === 'front' ? 'Front' : 'Back'} jersey image updated instantly!`);
+    };
+    reader.readAsDataURL(file);
+  };
 
   // Search & Filters for Registrations
   const [searchQuery, setSearchQuery] = useState('');
@@ -762,6 +900,32 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
                           </span>
                         </button>
 
+                        {/* Jersey Showcase Manager */}
+                        <button
+                          type="button"
+                          onClick={() => setActiveTab('jersey_showcase')}
+                          className={`w-full flex items-center justify-between px-3 py-2.5 rounded-xl text-xs font-bold transition-all cursor-pointer ${
+                            activeTab === 'jersey_showcase'
+                              ? 'bg-indigo-600 text-white shadow-lg shadow-indigo-600/30'
+                              : 'text-slate-300 hover:bg-slate-800 hover:text-white'
+                          }`}
+                        >
+                          <div className="flex items-center gap-3">
+                            <Shirt className="w-4 h-4 text-sky-400" />
+                            <span>Jersey Showcase</span>
+                          </div>
+                          <div className="flex items-center gap-1.5">
+                            <span
+                              className={`w-2 h-2 rounded-full ${
+                                localJerseyShowcase.enabled ? 'bg-emerald-400' : 'bg-slate-500'
+                              }`}
+                            />
+                            <span className="px-1.5 py-0.5 rounded-full text-[10px] bg-slate-800 text-slate-300 font-mono">
+                              {localJerseyShowcase.jerseys.length}
+                            </span>
+                          </div>
+                        </button>
+
                         {/* 5. Payment Settings (Admin Controlled) */}
                         <button
                           type="button"
@@ -958,6 +1122,26 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
                             </div>
                             <span className="px-2 py-0.5 rounded-full text-[10px] bg-slate-800">
                               {localCards.length}
+                            </span>
+                          </button>
+
+                          <button
+                            onClick={() => {
+                              setActiveTab('jersey_showcase');
+                              setIsMobileDrawerOpen(false);
+                            }}
+                            className={`w-full flex items-center justify-between px-3 py-3 rounded-xl text-xs font-bold transition-all ${
+                              activeTab === 'jersey_showcase'
+                                ? 'bg-indigo-600 text-white'
+                                : 'text-slate-300 hover:bg-slate-800'
+                            }`}
+                          >
+                            <div className="flex items-center gap-3">
+                              <Shirt className="w-4 h-4 text-sky-400" />
+                              <span>Jersey Showcase</span>
+                            </div>
+                            <span className="px-2 py-0.5 rounded-full text-[10px] bg-slate-800">
+                              {localJerseyShowcase.jerseys.length}
                             </span>
                           </button>
 
@@ -2168,8 +2352,519 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
               )}
 
               {/* ======================================================== */}
-              {/* SECTION 6: PDF SETTINGS PANEL (Super Admin) */}
+              {/* SECTION: JERSEY SHOWCASE MANAGER (Super Admin) */}
               {/* ======================================================== */}
+              {currentRole === 'super_admin' && activeTab === 'jersey_showcase' && (
+                <div className="max-w-5xl mx-auto space-y-6">
+                  {/* Top Header */}
+                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-4 border-b border-slate-200">
+                    <div>
+                      <div className="flex items-center gap-2">
+                        <div className="p-2 rounded-xl bg-sky-500/10 text-sky-600 border border-sky-200">
+                          <Shirt className="w-5 h-5" />
+                        </div>
+                        <div>
+                          <h3 className="font-display text-lg font-extrabold text-slate-900">
+                            Jersey Showcase Manager
+                          </h3>
+                          <p className="text-xs text-slate-500">
+                            Control showcase visibility, homepage section order, badge text, tag, front & back graphics, and multiple jersey carousel.
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="flex items-center gap-2">
+                      <button
+                        type="button"
+                        onClick={handleAddJersey}
+                        className="px-3.5 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-800 text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer shadow-xs"
+                      >
+                        <Plus className="w-3.5 h-3.5" />
+                        <span>Add Jersey</span>
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => handleSaveJerseyShowcase()}
+                        className="px-4 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold transition-all shadow-md shadow-indigo-600/20 flex items-center gap-1.5 cursor-pointer"
+                      >
+                        <Save className="w-3.5 h-3.5" />
+                        <span>Save & Apply</span>
+                      </button>
+                    </div>
+                  </div>
+
+                  {/* 1. Global Visibility & Section Reordering Card */}
+                  <div className="p-5 rounded-2xl bg-white border border-slate-200 shadow-sm space-y-5">
+                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-slate-100">
+                      <div>
+                        <div className="text-sm font-bold text-slate-900 flex items-center gap-2">
+                          <span>Show Jersey Showcase</span>
+                          <span
+                            className={`px-2 py-0.5 rounded-full text-[10px] font-bold ${
+                              localJerseyShowcase.enabled
+                                ? 'bg-emerald-100 text-emerald-700 border border-emerald-200'
+                                : 'bg-slate-100 text-slate-600 border border-slate-200'
+                            }`}
+                          >
+                            {localJerseyShowcase.enabled ? 'ON (Visible)' : 'OFF (Hidden)'}
+                          </span>
+                        </div>
+                        <p className="text-xs text-slate-500 mt-0.5">
+                          Toggle visibility of the Jersey Showcase section on the public homepage.
+                        </p>
+                      </div>
+
+                      <button
+                        type="button"
+                        onClick={handleToggleShowcaseEnabled}
+                        className={`px-4 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-2 cursor-pointer ${
+                          localJerseyShowcase.enabled
+                            ? 'bg-emerald-600 hover:bg-emerald-700 text-white shadow-md shadow-emerald-600/20'
+                            : 'bg-slate-200 hover:bg-slate-300 text-slate-700'
+                        }`}
+                      >
+                        {localJerseyShowcase.enabled ? (
+                          <>
+                            <Check className="w-4 h-4" />
+                            <span>Visible on Homepage</span>
+                          </>
+                        ) : (
+                          <>
+                            <EyeOff className="w-4 h-4" />
+                            <span>Hidden from Homepage</span>
+                          </>
+                        )}
+                      </button>
+                    </div>
+
+                    {/* Section Order Selection */}
+                    <div>
+                      <div className="flex items-center justify-between mb-2">
+                        <div>
+                          <span className="text-xs font-bold text-slate-900 block">
+                            Reorder Position on Homepage
+                          </span>
+                          <span className="text-[11px] text-slate-500">
+                            Move Jersey Showcase above or below Event Cards in the page hierarchy:
+                          </span>
+                        </div>
+                        <div className="flex items-center gap-1">
+                          <button
+                            type="button"
+                            onClick={() => handleSetSectionOrder('showcase_first')}
+                            disabled={localJerseyShowcase.sectionOrder === 'showcase_first'}
+                            className="p-1.5 rounded-lg border border-slate-200 hover:bg-slate-100 text-slate-700 disabled:opacity-40 cursor-pointer"
+                            title="Move Jersey Showcase Above Event Cards"
+                          >
+                            <ArrowUp className="w-3.5 h-3.5" />
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => handleSetSectionOrder('cards_first')}
+                            disabled={localJerseyShowcase.sectionOrder === 'cards_first'}
+                            className="p-1.5 rounded-lg border border-slate-200 hover:bg-slate-100 text-slate-700 disabled:opacity-40 cursor-pointer"
+                            title="Move Jersey Showcase Below Event Cards"
+                          >
+                            <ArrowDown className="w-3.5 h-3.5" />
+                          </button>
+                        </div>
+                      </div>
+
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-3 mt-3">
+                        {/* Option 1: Showcase First */}
+                        <div
+                          onClick={() => handleSetSectionOrder('showcase_first')}
+                          className={`p-3.5 rounded-xl border-2 transition-all cursor-pointer ${
+                            localJerseyShowcase.sectionOrder === 'showcase_first'
+                              ? 'border-indigo-600 bg-indigo-50/50 shadow-sm'
+                              : 'border-slate-200 hover:border-slate-300 bg-slate-50/50'
+                          }`}
+                        >
+                          <div className="flex items-center justify-between mb-2">
+                            <span className="text-xs font-bold text-slate-900 flex items-center gap-1.5">
+                              <span className="w-2 h-2 rounded-full bg-indigo-600" />
+                              Position A (Showcase First)
+                            </span>
+                            {localJerseyShowcase.sectionOrder === 'showcase_first' && (
+                              <span className="text-[10px] font-bold text-indigo-700 bg-indigo-100 px-2 py-0.5 rounded-full">
+                                Active Order
+                              </span>
+                            )}
+                          </div>
+                          <div className="flex items-center gap-1 text-[11px] text-slate-600 font-mono">
+                            <span className="font-semibold text-slate-800">Hero</span>
+                            <span>↓</span>
+                            <span className="font-bold text-indigo-600 bg-indigo-100/70 px-1 rounded">Jersey Showcase</span>
+                            <span>↓</span>
+                            <span>Event Cards</span>
+                            <span>↓</span>
+                            <span>Register CTA</span>
+                            <span>↓</span>
+                            <span>Footer</span>
+                          </div>
+                        </div>
+
+                        {/* Option 2: Cards First */}
+                        <div
+                          onClick={() => handleSetSectionOrder('cards_first')}
+                          className={`p-3.5 rounded-xl border-2 transition-all cursor-pointer ${
+                            localJerseyShowcase.sectionOrder === 'cards_first'
+                              ? 'border-indigo-600 bg-indigo-50/50 shadow-sm'
+                              : 'border-slate-200 hover:border-slate-300 bg-slate-50/50'
+                          }`}
+                        >
+                          <div className="flex items-center justify-between mb-2">
+                            <span className="text-xs font-bold text-slate-900 flex items-center gap-1.5">
+                              <span className="w-2 h-2 rounded-full bg-indigo-600" />
+                              Position B (Cards First)
+                            </span>
+                            {localJerseyShowcase.sectionOrder === 'cards_first' && (
+                              <span className="text-[10px] font-bold text-indigo-700 bg-indigo-100 px-2 py-0.5 rounded-full">
+                                Active Order
+                              </span>
+                            )}
+                          </div>
+                          <div className="flex items-center gap-1 text-[11px] text-slate-600 font-mono">
+                            <span className="font-semibold text-slate-800">Hero</span>
+                            <span>↓</span>
+                            <span>Event Cards</span>
+                            <span>↓</span>
+                            <span className="font-bold text-indigo-600 bg-indigo-100/70 px-1 rounded">Jersey Showcase</span>
+                            <span>↓</span>
+                            <span>Register CTA</span>
+                            <span>↓</span>
+                            <span>Footer</span>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* 2. Multiple Jersey List / Carousel Settings */}
+                  <div className="space-y-4">
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <h4 className="text-sm font-extrabold text-slate-900 flex items-center gap-2">
+                          <span>Showcase Jerseys</span>
+                          <span className="px-2 py-0.5 rounded-full text-xs bg-indigo-100 text-indigo-700 font-mono font-bold">
+                            {localJerseyShowcase.jerseys.length} {localJerseyShowcase.jerseys.length === 1 ? 'Kit' : 'Kits (Carousel Mode)'}
+                          </span>
+                        </h4>
+                        <p className="text-xs text-slate-500">
+                          {localJerseyShowcase.jerseys.length > 1
+                            ? 'Multiple jerseys configured: automatically displays as an interactive slider / carousel on the frontend!'
+                            : 'Single jersey configured: shows as signature kit showcase.'}
+                        </p>
+                      </div>
+
+                      <button
+                        type="button"
+                        onClick={handleAddJersey}
+                        className="px-3.5 py-1.5 rounded-xl bg-indigo-50 hover:bg-indigo-100 text-indigo-600 border border-indigo-200 text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer"
+                      >
+                        <Plus className="w-3.5 h-3.5" />
+                        <span>Add Another Jersey</span>
+                      </button>
+                    </div>
+
+                    {/* Jerseys List */}
+                    <div className="space-y-5">
+                      {localJerseyShowcase.jerseys.map((jersey, idx) => (
+                        <div
+                          key={jersey.id || idx}
+                          className="p-5 rounded-2xl bg-white border border-slate-200 shadow-sm space-y-4"
+                        >
+                          {/* Item Top Bar */}
+                          <div className="flex items-center justify-between pb-3 border-b border-slate-100">
+                            <div className="flex items-center gap-2.5">
+                              <span className="w-6 h-6 rounded-lg bg-indigo-600 text-white font-mono text-xs font-bold flex items-center justify-center">
+                                {idx + 1}
+                              </span>
+                              <input
+                                type="text"
+                                value={jersey.name}
+                                onChange={e => handleUpdateJersey(idx, { name: e.target.value })}
+                                placeholder="Jersey Title / Name..."
+                                className="font-bold text-sm text-slate-900 bg-transparent border-b border-transparent hover:border-slate-300 focus:border-indigo-500 outline-none px-1 py-0.5"
+                              />
+                            </div>
+
+                            {/* Reorder and Delete Actions */}
+                            <div className="flex items-center gap-1.5">
+                              <button
+                                type="button"
+                                onClick={() => handleMoveJersey(idx, 'up')}
+                                disabled={idx === 0}
+                                className="p-1.5 rounded-lg border border-slate-200 hover:bg-slate-100 text-slate-700 disabled:opacity-30 cursor-pointer"
+                                title="Move Up"
+                              >
+                                <ArrowUp className="w-3.5 h-3.5" />
+                              </button>
+                              <button
+                                type="button"
+                                onClick={() => handleMoveJersey(idx, 'down')}
+                                disabled={idx === localJerseyShowcase.jerseys.length - 1}
+                                className="p-1.5 rounded-lg border border-slate-200 hover:bg-slate-100 text-slate-700 disabled:opacity-30 cursor-pointer"
+                                title="Move Down"
+                              >
+                                <ArrowDown className="w-3.5 h-3.5" />
+                              </button>
+                              <button
+                                type="button"
+                                onClick={() => handleDeleteJersey(idx)}
+                                disabled={localJerseyShowcase.jerseys.length <= 1}
+                                className="p-1.5 rounded-lg border border-rose-200 hover:bg-rose-50 text-rose-600 disabled:opacity-30 cursor-pointer"
+                                title="Delete Jersey"
+                              >
+                                <Trash2 className="w-3.5 h-3.5" />
+                              </button>
+                            </div>
+                          </div>
+
+                          {/* Editable Fields Grid */}
+                          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            {/* Badge Text */}
+                            <div className="space-y-1.5">
+                              <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider">
+                                Badge Text (Top Left)
+                              </label>
+                              <input
+                                type="text"
+                                value={jersey.badgeText}
+                                onChange={e => handleUpdateJersey(idx, { badgeText: e.target.value })}
+                                placeholder="e.g. Signature Batch Edition"
+                                className="w-full px-3 py-2 rounded-xl text-xs bg-slate-50 border border-slate-200 text-slate-900 outline-none focus:border-indigo-500 focus:bg-white"
+                              />
+                              {/* Quick Presets */}
+                              <div className="flex flex-wrap gap-1 pt-1">
+                                {[
+                                  'Signature Batch Edition',
+                                  'Official Rag Day Jersey',
+                                  'Premium Edition',
+                                  'Batch 2027 Collection',
+                                ].map(preset => (
+                                  <button
+                                    key={preset}
+                                    type="button"
+                                    onClick={() => handleUpdateJersey(idx, { badgeText: preset })}
+                                    className="text-[10px] px-2 py-0.5 rounded-md bg-slate-100 hover:bg-indigo-50 hover:text-indigo-600 text-slate-600 cursor-pointer transition-colors"
+                                  >
+                                    {preset}
+                                  </button>
+                                ))}
+                              </div>
+                            </div>
+
+                            {/* Right Side Tag */}
+                            <div className="space-y-1.5">
+                              <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider">
+                                Right Side Tag
+                              </label>
+                              <input
+                                type="text"
+                                value={jersey.tagText}
+                                onChange={e => handleUpdateJersey(idx, { tagText: e.target.value })}
+                                placeholder="e.g. RD27"
+                                className="w-full px-3 py-2 rounded-xl text-xs bg-slate-50 border border-slate-200 text-slate-900 outline-none focus:border-indigo-500 focus:bg-white"
+                              />
+                              {/* Quick Presets */}
+                              <div className="flex flex-wrap gap-1 pt-1">
+                                {['RD27', 'RD28', 'Batch 2027', 'Official Edition'].map(preset => (
+                                  <button
+                                    key={preset}
+                                    type="button"
+                                    onClick={() => handleUpdateJersey(idx, { tagText: preset })}
+                                    className="text-[10px] px-2 py-0.5 rounded-md bg-slate-100 hover:bg-indigo-50 hover:text-indigo-600 text-slate-600 cursor-pointer transition-colors"
+                                  >
+                                    {preset}
+                                  </button>
+                                ))}
+                              </div>
+                            </div>
+
+                            {/* Subtitle & Title */}
+                            <div className="space-y-1.5">
+                              <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider">
+                                Bottom Caption Subtitle
+                              </label>
+                              <input
+                                type="text"
+                                value={jersey.subtitle}
+                                onChange={e => handleUpdateJersey(idx, { subtitle: e.target.value })}
+                                placeholder="e.g. Custom Squad Kit"
+                                className="w-full px-3 py-2 rounded-xl text-xs bg-slate-50 border border-slate-200 text-slate-900 outline-none focus:border-indigo-500 focus:bg-white"
+                              />
+                            </div>
+
+                            <div className="space-y-1.5">
+                              <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider">
+                                Bottom Caption Main Title
+                              </label>
+                              <input
+                                type="text"
+                                value={jersey.title}
+                                onChange={e => handleUpdateJersey(idx, { title: e.target.value })}
+                                placeholder="e.g. Back Name & Number Print Included"
+                                className="w-full px-3 py-2 rounded-xl text-xs bg-slate-50 border border-slate-200 text-slate-900 outline-none focus:border-indigo-500 focus:bg-white"
+                              />
+                            </div>
+                          </div>
+
+                          {/* Front & Back Images Upload Row */}
+                          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-2">
+                            {/* Front Jersey Upload */}
+                            <div className="p-3.5 rounded-xl border border-slate-200 bg-slate-50/60 space-y-2.5">
+                              <div className="flex items-center justify-between">
+                                <span className="text-xs font-bold text-slate-800 flex items-center gap-1.5">
+                                  <Shirt className="w-3.5 h-3.5 text-indigo-600" />
+                                  Front Jersey Image
+                                </span>
+                                {jersey.frontImage && (
+                                  <button
+                                    type="button"
+                                    onClick={() => handleUpdateJersey(idx, { frontImage: '' })}
+                                    className="text-[10px] text-rose-500 hover:underline cursor-pointer"
+                                  >
+                                    Remove
+                                  </button>
+                                )}
+                              </div>
+
+                              <div className="flex items-center gap-3">
+                                {jersey.frontImage ? (
+                                  <img
+                                    src={jersey.frontImage}
+                                    alt="Front View"
+                                    className="w-16 h-16 rounded-lg object-cover border border-slate-300 bg-white"
+                                  />
+                                ) : (
+                                  <div className="w-16 h-16 rounded-lg border-2 border-dashed border-slate-300 bg-white flex items-center justify-center text-slate-400">
+                                    <Shirt className="w-6 h-6" />
+                                  </div>
+                                )}
+
+                                <div className="flex-1 space-y-1.5">
+                                  <label className="inline-flex px-3 py-1.5 rounded-lg bg-white border border-slate-200 text-xs font-semibold text-slate-700 hover:bg-slate-100 cursor-pointer items-center gap-1.5 shadow-2xs">
+                                    <Upload className="w-3.5 h-3.5 text-indigo-600" />
+                                    <span>Upload Front (JPG, PNG, WEBP)</span>
+                                    <input
+                                      type="file"
+                                      accept="image/jpeg,image/png,image/webp"
+                                      className="hidden"
+                                      onChange={e => handleJerseyImageUpload(idx, 'front', e.target.files?.[0] || null)}
+                                    />
+                                  </label>
+                                  <input
+                                    type="text"
+                                    placeholder="Or paste front image URL..."
+                                    value={jersey.frontImage}
+                                    onChange={e => handleUpdateJersey(idx, { frontImage: e.target.value })}
+                                    className="w-full px-2.5 py-1 text-[11px] rounded-lg bg-white border border-slate-200 outline-none"
+                                  />
+                                </div>
+                              </div>
+                            </div>
+
+                            {/* Back Jersey Upload */}
+                            <div className="p-3.5 rounded-xl border border-slate-200 bg-slate-50/60 space-y-2.5">
+                              <div className="flex items-center justify-between">
+                                <span className="text-xs font-bold text-slate-800 flex items-center gap-1.5">
+                                  <Shirt className="w-3.5 h-3.5 text-indigo-600" />
+                                  Back Jersey Image
+                                </span>
+                                {jersey.backImage && (
+                                  <button
+                                    type="button"
+                                    onClick={() => handleUpdateJersey(idx, { backImage: '' })}
+                                    className="text-[10px] text-rose-500 hover:underline cursor-pointer"
+                                  >
+                                    Remove
+                                  </button>
+                                )}
+                              </div>
+
+                              <div className="flex items-center gap-3">
+                                {jersey.backImage ? (
+                                  <img
+                                    src={jersey.backImage}
+                                    alt="Back View"
+                                    className="w-16 h-16 rounded-lg object-cover border border-slate-300 bg-white"
+                                  />
+                                ) : (
+                                  <div className="w-16 h-16 rounded-lg border-2 border-dashed border-slate-300 bg-white flex items-center justify-center text-slate-400">
+                                    <Shirt className="w-6 h-6" />
+                                  </div>
+                                )}
+
+                                <div className="flex-1 space-y-1.5">
+                                  <label className="inline-flex px-3 py-1.5 rounded-lg bg-white border border-slate-200 text-xs font-semibold text-slate-700 hover:bg-slate-100 cursor-pointer items-center gap-1.5 shadow-2xs">
+                                    <Upload className="w-3.5 h-3.5 text-indigo-600" />
+                                    <span>Upload Back (JPG, PNG, WEBP)</span>
+                                    <input
+                                      type="file"
+                                      accept="image/jpeg,image/png,image/webp"
+                                      className="hidden"
+                                      onChange={e => handleJerseyImageUpload(idx, 'back', e.target.files?.[0] || null)}
+                                    />
+                                  </label>
+                                  <input
+                                    type="text"
+                                    placeholder="Or paste back image URL..."
+                                    value={jersey.backImage}
+                                    onChange={e => handleUpdateJersey(idx, { backImage: e.target.value })}
+                                    className="w-full px-2.5 py-1 text-[11px] rounded-lg bg-white border border-slate-200 outline-none"
+                                  />
+                                </div>
+                              </div>
+                            </div>
+                          </div>
+
+                          {/* Floating Badges */}
+                          <div className="pt-2 border-t border-slate-100 grid grid-cols-1 sm:grid-cols-3 gap-3 text-xs">
+                            <div>
+                              <label className="text-[10px] font-bold text-slate-500 uppercase block mb-1">
+                                Bottom Badge 1
+                              </label>
+                              <input
+                                type="text"
+                                value={jersey.badge1}
+                                onChange={e => handleUpdateJersey(idx, { badge1: e.target.value })}
+                                placeholder="e.g. Custom Fit"
+                                className="w-full px-2.5 py-1.5 text-xs rounded-lg bg-slate-50 border border-slate-200 outline-none"
+                              />
+                            </div>
+                            <div>
+                              <label className="text-[10px] font-bold text-slate-500 uppercase block mb-1">
+                                Badge 1 Sub-text
+                              </label>
+                              <input
+                                type="text"
+                                value={jersey.badge1Sub}
+                                onChange={e => handleUpdateJersey(idx, { badge1Sub: e.target.value })}
+                                placeholder="e.g. Sizes S to 4XL"
+                                className="w-full px-2.5 py-1.5 text-xs rounded-lg bg-slate-50 border border-slate-200 outline-none"
+                              />
+                            </div>
+                            <div>
+                              <label className="text-[10px] font-bold text-slate-500 uppercase block mb-1">
+                                Top Right Badge 2
+                              </label>
+                              <input
+                                type="text"
+                                value={jersey.badge2}
+                                onChange={e => handleUpdateJersey(idx, { badge2: e.target.value })}
+                                placeholder="e.g. 100% Cotton & Mesh"
+                                className="w-full px-2.5 py-1.5 text-xs rounded-lg bg-slate-50 border border-slate-200 outline-none"
+                              />
+                            </div>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+              )}
               {currentRole === 'super_admin' && activeTab === 'pdf' && (
                 <div className="max-w-4xl mx-auto space-y-6">
                   <div className="flex items-center justify-between pb-3 border-b border-slate-200">

@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   GenderType,
   JerseySize,
@@ -10,6 +10,7 @@ import {
 import { DEFAULT_PAYMENT_SETTINGS } from '../data/mockData';
 import { JerseyGraphic } from './JerseyGraphic';
 import { BkashLogo, NagadLogo } from './PaymentBrandLogos';
+import { PhotoUploadField } from './PhotoUploadField';
 import {
   Upload,
   User,
@@ -100,8 +101,6 @@ export const RegistrationForm: React.FC<RegistrationFormProps> = ({
   } | null>(null);
   const [formErrors, setFormErrors] = useState<{ [key: string]: string }>({});
 
-  const fileInputRef = useRef<HTMLInputElement>(null);
-
   // Gender-based theme configuration solely for the Registration Form Container
   const isMale = formData.gender === 'male';
   const isFemale = formData.gender === 'female';
@@ -153,15 +152,30 @@ export const RegistrationForm: React.FC<RegistrationFormProps> = ({
       ? (paymentSettings?.femaleNagadNumber || '01XXXXXXXXX')
       : (paymentSettings?.maleNagadNumber || '01XXXXXXXXX');
 
-  const handlePhotoUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (file) {
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        setFormData(prev => ({ ...prev, photoUrl: reader.result as string }));
-      };
-      reader.readAsDataURL(file);
-    }
+  const handlePhotoSelected = ({
+    photoUrl,
+    photoFile,
+    photoBlob,
+  }: {
+    photoUrl: string;
+    photoFile: File;
+    photoBlob: Blob;
+  }) => {
+    setFormData(prev => ({
+      ...prev,
+      photoUrl,
+      photoFile,
+      photoBlob,
+    }));
+  };
+
+  const handlePhotoRemoved = () => {
+    setFormData(prev => ({
+      ...prev,
+      photoUrl: null,
+      photoFile: null,
+      photoBlob: null,
+    }));
   };
 
   const handleGenderChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
@@ -482,69 +496,15 @@ export const RegistrationForm: React.FC<RegistrationFormProps> = ({
                 )}
               </div>
 
-              {/* Photo Upload */}
+              {/* Photo Upload System */}
               <div className="sm:col-span-2">
-                <label className={`block text-xs font-bold uppercase tracking-wider mb-1.5 ${labelClasses}`}>
-                  Photo Upload
-                </label>
-                <div
-                  onClick={() => fileInputRef.current?.click()}
-                  className={`p-3.5 sm:p-4 rounded-2xl border-2 border-dashed flex items-center justify-between gap-3 cursor-pointer transition-all hover:opacity-90 ${
-                    isMale
-                      ? 'border-slate-700 hover:border-sky-400 bg-slate-900/40'
-                      : isFemale
-                      ? 'border-pink-300 hover:border-pink-500 bg-white/60'
-                      : 'border-slate-300 hover:border-[#5B5FEF] bg-slate-50/50'
-                  }`}
-                >
-                  <div className="flex items-center gap-3">
-                    {formData.photoUrl ? (
-                      <img
-                        src={formData.photoUrl}
-                        alt="Student Portrait"
-                        className="w-11 h-11 rounded-xl object-cover border border-white shadow"
-                      />
-                    ) : (
-                      <div
-                        className={`w-11 h-11 rounded-xl flex items-center justify-center ${
-                          isMale
-                            ? 'bg-sky-500/20 text-sky-300'
-                            : isFemale
-                            ? 'bg-pink-100 text-pink-600'
-                            : 'bg-slate-200 text-slate-600'
-                        }`}
-                      >
-                        <Upload className="w-5 h-5" />
-                      </div>
-                    )}
-                    <div>
-                      <div className="text-xs font-bold">
-                        {formData.photoUrl ? 'Photo Uploaded (Click to change)' : 'Upload Student Photo'}
-                      </div>
-                      <div className="text-[11px] opacity-75">
-                        JPEG or PNG · Used for Invitation Pass
-                      </div>
-                    </div>
-                  </div>
-                  <span
-                    className={`text-xs font-semibold px-3 py-1.5 rounded-lg ${
-                      isMale
-                        ? 'bg-sky-500/20 text-sky-300'
-                        : isFemale
-                        ? 'bg-pink-200 text-pink-800'
-                        : 'bg-slate-200 text-slate-800'
-                    }`}
-                  >
-                    Browse
-                  </span>
-                  <input
-                    ref={fileInputRef}
-                    type="file"
-                    accept="image/*"
-                    onChange={handlePhotoUpload}
-                    className="hidden"
-                  />
-                </div>
+                <PhotoUploadField
+                  photoUrl={formData.photoUrl}
+                  gender={formData.gender}
+                  onPhotoSelected={handlePhotoSelected}
+                  onPhotoRemoved={handlePhotoRemoved}
+                  labelClasses={labelClasses}
+                />
               </div>
             </div>
           </div>

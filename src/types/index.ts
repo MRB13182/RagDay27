@@ -15,6 +15,8 @@ export interface RegistrationFormData {
   section: string;
   contactNumber: string;
   photoUrl: string | null;
+  photoFile?: File | null;
+  photoBlob?: Blob | null;
   amount: number;
   paymentMethod: PaymentMethod;
   senderNumber: string;
@@ -112,3 +114,26 @@ export interface PdfSettings {
   invitationCardTitle: string;
   customNotes: string;
 }
+
+export type SectionOrder = 'showcase_first' | 'cards_first';
+
+export interface JerseyItem {
+  id: string;
+  name: string;
+  badgeText: string; // e.g. "Signature Batch Edition", "Official Rag Day Jersey", "Premium Edition"
+  tagText: string; // e.g. "RD27", "RD28", "Batch 2027", "Official Edition"
+  frontImage: string; // URL or base64
+  backImage: string; // URL or base64
+  subtitle: string; // e.g. "Custom Squad Kit"
+  title: string; // e.g. "Back Name & Number Print Included"
+  badge1: string; // e.g. "Custom Fit"
+  badge1Sub: string; // e.g. "Sizes S to 4XL"
+  badge2: string; // e.g. "100% Cotton & Mesh"
+}
+
+export interface JerseyShowcaseSettings {
+  enabled: boolean;
+  sectionOrder: SectionOrder; // 'showcase_first': Hero -> Jersey Showcase -> Event Cards -> Register; 'cards_first': Hero -> Event Cards -> Jersey Showcase -> Register
+  jerseys: JerseyItem[];
+}
+

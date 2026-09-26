@@ -5,7 +5,10 @@ import {
   BrandingSettings,
   PdfSettings,
   PaymentSettings,
+  JerseyShowcaseSettings,
 } from '../types';
+import defaultWhiteJersey from '../assets/images/white_hero_jersey_1790359567080.jpg';
+import darkHeroJersey from '../assets/images/hero_white_kit_1790359583250.jpg';
 
 export const INITIAL_INVITATIONS: InvitationRecord[] = [
   {
@@ -206,4 +209,37 @@ export const DEFAULT_PDF_SETTINGS: PdfSettings = {
   approvalText: 'Verified and approved by Batch 27 Executive Committee. Gate entry strictly subject to verification.',
   invitationCardTitle: 'RAG DAY 2027 - OFFICIAL INVITATION PASS',
   customNotes: 'Please present your printed pass or digital PDF at entry checkpoint for barcode scanning.',
+};
+
+export const DEFAULT_JERSEY_SHOWCASE_SETTINGS: JerseyShowcaseSettings = {
+  enabled: true,
+  sectionOrder: 'showcase_first', // Hero -> Jersey Showcase -> Event Cards -> Register -> Footer
+  jerseys: [
+    {
+      id: 'jersey-1',
+      name: 'Official Catalyst White Jersey',
+      badgeText: 'Signature Batch Edition',
+      tagText: 'RD27',
+      frontImage: defaultWhiteJersey,
+      backImage: defaultWhiteJersey,
+      subtitle: 'Custom Squad Kit',
+      title: 'Back Name & Number Print Included',
+      badge1: 'Custom Fit',
+      badge1Sub: 'Sizes S to 4XL',
+      badge2: '100% Cotton & Mesh',
+    },
+    {
+      id: 'jersey-2',
+      name: 'Cyber Glass Studio Edition',
+      badgeText: 'Premium Edition',
+      tagText: 'Batch 2027',
+      frontImage: darkHeroJersey,
+      backImage: darkHeroJersey,
+      subtitle: 'Official Rag Day Jersey',
+      title: 'Personalized Name & Batch Print',
+      badge1: 'Breathable Knit',
+      badge1Sub: 'Athletic Cut',
+      badge2: 'Sublimation Print',
+    },
+  ],
 };

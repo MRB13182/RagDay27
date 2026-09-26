@@ -1,7 +1,7 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { ArrowRight, Sparkles, CheckCircle2, ShieldCheck, Ticket } from 'lucide-react';
-import { WebsiteSettings, BrandingSettings } from '../types';
-import heroJerseyImg from '../assets/images/rd27_hero_jersey_1790158987859.jpg';
+import { WebsiteSettings, BrandingSettings, JerseyShowcaseSettings } from '../types';
+import heroJerseyImg from '../assets/images/white_hero_jersey_1790359567080.jpg';
 import { EventCountdown } from './EventCountdown';
 
 interface HeroSectionProps {
@@ -9,6 +9,7 @@ interface HeroSectionProps {
   onInvitationClick: () => void;
   websiteSettings: WebsiteSettings;
   brandingSettings: BrandingSettings;
+  jerseySettings?: JerseyShowcaseSettings;
 }
 
 export const HeroSection: React.FC<HeroSectionProps> = ({
@@ -16,7 +17,17 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
   onInvitationClick,
   websiteSettings,
   brandingSettings,
+  jerseySettings,
 }) => {
+  const [heroViewMode, setHeroViewMode] = useState<'front' | 'back'>('back');
+
+  const activeJersey = jerseySettings?.jerseys?.[0];
+  const isShowcaseEnabled = jerseySettings ? jerseySettings.enabled : true;
+
+  const currentHeroImage =
+    heroViewMode === 'front'
+      ? activeJersey?.frontImage || activeJersey?.backImage || brandingSettings.heroBanner || heroJerseyImg
+      : activeJersey?.backImage || activeJersey?.frontImage || brandingSettings.heroBanner || heroJerseyImg;
   return (
     <section className="relative pt-6 pb-8 overflow-hidden">
       {/* Background Soft Glow Orbs */}
@@ -33,7 +44,7 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-12 items-center">
           {/* Left Column: Event Details & CTAs */}
-          <div className="lg:col-span-7 flex flex-col items-start text-left">
+          <div className={`${isShowcaseEnabled ? 'lg:col-span-7' : 'lg:col-span-12 max-w-4xl'} flex flex-col items-start text-left`}>
             {/* Event Logo & Category Badge */}
             <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-white/90 border border-slate-200 shadow-sm backdrop-blur-md mb-5">
               {brandingSettings.websiteLogo ? (
@@ -132,59 +143,98 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
             </div>
           </div>
 
-          {/* Right Column: Hero Visual Jersey Mockup */}
-          <div className="lg:col-span-5 relative flex items-center justify-center">
-            {/* Outer Glow Disc */}
-            <div className="absolute w-72 h-72 sm:w-80 sm:h-80 bg-gradient-to-tr from-[#5B5FEF]/20 via-[#7A6CFF]/20 to-[#00D4FF]/20 rounded-full blur-2xl pointer-events-none" />
+          {/* Right Column: Hero Visual Jersey Mockup (Only rendered when showcase enabled) */}
+          {isShowcaseEnabled && (
+            <div className="lg:col-span-5 relative flex items-center justify-center">
+              {/* Outer Glow Disc */}
+              <div className="absolute w-72 h-72 sm:w-80 sm:h-80 bg-gradient-to-tr from-[#5B5FEF]/20 via-[#7A6CFF]/20 to-[#00D4FF]/20 rounded-full blur-2xl pointer-events-none" />
 
-            {/* Main Jersey Card Container */}
-            <div className="relative w-full max-w-md rounded-3xl p-4 bg-white/70 backdrop-blur-2xl border border-white/80 shadow-[0_20px_50px_rgba(91,95,239,0.15)] transition-all duration-300 hover:shadow-[0_25px_60px_rgba(91,95,239,0.22)]">
-              {/* Top Glass Ribbon */}
-              <div className="flex items-center justify-between px-3 py-2 rounded-2xl bg-white/60 border border-slate-200/60 mb-3">
-                <div className="flex items-center gap-2">
-                  <span className="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-ping" />
-                  <span className="text-xs font-bold text-slate-800">
-                    Signature Batch Edition
-                  </span>
-                </div>
-                <span className="text-[11px] font-mono font-bold text-[#5B5FEF] bg-[#5B5FEF]/10 px-2.5 py-0.5 rounded-full">
-                  RD27
-                </span>
-              </div>
+              {/* Main Jersey Card Container */}
+              <div className="relative w-full max-w-md rounded-3xl p-4 bg-white/70 backdrop-blur-2xl border border-white/80 shadow-[0_20px_50px_rgba(91,95,239,0.15)] transition-all duration-300 hover:shadow-[0_25px_60px_rgba(91,95,239,0.22)]">
+                {/* Top Glass Ribbon */}
+                <div className="flex items-center justify-between px-3 py-2 rounded-2xl bg-white/60 border border-slate-200/60 mb-3">
+                  <div className="flex items-center gap-2">
+                    <span className="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-ping" />
+                    <span className="text-xs font-bold text-slate-800">
+                      {activeJersey?.badgeText || 'Signature Batch Edition'}
+                    </span>
+                  </div>
 
-              {/* Jersey Photo Showcase */}
-              <div className="relative rounded-2xl overflow-hidden aspect-[4/3] bg-gradient-to-b from-slate-900 to-slate-950 flex items-center justify-center shadow-inner group">
-                <img
-                  src={brandingSettings.heroBanner || heroJerseyImg}
-                  alt="RD27 Official Jersey Mockup"
-                  className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
-                />
-
-                <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent flex items-end p-4">
-                  <div className="text-white">
-                    <p className="text-[11px] font-medium text-slate-300">Custom Squad Kit</p>
-                    <p className="text-sm font-bold tracking-wide">Back Name & Number Print Included</p>
+                  <div className="flex items-center gap-1.5">
+                    {/* Front / Back Toggle if both images exist */}
+                    {activeJersey?.frontImage && activeJersey?.backImage && (
+                      <div className="flex items-center p-0.5 rounded-lg bg-slate-100 border border-slate-200 text-[10px] font-bold">
+                        <button
+                          type="button"
+                          onClick={() => setHeroViewMode('front')}
+                          className={`px-1.5 py-0.5 rounded cursor-pointer ${
+                            heroViewMode === 'front' ? 'bg-white text-[#5B5FEF] shadow-2xs' : 'text-slate-500'
+                          }`}
+                        >
+                          F
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => setHeroViewMode('back')}
+                          className={`px-1.5 py-0.5 rounded cursor-pointer ${
+                            heroViewMode === 'back' ? 'bg-white text-[#5B5FEF] shadow-2xs' : 'text-slate-500'
+                          }`}
+                        >
+                          B
+                        </button>
+                      </div>
+                    )}
+                    <span className="text-[11px] font-mono font-bold text-[#5B5FEF] bg-[#5B5FEF]/10 px-2.5 py-0.5 rounded-full">
+                      {activeJersey?.tagText || 'RD27'}
+                    </span>
                   </div>
                 </div>
-              </div>
 
-              {/* Floating Floating Card Overlays (SaaS feel) */}
-              <div className="hidden sm:flex absolute -bottom-3 -left-2 sm:-left-4 p-2.5 sm:p-3 rounded-2xl bg-white/95 backdrop-blur-xl border border-white shadow-lg items-center gap-3">
-                <div className="w-8 h-8 sm:w-9 sm:h-9 rounded-xl bg-gradient-to-br from-[#5B5FEF] to-[#7A6CFF] text-white flex items-center justify-center shadow-md">
-                  <Sparkles className="w-4 h-4" />
-                </div>
-                <div>
-                  <div className="text-xs font-bold text-slate-900">Custom Fit</div>
-                  <div className="text-[10px] text-slate-500">Sizes S to 4XL</div>
-                </div>
-              </div>
+                {/* Jersey Photo Showcase */}
+                <div className="relative rounded-2xl overflow-hidden aspect-[4/3] bg-gradient-to-b from-slate-900 to-slate-950 flex items-center justify-center shadow-inner group">
+                  <img
+                    src={currentHeroImage}
+                    alt={activeJersey?.name || 'RD27 Official Jersey Mockup'}
+                    className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
+                    referrerPolicy="no-referrer"
+                  />
 
-              <div className="hidden sm:flex absolute -top-3 -right-2 sm:-right-4 p-2.5 sm:p-3 rounded-2xl bg-white/95 backdrop-blur-xl border border-white shadow-lg items-center gap-2.5">
-                <span className="w-2.5 h-2.5 rounded-full bg-[#00D4FF]" />
-                <span className="text-xs font-bold text-slate-800 font-mono">100% Cotton & Mesh</span>
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent flex items-end p-4">
+                    <div className="text-white">
+                      <p className="text-[11px] font-medium text-slate-300">
+                        {activeJersey?.subtitle || 'Custom Squad Kit'}
+                      </p>
+                      <p className="text-sm font-bold tracking-wide">
+                        {activeJersey?.title || 'Back Name & Number Print Included'}
+                      </p>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Floating Card Overlays */}
+                <div className="hidden sm:flex absolute -bottom-3 -left-2 sm:-left-4 p-2.5 sm:p-3 rounded-2xl bg-white/95 backdrop-blur-xl border border-white shadow-lg items-center gap-3">
+                  <div className="w-8 h-8 sm:w-9 sm:h-9 rounded-xl bg-gradient-to-br from-[#5B5FEF] to-[#7A6CFF] text-white flex items-center justify-center shadow-md">
+                    <Sparkles className="w-4 h-4" />
+                  </div>
+                  <div>
+                    <div className="text-xs font-bold text-slate-900">
+                      {activeJersey?.badge1 || 'Custom Fit'}
+                    </div>
+                    <div className="text-[10px] text-slate-500">
+                      {activeJersey?.badge1Sub || 'Sizes S to 4XL'}
+                    </div>
+                  </div>
+                </div>
+
+                <div className="hidden sm:flex absolute -top-3 -right-2 sm:-right-4 p-2.5 sm:p-3 rounded-2xl bg-white/95 backdrop-blur-xl border border-white shadow-lg items-center gap-2.5">
+                  <span className="w-2.5 h-2.5 rounded-full bg-[#00D4FF]" />
+                  <span className="text-xs font-bold text-slate-800 font-mono">
+                    {activeJersey?.badge2 || '100% Cotton & Mesh'}
+                  </span>
+                </div>
               </div>
             </div>
-          </div>
+          )}
         </div>
       </div>
     </section>
