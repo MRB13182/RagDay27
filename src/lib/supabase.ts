@@ -181,20 +181,51 @@ export async function saveEventSettingsToSupabase(s:WebsiteSettings){
 }
 
 export async function fetchBrandingSettingsFromSupabase(){try{const d=await singleton('branding_settings');return d?{websiteLogo:d.logo_path||'',favicon:d.favicon_path||'',heroBanner:d.banner_path||'',heroBackground:d.hero_background_path||'',jerseyFrontImage:'',jerseyBackImage:'',invitationCardBackground:'',footerLogo:d.footer_logo_path||''}:null;}catch{return null;}}
-export async function saveBrandingSettingsToSupabase(s:BrandingSettings){const {error}=await supabase.from('branding_settings').update({logo_path:s.websiteLogo,favicon_path:s.favicon,banner_path:s.heroBanner,hero_background_path:s.heroBackground,footer_logo_path:s.footerLogo}).eq('id','current');return {success:!error,error:error?.message};}
-
+export async function saveBrandingSettingsToSupabase(s:BrandingSettings){
+  const {data,error}=await supabase.rpc('update_branding_settings',{
+    p_website_name:'Rag Day 27 (RD27)',p_logo_path:s.websiteLogo||null,p_favicon_path:s.favicon||null,
+    p_banner_path:s.heroBanner||null,p_hero_background_path:s.heroBackground||null,
+    p_footer_logo_path:s.footerLogo||null,p_footer_text:null
+  });
+  return {success:!error,error:error?.message,data};
+}
 export async function fetchPaymentSettingsFromSupabase(){try{const d=await singleton('payment_settings');return d?{registrationFee:Number(d.registration_fee),currency:d.currency,bkashEnabled:d.bkash_enabled,nagadEnabled:d.nagad_enabled,maleBkashNumber:d.bkash_number||'',maleNagadNumber:d.nagad_number||'',femaleBkashNumber:d.bkash_number||'',femaleNagadNumber:d.nagad_number||'',instructions:'',paymentInstructions:''}:null;}catch{return null;}}
-export async function savePaymentSettingsToSupabase(s:PaymentSettings){const {error}=await supabase.from('payment_settings').update({registration_fee:s.registrationFee,currency:s.currency,bkash_enabled:s.bkashEnabled,nagad_enabled:s.nagadEnabled,bkash_number:s.maleBkashNumber||s.femaleBkashNumber,nagad_number:s.maleNagadNumber||s.femaleNagadNumber}).eq('id','current');return {success:!error,error:error?.message};}
-
+export async function savePaymentSettingsToSupabase(s:PaymentSettings){
+  const {data,error}=await supabase.rpc('update_payment_settings',{
+    p_registration_fee:s.registrationFee,p_currency:s.currency,
+    p_bkash_number:s.maleBkashNumber||s.femaleBkashNumber||null,
+    p_nagad_number:s.maleNagadNumber||s.femaleNagadNumber||null,
+    p_bkash_enabled:s.bkashEnabled,p_nagad_enabled:s.nagadEnabled
+  });
+  return {success:!error,error:error?.message,data};
+}
 export async function fetchPdfSettingsFromSupabase():Promise<PdfSettings|null>{try{const d=await singleton('pdf_settings');if(!d)return null;return {pdfLogo:d.logo_path||'',pdfHeader:d.pdf_title||'RAG DAY 27',pdfSubHeader:d.pdf_subtitle||'',watermarkLogo:'RD27 OFFICIAL',watermarkOpacity:.08,footerText:d.footer_text||'',signatureArea:d.signature_text||'',signatureTitle:'',approvalText:'APPROVED & VERIFIED',invitationCardTitle:'RAG DAY 2027 - OFFICIAL INVITATION PASS',customNotes:''};}catch{return null;}}
-export async function savePdfSettingsToSupabase(s:PdfSettings){const {error}=await supabase.from('pdf_settings').update({pdf_title:s.pdfHeader,pdf_subtitle:s.pdfSubHeader,logo_path:s.pdfLogo,footer_text:s.footerText,signature_text:s.signatureArea}).eq('id','current');return {success:!error,error:error?.message};}
-
+export async function savePdfSettingsToSupabase(s:PdfSettings){
+  const {data,error}=await supabase.rpc('update_pdf_settings',{
+    p_pdf_title:s.pdfHeader,p_pdf_subtitle:s.pdfSubHeader,p_logo_path:s.pdfLogo||null,
+    p_footer_text:s.footerText,p_signature_text:s.signatureArea,p_background_image_path:null,
+    p_show_logo:true,p_show_photo:true,p_show_registration_no:true,p_show_student_details:true
+  });
+  return {success:!error,error:error?.message,data};
+}
 export async function fetchEventCardsFromSupabase(){const {data,error}=await supabase.from('event_cards').select('*').eq('active',true).order('sort_order');if(error)return null;return (data||[]).map((c:any)=>({id:c.id,icon:c.icon||'calendar',title:c.title,description:c.description||'',subDetail:'',customColor:'indigo',order:c.sort_order,visible:c.visible}));}
-export async function saveEventCardsToSupabase(cards:EventCard[]){const {error}=await supabase.from('event_cards').upsert(cards.map(c=>({id:c.id,icon:c.icon,title:c.title,description:c.description,sort_order:c.order,visible:c.visible,active:true})));return {success:!error,error:error?.message};}
-
+export async function saveEventCardsToSupabase(cards:EventCard[]){
+  for(const c of cards){
+    const {error}=await supabase.rpc('upsert_event_card',{
+      p_id:c.id,p_title:c.title,p_description:c.description,p_icon:c.icon,
+      p_sort_order:c.order,p_visible:c.visible,p_active:true
+    });
+    if(error)return {success:false,error:error.message};
+  }
+  return {success:true};
+}
 export async function fetchJerseyShowcaseFromSupabase(){const {data,error}=await supabase.from('jersey_showcase').select('*').eq('id','current').maybeSingle();if(error||!data)return null;return {enabled:data.enabled,sectionOrder:data.section_order,jerseys:Array.isArray(data.jerseys)?data.jerseys:[]};}
-export async function saveJerseyShowcaseToSupabase(s:JerseyShowcaseSettings){const {error}=await supabase.from('jersey_showcase').update({enabled:s.enabled,section_order:s.sectionOrder,jerseys:s.jerseys}).eq('id','current');return {success:!error,error:error?.message};}
-
+export async function saveJerseyShowcaseToSupabase(s:JerseyShowcaseSettings){
+  const {data,error}=await supabase.rpc('update_jersey_showcase',{
+    p_enabled:s.enabled,p_section_order:s.sectionOrder,p_jerseys:s.jerseys
+  });
+  return {success:!error,error:error?.message,data};
+}
 export async function fetchAdminFilesFromSupabase(category?:string){let q=supabase.from('admin_files').select('*').order('created_at',{ascending:false});if(category)q=q.eq('category',category);const {data,error}=await q;if(error)return [];return (data||[]).map((d:any)=>({id:d.id,category:d.category,title:d.title,description:d.description||'',fileUrl:d.file_url,fileName:d.file_name||'',fileSize:d.file_size||'',fileType:d.file_type||'',uploadedAt:d.created_at}));}
 export async function saveAdminFileToSupabase(f:AdminFileItem){const {error}=await supabase.from('admin_files').upsert({id:f.id,category:f.category,title:f.title,description:f.description||null,file_url:f.fileUrl,file_name:f.fileName||null,file_size:f.fileSize||null,file_type:f.fileType||null,updated_at:new Date().toISOString(),updated_by:null});return {success:!error,error:error?.message};}
 export async function deleteAdminFileFromSupabase(id:string){const {error}=await supabase.from('admin_files').delete().eq('id',id);return {success:!error,error:error?.message};}
