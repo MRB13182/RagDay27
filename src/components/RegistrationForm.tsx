@@ -972,9 +972,9 @@ export const RegistrationForm: React.FC<RegistrationFormProps> = ({
                 <span className="text-sm font-bold">{successModalData.name}</span>
               </div>
               <div className="flex items-center justify-between pb-2 border-b border-current/10">
-                <span className="opacity-75 uppercase font-semibold">Serial Number:</span>
+                <span className="opacity-75 uppercase font-semibold">Display Position:</span>
                 <span className="text-sm font-bold font-mono">
-                  #{successModalData.serialNo || 1}
+                  Generated from the current student list
                 </span>
               </div>
               <div className="flex items-center justify-between pb-2 border-b border-current/10">
