@@ -30,8 +30,14 @@ export async function uploadFileToStorage(
   folder: 'logos'|'banners'|'jerseys'|'students'|'certificates'|'invitations'|'resumes'|'projects'|'files',
   customFileName?: string
 ): Promise<string> {
-  if (file instanceof File && file.size > 10 * 1024 * 1024) throw new Error('FILE_TOO_LARGE');
-  const ext = file instanceof File ? (file.name.split('.').pop() || 'bin') : 'bin';
+  if (file instanceof File) {
+    if (file.size > 10 * 1024 * 1024) throw new Error('FILE_TOO_LARGE');
+    const allowed = ['image/jpeg','image/png','image/webp','application/pdf'];
+    if (folder === 'students' || folder === 'jerseys' || folder === 'logos' || folder === 'banners') {
+      if (!allowed.slice(0,3).includes(file.type)) throw new Error('INVALID_FILE_TYPE');
+    }
+  }
+  const ext = file instanceof File ? (file.name.split('.').pop() || 'bin').toLowerCase() : 'bin';
   const clean = customFileName ? customFileName.replace(/[^a-zA-Z0-9_-]/g,'_') + '.' + ext : crypto.randomUUID()+'.'+ext;
   const bucket = folder === 'students' ? 'student-photos'
     : folder === 'jerseys' ? 'jerseys'
@@ -39,9 +45,9 @@ export async function uploadFileToStorage(
     : folder === 'files' || folder === 'certificates' || folder === 'resumes' || folder === 'projects' ? 'branding'
     : 'branding';
   const path = `${folder}/${clean}`;
-  const {data,error}=await supabase.storage.from(bucket).upload(path,file,{cacheControl:'3600',upsert:false});
+  const {data,error}=await supabase.storage.from(bucket).upload(path,file,{cacheControl:'3600',upsert:false,contentType:file instanceof File ? file.type : undefined});
   if(error) dbError(error,'Storage upload failed');
-  if(bucket==='student-photos'||bucket==='invitation-cards') return data.path;
+  if(bucket==='student-photos'||bucket==='invitation-cards'||bucket==='pdf-assets'||bucket==='exports') return data.path;
   return supabase.storage.from(bucket).getPublicUrl(data.path).data.publicUrl;
 }
 
