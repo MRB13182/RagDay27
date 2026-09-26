@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { supabase } from '../lib/supabase';
 import { InvitationRecord, PdfSettings, WebsiteSettings } from '../types';
 import {
   Search,
@@ -46,26 +47,62 @@ export const InvitationCardPage: React.FC<InvitationCardPageProps> = ({
     }
   }, [initialSearchRegNo]);
 
-  const handleSearchWith = (regNoVal: string, nameVal: string) => {
-    const cleanedReg = regNoVal.trim().toUpperCase();
-    const cleanedName = nameVal.trim().toLowerCase();
+  const handleSearchWith = async (regNoVal: string, nameVal: string) => {
+    const cleanedReg = regNoVal.trim().toUpperCase().replace(/^RD27-/, '');
+    const cleanedName = nameVal.trim();
 
     setSearched(true);
+    setMatchedRecord(null);
 
-    if (!cleanedReg && !cleanedName) {
-      setMatchedRecord(null);
-      return;
+    if (!cleanedReg && !cleanedName) return;
+
+    try {
+      const query = cleanedReg || cleanedName;
+      if (/^\d+$/.test(query)) {
+        const { data, error } = await supabase.rpc('search_public_student', { p_query: query });
+        if (error) throw error;
+        const found = (data || [])[0];
+        if (!found) return;
+        if (found.status === 'approved') {
+          const { data: inv, error: invError } = await supabase.rpc('get_public_invitation', { p_registration_no: Number(found.registration_no) });
+          if (invError) throw invError;
+          setMatchedRecord(inv?.[0] ? {
+            registrationNo: `RD27-${String(inv[0].registration_no).padStart(3,'0')}`,
+            name: inv[0].student_name,
+            roll: '',
+            id: '',
+            group: '',
+            section: '',
+            status: inv[0].status,
+            gender: 'male',
+            photoUrl: '',
+            jerseyName: '',
+            jerseyNumber: '',
+            jerseySize: '',
+          } : null);
+        } else {
+          setMatchedRecord({
+            registrationNo: `RD27-${String(found.registration_no).padStart(3,'0')}`,
+            name: found.student_name,
+            roll: '', id: '', group: '', section: '', status: found.status, gender: 'male', photoUrl: '',
+            jerseyName:'', jerseyNumber:'', jerseySize:'', rejectionReason: found.rejection_reason || undefined
+          });
+        }
+      } else {
+        const { data, error } = await supabase.rpc('search_public_student', { p_query: query });
+        if (error) throw error;
+        const found = (data || []).find((x:any) => x.student_name?.toLowerCase().includes(cleanedName.toLowerCase()));
+        if (!found) return;
+        setMatchedRecord({
+          registrationNo: `RD27-${String(found.registration_no).padStart(3,'0')}`,
+          name: found.student_name, roll:'', id:'', group:'', section:'',
+          status:found.status, gender:'male', photoUrl:'', jerseyName:'', jerseyNumber:'', jerseySize:'',
+          rejectionReason:found.rejection_reason || undefined
+        });
+      }
+    } catch (err) {
+      console.error('Public invitation lookup failed', err);
     }
-
-    const found = invitations.find(item => {
-      const matchReg = cleanedReg ? item.registrationNo.toUpperCase() === cleanedReg : true;
-      const matchName = cleanedName
-        ? item.name.toLowerCase().includes(cleanedName)
-        : true;
-      return matchReg && matchName;
-    });
-
-    setMatchedRecord(found || null);
   };
 
   const handleSearch = (e: React.FormEvent) => {
