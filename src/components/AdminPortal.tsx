@@ -367,24 +367,35 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
   const humanitiesCount = invitations.filter(i => i.group === 'Humanities').length;
   const estimatedRevenue = approvedCount * (localPayment.registrationFee || 500);
 
-  // PDF Download Handler tailored specifically for current role
   const handleDownloadPDF = () => {
     const list = getRoleFilteredRecords();
     let title = 'RD27_All_Registrations';
+    if (currentRole === 'male_admin') title = 'RD27_Male_Registrations';
+    if (currentRole === 'female_admin') title = 'RD27_Female_Registrations';
+    generateRegistrationListPDF(list,title,currentRole || 'super_admin',localPdf,websiteSettings);
+  };
 
-    if (currentRole === 'male_admin') {
-      title = 'RD27_Male_Registrations';
-    } else if (currentRole === 'female_admin') {
-      title = 'RD27_Female_Registrations';
+  const handleDownloadExcel = async () => {
+    const gender = currentRole === 'male_admin' ? 'male' : currentRole === 'female_admin' ? 'female' : undefined;
+    const res = await getAdminExportData(gender);
+    if (res.error) {
+      showSaveSuccess(res.error);
+      return;
     }
-
-    generateRegistrationListPDF(
-      list,
-      title,
-      currentRole || 'super_admin',
-      localPdf,
-      websiteSettings
-    );
+    const list = res.data;
+    const headers = ['Registration No','Full Name','Gender','Roll','Student ID','Group','Section','Jersey Name','Jersey Number','Jersey Size','Contact Number','Payment Number','Payment Time','Transaction ID','Payment Method','Amount','Status','Rejection Reason','Registration Date'];
+    const escapeCsv = (val:any) => val === null || val === undefined ? '""' : '"' + String(val).replace(/"/g,'""') + '"';
+    const rows = list.map((r:any) => [
+      escapeCsv(`RD27-${String(r.registration_no).padStart(3,'0')}`),escapeCsv(r.student_name),escapeCsv(r.gender),escapeCsv(r.roll),
+      escapeCsv(r.student_id),escapeCsv(r.group_name),escapeCsv(r.section),escapeCsv(r.jersey_name),escapeCsv(r.jersey_number),
+      escapeCsv(r.jersey_size),escapeCsv(r.contact_number),escapeCsv(r.sender_number),escapeCsv(r.payment_time),
+      escapeCsv(r.transaction_id),escapeCsv(r.payment_method),escapeCsv(r.registration_fee),escapeCsv(r.status),
+      escapeCsv(r.rejection_reason),escapeCsv(r.created_at)
+    ]);
+    const blob = new Blob(['\uFEFF'+[headers.join(','),...rows.map((row:any[])=>row.join(','))].join('\r\n')],{type:'text/csv;charset=utf-8;'});
+    const url=URL.createObjectURL(blob); const link=document.createElement('a'); link.href=url;
+    link.download=`RD27_Registrations_${currentRole || 'super_admin'}_${Date.now()}.csv`;
+    document.body.appendChild(link); link.click(); link.remove(); URL.revokeObjectURL(url);
   };
 
   return (
