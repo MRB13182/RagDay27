@@ -166,10 +166,19 @@ export async function fetchEventSettingsFromSupabase():Promise<WebsiteSettings|n
     footerText:'',copyrightText:'',bannerText:d.banner_text||'',bannerActive:d.banner_active??true
   };}catch{return null;}
 }
-export async function saveEventSettingsToSupabase(s:WebsiteSettings){const {error}=await supabase.from('website_settings').update({
-  event_name:s.eventName,website_name:s.eventName,event_date:s.eventDate && s.eventDate.match(/^\d{4}-\d{2}-\d{2}$/)?s.eventDate:(s.eventYear&&s.eventMonth&&s.eventDay?new Date(`${s.eventMonth} ${s.eventDay}, ${s.eventYear}`).toISOString().slice(0,10):null),
-  event_time:s.eventTime,registration_fee_display:s.registrationFee,hero_subtitle:s.eventDescription,venue:s.venue,banner_text:s.bannerText,banner_active:s.bannerActive
-}).eq('id','current');return {success:!error,error:error?.message};}
+export async function saveEventSettingsToSupabase(s:WebsiteSettings){
+  const eventDate = s.eventDate && /^\d{4}-\d{2}-\d{2}$/.test(s.eventDate)
+    ? s.eventDate
+    : (s.eventYear && s.eventMonth && s.eventDay ? new Date(`${s.eventMonth} ${s.eventDay}, ${s.eventYear}`).toISOString().slice(0,10) : null);
+  const eventTime = s.eventTime || null;
+  const deadline = s.lastRegDate ? new Date(s.lastRegDate + 'T23:59:59+06:00').toISOString() : null;
+  const {data,error}=await supabase.rpc('update_website_settings',{
+    p_website_name:s.eventName,p_event_name:s.eventName,p_event_date:eventDate,p_event_time:eventTime,
+    p_registration_deadline:deadline,p_registration_open:true,p_registration_fee_display:s.registrationFee,
+    p_banner_active:s.bannerActive,p_banner_text:s.bannerText,p_hero_title:s.eventName,p_hero_subtitle:s.eventDescription,p_venue:s.venue
+  });
+  return {success:!error,error:error?.message,data};
+}
 
 export async function fetchBrandingSettingsFromSupabase(){try{const d=await singleton('branding_settings');return d?{websiteLogo:d.logo_path||'',favicon:d.favicon_path||'',heroBanner:d.banner_path||'',heroBackground:d.hero_background_path||'',jerseyFrontImage:'',jerseyBackImage:'',invitationCardBackground:'',footerLogo:d.footer_logo_path||''}:null;}catch{return null;}}
 export async function saveBrandingSettingsToSupabase(s:BrandingSettings){const {error}=await supabase.from('branding_settings').update({logo_path:s.websiteLogo,favicon_path:s.favicon,banner_path:s.heroBanner,hero_background_path:s.heroBackground,footer_logo_path:s.footerLogo}).eq('id','current');return {success:!error,error:error?.message};}
