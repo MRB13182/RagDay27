@@ -121,9 +121,34 @@ export async function updateRegistrationDetailsInSupabase(regNo:string,updates:P
       p_jersey_size:updates.jerseySize??null,p_sender_number:updates.senderNumber??null,p_payment_method:updates.paymentMethod??null,
       p_payment_time:updates.paymentTime??null,p_transaction_id:updates.transactionId??null,p_student_photo_path:updates.photoUrl??null
     });
-    return {success:!error,error:error?.message,data:data?mapRow(data):undefined};
+    if(error)return {success:false,error:error.message};
+    return {success:true,data:data?mapRow(data):undefined};
   }catch(e:any){return {success:false,error:e.message};}
 }
+
+export async function resetRegistrationSequence(){
+  const {data,error}=await supabase.rpc('reset_registration_sequence');
+  return {success:!error,error:error?.message,data};
+}
+
+export async function getAdminExportData(gender?:'male'|'female'){
+  const {data,error}=await supabase.rpc('get_admin_export_data',{p_gender:gender||null});
+  if(error)return {data:[] as any[],error:error.message};
+  return {data:data||[],error:undefined};
+}
+
+export async function getPublicStudent(query:string){
+  const {data,error}=await supabase.rpc('search_public_student',{p_query:query});
+  return {data:data||[],error:error?.message};
+}
+
+export async function getPublicInvitation(registrationNo:string){
+  const n=Number(String(registrationNo).replace(/^RD27-/i,''));
+  if(!Number.isInteger(n))return {data:[],error:'INVALID_REGISTRATION_NUMBER'};
+  const {data,error}=await supabase.rpc('get_public_invitation',{p_registration_no:n});
+  return {data:data||[],error:error?.message};
+}
+
 
 export async function deleteRegistrationFromSupabase(regNo:string){
   try{const row=await getRegistrationRow(regNo);const {error}=await supabase.rpc('delete_registration',{p_registration_id:row.id});return {success:!error,error:error?.message};}
