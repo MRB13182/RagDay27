@@ -64,6 +64,7 @@ import {
   FileCode,
 } from 'lucide-react';
 import {
+  supabase,
   uploadFileToStorage,
   checkSupabaseHealth,
   SupabaseHealthStatus,
@@ -121,8 +122,10 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
   onUpdateJerseyShowcase,
   onEditRegistration,
 }) => {
-  const [passcode, setPasscode] = useState('');
-  const [authError, setAuthError] = useState(false);
+  const [adminEmail, setAdminEmail] = useState('');
+  const [adminPassword, setAdminPassword] = useState('');
+  const [authError, setAuthError] = useState('');
+  const [authLoading, setAuthLoading] = useState(false);
   const [currentRole, setCurrentRole] = useState<AdminRole>(null);
 
   // Super Admin active section
@@ -464,40 +467,56 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
 
   // Logo Preview Modal & Ref
   const [showLogoPreviewModal, setShowLogoPreviewModal] = useState(false);
-  const headerLogoFileInputRef = useRef<HTMLInputElement>(null);
-  const settingsLogoFileInputRef = useRef<HTMLInputElement>(null);
-
-  if (!isOpen) return null;
-
-  const handleUnlock = (e: React.FormEvent) => {
+  const headerLogoFileInputRef = u  const handleUnlock = async (e: React.FormEvent) => {
     e.preventDefault();
-    const trimmed = passcode.trim();
-
-    if (trimmed === 'rdnic27.com') {
-      setCurrentRole('super_admin');
-      setActiveTab('overview');
-      setAuthError(false);
-      setPasscode('');
-      setLocalWebsite(websiteSettings);
-      setLocalBranding(brandingSettings);
-      setLocalPdf(pdfSettings);
-      setLocalCards(eventCards);
-    } else if (trimmed === 'rdnicboy.27') {
-      setCurrentRole('male_admin');
-      setActiveTab('registrations');
-      setAuthError(false);
-      setPasscode('');
-    } else if (trimmed === 'rdnic27.girl') {
-      setCurrentRole('female_admin');
-      setActiveTab('registrations');
-      setAuthError(false);
-      setPasscode('');
-    } else {
-      setAuthError(true);
+    setAuthLoading(true);
+    setAuthError('');
+    const { data, error } = await supabase.auth.signInWithPassword({
+      email: adminEmail.trim(),
+      password: adminPassword,
+    });
+    if (error || !data.user) {
+      setAuthError('Invalid email or password.');
+      setAuthLoading(false);
+      return;
     }
+
+    const { data: profile, error: profileError } = await supabase
+      .from('admin_profiles')
+      .select('role, active')
+      .eq('auth_user_id', data.user.id)
+      .eq('active', true)
+      .maybeSingle();
+
+    if (profileError || !profile) {
+      await supabase.auth.signOut();
+      setAuthError('This account is not authorized for the admin portal.');
+      setAuthLoading(false);
+      return;
+    }
+
+    setCurrentRole(profile.role as AdminRole);
+    setActiveTab(profile.role === 'super_admin' ? 'overview' : 'registrations');
+    setAdminEmail('');
+    setAdminPassword('');
+    setLocalWebsite(websiteSettings);
+    setLocalBranding(brandingSettings);
+    setLocalPdf(pdfSettings);
+    setLocalCards(eventCards);
+    setAuthLoading(false);
   };
 
-  const handleLogout = () => {
+  const handleLogout = async () => {
+    await supabase.auth.signOut();
+    setCurrentRole(null);
+    setAdminEmail('');
+    setAdminPassword('');
+    setAuthError('');
+    setIsMobileDrawerOpen(false);
+    onClose();
+  };
+
+
     setCurrentRole(null);
     setPasscode('');
     setAuthError(false);
@@ -757,21 +776,21 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
               Admin Committee Access
             </h2>
             <p className="text-xs text-slate-600 mt-1 mb-6">
-              Enter your authorized passcode to access Super Admin, Male Admin, or Female Admin dashboard.
+              Sign in with your Supabase Auth admin account. Your role is loaded securely from the database.
             </p>
 
             <form onSubmit={handleUnlock} className="space-y-4 text-left">
               <div>
                 <label className="block text-xs font-bold uppercase tracking-wider text-slate-700 mb-1.5">
-                  Access Passcode
+                  Admin Email
                 </label>
                 <input
-                  type="password"
-                  placeholder="Enter access code..."
-                  value={passcode}
+                  type="email"
+                  placeholder="admin@example.com"
+                  value={adminEmail}
                   onChange={e => {
-                    setPasscode(e.target.value);
-                    setAuthError(false);
+                    setAdminEmail(e.target.value);
+                    setAuthError('');
                   }}
                   autoFocus
                   className="w-full px-4 py-3 rounded-xl text-sm bg-slate-50 border border-slate-300 text-slate-900 outline-none focus:border-indigo-600 focus:ring-2 focus:ring-indigo-600/20"
@@ -781,7 +800,7 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
               {authError && (
                 <div className="p-3 rounded-xl bg-rose-50 border border-rose-200 text-rose-700 text-xs font-semibold flex items-center gap-2">
                   <XCircle className="w-4 h-4 shrink-0" />
-                  <span>Invalid passcode. Please verify your committee key.</span>
+                  <span>{authError}</span>
                 </div>
               )}
 
@@ -790,7 +809,7 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
                 className="w-full py-3.5 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-sm shadow-lg shadow-indigo-600/30 transition-all flex items-center justify-center gap-2"
               >
                 <ShieldCheck className="w-4 h-4" />
-                <span>Verify & Open Dashboard</span>
+                <span>{authLoading ? 'Signing in…' : 'Sign In & Open Dashboard'}</span>
               </button>
 
               <button
