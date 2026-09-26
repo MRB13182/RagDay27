@@ -263,35 +263,31 @@ export default function App() {
     newStatus: InvitationStatus,
     reason?: string
   ) => {
+    const res = await updateRegistrationStatusInSupabase(registrationNo, newStatus, reason);
+    if (!res.success) {
+      showToast(res.error || 'Registration status update failed.', 'error');
+      return;
+    }
+
     setInvitations(prev =>
       prev.map(item =>
         item.registrationNo === registrationNo
           ? {
               ...item,
+              ...(res.data || {}),
               status: newStatus,
               rejectionReason: reason || item.rejectionReason,
-              seatZone:
-                newStatus === 'approved'
-                  ? item.seatZone || 'Zone A - Amphitheatre Front Row'
-                  : item.seatZone,
-              gate:
-                newStatus === 'approved'
-                  ? item.gate || 'Gate 02 (North Pavilion)'
-                  : item.gate,
             }
           : item
       )
     );
 
-    const res = await updateRegistrationStatusInSupabase(registrationNo, newStatus, reason);
-    if (res.success) {
-      showToast(
-        newStatus === 'approved'
-          ? `Registration ${registrationNo} approved in Supabase!`
-          : `Registration ${registrationNo} rejected in Supabase.`,
-        'success'
-      );
-    }
+    showToast(
+      newStatus === 'approved'
+        ? `Registration ${registrationNo} approved in Supabase.`
+        : `Registration ${registrationNo} rejected in Supabase.`,
+      'success'
+    );
   };
 
   const handleDeleteRegistration = async (registrationNo: string) => {
