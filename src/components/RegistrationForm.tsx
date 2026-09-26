@@ -9,9 +9,7 @@ import {
 } from '../types';
 import { DEFAULT_PAYMENT_SETTINGS } from '../data/mockData';
 import {
-  getNextAvailableRegistrationNumber,
-  getNextSerialNumber,
-  uploadFileToStorage,
+  uploadStudentPhoto,
   saveRegistrationToSupabase,
 } from '../lib/supabase';
 import { JerseyGraphic } from './JerseyGraphic';
@@ -252,24 +250,15 @@ export const RegistrationForm: React.FC<RegistrationFormProps> = ({
     setIsSubmitting(true);
 
     try {
-      // 1. Generate unique Registration Number and separate Serial Number
-      const newRegNo = getNextAvailableRegistrationNumber(existingRegistrations);
-      const newSerialNo = getNextSerialNumber(existingRegistrations);
-
-      // 2. Upload student photo to Supabase Storage if file provided
-      let photoUrl = formData.photoUrl || '';
+      let photoPath = '';
       if (formData.photoFile) {
-        photoUrl = await uploadFileToStorage(formData.photoFile, 'students', newRegNo);
-      } else if (!photoUrl) {
-        photoUrl =
-          formData.gender === 'female'
-            ? 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&w=400&q=80'
-            : 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=400&q=80';
+        photoPath = await uploadStudentPhoto(formData.photoFile);
+      } else {
+        throw new Error('STUDENT_PHOTO_REQUIRED');
       }
 
-      const newRecord: InvitationRecord = {
-        registrationNo: newRegNo,
-        serialNo: newSerialNo,
+      const draftRecord: InvitationRecord = {
+        registrationNo: '',
         name: formData.name.trim(),
         roll: formData.roll.trim(),
         id: formData.id.trim(),
@@ -277,7 +266,7 @@ export const RegistrationForm: React.FC<RegistrationFormProps> = ({
         section: formData.section,
         status: 'pending',
         gender: formData.gender === 'female' ? 'female' : 'male',
-        photoUrl,
+        photoUrl: photoPath,
         contactNumber: formData.contactNumber.trim(),
         jerseyName: formData.jerseyName.toUpperCase().trim(),
         jerseyNumber: formData.jerseyNumber || '27',
@@ -289,19 +278,21 @@ export const RegistrationForm: React.FC<RegistrationFormProps> = ({
         transactionId: formData.transactionId.trim() || undefined,
       };
 
-      // 3. Save permanently to Supabase Database
-      const saveResult = await saveRegistrationToSupabase(newRecord);
-      const finalRecord = saveResult.data || newRecord;
+      const saveResult = await saveRegistrationToSupabase(draftRecord);
+      if (!saveResult.success || !saveResult.data) {
+        throw new Error(saveResult.error || 'Registration failed');
+      }
 
+      const finalRecord = saveResult.data;
       onSuccessSubmit(finalRecord);
       setSuccessModalData({
-        name: formData.name,
-        regNo: newRegNo,
-        serialNo: newSerialNo,
-        gender: formData.gender,
+        name: finalRecord.name,
+        regNo: finalRecord.registrationNo,
+        serialNo: undefined,
+        gender: finalRecord.gender,
       });
-    } catch (err) {
-      console.error('Registration submission error:', err);
+    } catch (err: any) {
+      setFormErrors(prev => ({ ...prev, submit: err?.message || 'Registration submission failed' }));
     } finally {
       setIsSubmitting(false);
     }
