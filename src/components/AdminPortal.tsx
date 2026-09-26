@@ -10,6 +10,8 @@ import {
   JerseyShowcaseSettings,
   JerseyItem,
   SectionOrder,
+  AdminFileItem,
+  AdminFileCategory,
 } from '../types';
 import { DEFAULT_PAYMENT_SETTINGS, DEFAULT_JERSEY_SHOWCASE_SETTINGS } from '../data/mockData';
 import {
@@ -53,7 +55,24 @@ import {
   ToggleLeft,
   ToggleRight,
   RefreshCw,
+  Database,
+  FileSpreadsheet,
+  CheckCheck,
+  Cloud,
+  HardDrive,
+  Terminal,
+  FileCode,
 } from 'lucide-react';
+import {
+  uploadFileToStorage,
+  checkSupabaseHealth,
+  SupabaseHealthStatus,
+  SUPABASE_URL,
+  COMPLETE_SUPABASE_SCHEMA_SQL,
+  fetchAdminFilesFromSupabase,
+  saveAdminFileToSupabase,
+  deleteAdminFileFromSupabase,
+} from '../lib/supabase';
 import { generateRegistrationListPDF } from '../utils/pdfGenerator';
 import { renderCardIcon } from './EventInformationSection';
 import { BkashLogo, NagadLogo } from './PaymentBrandLogos';
@@ -79,6 +98,7 @@ interface AdminPortalProps {
   onUpdateEventCards: (cards: EventCard[]) => void;
   jerseyShowcaseSettings?: JerseyShowcaseSettings;
   onUpdateJerseyShowcase?: (newSettings: JerseyShowcaseSettings) => void;
+  onEditRegistration?: (registrationNo: string, updates: Partial<InvitationRecord>) => void;
 }
 
 export const AdminPortal: React.FC<AdminPortalProps> = ({
@@ -99,6 +119,7 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
   onUpdateEventCards,
   jerseyShowcaseSettings = DEFAULT_JERSEY_SHOWCASE_SETTINGS,
   onUpdateJerseyShowcase,
+  onEditRegistration,
 }) => {
   const [passcode, setPasscode] = useState('');
   const [authError, setAuthError] = useState(false);
@@ -106,8 +127,22 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
 
   // Super Admin active section
   const [activeTab, setActiveTab] = useState<
-    'overview' | 'event_settings' | 'content' | 'builder' | 'cards' | 'jersey_showcase' | 'payment' | 'pdf' | 'registrations'
+    'overview' | 'event_settings' | 'content' | 'builder' | 'cards' | 'jersey_showcase' | 'payment' | 'pdf' | 'registrations' | 'database' | 'uploads'
   >('overview');
+
+  // Supabase Database & Health States
+  const [healthStatus, setHealthStatus] = useState<SupabaseHealthStatus | null>(null);
+  const [isCheckingHealth, setIsCheckingHealth] = useState(false);
+  const [copiedSql, setCopiedSql] = useState(false);
+
+  // Cloud Storage & Admin Files States
+  const [adminFiles, setAdminFiles] = useState<AdminFileItem[]>([]);
+  const [fileCategoryFilter, setFileCategoryFilter] = useState<string>('all');
+  const [isUploadingAdminFile, setIsUploadingAdminFile] = useState(false);
+  const [uploadTitle, setUploadTitle] = useState('');
+  const [uploadDescription, setUploadDescription] = useState('');
+  const [uploadCategory, setUploadCategory] = useState<AdminFileCategory>('certificate');
+  const [uploadFile, setUploadFile] = useState<File | null>(null);
 
   // Mobile drawer state
   const [isMobileDrawerOpen, setIsMobileDrawerOpen] = useState(false);
@@ -139,6 +174,77 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
       setLocalJerseyShowcase(jerseyShowcaseSettings);
     }
   }, [jerseyShowcaseSettings]);
+
+  // Load Supabase health & Admin files when portal is open
+  useEffect(() => {
+    if (isOpen && currentRole === 'super_admin') {
+      checkSupabaseHealth().then(setHealthStatus);
+      fetchAdminFilesFromSupabase().then(setAdminFiles);
+    }
+  }, [isOpen, currentRole]);
+
+  const handleRefreshHealth = async () => {
+    setIsCheckingHealth(true);
+    try {
+      const res = await checkSupabaseHealth();
+      setHealthStatus(res);
+      showSaveSuccess('Supabase connectivity & health status refreshed!');
+    } catch {
+      showSaveSuccess('Could not check Supabase status');
+    } finally {
+      setIsCheckingHealth(false);
+    }
+  };
+
+  const handleAdminFileUploadSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!uploadFile) {
+      showSaveSuccess('Please select a file to upload');
+      return;
+    }
+
+    setIsUploadingAdminFile(true);
+    try {
+      let folder: any = 'logos';
+      if (uploadCategory === 'certificate') folder = 'certificates';
+      else if (uploadCategory === 'resume') folder = 'resumes';
+      else if (uploadCategory === 'jersey') folder = 'jerseys';
+      else if (uploadCategory === 'banner') folder = 'banners';
+      else if (uploadCategory === 'invitation') folder = 'invitations';
+      else if (uploadCategory === 'project' || uploadCategory === 'skill') folder = 'projects';
+
+      const publicUrl = await uploadFileToStorage(uploadFile, folder);
+
+      const newFileItem: AdminFileItem = {
+        id: `file_${Date.now()}_${Math.random().toString(36).substring(2, 7)}`,
+        category: uploadCategory,
+        title: uploadTitle.trim() || uploadFile.name,
+        description: uploadDescription.trim(),
+        fileUrl: publicUrl,
+        fileName: uploadFile.name,
+        fileSize: `${(uploadFile.size / 1024).toFixed(1)} KB`,
+        fileType: uploadFile.type,
+        uploadedAt: new Date().toISOString(),
+      };
+
+      await saveAdminFileToSupabase(newFileItem);
+      setAdminFiles(prev => [newFileItem, ...prev.filter(f => f.id !== newFileItem.id)]);
+      setUploadTitle('');
+      setUploadDescription('');
+      setUploadFile(null);
+      showSaveSuccess(`${uploadCategory.toUpperCase()} uploaded to Supabase Storage & Database!`);
+    } catch (err: any) {
+      showSaveSuccess(`Upload failed: ${err?.message || 'Error'}`);
+    } finally {
+      setIsUploadingAdminFile(false);
+    }
+  };
+
+  const handleDeleteAdminFile = async (id: string) => {
+    await deleteAdminFileFromSupabase(id);
+    setAdminFiles(prev => prev.filter(f => f.id !== id));
+    showSaveSuccess('File deleted from database.');
+  };
 
   const handleSaveJerseyShowcase = (e?: React.FormEvent) => {
     if (e) e.preventDefault();
@@ -250,22 +356,100 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
     showSaveSuccess('Jersey order updated!');
   };
 
-  const handleJerseyImageUpload = (index: number, side: 'front' | 'back', file: File | null) => {
+  const handleJerseyImageUpload = async (index: number, side: 'front' | 'back', file: File | null) => {
     if (!file) return;
-    const reader = new FileReader();
-    reader.onloadend = () => {
-      const result = reader.result as string;
-      const field = side === 'front' ? 'frontImage' : 'backImage';
-      handleUpdateJersey(index, { [field]: result });
-      showSaveSuccess(`${side === 'front' ? 'Front' : 'Back'} jersey image updated instantly!`);
-    };
-    reader.readAsDataURL(file);
+    const publicUrl = await uploadFileToStorage(file, 'jerseys');
+    const field = side === 'front' ? 'frontImage' : 'backImage';
+    handleUpdateJersey(index, { [field]: publicUrl });
+    showSaveSuccess(`${side === 'front' ? 'Front' : 'Back'} jersey image uploaded to Supabase Storage!`);
   };
 
   // Search & Filters for Registrations
   const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState<'all' | 'pending' | 'approved' | 'rejected'>('all');
   const [groupFilter, setGroupFilter] = useState<'all' | 'Science' | 'Business Studies' | 'Humanities'>('all');
+
+  // Edit Registration Modal State
+  const [editingRegistration, setEditingRegistration] = useState<InvitationRecord | null>(null);
+
+  const handleSaveEditedRegistration = () => {
+    if (!editingRegistration) return;
+    if (onEditRegistration) {
+      onEditRegistration(editingRegistration.registrationNo, editingRegistration);
+    }
+    showSaveSuccess(`Registration ${editingRegistration.registrationNo} updated & saved in database!`);
+    setEditingRegistration(null);
+  };
+
+  const handleDownloadExcel = () => {
+    const list = getRoleFilteredRecords();
+    const headers = [
+      'Serial No',
+      'Registration No',
+      'Full Name',
+      'Roll',
+      'Student ID',
+      'Group',
+      'Section',
+      'Gender',
+      'Status',
+      'Contact Number',
+      'Payment Number',
+      'Payment Time',
+      'Transaction ID',
+      'Payment Method',
+      'Amount',
+      'Jersey Name',
+      'Jersey Number',
+      'Jersey Size',
+      'Seat Zone',
+      'Gate',
+      'Rejection Reason',
+      'Registration Date',
+    ];
+
+    const escapeCsv = (val: any) => {
+      if (val === null || val === undefined) return '""';
+      const str = String(val).replace(/"/g, '""');
+      return `"${str}"`;
+    };
+
+    const rows = list.map((r, i) => [
+      escapeCsv(r.serialNo || i + 1),
+      escapeCsv(r.registrationNo),
+      escapeCsv(r.name),
+      escapeCsv(r.roll),
+      escapeCsv(r.id),
+      escapeCsv(r.group),
+      escapeCsv(r.section),
+      escapeCsv(r.gender),
+      escapeCsv(r.status),
+      escapeCsv(r.contactNumber || ''),
+      escapeCsv(r.senderNumber || ''),
+      escapeCsv(r.paymentTime || ''),
+      escapeCsv(r.transactionId || ''),
+      escapeCsv(r.paymentMethod || 'bkash'),
+      escapeCsv(r.amount || localPayment.registrationFee || 500),
+      escapeCsv(r.jerseyName),
+      escapeCsv(r.jerseyNumber),
+      escapeCsv(r.jerseySize),
+      escapeCsv(r.seatZone || ''),
+      escapeCsv(r.gate || ''),
+      escapeCsv(r.rejectionReason || ''),
+      escapeCsv(r.issuedAt || r.createdAt || ''),
+    ]);
+
+    const csvContent = '\uFEFF' + [headers.join(','), ...rows.map(row => row.join(','))].join('\r\n');
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.setAttribute('download', `RD27_Registrations_${currentRole || 'All'}_${Date.now()}.csv`);
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    showSaveSuccess('Excel/CSV export downloaded successfully!');
+  };
 
   // Reject Reason Modal State
   const [rejectingRegNo, setRejectingRegNo] = useState<string | null>(null);
@@ -388,17 +572,13 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
   };
 
   // PDF Official Logo Handlers
-  const handlePdfLogoUpload = (file: File | null) => {
+  const handlePdfLogoUpload = async (file: File | null) => {
     if (!file) return;
-    const reader = new FileReader();
-    reader.onloadend = () => {
-      const result = reader.result as string;
-      const updated = { ...localPdf, pdfLogo: result };
-      setLocalPdf(updated);
-      onUpdatePdfSettings(updated);
-      showSaveSuccess();
-    };
-    reader.readAsDataURL(file);
+    const publicUrl = await uploadFileToStorage(file, 'logos', 'pdf_logo');
+    const updated = { ...localPdf, pdfLogo: publicUrl };
+    setLocalPdf(updated);
+    onUpdatePdfSettings(updated);
+    showSaveSuccess('PDF official logo uploaded to Supabase Storage!');
   };
 
   const handleRemovePdfLogo = () => {
@@ -447,16 +627,17 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
   };
 
   // Image Upload helper for Branding
-  const handleFileUpload = (field: keyof BrandingSettings, file: File | null) => {
+  const handleFileUpload = async (field: keyof BrandingSettings, file: File | null) => {
     if (!file) return;
-    const reader = new FileReader();
-    reader.onloadend = () => {
-      setLocalBranding(prev => ({
-        ...prev,
-        [field]: reader.result as string,
-      }));
+    const folder = field.includes('jersey') ? 'jerseys' : field.includes('banner') ? 'banners' : 'logos';
+    const publicUrl = await uploadFileToStorage(file, folder);
+    const updated = {
+      ...localBranding,
+      [field]: publicUrl,
     };
-    reader.readAsDataURL(file);
+    setLocalBranding(updated);
+    onUpdateBrandingSettings(updated);
+    showSaveSuccess(`${field} uploaded to Supabase Storage!`);
   };
 
   // Filtered registrations based on active role
@@ -963,6 +1144,48 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
                             <span className="w-2 h-2 rounded-full bg-emerald-400"></span>
                           )}
                         </button>
+
+                        {/* 7. Cloud Storage & Media Uploads */}
+                        <button
+                          type="button"
+                          onClick={() => setActiveTab('uploads')}
+                          className={`w-full flex items-center justify-between px-3 py-2.5 rounded-xl text-xs font-bold transition-all cursor-pointer ${
+                            activeTab === 'uploads'
+                              ? 'bg-indigo-600 text-white shadow-lg shadow-indigo-600/30'
+                              : 'text-slate-300 hover:bg-slate-800 hover:text-white'
+                          }`}
+                        >
+                          <div className="flex items-center gap-3">
+                            <Cloud className="w-4 h-4 text-cyan-400" />
+                            <span>Storage & Media</span>
+                          </div>
+                          <span className="px-2 py-0.5 rounded-full text-[10px] bg-slate-800 text-cyan-300 font-mono">
+                            {adminFiles.length}
+                          </span>
+                        </button>
+
+                        {/* 8. Supabase Database */}
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setActiveTab('database');
+                            checkSupabaseHealth().then(setHealthStatus);
+                          }}
+                          className={`w-full flex items-center justify-between px-3 py-2.5 rounded-xl text-xs font-bold transition-all cursor-pointer ${
+                            activeTab === 'database'
+                              ? 'bg-indigo-600 text-white shadow-lg shadow-indigo-600/30'
+                              : 'text-slate-300 hover:bg-slate-800 hover:text-white'
+                          }`}
+                        >
+                          <div className="flex items-center gap-3">
+                            <Database className="w-4 h-4 text-emerald-400" />
+                            <span>Supabase Database</span>
+                          </div>
+                          <span className="flex h-2 w-2 relative">
+                            <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+                            <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
+                          </span>
+                        </button>
                       </>
                     )}
                   </nav>
@@ -1183,6 +1406,45 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
                             {localPdf.pdfLogo && (
                               <span className="w-2 h-2 rounded-full bg-emerald-400"></span>
                             )}
+                          </button>
+
+                          <button
+                            onClick={() => {
+                              setActiveTab('uploads');
+                              setIsMobileDrawerOpen(false);
+                            }}
+                            className={`w-full flex items-center justify-between px-3 py-3 rounded-xl text-xs font-bold transition-all ${
+                              activeTab === 'uploads'
+                                ? 'bg-indigo-600 text-white'
+                                : 'text-slate-300 hover:bg-slate-800'
+                            }`}
+                          >
+                            <div className="flex items-center gap-3">
+                              <Cloud className="w-4 h-4 text-cyan-400" />
+                              <span>Storage & Media</span>
+                            </div>
+                            <span className="px-2 py-0.5 rounded-full text-[10px] bg-slate-800 text-cyan-300 font-mono">
+                              {adminFiles.length}
+                            </span>
+                          </button>
+
+                          <button
+                            onClick={() => {
+                              setActiveTab('database');
+                              checkSupabaseHealth().then(setHealthStatus);
+                              setIsMobileDrawerOpen(false);
+                            }}
+                            className={`w-full flex items-center justify-between px-3 py-3 rounded-xl text-xs font-bold transition-all ${
+                              activeTab === 'database'
+                                ? 'bg-indigo-600 text-white'
+                                : 'text-slate-300 hover:bg-slate-800'
+                            }`}
+                          >
+                            <div className="flex items-center gap-3">
+                              <Database className="w-4 h-4 text-emerald-400" />
+                              <span>Supabase Database</span>
+                            </div>
+                            <span className="w-2 h-2 rounded-full bg-emerald-400"></span>
                           </button>
                         </>
                       )}
@@ -1468,10 +1730,19 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
                       <button
                         type="button"
                         onClick={handleDownloadPDF}
-                        className="px-3 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold flex items-center gap-1.5 transition-colors cursor-pointer"
+                        className="px-3 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold flex items-center gap-1.5 transition-colors cursor-pointer shadow-xs"
                       >
                         <Download className="w-3.5 h-3.5" />
                         <span>Download PDF</span>
+                      </button>
+
+                      <button
+                        type="button"
+                        onClick={handleDownloadExcel}
+                        className="px-3 py-2 rounded-xl bg-teal-600 hover:bg-teal-700 text-white text-xs font-bold flex items-center gap-1.5 transition-colors cursor-pointer shadow-xs"
+                      >
+                        <FileSpreadsheet className="w-3.5 h-3.5" />
+                        <span>Download Excel</span>
                       </button>
                     </div>
                   </div>
@@ -1494,9 +1765,10 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
                     </div>
 
                     <div className="overflow-x-auto w-full">
-                      <table className="w-full text-left text-xs min-w-[1020px]">
+                      <table className="w-full text-left text-xs min-w-[1080px]">
                         <thead className="bg-slate-100/90 text-slate-700 font-bold uppercase tracking-wider text-[11px] border-b border-slate-200">
                           <tr>
+                            <th className="py-3 px-3 whitespace-nowrap">SL #</th>
                             <th className="py-3 px-3.5 whitespace-nowrap">Reg No</th>
                             <th className="py-3 px-3.5 whitespace-nowrap">Name</th>
                             <th className="py-3 px-3 whitespace-nowrap">Roll</th>
@@ -1513,13 +1785,13 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
                         <tbody className="divide-y divide-slate-100 text-slate-700">
                           {filteredRegistrations.length === 0 ? (
                             <tr>
-                              <td colSpan={11} className="py-12 text-center text-slate-400">
+                              <td colSpan={12} className="py-12 text-center text-slate-400">
                                 <Users className="w-8 h-8 text-slate-300 mx-auto mb-2" />
                                 No registrations match your search or filter criteria.
                               </td>
                             </tr>
                           ) : (
-                            filteredRegistrations.map(record => {
+                            filteredRegistrations.map((record, idx) => {
                               const paymentNumber = record.senderNumber || '—';
                               const paymentTime = record.paymentTime || '—';
                               const hasTrx = record.transactionId && record.transactionId.trim() !== '';
@@ -1529,6 +1801,11 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
                                   key={record.registrationNo}
                                   className="hover:bg-indigo-50/40 transition-colors group"
                                 >
+                                  {/* 0. Serial No (Separate from Registration No) */}
+                                  <td className="py-3 px-3 font-mono text-slate-500 whitespace-nowrap">
+                                    #{record.serialNo || idx + 1}
+                                  </td>
+
                                   {/* 1. Reg No */}
                                   <td className="py-3 px-3.5 font-mono font-bold text-indigo-600 whitespace-nowrap">
                                     {record.registrationNo}
@@ -1636,6 +1913,16 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
                                         className="w-8 h-8 rounded-xl flex items-center justify-center bg-rose-500/15 text-rose-600 border border-rose-500/30 hover:bg-rose-500/25 hover:border-rose-500/50 active:scale-95 shadow-[0_2px_8px_rgba(244,63,94,0.18)] hover:shadow-[0_4px_12px_rgba(244,63,94,0.30)] backdrop-blur-md transition-all duration-200 cursor-pointer"
                                       >
                                         <X className="w-4 h-4 stroke-[2.5]" />
+                                      </button>
+
+                                      {/* Edit: Glassmorphism Indigo Icon */}
+                                      <button
+                                        type="button"
+                                        onClick={() => setEditingRegistration({ ...record })}
+                                        title="Edit Registration Details"
+                                        className="w-8 h-8 rounded-xl flex items-center justify-center bg-indigo-500/15 text-indigo-600 border border-indigo-500/30 hover:bg-indigo-500/25 hover:border-indigo-500/50 active:scale-95 shadow-[0_2px_8px_rgba(99,102,241,0.18)] hover:shadow-[0_4px_12px_rgba(99,102,241,0.30)] backdrop-blur-md transition-all duration-200 cursor-pointer"
+                                      >
+                                        <Edit className="w-3.5 h-3.5 stroke-[2.2]" />
                                       </button>
 
                                       {/* Delete: Glassmorphism Gray Icon (Only available after rejection) */}
@@ -3749,6 +4036,594 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
                   </div>
                 </div>
               )}
+
+              {/* ======================================================== */}
+              {/* SECTION 8: CLOUD STORAGE & ADMIN FILES (Super Admin) */}
+              {/* Requirements: Logo, Banner, Jersey, Certificates, Resume, Cards */}
+              {/* ======================================================== */}
+              {currentRole === 'super_admin' && activeTab === 'uploads' && (
+                <div className="max-w-5xl mx-auto space-y-6">
+                  {/* Top Header */}
+                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-slate-200">
+                    <div>
+                      <h3 className="font-display text-lg font-extrabold text-slate-900 flex items-center gap-2">
+                        <Cloud className="w-5 h-5 text-indigo-600" />
+                        <span>Supabase Storage & Document Manager</span>
+                      </h3>
+                      <p className="text-xs text-slate-500">
+                        Upload and manage certificates, student resumes, jersey artwork, banners, and logos stored permanently in Supabase.
+                      </p>
+                    </div>
+
+                    <div className="flex items-center gap-2">
+                      <span className="px-2.5 py-1 rounded-full text-xs font-bold bg-cyan-50 text-cyan-700 border border-cyan-200">
+                        Bucket: uploads
+                      </span>
+                      <span className="px-2.5 py-1 rounded-full text-xs font-bold bg-indigo-50 text-indigo-700 border border-indigo-200 font-mono">
+                        {adminFiles.length} Total Files
+                      </span>
+                    </div>
+                  </div>
+
+                  {/* Upload Form Card */}
+                  <div className="p-5 sm:p-6 rounded-3xl bg-white border border-slate-200 shadow-sm space-y-4">
+                    <div className="flex items-center gap-2 pb-2 border-b border-slate-100">
+                      <Upload className="w-4 h-4 text-indigo-600" />
+                      <h4 className="font-display text-sm font-bold text-slate-900">
+                        Upload New File to Supabase Storage
+                      </h4>
+                    </div>
+
+                    <form onSubmit={handleAdminFileUploadSubmit} className="space-y-4">
+                      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                        <div>
+                          <label className="block text-xs font-bold uppercase text-slate-700 mb-1">
+                            File Category <span className="text-rose-500">*</span>
+                          </label>
+                          <select
+                            value={uploadCategory}
+                            onChange={e => setUploadCategory(e.target.value as AdminFileCategory)}
+                            className="w-full px-3 py-2.5 rounded-xl text-xs bg-slate-50 border border-slate-200 text-slate-900 outline-none focus:border-indigo-600 focus:bg-white"
+                          >
+                            <option value="certificate">Certificate (Award / Event)</option>
+                            <option value="resume">Resume / CV Document</option>
+                            <option value="logo">Brand Logo / Favicon</option>
+                            <option value="banner">Banner / Poster Graphic</option>
+                            <option value="jersey">Jersey Graphic / Mockup</option>
+                            <option value="invitation">Invitation Card Pass</option>
+                            <option value="project">Project / Milestone Asset</option>
+                            <option value="skill">Skill / Talent Asset</option>
+                          </select>
+                        </div>
+
+                        <div>
+                          <label className="block text-xs font-bold uppercase text-slate-700 mb-1">
+                            Title / Document Label <span className="text-rose-500">*</span>
+                          </label>
+                          <input
+                            type="text"
+                            placeholder="e.g. Official Convener Certificate 2027"
+                            value={uploadTitle}
+                            onChange={e => setUploadTitle(e.target.value)}
+                            className="w-full px-3 py-2.5 rounded-xl text-xs bg-slate-50 border border-slate-200 text-slate-900 outline-none focus:border-indigo-600 focus:bg-white"
+                          />
+                        </div>
+
+                        <div>
+                          <label className="block text-xs font-bold uppercase text-slate-700 mb-1">
+                            Short Note / Description
+                          </label>
+                          <input
+                            type="text"
+                            placeholder="Optional notes or details..."
+                            value={uploadDescription}
+                            onChange={e => setUploadDescription(e.target.value)}
+                            className="w-full px-3 py-2.5 rounded-xl text-xs bg-slate-50 border border-slate-200 text-slate-900 outline-none focus:border-indigo-600 focus:bg-white"
+                          />
+                        </div>
+                      </div>
+
+                      {/* File Selector */}
+                      <div className="border-2 border-dashed border-slate-200 rounded-2xl p-4 text-center hover:border-indigo-400 transition-colors bg-slate-50/50">
+                        <input
+                          type="file"
+                          id="adminFileUploadInput"
+                          className="hidden"
+                          onChange={e => {
+                            const f = e.target.files?.[0] || null;
+                            setUploadFile(f);
+                            if (f && !uploadTitle) {
+                              setUploadTitle(f.name.replace(/\.[^/.]+$/, ''));
+                            }
+                          }}
+                        />
+                        <label
+                          htmlFor="adminFileUploadInput"
+                          className="flex flex-col items-center justify-center gap-2 cursor-pointer"
+                        >
+                          <div className="w-10 h-10 rounded-full bg-indigo-50 text-indigo-600 flex items-center justify-center">
+                            <Upload className="w-5 h-5" />
+                          </div>
+                          <div>
+                            <span className="text-xs font-bold text-indigo-600 hover:text-indigo-700">
+                              Click to choose file
+                            </span>
+                            <span className="text-xs text-slate-500"> or drag and drop here</span>
+                          </div>
+                          <p className="text-[11px] text-slate-400">
+                            Supports Images (PNG, JPG, WEBP, SVG), PDFs, DOCX, ZIP up to 50MB
+                          </p>
+                        </label>
+
+                        {uploadFile && (
+                          <div className="mt-3 inline-flex items-center gap-2 px-3 py-1.5 rounded-xl bg-indigo-50 border border-indigo-200 text-xs text-indigo-900 font-medium">
+                            <Check className="w-3.5 h-3.5 text-emerald-600" />
+                            <span className="font-bold">{uploadFile.name}</span>
+                            <span className="text-indigo-600 text-[10px]">
+                              ({(uploadFile.size / 1024).toFixed(1)} KB)
+                            </span>
+                            <button
+                              type="button"
+                              onClick={() => setUploadFile(null)}
+                              className="text-slate-400 hover:text-rose-600 ml-1"
+                            >
+                              <X className="w-3.5 h-3.5" />
+                            </button>
+                          </div>
+                        )}
+                      </div>
+
+                      <div className="flex justify-end">
+                        <button
+                          type="submit"
+                          disabled={!uploadFile || isUploadingAdminFile}
+                          className="px-6 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs shadow-md shadow-indigo-600/30 transition-all flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
+                        >
+                          {isUploadingAdminFile ? (
+                            <>
+                              <RefreshCw className="w-4 h-4 animate-spin" />
+                              <span>Uploading to Supabase...</span>
+                            </>
+                          ) : (
+                            <>
+                              <Upload className="w-4 h-4" />
+                              <span>Upload to Supabase Storage</span>
+                            </>
+                          )}
+                        </button>
+                      </div>
+                    </form>
+                  </div>
+
+                  {/* Filter Pills */}
+                  <div className="flex items-center gap-1.5 overflow-x-auto pb-1">
+                    {[
+                      { key: 'all', label: 'All Files' },
+                      { key: 'certificate', label: 'Certificates' },
+                      { key: 'resume', label: 'Resumes' },
+                      { key: 'logo', label: 'Logos' },
+                      { key: 'banner', label: 'Banners' },
+                      { key: 'jersey', label: 'Jerseys' },
+                      { key: 'invitation', label: 'Invitations' },
+                      { key: 'project', label: 'Projects' },
+                      { key: 'skill', label: 'Skills' },
+                    ].map(f => (
+                      <button
+                        key={f.key}
+                        type="button"
+                        onClick={() => setFileCategoryFilter(f.key)}
+                        className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all shrink-0 cursor-pointer ${
+                          fileCategoryFilter === f.key
+                            ? 'bg-slate-900 text-white shadow-sm'
+                            : 'bg-white text-slate-600 border border-slate-200 hover:bg-slate-50'
+                        }`}
+                      >
+                        {f.label}
+                      </button>
+                    ))}
+                  </div>
+
+                  {/* Files Grid */}
+                  {adminFiles.filter(
+                    f => fileCategoryFilter === 'all' || f.category === fileCategoryFilter
+                  ).length === 0 ? (
+                    <div className="text-center py-12 rounded-3xl bg-white border border-slate-200 p-8">
+                      <Cloud className="w-10 h-10 text-slate-300 mx-auto mb-2" />
+                      <h4 className="text-sm font-bold text-slate-700">No files in this category</h4>
+                      <p className="text-xs text-slate-400 mt-1 max-w-sm mx-auto">
+                        Upload certificates, resume documents, jersey graphics, or logos using the form above.
+                      </p>
+                    </div>
+                  ) : (
+                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                      {adminFiles
+                        .filter(f => fileCategoryFilter === 'all' || f.category === fileCategoryFilter)
+                        .map(file => {
+                          const isImage =
+                            file.fileUrl.startsWith('data:image') ||
+                            /\.(png|jpe?g|webp|gif|svg)$/i.test(file.fileUrl) ||
+                            file.fileType?.startsWith('image/');
+
+                          return (
+                            <div
+                              key={file.id}
+                              className="p-4 rounded-2xl bg-white border border-slate-200 shadow-sm hover:shadow-md transition-shadow flex flex-col justify-between space-y-3"
+                            >
+                              <div className="space-y-2">
+                                <div className="flex items-center justify-between">
+                                  <span className="px-2 py-0.5 rounded-md text-[10px] font-bold uppercase tracking-wider bg-indigo-50 text-indigo-700 border border-indigo-100">
+                                    {file.category}
+                                  </span>
+                                  {file.fileSize && (
+                                    <span className="text-[10px] text-slate-400 font-mono">
+                                      {file.fileSize}
+                                    </span>
+                                  )}
+                                </div>
+
+                                {/* Preview Thumbnail */}
+                                <div className="h-32 rounded-xl bg-slate-50 border border-slate-100 overflow-hidden flex items-center justify-center relative group">
+                                  {isImage ? (
+                                    <img
+                                      src={file.fileUrl}
+                                      alt={file.title}
+                                      className="w-full h-full object-cover"
+                                    />
+                                  ) : (
+                                    <div className="flex flex-col items-center justify-center text-slate-400 gap-1.5 p-3 text-center">
+                                      <FileText className="w-8 h-8 text-indigo-500" />
+                                      <span className="text-[11px] font-bold text-slate-700 truncate max-w-[180px]">
+                                        {file.fileName || file.title}
+                                      </span>
+                                    </div>
+                                  )}
+                                </div>
+
+                                <div>
+                                  <h5 className="font-display text-xs font-bold text-slate-900 truncate">
+                                    {file.title}
+                                  </h5>
+                                  {file.description && (
+                                    <p className="text-[11px] text-slate-500 line-clamp-2 mt-0.5">
+                                      {file.description}
+                                    </p>
+                                  )}
+                                </div>
+                              </div>
+
+                              <div className="pt-2 border-t border-slate-100 flex items-center justify-between text-xs">
+                                <button
+                                  type="button"
+                                  onClick={() => {
+                                    navigator.clipboard.writeText(file.fileUrl);
+                                    showSaveSuccess('Public file URL copied to clipboard!');
+                                  }}
+                                  className="text-indigo-600 hover:text-indigo-800 font-semibold inline-flex items-center gap-1 cursor-pointer"
+                                >
+                                  <Copy className="w-3.5 h-3.5" />
+                                  <span>Copy URL</span>
+                                </button>
+
+                                <div className="flex items-center gap-1.5">
+                                  <a
+                                    href={file.fileUrl}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    download={file.fileName || file.title}
+                                    className="p-1.5 rounded-lg text-slate-500 hover:text-slate-900 hover:bg-slate-100"
+                                    title="Open / Download"
+                                  >
+                                    <ExternalLink className="w-3.5 h-3.5" />
+                                  </a>
+                                  <button
+                                    type="button"
+                                    onClick={() => handleDeleteAdminFile(file.id)}
+                                    className="p-1.5 rounded-lg text-rose-400 hover:text-rose-600 hover:bg-rose-50"
+                                    title="Delete from Supabase"
+                                  >
+                                    <Trash2 className="w-3.5 h-3.5" />
+                                  </button>
+                                </div>
+                              </div>
+                            </div>
+                          );
+                        })}
+                    </div>
+                  )}
+                </div>
+              )}
+
+              {/* ======================================================== */}
+              {/* SECTION 9: SUPABASE DATABASE & LIVE HEALTH (Super Admin) */}
+              {/* ======================================================== */}
+              {currentRole === 'super_admin' && activeTab === 'database' && (
+                <div className="max-w-5xl mx-auto space-y-6">
+                  {/* Top Header */}
+                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-slate-200">
+                    <div>
+                      <h3 className="font-display text-lg font-extrabold text-slate-900 flex items-center gap-2">
+                        <Database className="w-5 h-5 text-emerald-600" />
+                        <span>Supabase Database & Cloud Storage Manager</span>
+                      </h3>
+                      <p className="text-xs text-slate-500">
+                        Primary storage connection, table schemas, live health checks, and Row-Level Security (RLS).
+                      </p>
+                    </div>
+
+                    <button
+                      type="button"
+                      onClick={handleRefreshHealth}
+                      disabled={isCheckingHealth}
+                      className="px-4 py-2 rounded-xl bg-slate-900 hover:bg-slate-800 text-white text-xs font-bold shadow transition-all flex items-center gap-2 cursor-pointer self-start sm:self-auto"
+                    >
+                      <RefreshCw className={`w-3.5 h-3.5 ${isCheckingHealth ? 'animate-spin' : ''}`} />
+                      <span>{isCheckingHealth ? 'Checking...' : 'Refresh Status'}</span>
+                    </button>
+                  </div>
+
+                  {/* Supabase Connection Details Card */}
+                  <div className="p-5 sm:p-6 rounded-3xl bg-white border border-slate-200 shadow-sm space-y-4">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-2.5">
+                        <span className="relative flex h-3 w-3">
+                          <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+                          <span className="relative inline-flex rounded-full h-3 w-3 bg-emerald-500"></span>
+                        </span>
+                        <h4 className="font-display text-sm font-bold text-slate-900">
+                          Connected to Supabase Project
+                        </h4>
+                      </div>
+
+                      <a
+                        href="https://supabase.com/dashboard/project/rqjlrbteaqjpgwkeomro"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="inline-flex items-center gap-1.5 text-xs font-bold text-indigo-600 hover:text-indigo-800 bg-indigo-50 px-3 py-1.5 rounded-xl border border-indigo-200"
+                      >
+                        <span>Open Supabase Dashboard</span>
+                        <ExternalLink className="w-3.5 h-3.5" />
+                      </a>
+                    </div>
+
+                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 pt-2">
+                      <div className="p-3.5 rounded-2xl bg-slate-50 border border-slate-200">
+                        <span className="text-[10px] uppercase font-bold text-slate-400 block mb-1">
+                          Project URL
+                        </span>
+                        <div className="flex items-center justify-between">
+                          <span className="text-xs font-mono font-bold text-slate-800 truncate mr-2">
+                            {SUPABASE_URL}
+                          </span>
+                          <button
+                            type="button"
+                            onClick={() => {
+                              navigator.clipboard.writeText(SUPABASE_URL);
+                              showSaveSuccess('Supabase URL copied!');
+                            }}
+                            className="p-1 rounded text-slate-400 hover:text-indigo-600 hover:bg-slate-200"
+                          >
+                            <Copy className="w-3.5 h-3.5" />
+                          </button>
+                        </div>
+                      </div>
+
+                      <div className="p-3.5 rounded-2xl bg-slate-50 border border-slate-200">
+                        <span className="text-[10px] uppercase font-bold text-slate-400 block mb-1">
+                          Project ID
+                        </span>
+                        <div className="flex items-center justify-between">
+                          <span className="text-xs font-mono font-bold text-slate-800">
+                            rqjlrbteaqjpgwkeomro
+                          </span>
+                          <button
+                            type="button"
+                            onClick={() => {
+                              navigator.clipboard.writeText('rqjlrbteaqjpgwkeomro');
+                              showSaveSuccess('Project ID copied!');
+                            }}
+                            className="p-1 rounded text-slate-400 hover:text-indigo-600 hover:bg-slate-200"
+                          >
+                            <Copy className="w-3.5 h-3.5" />
+                          </button>
+                        </div>
+                      </div>
+
+                      <div className="p-3.5 rounded-2xl bg-slate-50 border border-slate-200 sm:col-span-2 lg:col-span-1">
+                        <span className="text-[10px] uppercase font-bold text-slate-400 block mb-1">
+                          Publishable Key
+                        </span>
+                        <div className="flex items-center justify-between">
+                          <span className="text-xs font-mono font-bold text-slate-800 truncate mr-2">
+                            sb_publishable_BcoEce...
+                          </span>
+                          <button
+                            type="button"
+                            onClick={() => {
+                              navigator.clipboard.writeText('sb_publishable_BcoEceXY8X9BxifFSMRjoA_neWVF9wb');
+                              showSaveSuccess('Publishable key copied!');
+                            }}
+                            className="p-1 rounded text-slate-400 hover:text-indigo-600 hover:bg-slate-200"
+                          >
+                            <Copy className="w-3.5 h-3.5" />
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Tables & Storage Health Grid */}
+                  <div className="space-y-3">
+                    <h4 className="font-display text-sm font-bold text-slate-900 flex items-center justify-between">
+                      <span>Database Tables & Storage Bucket Health</span>
+                      <span className="text-xs font-normal text-slate-500">
+                        Total Registrations in Session: {invitations.length}
+                      </span>
+                    </h4>
+
+                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+                      {[
+                        {
+                          name: 'registrations',
+                          label: 'Student Registrations',
+                          desc: 'Sequential Serials & Unique RD27-xxx Numbers',
+                          online: healthStatus?.registrationsTable ?? true,
+                          count: `${invitations.length} Records`,
+                        },
+                        {
+                          name: 'event_settings',
+                          label: 'Event & Countdown Settings',
+                          desc: 'Event Date, Time, Venue, Live Countdown',
+                          online: healthStatus?.eventSettingsTable ?? true,
+                          count: 'Synchronized',
+                        },
+                        {
+                          name: 'branding_settings',
+                          label: 'Branding & Graphics',
+                          desc: 'Logos, Favicon, Hero Banner, Jersey Art',
+                          online: healthStatus?.brandingSettingsTable ?? true,
+                          count: 'Synchronized',
+                        },
+                        {
+                          name: 'payment_settings',
+                          label: 'Payment Configuration',
+                          desc: 'bKash, Nagad Numbers & Fee Amounts',
+                          online: healthStatus?.paymentSettingsTable ?? true,
+                          count: `${localPayment.registrationFee} ${localPayment.currency}`,
+                        },
+                        {
+                          name: 'pdf_settings',
+                          label: 'PDF & Ledger Settings',
+                          desc: 'Watermarks, Official Stamps & Pass Templates',
+                          online: healthStatus?.pdfSettingsTable ?? true,
+                          count: 'Synchronized',
+                        },
+                        {
+                          name: 'event_cards',
+                          label: 'Event Information Cards',
+                          desc: 'Interactive Homepage Cards & Display Orders',
+                          online: healthStatus?.eventCardsTable ?? true,
+                          count: `${localCards.length} Cards`,
+                        },
+                        {
+                          name: 'jersey_showcase',
+                          label: 'Jersey Showcase Kits',
+                          desc: 'Custom Batch Jerseys, Carousel & Reordering',
+                          online: healthStatus?.jerseyShowcaseTable ?? true,
+                          count: `${localJerseyShowcase.jerseys.length} Kits`,
+                        },
+                        {
+                          name: 'admin_files',
+                          label: 'Admin Files & Documents',
+                          desc: 'Certificates, Resumes, Logos & Badges',
+                          online: healthStatus?.adminFilesTable ?? true,
+                          count: `${adminFiles.length} Uploads`,
+                        },
+                        {
+                          name: 'storage: uploads',
+                          label: 'Supabase Storage Bucket',
+                          desc: 'Public Bucket for Student Photos & Media Assets',
+                          online: healthStatus?.storageBucket ?? true,
+                          count: 'Public CDN Active',
+                        },
+                      ].map(item => (
+                        <div
+                          key={item.name}
+                          className="p-4 rounded-2xl bg-white border border-slate-200 shadow-sm flex flex-col justify-between"
+                        >
+                          <div className="flex items-start justify-between mb-2">
+                            <span className="font-mono text-xs font-bold text-slate-800">
+                              {item.name}
+                            </span>
+                            <span
+                              className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold ${
+                                item.online
+                                  ? 'bg-emerald-50 text-emerald-700 border border-emerald-200'
+                                  : 'bg-amber-50 text-amber-700 border border-amber-200'
+                              }`}
+                            >
+                              <span
+                                className={`w-1.5 h-1.5 rounded-full ${
+                                  item.online ? 'bg-emerald-500' : 'bg-amber-500'
+                                }`}
+                              />
+                              {item.online ? 'Ready / Active' : 'Pending SQL'}
+                            </span>
+                          </div>
+                          <div>
+                            <div className="text-xs font-bold text-slate-900">{item.label}</div>
+                            <div className="text-[11px] text-slate-500 mt-0.5">{item.desc}</div>
+                          </div>
+                          <div className="mt-3 pt-2 border-t border-slate-100 text-[11px] font-mono text-indigo-600 font-semibold">
+                            {item.count}
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* SQL Schema Script Setup Section */}
+                  <div className="p-5 sm:p-6 rounded-3xl bg-white border border-slate-200 shadow-sm space-y-4">
+                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-slate-100">
+                      <div>
+                        <h4 className="font-display text-sm font-bold text-slate-900 flex items-center gap-2">
+                          <Terminal className="w-4 h-4 text-indigo-600" />
+                          <span>Supabase Database Schema Setup (1-Click SQL)</span>
+                        </h4>
+                        <p className="text-xs text-slate-500 mt-0.5">
+                          Run this SQL once in your Supabase Dashboard to automatically create all tables, indexes, RLS policies, and storage buckets.
+                        </p>
+                      </div>
+
+                      <div className="flex items-center gap-2">
+                        <button
+                          type="button"
+                          onClick={() => {
+                            navigator.clipboard.writeText(COMPLETE_SUPABASE_SCHEMA_SQL);
+                            setCopiedSql(true);
+                            showSaveSuccess('Complete SQL schema copied to clipboard!');
+                            setTimeout(() => setCopiedSql(false), 3000);
+                          }}
+                          className="px-4 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs shadow-md shadow-indigo-600/30 transition-all flex items-center gap-1.5 cursor-pointer"
+                        >
+                          {copiedSql ? <Check className="w-3.5 h-3.5" /> : <Copy className="w-3.5 h-3.5" />}
+                          <span>{copiedSql ? 'Copied SQL!' : 'Copy Complete SQL'}</span>
+                        </button>
+
+                        <a
+                          href="https://supabase.com/dashboard/project/rqjlrbteaqjpgwkeomro/sql"
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="px-4 py-2 rounded-xl bg-slate-900 hover:bg-slate-800 text-white font-bold text-xs transition-all flex items-center gap-1.5"
+                        >
+                          <span>Open Supabase SQL Editor</span>
+                          <ExternalLink className="w-3.5 h-3.5" />
+                        </a>
+                      </div>
+                    </div>
+
+                    {/* Step-by-step instructions */}
+                    <div className="p-4 rounded-2xl bg-indigo-50/60 border border-indigo-100 text-xs text-indigo-950 space-y-1.5">
+                      <div className="font-bold flex items-center gap-1.5">
+                        <Sparkles className="w-3.5 h-3.5 text-indigo-600" />
+                        <span>How to run in Supabase (Takes less than 15 seconds):</span>
+                      </div>
+                      <ol className="list-decimal list-inside space-y-1 text-slate-700 text-xs ml-1">
+                        <li>Click <strong>Copy Complete SQL</strong> above.</li>
+                        <li>Click <strong>Open Supabase SQL Editor</strong> to open your project dashboard.</li>
+                        <li>Click <strong>New query</strong>, paste the copied SQL script, and click <strong>Run</strong>.</li>
+                        <li>Return here and click <strong>Refresh Status</strong> — all status badges will turn green!</li>
+                      </ol>
+                    </div>
+
+                    {/* SQL Code Box */}
+                    <div className="relative rounded-2xl bg-slate-950 text-slate-300 font-mono text-xs p-4 overflow-x-auto max-h-72 border border-slate-800">
+                      <pre className="leading-relaxed whitespace-pre font-mono text-[11px]">
+                        {COMPLETE_SUPABASE_SCHEMA_SQL}
+                      </pre>
+                    </div>
+                  </div>
+                </div>
+              )}
             </main>
           </div>
         </div>
@@ -4055,6 +4930,393 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
                 Save Card
               </button>
             </div>
+          </div>
+        </div>
+      )}
+
+      {/* ======================================================== */}
+      {/* MODAL 4: EDIT REGISTRATION DETAILS MODAL */}
+      {/* ======================================================== */}
+      {editingRegistration && (
+        <div className="fixed inset-0 z-[90] flex items-center justify-center p-3 sm:p-4 bg-slate-950/80 backdrop-blur-md overflow-y-auto">
+          <div className="w-full max-w-2xl max-h-[90vh] bg-white rounded-3xl p-5 sm:p-6 shadow-2xl border border-slate-200 overflow-y-auto animate-scaleIn space-y-4">
+            <div className="flex items-center justify-between pb-3 border-b border-slate-100">
+              <div>
+                <div className="flex items-center gap-2">
+                  <Edit className="w-4 h-4 text-indigo-600" />
+                  <h3 className="font-display text-base font-extrabold text-slate-900">
+                    Edit Registration Details
+                  </h3>
+                  <span className="px-2 py-0.5 rounded-full text-[11px] font-mono font-bold bg-indigo-50 text-indigo-700 border border-indigo-200">
+                    {editingRegistration.registrationNo}
+                  </span>
+                </div>
+                <p className="text-xs text-slate-500 mt-0.5">
+                  Update student details, jersey choices, or payment verification directly in Supabase.
+                </p>
+              </div>
+
+              <button
+                type="button"
+                onClick={() => setEditingRegistration(null)}
+                className="p-1 rounded-lg text-slate-400 hover:text-slate-700 hover:bg-slate-100"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            <form
+              onSubmit={e => {
+                e.preventDefault();
+                handleSaveEditedRegistration();
+              }}
+              className="space-y-4"
+            >
+              {/* 1. Student Personal Information */}
+              <div className="space-y-2">
+                <span className="text-xs font-bold text-slate-800 uppercase tracking-wider block">
+                  1. Student Information
+                </span>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  <div>
+                    <label className="block text-[11px] font-bold uppercase text-slate-600 mb-1">
+                      Full Name
+                    </label>
+                    <input
+                      type="text"
+                      value={editingRegistration.name}
+                      onChange={e =>
+                        setEditingRegistration({ ...editingRegistration, name: e.target.value })
+                      }
+                      className="w-full px-3 py-2 rounded-xl text-xs bg-slate-50 border border-slate-200 text-slate-900 outline-none focus:border-indigo-600 focus:bg-white"
+                      required
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-[11px] font-bold uppercase text-slate-600 mb-1">
+                      Gender
+                    </label>
+                    <select
+                      value={editingRegistration.gender}
+                      onChange={e =>
+                        setEditingRegistration({
+                          ...editingRegistration,
+                          gender: e.target.value as 'male' | 'female',
+                        })
+                      }
+                      className="w-full px-3 py-2 rounded-xl text-xs bg-slate-50 border border-slate-200 text-slate-900 outline-none focus:border-indigo-600 focus:bg-white"
+                    >
+                      <option value="male">Male</option>
+                      <option value="female">Female</option>
+                    </select>
+                  </div>
+
+                  <div>
+                    <label className="block text-[11px] font-bold uppercase text-slate-600 mb-1">
+                      Roll Number
+                    </label>
+                    <input
+                      type="text"
+                      value={editingRegistration.roll}
+                      onChange={e =>
+                        setEditingRegistration({ ...editingRegistration, roll: e.target.value })
+                      }
+                      className="w-full px-3 py-2 rounded-xl text-xs bg-slate-50 border border-slate-200 text-slate-900 outline-none focus:border-indigo-600 focus:bg-white"
+                      required
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-[11px] font-bold uppercase text-slate-600 mb-1">
+                      Student ID
+                    </label>
+                    <input
+                      type="text"
+                      value={editingRegistration.id}
+                      onChange={e =>
+                        setEditingRegistration({ ...editingRegistration, id: e.target.value })
+                      }
+                      className="w-full px-3 py-2 rounded-xl text-xs bg-slate-50 border border-slate-200 text-slate-900 outline-none focus:border-indigo-600 focus:bg-white"
+                      required
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-[11px] font-bold uppercase text-slate-600 mb-1">
+                      Group
+                    </label>
+                    <select
+                      value={editingRegistration.group}
+                      onChange={e =>
+                        setEditingRegistration({ ...editingRegistration, group: e.target.value })
+                      }
+                      className="w-full px-3 py-2 rounded-xl text-xs bg-slate-50 border border-slate-200 text-slate-900 outline-none focus:border-indigo-600 focus:bg-white"
+                    >
+                      <option value="Science">Science</option>
+                      <option value="Business Studies">Business Studies</option>
+                      <option value="Humanities">Humanities</option>
+                    </select>
+                  </div>
+
+                  <div>
+                    <label className="block text-[11px] font-bold uppercase text-slate-600 mb-1">
+                      Section
+                    </label>
+                    <input
+                      type="text"
+                      value={editingRegistration.section}
+                      onChange={e =>
+                        setEditingRegistration({ ...editingRegistration, section: e.target.value })
+                      }
+                      className="w-full px-3 py-2 rounded-xl text-xs bg-slate-50 border border-slate-200 text-slate-900 outline-none focus:border-indigo-600 focus:bg-white"
+                      required
+                    />
+                  </div>
+
+                  <div className="sm:col-span-2">
+                    <label className="block text-[11px] font-bold uppercase text-slate-600 mb-1">
+                      Contact Number
+                    </label>
+                    <input
+                      type="text"
+                      value={editingRegistration.contactNumber || ''}
+                      onChange={e =>
+                        setEditingRegistration({
+                          ...editingRegistration,
+                          contactNumber: e.target.value,
+                        })
+                      }
+                      className="w-full px-3 py-2 rounded-xl text-xs bg-slate-50 border border-slate-200 text-slate-900 outline-none focus:border-indigo-600 focus:bg-white"
+                    />
+                  </div>
+                </div>
+              </div>
+
+              {/* 2. Jersey Specifications */}
+              <div className="space-y-2 pt-2 border-t border-slate-100">
+                <span className="text-xs font-bold text-slate-800 uppercase tracking-wider block">
+                  2. Jersey Specifications
+                </span>
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                  <div>
+                    <label className="block text-[11px] font-bold uppercase text-slate-600 mb-1">
+                      Jersey Name
+                    </label>
+                    <input
+                      type="text"
+                      value={editingRegistration.jerseyName}
+                      onChange={e =>
+                        setEditingRegistration({
+                          ...editingRegistration,
+                          jerseyName: e.target.value.toUpperCase(),
+                        })
+                      }
+                      className="w-full px-3 py-2 rounded-xl text-xs font-mono font-bold bg-slate-50 border border-slate-200 text-slate-900 outline-none focus:border-indigo-600 focus:bg-white"
+                      required
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-[11px] font-bold uppercase text-slate-600 mb-1">
+                      Jersey Number
+                    </label>
+                    <input
+                      type="text"
+                      value={editingRegistration.jerseyNumber}
+                      onChange={e =>
+                        setEditingRegistration({
+                          ...editingRegistration,
+                          jerseyNumber: e.target.value,
+                        })
+                      }
+                      className="w-full px-3 py-2 rounded-xl text-xs font-mono font-bold bg-slate-50 border border-slate-200 text-slate-900 outline-none focus:border-indigo-600 focus:bg-white"
+                      required
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-[11px] font-bold uppercase text-slate-600 mb-1">
+                      Jersey Size
+                    </label>
+                    <select
+                      value={editingRegistration.jerseySize}
+                      onChange={e =>
+                        setEditingRegistration({
+                          ...editingRegistration,
+                          jerseySize: e.target.value,
+                        })
+                      }
+                      className="w-full px-3 py-2 rounded-xl text-xs font-bold bg-slate-50 border border-slate-200 text-slate-900 outline-none focus:border-indigo-600 focus:bg-white"
+                    >
+                      {['S', 'M', 'L', 'XL', '2XL', '3XL', '4XL'].map(sz => (
+                        <option key={sz} value={sz}>
+                          {sz}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                </div>
+              </div>
+
+              {/* 3. Payment Verification */}
+              <div className="space-y-2 pt-2 border-t border-slate-100">
+                <span className="text-xs font-bold text-slate-800 uppercase tracking-wider block">
+                  3. Payment Verification
+                </span>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  <div>
+                    <label className="block text-[11px] font-bold uppercase text-slate-600 mb-1">
+                      Sender Phone Number
+                    </label>
+                    <input
+                      type="text"
+                      value={editingRegistration.senderNumber || ''}
+                      onChange={e =>
+                        setEditingRegistration({
+                          ...editingRegistration,
+                          senderNumber: e.target.value,
+                        })
+                      }
+                      className="w-full px-3 py-2 rounded-xl text-xs bg-slate-50 border border-slate-200 text-slate-900 outline-none focus:border-indigo-600 focus:bg-white"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-[11px] font-bold uppercase text-slate-600 mb-1">
+                      Payment Time
+                    </label>
+                    <input
+                      type="text"
+                      value={editingRegistration.paymentTime || ''}
+                      onChange={e =>
+                        setEditingRegistration({
+                          ...editingRegistration,
+                          paymentTime: e.target.value,
+                        })
+                      }
+                      className="w-full px-3 py-2 rounded-xl text-xs bg-slate-50 border border-slate-200 text-slate-900 outline-none focus:border-indigo-600 focus:bg-white"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-[11px] font-bold uppercase text-slate-600 mb-1">
+                      Transaction ID (TrxID)
+                    </label>
+                    <input
+                      type="text"
+                      value={editingRegistration.transactionId || ''}
+                      onChange={e =>
+                        setEditingRegistration({
+                          ...editingRegistration,
+                          transactionId: e.target.value,
+                        })
+                      }
+                      className="w-full px-3 py-2 rounded-xl text-xs font-mono bg-slate-50 border border-slate-200 text-slate-900 outline-none focus:border-indigo-600 focus:bg-white"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-[11px] font-bold uppercase text-slate-600 mb-1">
+                      Status
+                    </label>
+                    <select
+                      value={editingRegistration.status}
+                      onChange={e =>
+                        setEditingRegistration({
+                          ...editingRegistration,
+                          status: e.target.value as InvitationStatus,
+                        })
+                      }
+                      className="w-full px-3 py-2 rounded-xl text-xs font-bold bg-slate-50 border border-slate-200 text-slate-900 outline-none focus:border-indigo-600 focus:bg-white"
+                    >
+                      <option value="pending">Pending</option>
+                      <option value="approved">Approved</option>
+                      <option value="rejected">Rejected</option>
+                    </select>
+                  </div>
+
+                  {editingRegistration.status === 'rejected' && (
+                    <div className="sm:col-span-2">
+                      <label className="block text-[11px] font-bold uppercase text-rose-600 mb-1">
+                        Rejection Reason
+                      </label>
+                      <input
+                        type="text"
+                        value={editingRegistration.rejectionReason || ''}
+                        onChange={e =>
+                          setEditingRegistration({
+                            ...editingRegistration,
+                            rejectionReason: e.target.value,
+                          })
+                        }
+                        className="w-full px-3 py-2 rounded-xl text-xs bg-rose-50/50 border border-rose-200 text-slate-900 outline-none focus:border-rose-500"
+                      />
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              {/* 4. Pass Zone & Gate */}
+              <div className="space-y-2 pt-2 border-t border-slate-100">
+                <span className="text-xs font-bold text-slate-800 uppercase tracking-wider block">
+                  4. Gate & Seat Allocation
+                </span>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  <div>
+                    <label className="block text-[11px] font-bold uppercase text-slate-600 mb-1">
+                      Seat Zone
+                    </label>
+                    <input
+                      type="text"
+                      value={editingRegistration.seatZone || ''}
+                      onChange={e =>
+                        setEditingRegistration({
+                          ...editingRegistration,
+                          seatZone: e.target.value,
+                        })
+                      }
+                      className="w-full px-3 py-2 rounded-xl text-xs bg-slate-50 border border-slate-200 text-slate-900 outline-none"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-[11px] font-bold uppercase text-slate-600 mb-1">
+                      Gate Entry
+                    </label>
+                    <input
+                      type="text"
+                      value={editingRegistration.gate || ''}
+                      onChange={e =>
+                        setEditingRegistration({
+                          ...editingRegistration,
+                          gate: e.target.value,
+                        })
+                      }
+                      className="w-full px-3 py-2 rounded-xl text-xs bg-slate-50 border border-slate-200 text-slate-900 outline-none"
+                    />
+                  </div>
+                </div>
+              </div>
+
+              {/* Buttons */}
+              <div className="pt-3 border-t border-slate-100 flex items-center justify-end gap-2">
+                <button
+                  type="button"
+                  onClick={() => setEditingRegistration(null)}
+                  className="px-4 py-2.5 rounded-xl bg-slate-100 text-slate-700 text-xs font-bold hover:bg-slate-200 transition-colors"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  className="px-6 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold shadow-md shadow-indigo-600/30 transition-all flex items-center gap-1.5 cursor-pointer"
+                >
+                  <Save className="w-4 h-4" />
+                  <span>Save & Update in Database</span>
+                </button>
+              </div>
+            </form>
           </div>
         </div>
       )}

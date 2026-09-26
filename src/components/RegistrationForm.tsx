@@ -8,6 +8,12 @@ import {
   PaymentSettings,
 } from '../types';
 import { DEFAULT_PAYMENT_SETTINGS } from '../data/mockData';
+import {
+  getNextAvailableRegistrationNumber,
+  getNextSerialNumber,
+  uploadFileToStorage,
+  saveRegistrationToSupabase,
+} from '../lib/supabase';
 import { JerseyGraphic } from './JerseyGraphic';
 import { BkashLogo, NagadLogo } from './PaymentBrandLogos';
 import { PhotoUploadField } from './PhotoUploadField';
@@ -30,6 +36,7 @@ interface RegistrationFormProps {
   onSuccessSubmit: (newRecord: InvitationRecord) => void;
   onGoToInvitation: (regNo: string) => void;
   paymentSettings?: PaymentSettings;
+  existingRegistrations?: InvitationRecord[];
 }
 
 const JERSEY_SIZES: JerseySize[] = ['S', 'M', 'L', 'XL', '2XL', '3XL', '4XL'];
@@ -51,6 +58,7 @@ export const RegistrationForm: React.FC<RegistrationFormProps> = ({
   onSuccessSubmit,
   onGoToInvitation,
   paymentSettings = DEFAULT_PAYMENT_SETTINGS,
+  existingRegistrations = [],
 }) => {
   const activeFee = paymentSettings?.registrationFee ?? 500;
   const activeCurrency = paymentSettings?.currency ?? 'BDT';
@@ -97,6 +105,7 @@ export const RegistrationForm: React.FC<RegistrationFormProps> = ({
   const [successModalData, setSuccessModalData] = useState<{
     name: string;
     regNo: string;
+    serialNo?: number;
     gender: GenderType;
   } | null>(null);
   const [formErrors, setFormErrors] = useState<{ [key: string]: string }>({});
@@ -232,7 +241,7 @@ export const RegistrationForm: React.FC<RegistrationFormProps> = ({
     return errors;
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     const errors = validateForm();
     if (Object.keys(errors).length > 0) {
@@ -242,40 +251,60 @@ export const RegistrationForm: React.FC<RegistrationFormProps> = ({
     setFormErrors({});
     setIsSubmitting(true);
 
-    setTimeout(() => {
-      const randomId = Math.floor(Math.random() * 800) + 100;
-      const newRegNo = `RD27-${randomId}`;
+    try {
+      // 1. Generate unique Registration Number and separate Serial Number
+      const newRegNo = getNextAvailableRegistrationNumber(existingRegistrations);
+      const newSerialNo = getNextSerialNumber(existingRegistrations);
+
+      // 2. Upload student photo to Supabase Storage if file provided
+      let photoUrl = formData.photoUrl || '';
+      if (formData.photoFile) {
+        photoUrl = await uploadFileToStorage(formData.photoFile, 'students', newRegNo);
+      } else if (!photoUrl) {
+        photoUrl =
+          formData.gender === 'female'
+            ? 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&w=400&q=80'
+            : 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=400&q=80';
+      }
 
       const newRecord: InvitationRecord = {
         registrationNo: newRegNo,
-        name: formData.name,
-        roll: formData.roll,
-        id: formData.id,
+        serialNo: newSerialNo,
+        name: formData.name.trim(),
+        roll: formData.roll.trim(),
+        id: formData.id.trim(),
         group: formData.group,
         section: formData.section,
         status: 'pending',
         gender: formData.gender === 'female' ? 'female' : 'male',
-        photoUrl:
-          formData.photoUrl ||
-          (formData.gender === 'female'
-            ? 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&w=400&q=80'
-            : 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=400&q=80'),
-        jerseyName: formData.jerseyName.toUpperCase(),
+        photoUrl,
+        contactNumber: formData.contactNumber.trim(),
+        jerseyName: formData.jerseyName.toUpperCase().trim(),
         jerseyNumber: formData.jerseyNumber || '27',
         jerseySize: formData.jerseySize,
+        paymentMethod: formData.paymentMethod,
+        amount: formData.amount,
         senderNumber: formData.senderNumber.trim(),
         paymentTime: formData.paymentTime.trim(),
         transactionId: formData.transactionId.trim() || undefined,
       };
 
-      onSuccessSubmit(newRecord);
+      // 3. Save permanently to Supabase Database
+      const saveResult = await saveRegistrationToSupabase(newRecord);
+      const finalRecord = saveResult.data || newRecord;
+
+      onSuccessSubmit(finalRecord);
       setSuccessModalData({
         name: formData.name,
         regNo: newRegNo,
+        serialNo: newSerialNo,
         gender: formData.gender,
       });
+    } catch (err) {
+      console.error('Registration submission error:', err);
+    } finally {
       setIsSubmitting(false);
-    }, 500);
+    }
   };
 
   return (
@@ -951,10 +980,23 @@ export const RegistrationForm: React.FC<RegistrationFormProps> = ({
                 <span className="opacity-75 uppercase font-semibold">Name:</span>
                 <span className="text-sm font-bold">{successModalData.name}</span>
               </div>
-              <div className="flex items-center justify-between">
+              <div className="flex items-center justify-between pb-2 border-b border-current/10">
+                <span className="opacity-75 uppercase font-semibold">Serial Number:</span>
+                <span className="text-sm font-bold font-mono">
+                  #{successModalData.serialNo || 1}
+                </span>
+              </div>
+              <div className="flex items-center justify-between pb-2 border-b border-current/10">
                 <span className="opacity-75 uppercase font-semibold">Registration No:</span>
                 <span className="text-base font-extrabold font-mono tracking-wider text-emerald-500">
                   {successModalData.regNo}
+                </span>
+              </div>
+              <div className="flex items-center justify-between text-[11px] pt-1">
+                <span className="opacity-75">Database:</span>
+                <span className="font-semibold text-emerald-600 flex items-center gap-1">
+                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
+                  Saved in Supabase
                 </span>
               </div>
             </div>

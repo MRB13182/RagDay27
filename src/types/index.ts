@@ -28,18 +28,23 @@ export interface RegistrationFormData {
 }
 
 export interface InvitationRecord {
+  dbId?: string;
+  serialNo?: number;
   registrationNo: string;
   name: string;
   roll: string;
-  id: string;
+  id: string; // Student ID
   group: string;
   section: string;
   status: InvitationStatus;
   gender: 'male' | 'female';
   photoUrl: string;
+  contactNumber?: string;
   jerseyName: string;
   jerseyNumber: string;
   jerseySize: string;
+  paymentMethod?: PaymentMethod;
+  amount?: number;
   seatZone?: string;
   gate?: string;
   issuedAt?: string;
@@ -47,6 +52,8 @@ export interface InvitationRecord {
   senderNumber?: string;
   paymentTime?: string;
   transactionId?: string;
+  createdAt?: string;
+  updatedAt?: string;
 }
 
 export interface EventCard {
@@ -135,5 +142,27 @@ export interface JerseyShowcaseSettings {
   enabled: boolean;
   sectionOrder: SectionOrder; // 'showcase_first': Hero -> Jersey Showcase -> Event Cards -> Register; 'cards_first': Hero -> Event Cards -> Jersey Showcase -> Register
   jerseys: JerseyItem[];
+}
+
+export type AdminFileCategory =
+  | 'logo'
+  | 'banner'
+  | 'jersey'
+  | 'certificate'
+  | 'resume'
+  | 'invitation'
+  | 'project'
+  | 'skill';
+
+export interface AdminFileItem {
+  id: string;
+  category: AdminFileCategory;
+  title: string;
+  description?: string;
+  fileUrl: string;
+  fileName?: string;
+  fileSize?: string;
+  fileType?: string;
+  uploadedAt: string;
 }
 

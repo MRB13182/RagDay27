@@ -26,7 +26,26 @@ import {
   PaymentSettings,
   JerseyShowcaseSettings,
 } from './types';
-import { ArrowRight, Bell } from 'lucide-react';
+import {
+  supabase,
+  fetchRegistrationsFromSupabase,
+  fetchEventSettingsFromSupabase,
+  saveEventSettingsToSupabase,
+  fetchBrandingSettingsFromSupabase,
+  saveBrandingSettingsToSupabase,
+  fetchPaymentSettingsFromSupabase,
+  savePaymentSettingsToSupabase,
+  fetchPdfSettingsFromSupabase,
+  savePdfSettingsToSupabase,
+  fetchEventCardsFromSupabase,
+  saveEventCardsToSupabase,
+  fetchJerseyShowcaseFromSupabase,
+  saveJerseyShowcaseToSupabase,
+  updateRegistrationStatusInSupabase,
+  deleteRegistrationFromSupabase,
+  updateRegistrationDetailsInSupabase,
+} from './lib/supabase';
+import { ArrowRight, Bell, CheckCircle2, AlertCircle, Info, X } from 'lucide-react';
 
 export default function App() {
   const [activeTab, setActiveTab] = useState<'home' | 'register' | 'invitation'>('home');
@@ -43,6 +62,101 @@ export default function App() {
   const [jerseyShowcaseSettings, setJerseyShowcaseSettings] = useState<JerseyShowcaseSettings>(
     DEFAULT_JERSEY_SHOWCASE_SETTINGS
   );
+
+  // Database Action Toast Notification
+  const [toast, setToast] = useState<{ message: string; type: 'success' | 'error' | 'info' } | null>(null);
+
+  const showToast = (message: string, type: 'success' | 'error' | 'info' = 'success') => {
+    setToast({ message, type });
+    setTimeout(() => {
+      setToast(prev => (prev?.message === message ? null : prev));
+    }, 4000);
+  };
+
+  // ============================================================================
+  // 1. FETCH ALL DATA DIRECTLY FROM SUPABASE ON INITIAL MOUNT
+  // ============================================================================
+  useEffect(() => {
+    let isMounted = true;
+
+    async function loadDataFromSupabase() {
+      try {
+        const [
+          regResult,
+          eventRes,
+          brandRes,
+          payRes,
+          pdfRes,
+          cardsRes,
+          showcaseRes,
+        ] = await Promise.all([
+          fetchRegistrationsFromSupabase(),
+          fetchEventSettingsFromSupabase(),
+          fetchBrandingSettingsFromSupabase(),
+          fetchPaymentSettingsFromSupabase(),
+          fetchPdfSettingsFromSupabase(),
+          fetchEventCardsFromSupabase(),
+          fetchJerseyShowcaseFromSupabase(),
+        ]);
+
+        if (!isMounted) return;
+
+        if (regResult && Array.isArray(regResult.data)) {
+          setInvitations(regResult.data);
+        }
+        if (eventRes) setWebsiteSettings(eventRes);
+        if (brandRes) setBrandingSettings(brandRes);
+        if (payRes) setPaymentSettings(payRes);
+        if (pdfRes) setPdfSettings(pdfRes);
+        if (cardsRes && cardsRes.length > 0) setEventCards(cardsRes);
+        if (showcaseRes) setJerseyShowcaseSettings(showcaseRes);
+      } catch (err) {
+        console.warn('Initial Supabase fetch warning:', err);
+      }
+    }
+
+    loadDataFromSupabase();
+
+    // ==========================================================================
+    // 2. REAL-TIME SUBSCRIPTION TO SUPABASE DATABASE CHANGES
+    // ==========================================================================
+    const channel = supabase
+      .channel('public:realtime_updates')
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'registrations' }, async () => {
+        const res = await fetchRegistrationsFromSupabase();
+        if (res && res.data) setInvitations(res.data);
+      })
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'event_settings' }, async () => {
+        const res = await fetchEventSettingsFromSupabase();
+        if (res) setWebsiteSettings(res);
+      })
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'branding_settings' }, async () => {
+        const res = await fetchBrandingSettingsFromSupabase();
+        if (res) setBrandingSettings(res);
+      })
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'payment_settings' }, async () => {
+        const res = await fetchPaymentSettingsFromSupabase();
+        if (res) setPaymentSettings(res);
+      })
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'pdf_settings' }, async () => {
+        const res = await fetchPdfSettingsFromSupabase();
+        if (res) setPdfSettings(res);
+      })
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'event_cards' }, async () => {
+        const res = await fetchEventCardsFromSupabase();
+        if (res) setEventCards(res);
+      })
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'jersey_showcase' }, async () => {
+        const res = await fetchJerseyShowcaseFromSupabase();
+        if (res) setJerseyShowcaseSettings(res);
+      })
+      .subscribe();
+
+    return () => {
+      isMounted = false;
+      supabase.removeChannel(channel);
+    };
+  }, []);
 
   // Sync document title with Admin Controlled Website Name
   useEffect(() => {
@@ -64,25 +178,78 @@ export default function App() {
     }
   }, [brandingSettings.favicon]);
 
-  // Handler to update payment settings and keep website fee displays synchronized
-  const handleUpdatePaymentSettings = (newPaymentSettings: PaymentSettings) => {
-    setPaymentSettings(newPaymentSettings);
-    const formattedFee = `${newPaymentSettings.registrationFee} ${newPaymentSettings.currency}`;
-    setWebsiteSettings(prev => ({
-      ...prev,
-      registrationFee: formattedFee,
-    }));
-    setEventCards(prev =>
-      prev.map(c =>
-        c.id === 'card-3' || c.title.toLowerCase().includes('fee')
-          ? { ...c, description: formattedFee }
-          : c
-      )
-    );
+  // ============================================================================
+  // 3. ADMIN SETTINGS SUPABASE PERSISTENCE HANDLERS
+  // ============================================================================
+
+  const handleUpdateWebsiteSettings = async (newSettings: WebsiteSettings) => {
+    setWebsiteSettings(newSettings);
+    const res = await saveEventSettingsToSupabase(newSettings);
+    if (res.success) {
+      showToast('Event settings saved to Supabase database!', 'success');
+    }
   };
 
+  const handleUpdateBrandingSettings = async (newSettings: BrandingSettings) => {
+    setBrandingSettings(newSettings);
+    const res = await saveBrandingSettingsToSupabase(newSettings);
+    if (res.success) {
+      showToast('Visual branding assets saved to Supabase database!', 'success');
+    }
+  };
+
+  const handleUpdatePaymentSettings = async (newPaymentSettings: PaymentSettings) => {
+    setPaymentSettings(newPaymentSettings);
+    const formattedFee = `${newPaymentSettings.registrationFee} ${newPaymentSettings.currency}`;
+    const updatedWebsite = { ...websiteSettings, registrationFee: formattedFee };
+    setWebsiteSettings(updatedWebsite);
+
+    const updatedCards = eventCards.map(c =>
+      c.id === 'card-3' || c.title.toLowerCase().includes('fee')
+        ? { ...c, description: formattedFee }
+        : c
+    );
+    setEventCards(updatedCards);
+
+    await Promise.all([
+      savePaymentSettingsToSupabase(newPaymentSettings),
+      saveEventSettingsToSupabase(updatedWebsite),
+      saveEventCardsToSupabase(updatedCards),
+    ]);
+    showToast('Payment settings and fee synchronized in Supabase!', 'success');
+  };
+
+  const handleUpdatePdfSettings = async (newSettings: PdfSettings) => {
+    setPdfSettings(newSettings);
+    const res = await savePdfSettingsToSupabase(newSettings);
+    if (res.success) {
+      showToast('PDF Ledger settings saved to Supabase database!', 'success');
+    }
+  };
+
+  const handleUpdateEventCards = async (cards: EventCard[]) => {
+    setEventCards(cards);
+    const res = await saveEventCardsToSupabase(cards);
+    if (res.success) {
+      showToast('Event cards saved to Supabase database!', 'success');
+    }
+  };
+
+  const handleUpdateJerseyShowcase = async (newSettings: JerseyShowcaseSettings) => {
+    setJerseyShowcaseSettings(newSettings);
+    const res = await saveJerseyShowcaseToSupabase(newSettings);
+    if (res.success) {
+      showToast('Jersey Showcase settings saved to Supabase database!', 'success');
+    }
+  };
+
+  // ============================================================================
+  // 4. REGISTRATION SUPABASE PERSISTENCE HANDLERS
+  // ============================================================================
+
   const handleSuccessSubmit = (newRecord: InvitationRecord) => {
-    setInvitations(prev => [newRecord, ...prev]);
+    setInvitations(prev => [newRecord, ...prev.filter(x => x.registrationNo !== newRecord.registrationNo)]);
+    showToast(`Registration ${newRecord.registrationNo} successfully stored in Supabase!`, 'success');
   };
 
   const handleGoToInvitation = (regNo: string) => {
@@ -91,7 +258,7 @@ export default function App() {
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
-  const handleUpdateRegistrationStatus = (
+  const handleUpdateRegistrationStatus = async (
     registrationNo: string,
     newStatus: InvitationStatus,
     reason?: string
@@ -115,14 +282,74 @@ export default function App() {
           : item
       )
     );
+
+    const res = await updateRegistrationStatusInSupabase(registrationNo, newStatus, reason);
+    if (res.success) {
+      showToast(
+        newStatus === 'approved'
+          ? `Registration ${registrationNo} approved in Supabase!`
+          : `Registration ${registrationNo} rejected in Supabase.`,
+        'success'
+      );
+    }
   };
 
-  const handleDeleteRegistration = (registrationNo: string) => {
+  const handleDeleteRegistration = async (registrationNo: string) => {
     setInvitations(prev => prev.filter(item => item.registrationNo !== registrationNo));
+    const res = await deleteRegistrationFromSupabase(registrationNo);
+    if (res.success) {
+      showToast(`Registration ${registrationNo} deleted from Supabase. Number is now available for reuse.`, 'success');
+    }
+  };
+
+  const handleEditRegistration = async (
+    registrationNo: string,
+    updates: Partial<InvitationRecord>
+  ) => {
+    setInvitations(prev =>
+      prev.map(item => (item.registrationNo === registrationNo ? { ...item, ...updates } : item))
+    );
+    const res = await updateRegistrationDetailsInSupabase(registrationNo, updates);
+    if (res.success) {
+      showToast(`Registration ${registrationNo} updated in Supabase database!`, 'success');
+    }
   };
 
   return (
-    <div className="min-h-screen flex flex-col bg-[#F8F9FC] text-[#111827] selection:bg-[#5B5FEF] selection:text-white">
+    <div className="min-h-screen flex flex-col bg-[#F8F9FC] text-[#111827] selection:bg-[#5B5FEF] selection:text-white relative">
+      {/* Floating Database Notification Toast */}
+      {toast && (
+        <aside
+          aria-label="Notification"
+          className="fixed top-20 right-4 sm:right-6 z-[100] max-w-sm sm:max-w-md animate-slideDown shadow-2xl rounded-2xl p-4 border flex items-center gap-3 backdrop-blur-xl bg-white/95 text-slate-900 border-slate-200"
+        >
+          {toast.type === 'success' && (
+            <div className="w-8 h-8 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center shrink-0">
+              <CheckCircle2 className="w-5 h-5" />
+            </div>
+          )}
+          {toast.type === 'error' && (
+            <div className="w-8 h-8 rounded-xl bg-rose-50 text-rose-600 flex items-center justify-center shrink-0">
+              <AlertCircle className="w-5 h-5" />
+            </div>
+          )}
+          {toast.type === 'info' && (
+            <div className="w-8 h-8 rounded-xl bg-indigo-50 text-indigo-600 flex items-center justify-center shrink-0">
+              <Info className="w-5 h-5" />
+            </div>
+          )}
+          <div className="flex-1 text-xs sm:text-sm font-semibold text-slate-800 leading-snug">
+            {toast.message}
+          </div>
+          <button
+            onClick={() => setToast(null)}
+            className="p-1 rounded-lg text-slate-400 hover:text-slate-700 hover:bg-slate-100 transition-colors"
+          >
+            <X className="w-4 h-4" />
+          </button>
+        </aside>
+      )}
+
       {/* 1. Sticky/Fixed Navbar */}
       <Navbar
         activeTab={activeTab}
@@ -229,6 +456,7 @@ export default function App() {
                 onSuccessSubmit={handleSuccessSubmit}
                 onGoToInvitation={handleGoToInvitation}
                 paymentSettings={paymentSettings}
+                existingRegistrations={invitations}
               />
             </div>
           )}
@@ -267,18 +495,19 @@ export default function App() {
         invitations={invitations}
         onUpdateStatus={handleUpdateRegistrationStatus}
         onDeleteRegistration={handleDeleteRegistration}
+        onEditRegistration={handleEditRegistration}
         websiteSettings={websiteSettings}
-        onUpdateWebsiteSettings={setWebsiteSettings}
+        onUpdateWebsiteSettings={handleUpdateWebsiteSettings}
         brandingSettings={brandingSettings}
-        onUpdateBrandingSettings={setBrandingSettings}
+        onUpdateBrandingSettings={handleUpdateBrandingSettings}
         pdfSettings={pdfSettings}
-        onUpdatePdfSettings={setPdfSettings}
+        onUpdatePdfSettings={handleUpdatePdfSettings}
         paymentSettings={paymentSettings}
         onUpdatePaymentSettings={handleUpdatePaymentSettings}
         eventCards={eventCards}
-        onUpdateEventCards={setEventCards}
+        onUpdateEventCards={handleUpdateEventCards}
         jerseyShowcaseSettings={jerseyShowcaseSettings}
-        onUpdateJerseyShowcase={setJerseyShowcaseSettings}
+        onUpdateJerseyShowcase={handleUpdateJerseyShowcase}
       />
     </div>
   );
