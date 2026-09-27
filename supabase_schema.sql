@@ -1,7 +1,6 @@
--- RagDay27 canonical database reference
--- Production migrations are tracked in Supabase migration history.
--- Application data tables: registrations, admins, site_content.
--- Supabase Auth tables under auth.* remain managed by Supabase.
+-- RagDay27 canonical Supabase schema and hardening reference.
+-- Production migrations are already applied in the connected Supabase project.
+-- This file documents the target state; do not run blindly against production.
 
 create table if not exists public.admins (
   auth_user_id uuid primary key references auth.users(id) on delete cascade,
@@ -42,10 +41,10 @@ create table if not exists public.site_content (
   updated_at timestamptz not null default now()
 );
 
--- registrations includes:
--- registration_no, student_name, gender, roll, student_id, group_name,
--- section_name, jersey_name, jersey_number, jersey_size, sender_number,
+-- registrations canonical columns:
+-- registration_no bigint (database assigned from public.registration_no_seq)
+-- student_name, gender, roll, student_id, group_name, section_name,
+-- jersey_name, jersey_number, jersey_size, sender_number,
 -- payment_method, payment_time, transaction_id, registration_fee,
--- student_photo, status, rejection_reason, approved_by, approved_at,
--- rejected_by, rejected_at, created_at, updated_at.
--- registration_no is assigned by the database sequence/trigger.
+-- student_photo, status, rejection_reason,
+-- approved_by, approved_at, rejected_by, rejected_at, created_at, updated_at.
