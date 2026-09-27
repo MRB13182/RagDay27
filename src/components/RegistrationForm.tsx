@@ -209,7 +209,7 @@ export const RegistrationForm: React.FC<RegistrationFormProps> = ({
     if (!formData.id.trim()) errors.id = 'Student ID is required';
     if (!formData.group) errors.group = 'Please select your academic group';
 
-    const validSections = getAvailableSections(formData.gender, formData.group);
+    const validSections = getAvailableSections(formData.gender, formData.group, sections);
     if (!formData.section) {
       errors.section = 'Please select your section';
     } else if (!validSections.includes(formData.section)) {
