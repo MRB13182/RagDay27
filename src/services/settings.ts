@@ -16,6 +16,7 @@ import {
   DEFAULT_PDF_SETTINGS,
   DEFAULT_EVENT_CARDS,
   DEFAULT_JERSEY_SHOWCASE_SETTINGS,
+  DEFAULT_SECTIONS,
 } from '../data/mockData';
 import { translateBackendError } from './registrations';
 
@@ -89,7 +90,10 @@ export async function fetchSiteContent(): Promise<SiteContentRow | null> {
   return {
     ...merged,
     cards_json: Array.isArray(merged.cards_json) ? merged.cards_json : DEFAULT_EVENT_CARDS,
-    sections_json: Array.isArray(merged.sections_json) ? merged.sections_json : [],
+    sections_json:
+      Array.isArray(merged.sections_json) && merged.sections_json.length > 0
+        ? merged.sections_json
+        : DEFAULT_SECTIONS,
     content_blocks_json:
       merged.content_blocks_json && typeof merged.content_blocks_json === 'object'
         ? merged.content_blocks_json
@@ -125,7 +129,10 @@ export async function saveSiteContent(
         data: {
           ...data,
           cards_json: Array.isArray(data.cards_json) ? data.cards_json : DEFAULT_EVENT_CARDS,
-          sections_json: Array.isArray(data.sections_json) ? data.sections_json : [],
+          sections_json:
+            Array.isArray(data.sections_json) && data.sections_json.length > 0
+              ? data.sections_json
+              : DEFAULT_SECTIONS,
           content_blocks_json: data.content_blocks_json || {},
         },
       };

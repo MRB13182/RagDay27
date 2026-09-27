@@ -142,3 +142,47 @@ export const DEFAULT_JERSEY_SHOWCASE_SETTINGS: JerseyShowcaseSettings = {
     },
   ],
 };
+
+export const DEFAULT_SECTIONS = [
+  // Science Male: ScB1 - ScB5
+  { id: 'sec-sc-m-1', group: 'Science', gender: 'male', code: 'ScB1', displayName: 'ScB1', active: true, sortOrder: 1 },
+  { id: 'sec-sc-m-2', group: 'Science', gender: 'male', code: 'ScB2', displayName: 'ScB2', active: true, sortOrder: 2 },
+  { id: 'sec-sc-m-3', group: 'Science', gender: 'male', code: 'ScB3', displayName: 'ScB3', active: true, sortOrder: 3 },
+  { id: 'sec-sc-m-4', group: 'Science', gender: 'male', code: 'ScB4', displayName: 'ScB4', active: true, sortOrder: 4 },
+  { id: 'sec-sc-m-5', group: 'Science', gender: 'male', code: 'ScB5', displayName: 'ScB5', active: true, sortOrder: 5 },
+
+  // Science Female: ScG1 - ScG5
+  { id: 'sec-sc-f-1', group: 'Science', gender: 'female', code: 'ScG1', displayName: 'ScG1', active: true, sortOrder: 6 },
+  { id: 'sec-sc-f-2', group: 'Science', gender: 'female', code: 'ScG2', displayName: 'ScG2', active: true, sortOrder: 7 },
+  { id: 'sec-sc-f-3', group: 'Science', gender: 'female', code: 'ScG3', displayName: 'ScG3', active: true, sortOrder: 8 },
+  { id: 'sec-sc-f-4', group: 'Science', gender: 'female', code: 'ScG4', displayName: 'ScG4', active: true, sortOrder: 9 },
+  { id: 'sec-sc-f-5', group: 'Science', gender: 'female', code: 'ScG5', displayName: 'ScG5', active: true, sortOrder: 10 },
+
+  // Business Male: BsB1 - BsB5
+  { id: 'sec-bs-m-1', group: 'Business Studies', gender: 'male', code: 'BsB1', displayName: 'BsB1', active: true, sortOrder: 11 },
+  { id: 'sec-bs-m-2', group: 'Business Studies', gender: 'male', code: 'BsB2', displayName: 'BsB2', active: true, sortOrder: 12 },
+  { id: 'sec-bs-m-3', group: 'Business Studies', gender: 'male', code: 'BsB3', displayName: 'BsB3', active: true, sortOrder: 13 },
+  { id: 'sec-bs-m-4', group: 'Business Studies', gender: 'male', code: 'BsB4', displayName: 'BsB4', active: true, sortOrder: 14 },
+  { id: 'sec-bs-m-5', group: 'Business Studies', gender: 'male', code: 'BsB5', displayName: 'BsB5', active: true, sortOrder: 15 },
+
+  // Business Female: BsG1 - BsG5
+  { id: 'sec-bs-f-1', group: 'Business Studies', gender: 'female', code: 'BsG1', displayName: 'BsG1', active: true, sortOrder: 16 },
+  { id: 'sec-bs-f-2', group: 'Business Studies', gender: 'female', code: 'BsG2', displayName: 'BsG2', active: true, sortOrder: 17 },
+  { id: 'sec-bs-f-3', group: 'Business Studies', gender: 'female', code: 'BsG3', displayName: 'BsG3', active: true, sortOrder: 18 },
+  { id: 'sec-bs-f-4', group: 'Business Studies', gender: 'female', code: 'BsG4', displayName: 'BsG4', active: true, sortOrder: 19 },
+  { id: 'sec-bs-f-5', group: 'Business Studies', gender: 'female', code: 'BsG5', displayName: 'BsG5', active: true, sortOrder: 20 },
+
+  // Humanities Male: HuB1 - HuB5
+  { id: 'sec-hu-m-1', group: 'Humanities', gender: 'male', code: 'HuB1', displayName: 'HuB1', active: true, sortOrder: 21 },
+  { id: 'sec-hu-m-2', group: 'Humanities', gender: 'male', code: 'HuB2', displayName: 'HuB2', active: true, sortOrder: 22 },
+  { id: 'sec-hu-m-3', group: 'Humanities', gender: 'male', code: 'HuB3', displayName: 'HuB3', active: true, sortOrder: 23 },
+  { id: 'sec-hu-m-4', group: 'Humanities', gender: 'male', code: 'HuB4', displayName: 'HuB4', active: true, sortOrder: 24 },
+  { id: 'sec-hu-m-5', group: 'Humanities', gender: 'male', code: 'HuB5', displayName: 'HuB5', active: true, sortOrder: 25 },
+
+  // Humanities Female: HuG1 - HuG5
+  { id: 'sec-hu-f-1', group: 'Humanities', gender: 'female', code: 'HuG1', displayName: 'HuG1', active: true, sortOrder: 26 },
+  { id: 'sec-hu-f-2', group: 'Humanities', gender: 'female', code: 'HuG2', displayName: 'HuG2', active: true, sortOrder: 27 },
+  { id: 'sec-hu-f-3', group: 'Humanities', gender: 'female', code: 'HuG3', displayName: 'HuG3', active: true, sortOrder: 28 },
+  { id: 'sec-hu-f-4', group: 'Humanities', gender: 'female', code: 'HuG4', displayName: 'HuG4', active: true, sortOrder: 29 },
+  { id: 'sec-hu-f-5', group: 'Humanities', gender: 'female', code: 'HuG5', displayName: 'HuG5', active: true, sortOrder: 30 },
+];

@@ -463,6 +463,7 @@ export default function App() {
                 onGoToInvitation={handleGoToInvitation}
                 paymentSettings={paymentSettings}
                 existingRegistrations={invitations}
+                sections={siteContent?.sections_json}
               />
             </div>
           )}

@@ -130,12 +130,6 @@ export const InvitationCardPage: React.FC<InvitationCardPageProps> = ({
     handleSearchWith(searchRegNo, searchName);
   };
 
-  const handlePresetSelect = (regNo: string, name: string) => {
-    setSearchRegNo(regNo);
-    setSearchName(name);
-    handleSearchWith(regNo, name);
-  };
-
   const handleDownloadPDF = () => {
     if (!matchedRecord || matchedRecord.status !== 'approved') return;
     setDownloadToast(true);
@@ -162,39 +156,6 @@ export const InvitationCardPage: React.FC<InvitationCardPageProps> = ({
         </p>
       </div>
 
-      {/* Instant Demo Presets Bar */}
-      <div className="mb-6 p-4 rounded-2xl bg-white/80 backdrop-blur-md border border-slate-200/90 shadow-sm flex flex-col sm:flex-row items-center justify-between gap-3">
-        <div className="text-xs font-semibold text-slate-600 flex items-center gap-1.5">
-          <span className="w-2 h-2 rounded-full bg-[#5B5FEF]" />
-          <span>Quick Demo Test Cases:</span>
-        </div>
-        <div className="flex flex-wrap items-center gap-2">
-          <button
-            type="button"
-            onClick={() => handlePresetSelect('RD27-001', 'John Doe')}
-            className="px-3 py-1.5 rounded-lg text-xs font-bold bg-emerald-50 text-emerald-700 border border-emerald-300 hover:bg-emerald-100 transition-colors flex items-center gap-1 cursor-pointer"
-          >
-            <CheckCircle2 className="w-3 h-3" /> Approved: RD27-001
-          </button>
-
-          <button
-            type="button"
-            onClick={() => handlePresetSelect('RD27-101', 'Sohan Chowdhury')}
-            className="px-3 py-1.5 rounded-lg text-xs font-bold bg-amber-50 text-amber-700 border border-amber-300 hover:bg-amber-100 transition-colors flex items-center gap-1 cursor-pointer"
-          >
-            <Clock className="w-3 h-3" /> Pending: RD27-101
-          </button>
-
-          <button
-            type="button"
-            onClick={() => handlePresetSelect('RD27-999', 'Tanvir Ahmed')}
-            className="px-3 py-1.5 rounded-lg text-xs font-bold bg-rose-50 text-rose-700 border border-rose-300 hover:bg-rose-100 transition-colors flex items-center gap-1 cursor-pointer"
-          >
-            <XCircle className="w-3 h-3" /> Rejected: RD27-999
-          </button>
-        </div>
-      </div>
-
       {/* Search Layout (Form) */}
       <div className="p-6 sm:p-8 rounded-3xl bg-white/80 backdrop-blur-xl border border-white/90 shadow-[0_20px_45px_-15px_rgba(91,95,239,0.08)] mb-8">
         <form onSubmit={handleSearch} className="grid grid-cols-1 sm:grid-cols-12 gap-4">
@@ -204,7 +165,7 @@ export const InvitationCardPage: React.FC<InvitationCardPageProps> = ({
             </label>
             <input
               type="text"
-              placeholder="e.g. John Doe"
+              placeholder="e.g. Student Name"
               value={searchName}
               onChange={e => setSearchName(e.target.value)}
               className="w-full px-4 py-3 rounded-xl text-sm bg-slate-50 border border-slate-200 text-slate-900 placeholder-slate-400 focus:bg-white focus:border-[#5B5FEF] focus:ring-2 focus:ring-[#5B5FEF]/20 outline-none transition-all"
@@ -213,11 +174,11 @@ export const InvitationCardPage: React.FC<InvitationCardPageProps> = ({
 
           <div className="sm:col-span-5">
             <label className="block text-xs font-bold uppercase tracking-wider text-slate-700 mb-1.5">
-              Registration Number <span className="text-slate-400 font-normal">(e.g. RD27-001)</span>
+              Registration Number
             </label>
             <input
               type="text"
-              placeholder="e.g. RD27-001"
+              placeholder="Enter registration no..."
               value={searchRegNo}
               onChange={e => setSearchRegNo(e.target.value.toUpperCase())}
               className="w-full px-4 py-3 rounded-xl text-sm font-mono font-bold bg-slate-50 border border-slate-200 text-slate-900 placeholder-slate-400 focus:bg-white focus:border-[#5B5FEF] focus:ring-2 focus:ring-[#5B5FEF]/20 outline-none transition-all"

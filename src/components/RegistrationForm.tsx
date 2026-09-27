@@ -32,6 +32,7 @@ import {
   Shirt,
   CreditCard,
   AlertCircle,
+  AlertTriangle,
   Clock,
 } from 'lucide-react';
 
@@ -40,6 +41,7 @@ interface RegistrationFormProps {
   onGoToInvitation: (regNo: string) => void;
   paymentSettings?: PaymentSettings;
   existingRegistrations?: InvitationRecord[];
+  sections?: any[];
 }
 
 const JERSEY_SIZES: JerseySize[] = ['S', 'M', 'L', 'XL', '2XL', '3XL', '4XL'];
@@ -62,6 +64,7 @@ export const RegistrationForm: React.FC<RegistrationFormProps> = ({
   onGoToInvitation,
   paymentSettings = DEFAULT_PAYMENT_SETTINGS,
   existingRegistrations = [],
+  sections,
 }) => {
   const activeFee = paymentSettings?.registrationFee ?? 500;
   const activeCurrency = paymentSettings?.currency ?? 'BDT';
@@ -92,6 +95,23 @@ export const RegistrationForm: React.FC<RegistrationFormProps> = ({
   const [selectedSectionId, setSelectedSectionId] = useState<string>('');
   const [submitErrorMessage, setSubmitErrorMessage] = useState<string | null>(null);
 
+  // Sync sections from parent immediately whenever updated
+  useEffect(() => {
+    if (Array.isArray(sections) && sections.length > 0) {
+      setSectionsList(
+        sections.map((s, index) => ({
+          id: s.id || `sec-${index}`,
+          group_id: s.group || s.group_name || 'Science',
+          gender: s.gender || 'male',
+          code: s.code || s.displayName || `SEC${index + 1}`,
+          display_name: s.displayName || s.code || `SEC${index + 1}`,
+          active: s.active !== false,
+          sort_order: s.sortOrder || index + 1,
+        }))
+      );
+    }
+  }, [sections]);
+
   // Load groups and sections from Supabase on mount
   useEffect(() => {
     fetchGroups().then(grps => {
@@ -99,12 +119,14 @@ export const RegistrationForm: React.FC<RegistrationFormProps> = ({
         setGroupsList(grps);
       }
     });
-    fetchSections().then(sects => {
-      if (sects && sects.length > 0) {
-        setSectionsList(sects);
-      }
-    });
-  }, []);
+    if (!sections || sections.length === 0) {
+      fetchSections().then(sects => {
+        if (sects && sects.length > 0) {
+          setSectionsList(sects);
+        }
+      });
+    }
+  }, [sections]);
 
   // Keep amount in sync if admin updates registration fee
   useEffect(() => {
@@ -1066,52 +1088,41 @@ export const RegistrationForm: React.FC<RegistrationFormProps> = ({
 
             {/* Details Box */}
             <div
-              className={`p-4 rounded-2xl mb-4 space-y-2.5 text-xs ${
+              className={`p-5 rounded-2xl mb-4 space-y-3 text-xs ${
                 successModalData.gender === 'male'
-                  ? 'bg-slate-900/80 border border-slate-800 text-white'
+                  ? 'bg-slate-900/90 border border-slate-800 text-white'
                   : successModalData.gender === 'female'
-                  ? 'bg-white/80 border border-pink-200 text-slate-900'
+                  ? 'bg-white border border-pink-200 text-slate-900'
                   : 'bg-slate-50 border border-slate-200 text-slate-900'
               }`}
             >
-              <div className="flex items-center justify-between pb-2 border-b border-current/10">
-                <span className="opacity-75 uppercase font-semibold">Name:</span>
-                <span className="text-sm font-bold">{successModalData.name}</span>
+              <div className="flex items-center justify-between pb-2.5 border-b border-current/10">
+                <span className="opacity-75 uppercase font-bold tracking-wider">Student Name:</span>
+                <span className="text-sm font-extrabold">{successModalData.name}</span>
               </div>
-              <div className="flex items-center justify-between pb-2 border-b border-current/10">
-                <span className="opacity-75 uppercase font-semibold">Serial Number:</span>
-                <span className="text-sm font-bold font-mono">
-                  #{successModalData.serialNo || 1}
-                </span>
-              </div>
-              <div className="flex items-center justify-between pb-2 border-b border-current/10">
-                <span className="opacity-75 uppercase font-semibold">Registration No:</span>
-                <span className="text-base font-extrabold font-mono tracking-wider text-emerald-500">
+              <div className="flex items-center justify-between pt-0.5">
+                <span className="opacity-75 uppercase font-bold tracking-wider">Registration Number:</span>
+                <span className="text-lg font-black font-mono tracking-wider text-emerald-500">
                   {successModalData.regNo}
-                </span>
-              </div>
-              <div className="flex items-center justify-between text-[11px] pt-1">
-                <span className="opacity-75">Database:</span>
-                <span className="font-semibold text-emerald-600 flex items-center gap-1">
-                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
-                  Saved in Supabase
                 </span>
               </div>
             </div>
 
-            {/* Notice Requirement */}
-            <div
-              className={`p-3.5 rounded-2xl mb-5 flex items-start gap-2.5 text-xs leading-relaxed ${
-                successModalData.gender === 'male'
-                  ? 'bg-sky-950/50 border border-sky-800/40 text-sky-200'
-                  : successModalData.gender === 'female'
-                  ? 'bg-pink-100/70 border border-pink-300 text-pink-900'
-                  : 'bg-amber-50 border border-amber-200 text-amber-900'
-              }`}
-            >
-              <Info className="w-4 h-4 shrink-0 mt-0.5" />
-              <div>
-                <strong>Notice:</strong> Keep your Registration Number in mind. You will need this Registration Number to download your invitation card after admin approval.
+            {/* Notice Section: RED & BOLD */}
+            <div className="p-4 rounded-2xl mb-5 bg-red-50 border-2 border-red-500 text-red-600 shadow-sm text-left">
+              <div className="flex items-start gap-2.5">
+                <AlertTriangle className="w-5 h-5 shrink-0 text-red-600 mt-0.5" />
+                <div className="space-y-1">
+                  <div className="text-xs font-black uppercase tracking-wider text-red-600">
+                    IMPORTANT NOTICE:
+                  </div>
+                  <div className="text-xs font-bold text-red-600 leading-snug">
+                    Keep your Registration Number safe.
+                  </div>
+                  <div className="text-xs font-bold text-red-600 leading-snug">
+                    You will need it to download your invitation card.
+                  </div>
+                </div>
               </div>
             </div>
 
