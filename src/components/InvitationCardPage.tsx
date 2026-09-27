@@ -113,26 +113,26 @@ export const InvitationCardPage: React.FC<InvitationCardPageProps> = ({
         <div className="flex flex-wrap items-center gap-2">
           <button
             type="button"
-            onClick={() => handlePresetSelect('RD27-001', 'John Doe')}
+            onClick={() => handlePresetSelect('1', 'John Doe')}
             className="px-3 py-1.5 rounded-lg text-xs font-bold bg-emerald-50 text-emerald-700 border border-emerald-300 hover:bg-emerald-100 transition-colors flex items-center gap-1 cursor-pointer"
           >
-            <CheckCircle2 className="w-3 h-3" /> Approved: RD27-001
+            <CheckCircle2 className="w-3 h-3" /> Approved: 1
           </button>
 
           <button
             type="button"
-            onClick={() => handlePresetSelect('RD27-101', 'Sohan Chowdhury')}
+            onClick={() => handlePresetSelect('101', 'Sohan Chowdhury')}
             className="px-3 py-1.5 rounded-lg text-xs font-bold bg-amber-50 text-amber-700 border border-amber-300 hover:bg-amber-100 transition-colors flex items-center gap-1 cursor-pointer"
           >
-            <Clock className="w-3 h-3" /> Pending: RD27-101
+            <Clock className="w-3 h-3" /> Pending: 101
           </button>
 
           <button
             type="button"
-            onClick={() => handlePresetSelect('RD27-999', 'Tanvir Ahmed')}
+            onClick={() => handlePresetSelect('999', 'Tanvir Ahmed')}
             className="px-3 py-1.5 rounded-lg text-xs font-bold bg-rose-50 text-rose-700 border border-rose-300 hover:bg-rose-100 transition-colors flex items-center gap-1 cursor-pointer"
           >
-            <XCircle className="w-3 h-3" /> Rejected: RD27-999
+            <XCircle className="w-3 h-3" /> Rejected: 999
           </button>
         </div>
       </div>
@@ -155,11 +155,11 @@ export const InvitationCardPage: React.FC<InvitationCardPageProps> = ({
 
           <div className="sm:col-span-5">
             <label className="block text-xs font-bold uppercase tracking-wider text-slate-700 mb-1.5">
-              Registration Number <span className="text-slate-400 font-normal">(e.g. RD27-001)</span>
+              Registration Number <span className="text-slate-400 font-normal">(e.g. 1)</span>
             </label>
             <input
               type="text"
-              placeholder="e.g. RD27-001"
+              placeholder="e.g. 1"
               value={searchRegNo}
               onChange={e => setSearchRegNo(e.target.value.toUpperCase())}
               className="w-full px-4 py-3 rounded-xl text-sm font-mono font-bold bg-slate-50 border border-slate-200 text-slate-900 placeholder-slate-400 focus:bg-white focus:border-[#5B5FEF] focus:ring-2 focus:ring-[#5B5FEF]/20 outline-none transition-all"
@@ -431,7 +431,6 @@ export const InvitationCardPage: React.FC<InvitationCardPageProps> = ({
                           Seating Zone
                         </span>
                         <span className="font-medium text-white truncate block">
-                          {matchedRecord.seatZone || 'Zone A - Amphitheatre'}
                         </span>
                       </div>
 
@@ -440,7 +439,7 @@ export const InvitationCardPage: React.FC<InvitationCardPageProps> = ({
                           Entry Gate
                         </span>
                         <span className="font-medium text-emerald-400 truncate block">
-                          {matchedRecord.gate || 'Gate 02 (North)'}
+                          Verified after approval
                         </span>
                       </div>
                     </div>
