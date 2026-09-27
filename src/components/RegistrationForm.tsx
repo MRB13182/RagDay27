@@ -331,6 +331,18 @@ export const RegistrationForm: React.FC<RegistrationFormProps> = ({
                 )}
               </div>
 
+              <div className="sm:col-span-2">
+                <label className={`block text-xs font-bold uppercase tracking-wider mb-1.5 ${labelClasses}`}>Registration No</label>
+                <input
+                  type="text"
+                  value="Assigned automatically by Supabase"
+                  readOnly
+                  disabled
+                  className={`w-full px-4 py-3 rounded-xl text-sm bg-slate-100 border border-slate-200 text-slate-500 cursor-not-allowed`}
+                />
+                <p className="text-[11px] mt-1 text-slate-500">The database assigns the next registration number after submission.</p>
+              </div>
+
               {/* Full Name */}
               <div className="sm:col-span-2">
                 <label className={`block text-xs font-bold uppercase tracking-wider mb-1.5 ${labelClasses}`}>
