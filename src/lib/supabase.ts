@@ -50,6 +50,30 @@ function numericReg(regNo:string):number{const n=Number(regNo.replace(/[^0-9]/g,
 export async function updateRegistrationStatusInSupabase(regNo:string,status:InvitationStatus,reason?:string):Promise<void>{const {error}=await supabase.from('registrations').update({status,rejection_reason:status==='rejected'?(reason||'').trim():null}).eq('registration_no',numericReg(regNo));if(error)throw new Error(error.message);}
 export async function updateRegistrationDetailsInSupabase(regNo:string,updates:Partial<InvitationRecord>):Promise<void>{const p:any={};if(updates.name!==undefined)p.student_name=updates.name;if(updates.roll!==undefined)p.roll=updates.roll;if(updates.id!==undefined)p.student_id=updates.id;if(updates.group!==undefined)p.group_name=updates.group;if(updates.section!==undefined)p.section_name=normalizeSectionCode(updates.section);if(updates.gender!==undefined)p.gender=updates.gender;if(updates.jerseyName!==undefined)p.jersey_name=updates.jerseyName;if(updates.jerseyNumber!==undefined)p.jersey_number=updates.jerseyNumber;if(updates.jerseySize!==undefined)p.jersey_size=updates.jerseySize;if(updates.senderNumber!==undefined)p.sender_number=updates.senderNumber;if(updates.paymentTime!==undefined)p.payment_time=updates.paymentTime;if(updates.transactionId!==undefined)p.transaction_id=updates.transactionId;if(updates.photoUrl!==undefined)p.student_photo=updates.photoUrl;const {error}=await supabase.from('registrations').update(p).eq('registration_no',numericReg(regNo));if(error)throw new Error(error.message);}
 export async function deleteRegistrationFromSupabase(regNo:string):Promise<void>{const {error}=await supabase.from('registrations').delete().eq('registration_no',numericReg(regNo));if(error)throw new Error(error.message);}
+
+export async function fetchAdminsFromSupabase(): Promise<AdminProfile[]> {
+  const { data, error } = await supabase
+    .from('admins')
+    .select('auth_user_id,username,full_name,role,active,created_at,updated_at')
+    .order('created_at', { ascending: true });
+  if (error) throw new Error(error.message);
+  return (data || []) as AdminProfile[];
+}
+
+export async function saveAdminProfileToSupabase(profile: AdminProfile): Promise<AdminProfile> {
+  const { data, error } = await supabase
+    .from('admins')
+    .upsert(profile)
+    .select('auth_user_id,username,full_name,role,active,created_at,updated_at')
+    .single();
+  if (error) throw new Error(error.message);
+  return data as AdminProfile;
+}
+
+export async function deleteAdminProfileFromSupabase(authUserId: string): Promise<void> {
+  const { error } = await supabase.from('admins').delete().eq('auth_user_id', authUserId);
+  if (error) throw new Error(error.message);
+}
 export async function getCurrentAdminProfile():Promise<AdminProfile|null>{const {data:authData,error:authError}=await supabase.auth.getUser();if(authError||!authData.user)return null;const {data,error}=await supabase.from('admins').select('auth_user_id,username,full_name,role,active,created_at,updated_at').eq('auth_user_id',authData.user.id).eq('active',true).maybeSingle();if(error)throw new Error(error.message);return (data as AdminProfile)||null;}
 export async function signInAdmin(email:string,password:string):Promise<AdminProfile>{const {error}=await supabase.auth.signInWithPassword({email:email.trim(),password});if(error)throw new Error(error.message);const profile=await getCurrentAdminProfile();if(!profile){await supabase.auth.signOut();throw new Error('Authenticated user is not registered as an active RagDay27 admin.');}return profile;}
 export async function signOutAdmin():Promise<void>{const {error}=await supabase.auth.signOut();if(error)throw new Error(error.message);}
