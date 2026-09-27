@@ -4,10 +4,9 @@ import { InvitationRecord, PdfSettings, WebsiteSettings } from '../types';
 
 export const generateRegistrationListPDF = (
   records: InvitationRecord[],
-  title: string,
-  adminRole: 'super_admin' | 'male_admin' | 'female_admin' | string,
   pdfSettings: PdfSettings,
-  websiteSettings: WebsiteSettings
+  websiteSettings: WebsiteSettings,
+  adminRole: 'super_admin' | 'male_admin' | 'female_admin' | string
 ) => {
   const doc = new jsPDF({
     orientation: 'landscape',
