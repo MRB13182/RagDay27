@@ -6,13 +6,17 @@ import {
   RegistrationFormData,
   InvitationRecord,
   PaymentSettings,
+  GroupItem,
+  SectionItem,
+  BackendRegistrationInput,
 } from '../types';
 import { DEFAULT_PAYMENT_SETTINGS } from '../data/mockData';
 import {
-  getAvailableSections as getSectionsFromContent,
-  uploadFileToStorage,
-  saveRegistrationToSupabase,
-} from '../lib/supabase';
+  createRegistration,
+  fetchGroups,
+  fetchSections,
+  uploadStudentPhoto,
+} from '../services';
 import { JerseyGraphic } from './JerseyGraphic';
 import { BkashLogo, NagadLogo } from './PaymentBrandLogos';
 import { PhotoUploadField } from './PhotoUploadField';
@@ -35,18 +39,29 @@ interface RegistrationFormProps {
   onSuccessSubmit: (newRecord: InvitationRecord) => void;
   onGoToInvitation: (regNo: string) => void;
   paymentSettings?: PaymentSettings;
-  sections?: unknown[];
+  existingRegistrations?: InvitationRecord[];
 }
 
 const JERSEY_SIZES: JerseySize[] = ['S', 'M', 'L', 'XL', '2XL', '3XL', '4XL'];
 
-export const getAvailableSections = getSectionsFromContent;
+export const getAvailableSections = (gender: GenderType, group: string): string[] => {
+  if (gender === 'male') {
+    if (group === 'Science') return ['SCB1', 'SCB2', 'SCB3', 'SCB4', 'SCB5'];
+    if (group === 'Business Studies') return ['BSB1', 'BSB2', 'BSB3', 'BSB4', 'BSB5'];
+    if (group === 'Humanities') return ['HUB1', 'HUB2', 'HUB3', 'HUB4', 'HUB5'];
+  } else if (gender === 'female') {
+    if (group === 'Science') return ['SCG1', 'SCG2', 'SCG3', 'SCG4', 'SCG5'];
+    if (group === 'Business Studies') return ['BSG1', 'BSG2', 'BSG3', 'BSG4', 'BSG5'];
+    if (group === 'Humanities') return ['HUG1', 'HUG2', 'HUG3', 'HUG4', 'HUG5'];
+  }
+  return [];
+};
 
 export const RegistrationForm: React.FC<RegistrationFormProps> = ({
   onSuccessSubmit,
   onGoToInvitation,
   paymentSettings = DEFAULT_PAYMENT_SETTINGS,
-  sections = [],
+  existingRegistrations = [],
 }) => {
   const activeFee = paymentSettings?.registrationFee ?? 500;
   const activeCurrency = paymentSettings?.currency ?? 'BDT';
@@ -58,6 +73,7 @@ export const RegistrationForm: React.FC<RegistrationFormProps> = ({
     id: '',
     group: '',
     section: '',
+    contactNumber: '',
     photoUrl: null,
     amount: activeFee,
     paymentMethod: paymentSettings?.bkashEnabled ? 'bkash' : 'nagad',
@@ -68,6 +84,27 @@ export const RegistrationForm: React.FC<RegistrationFormProps> = ({
     jerseyNumber: '27',
     jerseySize: 'L',
   });
+
+  // Supabase groups & sections data state
+  const [groupsList, setGroupsList] = useState<GroupItem[]>([]);
+  const [sectionsList, setSectionsList] = useState<SectionItem[]>([]);
+  const [selectedGroupId, setSelectedGroupId] = useState<string>('');
+  const [selectedSectionId, setSelectedSectionId] = useState<string>('');
+  const [submitErrorMessage, setSubmitErrorMessage] = useState<string | null>(null);
+
+  // Load groups and sections from Supabase on mount
+  useEffect(() => {
+    fetchGroups().then(grps => {
+      if (grps && grps.length > 0) {
+        setGroupsList(grps);
+      }
+    });
+    fetchSections().then(sects => {
+      if (sects && sects.length > 0) {
+        setSectionsList(sects);
+      }
+    });
+  }, []);
 
   // Keep amount in sync if admin updates registration fee
   useEffect(() => {
@@ -89,7 +126,12 @@ export const RegistrationForm: React.FC<RegistrationFormProps> = ({
 
   const [copiedAccount, setCopiedAccount] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [successModalData, setSuccessModalData] = useState<{ name: string; regNo: string; gender: GenderType } | null>(null);
+  const [successModalData, setSuccessModalData] = useState<{
+    name: string;
+    regNo: string;
+    serialNo?: number;
+    gender: GenderType;
+  } | null>(null);
   const [formErrors, setFormErrors] = useState<{ [key: string]: string }>({});
 
   // Gender-based theme configuration solely for the Registration Form Container
@@ -191,9 +233,16 @@ export const RegistrationForm: React.FC<RegistrationFormProps> = ({
 
   const handleGroupChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
     const val = e.target.value;
+    // Check if value is a UUID from groupsList or group name
+    const found = groupsList.find(g => g.id === val || g.name === val);
+    const grpId = found ? found.id : val;
+    const grpName = found ? found.name : val;
+
+    setSelectedGroupId(grpId);
+    setSelectedSectionId('');
     setFormData(prev => ({
       ...prev,
-      group: val,
+      group: grpName,
       section: '', // Reset section automatically when group changes
     }));
     if (formErrors.group) {
@@ -207,15 +256,13 @@ export const RegistrationForm: React.FC<RegistrationFormProps> = ({
     if (!formData.name.trim()) errors.name = 'Full name is required';
     if (!formData.roll.trim()) errors.roll = 'Roll number is required';
     if (!formData.id.trim()) errors.id = 'Student ID is required';
-    if (!formData.group) errors.group = 'Please select your academic group';
+    if (!formData.group && !selectedGroupId) errors.group = 'Please select your academic group';
 
-    const validSections = getAvailableSections(formData.gender, formData.group, sections);
-    if (!formData.section) {
+    if (!formData.section && !selectedSectionId) {
       errors.section = 'Please select your section';
-    } else if (!validSections.includes(formData.section)) {
-      errors.section = 'Invalid section for selected Gender and Group';
     }
 
+    if (!formData.contactNumber.trim()) errors.contactNumber = 'Contact number is required';
     if (!formData.senderNumber.trim()) errors.senderNumber = 'Sender number is required';
     if (!formData.paymentTime.trim()) errors.paymentTime = 'Payment time is required';
     // Transaction ID is optional per requirements
@@ -224,6 +271,7 @@ export const RegistrationForm: React.FC<RegistrationFormProps> = ({
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    setSubmitErrorMessage(null);
     const errors = validateForm();
     if (Object.keys(errors).length > 0) {
       setFormErrors(errors);
@@ -233,13 +281,43 @@ export const RegistrationForm: React.FC<RegistrationFormProps> = ({
     setIsSubmitting(true);
 
     try {
-      let photoPath = formData.photoUrl || null;
+      // 1. Upload student photo to Supabase Storage if file provided
+      let photoStoragePath: string | null = null;
+      let displayPhotoUrl = formData.photoUrl || '';
       if (formData.photoFile) {
-        photoPath = await uploadFileToStorage(formData.photoFile, 'studentPhoto');
+        const uploadRes = await uploadStudentPhoto(formData.photoFile, formData.roll.trim());
+        if (uploadRes.success) {
+          photoStoragePath = uploadRes.storagePath;
+          displayPhotoUrl = uploadRes.publicUrl;
+        }
       }
 
-      const newRecord: InvitationRecord = {
-        registrationNo: '',
+      // Format payment time into valid ISO 8601 string for PostgreSQL timestamptz
+      let paymentTimeIso = new Date().toISOString();
+      if (formData.paymentTime.trim()) {
+        const parsed = new Date(formData.paymentTime.trim());
+        if (!isNaN(parsed.getTime())) {
+          paymentTimeIso = parsed.toISOString();
+        }
+      }
+
+      // 2. Prepare registration data matching registrations table contract
+      const result = await createRegistration({
+        ...formData,
+        photoUrl: photoStoragePath || displayPhotoUrl || null,
+      });
+
+      if (!result.success) {
+        setSubmitErrorMessage(result.errorMessage || 'Registration failed in Supabase database.');
+        setIsSubmitting(false);
+        return;
+      }
+
+      // 4. Extract confirmed registration number
+      const confirmedRegNo = result.data?.registrationNo || `RD27-${formData.roll.trim()}`;
+
+      const confirmedRecord: InvitationRecord = {
+        registrationNo: confirmedRegNo,
         name: formData.name.trim(),
         roll: formData.roll.trim(),
         id: formData.id.trim(),
@@ -247,7 +325,8 @@ export const RegistrationForm: React.FC<RegistrationFormProps> = ({
         section: formData.section,
         status: 'pending',
         gender: formData.gender === 'female' ? 'female' : 'male',
-        photoUrl: photoPath,
+        photoUrl: displayPhotoUrl,
+        contactNumber: formData.contactNumber.trim(),
         jerseyName: formData.jerseyName.toUpperCase().trim(),
         jerseyNumber: formData.jerseyNumber || '27',
         jerseySize: formData.jerseySize,
@@ -258,14 +337,17 @@ export const RegistrationForm: React.FC<RegistrationFormProps> = ({
         transactionId: formData.transactionId.trim() || undefined,
       };
 
-      // 3. Save permanently to Supabase Database
-      const saveResult = await saveRegistrationToSupabase(newRecord);
-      const finalRecord = saveResult.data || newRecord;
+      // Notify parent to refetch public/student data
+      onSuccessSubmit(confirmedRecord);
 
-      onSuccessSubmit(finalRecord);
-      setSuccessModalData({ name: finalRecord.name, regNo: finalRecord.registrationNo, gender: finalRecord.gender });
-    } catch (err) {
+      setSuccessModalData({
+        name: formData.name,
+        regNo: confirmedRegNo,
+        gender: formData.gender,
+      });
+    } catch (err: any) {
       console.error('Registration submission error:', err);
+      setSubmitErrorMessage(err.message || 'An error occurred during submission.');
     } finally {
       setIsSubmitting(false);
     }
@@ -329,18 +411,6 @@ export const RegistrationForm: React.FC<RegistrationFormProps> = ({
                 {formErrors.gender && (
                   <p className="text-rose-400 text-xs mt-1">{formErrors.gender}</p>
                 )}
-              </div>
-
-              <div className="sm:col-span-2">
-                <label className={`block text-xs font-bold uppercase tracking-wider mb-1.5 ${labelClasses}`}>Registration No</label>
-                <input
-                  type="text"
-                  value="Assigned automatically by Supabase"
-                  readOnly
-                  disabled
-                  className={`w-full px-4 py-3 rounded-xl text-sm bg-slate-100 border border-slate-200 text-slate-500 cursor-not-allowed`}
-                />
-                <p className="text-[11px] mt-1 text-slate-500">The database assigns the next registration number after submission.</p>
               </div>
 
               {/* Full Name */}
@@ -409,22 +479,32 @@ export const RegistrationForm: React.FC<RegistrationFormProps> = ({
                   Group <span className="text-rose-500">*</span>
                 </label>
                 <select
-                  value={formData.group}
+                  value={selectedGroupId || formData.group}
                   onChange={handleGroupChange}
                   className={`w-full px-4 py-3 rounded-xl text-sm transition-colors outline-none cursor-pointer ${inputClasses}`}
                 >
                   <option value="" className={isMale ? 'bg-slate-900 text-white' : 'bg-white text-slate-900'}>
                     Choose Group
                   </option>
-                  <option value="Science" className={isMale ? 'bg-slate-900 text-white' : 'bg-white text-slate-900'}>
-                    Science
-                  </option>
-                  <option value="Business Studies" className={isMale ? 'bg-slate-900 text-white' : 'bg-white text-slate-900'}>
-                    Business Studies
-                  </option>
-                  <option value="Humanities" className={isMale ? 'bg-slate-900 text-white' : 'bg-white text-slate-900'}>
-                    Humanities
-                  </option>
+                  {groupsList.length > 0 ? (
+                    groupsList.map(g => (
+                      <option key={g.id} value={g.id} className={isMale ? 'bg-slate-900 text-white' : 'bg-white text-slate-900'}>
+                        {g.name}
+                      </option>
+                    ))
+                  ) : (
+                    <>
+                      <option value="b14362d8-0658-471b-850f-947915d926f0" className={isMale ? 'bg-slate-900 text-white' : 'bg-white text-slate-900'}>
+                        Science
+                      </option>
+                      <option value="a4261df4-bb1d-476a-b309-700dad5596c9" className={isMale ? 'bg-slate-900 text-white' : 'bg-white text-slate-900'}>
+                        Business Studies
+                      </option>
+                      <option value="a55ebc2f-8456-4bc0-beb2-7aaa842c0d87" className={isMale ? 'bg-slate-900 text-white' : 'bg-white text-slate-900'}>
+                        Humanities
+                      </option>
+                    </>
+                  )}
                 </select>
                 {formErrors.group && (
                   <p className="text-rose-400 text-xs mt-1">{formErrors.group}</p>
@@ -439,18 +519,33 @@ export const RegistrationForm: React.FC<RegistrationFormProps> = ({
                 {(() => {
                   const isSectionEnabled =
                     (formData.gender === 'male' || formData.gender === 'female') &&
-                    Boolean(formData.group);
-                  const availableSections = isSectionEnabled
-                    ? getAvailableSections(formData.gender, formData.group, sections)
-                    : [];
+                    Boolean(selectedGroupId || formData.group);
+
+                  const activeGrpId =
+                    selectedGroupId ||
+                    groupsList.find(g => g.name === formData.group)?.id;
+
+                  const dbSections = sectionsList.filter(
+                    s =>
+                      (!activeGrpId || s.group_id === activeGrpId) &&
+                      (!formData.gender || s.gender === formData.gender)
+                  );
 
                   return (
                     <>
                       <select
-                        value={formData.section}
+                        value={selectedSectionId || formData.section}
                         disabled={!isSectionEnabled}
                         onChange={e => {
-                          setFormData(prev => ({ ...prev, section: e.target.value }));
+                          const secVal = e.target.value;
+                          setSelectedSectionId(secVal);
+                          const found = sectionsList.find(
+                            s => s.id === secVal || s.code === secVal || s.display_name === secVal
+                          );
+                          setFormData(prev => ({
+                            ...prev,
+                            section: found ? (found.display_name || found.code) : secVal,
+                          }));
                           if (formErrors.section) {
                             setFormErrors(prev => ({ ...prev, section: '' }));
                           }
@@ -462,11 +557,27 @@ export const RegistrationForm: React.FC<RegistrationFormProps> = ({
                             ? '[ Select Gender & Group First ]'
                             : 'Select Section'}
                         </option>
-                        {availableSections.map(sec => (
-                          <option key={sec} value={sec} className={isMale ? 'bg-slate-900 text-white' : 'bg-white text-slate-900'}>
-                            {sec}
-                          </option>
-                        ))}
+                        {dbSections.length > 0 ? (
+                          dbSections.map(sec => (
+                            <option
+                              key={sec.id}
+                              value={sec.id}
+                              className={isMale ? 'bg-slate-900 text-white' : 'bg-white text-slate-900'}
+                            >
+                              {sec.display_name || sec.code}
+                            </option>
+                          ))
+                        ) : (
+                          getAvailableSections(formData.gender, formData.group).map(sec => (
+                            <option
+                              key={sec}
+                              value={sec}
+                              className={isMale ? 'bg-slate-900 text-white' : 'bg-white text-slate-900'}
+                            >
+                              {sec}
+                            </option>
+                          ))
+                        )}
                       </select>
                       {!isSectionEnabled && (
                         <p className={`text-[11px] mt-1 ${isMale ? 'text-slate-400' : 'text-slate-500'}`}>
@@ -479,6 +590,26 @@ export const RegistrationForm: React.FC<RegistrationFormProps> = ({
                     </>
                   );
                 })()}
+              </div>
+
+              {/* Contact Number */}
+              <div className="sm:col-span-2">
+                <label className={`block text-xs font-bold uppercase tracking-wider mb-1.5 ${labelClasses}`}>
+                  Contact Number <span className="text-rose-500">*</span>
+                </label>
+                <input
+                  type="tel"
+                  placeholder="e.g. 01712-345678"
+                  value={formData.contactNumber}
+                  onChange={e => {
+                    setFormData({ ...formData, contactNumber: e.target.value });
+                    if (formErrors.contactNumber) setFormErrors(prev => ({ ...prev, contactNumber: '' }));
+                  }}
+                  className={`w-full px-4 py-3 rounded-xl text-sm transition-colors outline-none ${inputClasses}`}
+                />
+                {formErrors.contactNumber && (
+                  <p className="text-rose-400 text-xs mt-1">{formErrors.contactNumber}</p>
+                )}
               </div>
 
               {/* Photo Upload System */}
@@ -855,6 +986,17 @@ export const RegistrationForm: React.FC<RegistrationFormProps> = ({
             </div>
           </div>
 
+          {/* Error Message Banner */}
+          {submitErrorMessage && (
+            <div className="p-4 rounded-2xl bg-rose-500/10 border border-rose-500/30 text-rose-500 flex items-start gap-3 text-xs sm:text-sm animate-fadeIn">
+              <AlertCircle className="w-5 h-5 shrink-0 mt-0.5" />
+              <div className="flex-1">
+                <strong className="block font-bold">Registration Failed:</strong>
+                <p className="mt-0.5 leading-relaxed">{submitErrorMessage}</p>
+              </div>
+            </div>
+          )}
+
           {/* ======================================================== */}
           {/* 5. SUBMIT REGISTRATION BUTTON (REDUCED SIZE, PREMIUM STYLING) */}
           {/* ======================================================== */}
@@ -937,14 +1079,16 @@ export const RegistrationForm: React.FC<RegistrationFormProps> = ({
                 <span className="text-sm font-bold">{successModalData.name}</span>
               </div>
               <div className="flex items-center justify-between pb-2 border-b border-current/10">
-                <span className="opacity-75 uppercase font-semibold">Registration Number:</span>
+                <span className="opacity-75 uppercase font-semibold">Serial Number:</span>
                 <span className="text-sm font-bold font-mono">
-                  {successModalData.regNo}
+                  #{successModalData.serialNo || 1}
                 </span>
               </div>
               <div className="flex items-center justify-between pb-2 border-b border-current/10">
                 <span className="opacity-75 uppercase font-semibold">Registration No:</span>
-
+                <span className="text-base font-extrabold font-mono tracking-wider text-emerald-500">
+                  {successModalData.regNo}
+                </span>
               </div>
               <div className="flex items-center justify-between text-[11px] pt-1">
                 <span className="opacity-75">Database:</span>

@@ -1,83 +1,185 @@
 import { createClient } from '@supabase/supabase-js';
-import type { InvitationRecord, InvitationStatus, WebsiteSettings, BrandingSettings, PaymentSettings, PdfSettings, EventCard, JerseyShowcaseSettings, SiteContentRow, AdminProfile } from '../types';
-export const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL || 'https://rqjlrbteaqjpgwkeomro.supabase.co';
-export const SUPABASE_PUBLISHABLE_KEY = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY || import.meta.env.VITE_SUPABASE_ANON_KEY || '';
-export const supabase = createClient(SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY, { auth: { persistSession: true, autoRefreshToken: true, detectSessionInUrl: true } });
-export const STORAGE_BUCKETS = { branding: 'branding', jerseys: 'jerseys', studentPhotos: 'student-photos' } as const;
-const DEFAULT_SECTIONS = ['ScB1','ScB2','ScB3','ScB4','ScB5','BsB1','BsB2','BsB3','BsB4','BsB5','HuB1','HuB2','HuB3','HuB4','HuB5','ScG1','ScG2','ScG3','ScG4','ScG5','BsG1','BsG2','BsG3','BsG4','BsG5','HuG1','HuG2','HuG3','HuG4','HuG5'];
-function asRecord(value: unknown): Record<string, any> { return value && typeof value === 'object' && !Array.isArray(value) ? (value as Record<string, any>) : {}; }
-export function normalizeSectionCode(value: string): string { const m = value.trim().toUpperCase().match(/^(SC|BS|HU)([BG])([1-5])$/); if (!m) return value.trim(); const p = m[1] === 'SC' ? 'Sc' : m[1] === 'BS' ? 'Bs' : 'Hu'; return p + m[2] + m[3]; }
-export function getAvailableSections(gender: 'male' | 'female' | 'choose_one', group: string, sections?: any[]): string[] {
-  if (gender === 'choose_one' || !group) return [];
-  const content = Array.isArray(sections) ? sections.filter((s) => s && s.active !== false && String(s.gender || '').toLowerCase() === gender && String(s.group || '').toLowerCase() === group.toLowerCase()).map((s) => normalizeSectionCode(String(s.code || s.displayName || ''))).filter(Boolean) : [];
-  if (content.length) return content;
-  const prefix = group === 'Science' ? 'Sc' : group === 'Business Studies' ? 'Bs' : 'Hu';
-  const suffix = gender === 'male' ? 'B' : 'G';
-  return DEFAULT_SECTIONS.filter((s) => s.startsWith(prefix) && s.endsWith(suffix));
-}
-export function mapDbToInvitation(row: any): InvitationRecord {
-  return { dbId: row.id, registrationNo: String(row.registration_no), name: row.student_name, roll: row.roll, id: row.student_id, group: row.group_name, section: normalizeSectionCode(row.section_name), status: row.status as InvitationStatus, gender: row.gender as 'male' | 'female', photoUrl: row.student_photo || null, jerseyName: row.jersey_name, jerseyNumber: row.jersey_number, jerseySize: row.jersey_size, paymentMethod: row.payment_method, amount: Number(row.registration_fee), senderNumber: row.sender_number, paymentTime: row.payment_time, transactionId: row.transaction_id || undefined, rejectionReason: row.rejection_reason || undefined, createdAt: row.created_at, updatedAt: row.updated_at };
-}
-const DEFAULT_CARDS: EventCard[] = [
-  { id: 'card-1', icon: 'calendar', title: 'Event Date', description: 'November 27, 2027', subDetail: '10:00 AM', customColor: 'indigo', order: 1, visible: true },
-  { id: 'card-2', icon: 'map-pin', title: 'Venue', description: 'Central Amphitheatre', subDetail: '', customColor: 'cyan', order: 2, visible: true },
-  { id: 'card-3', icon: 'credit-card', title: 'Registration Fee', description: '500 BDT', subDetail: '', customColor: 'emerald', order: 3, visible: true },
-  { id: 'card-4', icon: 'clock', title: 'Last Registration Date', description: 'October 31, 2027', subDetail: '', customColor: 'amber', order: 4, visible: true },
-];
-const DEFAULT_CONTENT: any = { description: 'Official Batch 2027 Celebration', bannerText: '', bannerActive: true, registrationOpen: true, registrationDeadline: '', copyrightText: '© 2027 RD27. All Rights Reserved.', footerText: 'Official Batch 2027 Committee · Executive Administration', payment: { currency: 'BDT', bkashEnabled: true, nagadEnabled: true, bkashNumber: '', nagadNumber: '', maleBkashNumber: '', maleNagadNumber: '', femaleBkashNumber: '', femaleNagadNumber: '', instructions: '', paymentInstructions: '' }, pdf: { title: 'RAG DAY 27 (RD27)', subtitle: 'Official Registration Ledger', logo: '', footerText: 'RD27 Rag Day 2027 Official Record', signatureText: 'Executive Convener', showLogo: true, showPhoto: false, showRegistrationNo: true, showStudentDetails: true }, jersey: { showcaseEnabled: true, sectionOrder: 'showcase_first', items: [] } };
-export function mapSiteContent(row: SiteContentRow) {
-  const content = { ...DEFAULT_CONTENT, ...asRecord(row.content_blocks) };
-  const paymentBlock = { ...DEFAULT_CONTENT.payment, ...asRecord(content.payment) };
-  const pdfBlock = { ...DEFAULT_CONTENT.pdf, ...asRecord(content.pdf) };
-  const jerseyBlock = { ...DEFAULT_CONTENT.jersey, ...asRecord(content.jersey) };
-  const eventDate = row.event_date || '2027-11-27'; const eventTime = row.event_time || '10:00:00';
-  const dateObj = new Date(eventDate + 'T' + eventTime); const validDate = !Number.isNaN(dateObj.getTime());
-  const website: WebsiteSettings = { eventName: row.event_name || row.website_name || 'Rag Day 27', eventDescription: content.description || '', eventDate: validDate ? dateObj.toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' }) : eventDate, eventTime: validDate ? dateObj.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' }) : eventTime, eventDay: Number(eventDate.slice(8,10)) || 27, eventMonth: validDate ? dateObj.toLocaleDateString('en-US', { month: 'long' }) : 'November', eventYear: Number(eventDate.slice(0,4)) || 2027, venue: row.venue || '', registrationFee: String(Number(row.registration_fee ?? 500)) + ' BDT', lastRegDate: content.registrationDeadline ? new Date(content.registrationDeadline).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' }) : '', footerText: content.footerText || '', copyrightText: content.copyrightText || '', bannerText: content.bannerText || '', bannerActive: content.bannerActive !== false };
-  const branding: BrandingSettings = { websiteLogo: row.logo || '', favicon: row.favicon || '', heroBanner: row.banner || '', heroBackground: row.hero_background || '', jerseyFrontImage: row.male_front || '', jerseyBackImage: row.male_back || '', invitationCardBackground: '', footerLogo: row.logo || '' };
-  const payment: PaymentSettings = { registrationFee: Number(row.registration_fee ?? 500), currency: paymentBlock.currency || 'BDT', bkashEnabled: paymentBlock.bkashEnabled !== false, nagadEnabled: paymentBlock.nagadEnabled !== false, maleBkashNumber: paymentBlock.maleBkashNumber || paymentBlock.bkashNumber || '', maleNagadNumber: paymentBlock.maleNagadNumber || paymentBlock.nagadNumber || '', femaleBkashNumber: paymentBlock.femaleBkashNumber || paymentBlock.bkashNumber || '', femaleNagadNumber: paymentBlock.femaleNagadNumber || paymentBlock.nagadNumber || '', instructions: paymentBlock.instructions || '', paymentInstructions: paymentBlock.paymentInstructions || paymentBlock.instructions || '' };
-  const pdf: PdfSettings = { pdfLogo: pdfBlock.logo || row.logo || '', pdfHeader: pdfBlock.title || 'RAG DAY 27 (RD27)', pdfSubHeader: pdfBlock.subtitle || 'Official Registration Ledger', watermarkLogo: 'RD27 OFFICIAL', watermarkOpacity: 0.08, footerText: pdfBlock.footerText || '', signatureArea: pdfBlock.signatureText || 'Executive Convener', signatureTitle: 'Authorized Rag Day 2027 Committee', approvalText: 'Verified and approved by Batch 27 Executive Committee.', invitationCardTitle: String(row.event_name || 'RAG DAY 27') + ' - OFFICIAL INVITATION PASS', customNotes: '' };
-  const rawCards = Array.isArray(row.cards) && row.cards.length ? row.cards : DEFAULT_CARDS;
-  const cards: EventCard[] = rawCards.map((card:any,i:number)=>({ id:String(card.id||('card-'+(i+1))), icon:card.icon||'sparkles', title:card.title||'', description:card.description||'', subDetail:card.subDetail||'', customColor:card.customColor||'indigo', order:Number(card.order ?? card.sort_order ?? i+1), visible:card.visible !== false }));
-  const jerseyShowcase: JerseyShowcaseSettings = { enabled: jerseyBlock.showcaseEnabled !== false, sectionOrder: jerseyBlock.sectionOrder === 'cards_first' ? 'cards_first' : 'showcase_first', jerseys: Array.isArray(jerseyBlock.items) ? jerseyBlock.items : [] };
-  return { site: row, website, branding, payment, pdf, cards, jerseyShowcase };
-}
-export async function fetchSiteContentFromSupabase():Promise<SiteContentRow|null>{ const {data,error}=await supabase.from('site_content').select('*').eq('id','current').maybeSingle(); if(error) throw new Error(error.message); return (data as SiteContentRow)||null; }
-export async function saveSiteContentToSupabase(content:Partial<SiteContentRow>):Promise<SiteContentRow>{ const {data,error}=await supabase.from('site_content').upsert({...content,id:'current',updated_at:new Date().toISOString()}).select('*').single(); if(error) throw new Error(error.message); return data as SiteContentRow; }
-const REGISTRATION_SELECT='id,registration_no,student_name,gender,roll,student_id,group_name,section_name,jersey_name,jersey_number,jersey_size,sender_number,payment_method,payment_time,transaction_id,registration_fee,student_photo,status,rejection_reason,approved_by,approved_at,rejected_by,rejected_at,created_at,updated_at';
-export async function fetchRegistrationsFromSupabase(){ const {data,error}=await supabase.from('registrations').select(REGISTRATION_SELECT).order('registration_no',{ascending:false}); if(error) throw new Error(error.message); return {data:(data||[]).map(mapDbToInvitation),fromDb:true}; }
-export async function saveRegistrationToSupabase(rec:any){ const {data,error}=await supabase.from('registrations').insert({student_name:rec.name,gender:rec.gender,roll:rec.roll,student_id:rec.id,group_name:rec.group,section_name:normalizeSectionCode(rec.section),jersey_name:rec.jerseyName,jersey_number:rec.jerseyNumber,jersey_size:rec.jerseySize,sender_number:rec.senderNumber,payment_method:rec.paymentMethod||'bkash',payment_time:rec.paymentTime,transaction_id:rec.transactionId||null,registration_fee:rec.amount??500,student_photo:rec.photoUrl||null,status:'pending'}).select(REGISTRATION_SELECT).single(); if(error) throw new Error(error.message); return {success:true,data:mapDbToInvitation(data)}; }
-function numericReg(regNo:string):number{const n=Number(regNo.replace(/[^0-9]/g,''));if(!Number.isFinite(n))throw new Error('Invalid registration number.');return n;}
-export async function updateRegistrationStatusInSupabase(regNo:string,status:InvitationStatus,reason?:string):Promise<void>{const {error}=await supabase.from('registrations').update({status,rejection_reason:status==='rejected'?(reason||'').trim():null}).eq('registration_no',numericReg(regNo));if(error)throw new Error(error.message);}
-export async function updateRegistrationDetailsInSupabase(regNo:string,updates:Partial<InvitationRecord>):Promise<void>{const p:any={};if(updates.name!==undefined)p.student_name=updates.name;if(updates.roll!==undefined)p.roll=updates.roll;if(updates.id!==undefined)p.student_id=updates.id;if(updates.group!==undefined)p.group_name=updates.group;if(updates.section!==undefined)p.section_name=normalizeSectionCode(updates.section);if(updates.gender!==undefined)p.gender=updates.gender;if(updates.jerseyName!==undefined)p.jersey_name=updates.jerseyName;if(updates.jerseyNumber!==undefined)p.jersey_number=updates.jerseyNumber;if(updates.jerseySize!==undefined)p.jersey_size=updates.jerseySize;if(updates.senderNumber!==undefined)p.sender_number=updates.senderNumber;if(updates.paymentTime!==undefined)p.payment_time=updates.paymentTime;if(updates.transactionId!==undefined)p.transaction_id=updates.transactionId;if(updates.photoUrl!==undefined)p.student_photo=updates.photoUrl;const {error}=await supabase.from('registrations').update(p).eq('registration_no',numericReg(regNo));if(error)throw new Error(error.message);}
-export async function deleteRegistrationFromSupabase(regNo:string):Promise<void>{const {error}=await supabase.from('registrations').delete().eq('registration_no',numericReg(regNo));if(error)throw new Error(error.message);}
+import type { AdminProfile } from '../types';
 
+// Environment variables for Supabase
+export const SUPABASE_URL =
+  (import.meta.env.VITE_SUPABASE_URL as string) ||
+  'https://rqjlrbteaqjpgwkeomro.supabase.co';
+
+export const SUPABASE_PUBLISHABLE_KEY =
+  (import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY as string) ||
+  (import.meta.env.VITE_SUPABASE_ANON_KEY as string) ||
+  'sb_publishable_BcoEceXY8X9BxifFSMRjoA_neWVF9wb';
+
+// Central Supabase Client (browser-safe publishable/anon key only)
+export const supabase = createClient(SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY, {
+  auth: {
+    persistSession: true,
+    autoRefreshToken: true,
+  },
+});
+
+// Storage Bucket Name
+export const STORAGE_BUCKET = 'uploads';
+
+// ============================================================================
+// ADMIN AUTHENTICATION & IDENTITY HELPERS (Backed by public.admins table)
+// ============================================================================
+
+/**
+ * Sign in an admin using Supabase Auth, then verify active role in the admins table.
+ */
+export async function signInAdmin(email: string, password: string): Promise<AdminProfile> {
+  const { data: authData, error: authError } = await supabase.auth.signInWithPassword({
+    email,
+    password,
+  });
+
+  if (authError || !authData?.user) {
+    throw new Error(authError?.message || 'Invalid email or password.');
+  }
+
+  const user = authData.user;
+
+  // Verify membership in public.admins table
+  const { data: adminRecord, error: adminError } = await supabase
+    .from('admins')
+    .select('*')
+    .eq('auth_user_id', user.id)
+    .maybeSingle();
+
+  if (adminError || !adminRecord) {
+    await supabase.auth.signOut();
+    throw new Error('Access denied: Your account is not configured as an active administrator.');
+  }
+
+  if (!adminRecord.active) {
+    await supabase.auth.signOut();
+    throw new Error('Access denied: Your administrator account has been disabled.');
+  }
+
+  return {
+    id: adminRecord.id,
+    auth_user_id: adminRecord.auth_user_id,
+    username: adminRecord.username,
+    full_name: adminRecord.full_name,
+    role: adminRecord.role,
+    active: adminRecord.active,
+    created_at: adminRecord.created_at || new Date().toISOString(),
+    updated_at: adminRecord.updated_at || new Date().toISOString(),
+  };
+}
+
+/**
+ * Sign out the currently authenticated admin.
+ */
+export async function signOutAdmin(): Promise<void> {
+  await supabase.auth.signOut();
+}
+
+/**
+ * Retrieve the current admin profile from the admins table based on active session.
+ */
+export async function getCurrentAdminProfile(): Promise<AdminProfile | null> {
+  try {
+    const { data: { session } } = await supabase.auth.getSession();
+    if (!session?.user) return null;
+
+    const { data: adminRecord, error } = await supabase
+      .from('admins')
+      .select('*')
+      .eq('auth_user_id', session.user.id)
+      .maybeSingle();
+
+    if (error || !adminRecord || !adminRecord.active) {
+      return null;
+    }
+
+    return {
+      id: adminRecord.id,
+      auth_user_id: adminRecord.auth_user_id,
+      username: adminRecord.username,
+      full_name: adminRecord.full_name,
+      role: adminRecord.role,
+      active: adminRecord.active,
+      created_at: adminRecord.created_at,
+      updated_at: adminRecord.updated_at,
+    };
+  } catch {
+    return null;
+  }
+}
+
+/**
+ * Fetch all admin links (for Super Admin management).
+ */
 export async function fetchAdminsFromSupabase(): Promise<AdminProfile[]> {
   const { data, error } = await supabase
     .from('admins')
-    .select('auth_user_id,username,full_name,role,active,created_at,updated_at')
+    .select('*')
     .order('created_at', { ascending: true });
-  if (error) throw new Error(error.message);
-  return (data || []) as AdminProfile[];
+
+  if (error) {
+    throw new Error(error.message || 'Failed to fetch admin list.');
+  }
+
+  return (data || []).map(row => ({
+    id: row.id,
+    auth_user_id: row.auth_user_id,
+    username: row.username,
+    full_name: row.full_name,
+    role: row.role,
+    active: row.active,
+    created_at: row.created_at,
+    updated_at: row.updated_at,
+  }));
 }
 
-export async function saveAdminProfileToSupabase(profile: AdminProfile): Promise<AdminProfile> {
+/**
+ * Save or update an admin record in public.admins.
+ */
+export async function saveAdminProfileToSupabase(profile: Partial<AdminProfile> & { auth_user_id: string }): Promise<AdminProfile> {
+  const payload = {
+    auth_user_id: profile.auth_user_id,
+    username: profile.username || null,
+    full_name: profile.full_name || 'Admin',
+    role: profile.role || 'male_admin',
+    active: profile.active ?? true,
+    updated_at: new Date().toISOString(),
+  };
+
   const { data, error } = await supabase
     .from('admins')
-    .upsert(profile)
-    .select('auth_user_id,username,full_name,role,active,created_at,updated_at')
+    .upsert(payload, { onConflict: 'auth_user_id' })
+    .select()
     .single();
-  if (error) throw new Error(error.message);
-  return data as AdminProfile;
+
+  if (error || !data) {
+    throw new Error(error?.message || 'Failed to save admin record.');
+  }
+
+  return {
+    id: data.id,
+    auth_user_id: data.auth_user_id,
+    username: data.username,
+    full_name: data.full_name,
+    role: data.role,
+    active: data.active,
+    created_at: data.created_at,
+    updated_at: data.updated_at,
+  };
 }
 
+/**
+ * Remove an admin record from public.admins.
+ */
 export async function deleteAdminProfileFromSupabase(authUserId: string): Promise<void> {
-  const { error } = await supabase.from('admins').delete().eq('auth_user_id', authUserId);
-  if (error) throw new Error(error.message);
+  const { error } = await supabase
+    .from('admins')
+    .delete()
+    .eq('auth_user_id', authUserId);
+
+  if (error) {
+    throw new Error(error.message || 'Failed to delete admin profile.');
+  }
 }
-export async function getCurrentAdminProfile():Promise<AdminProfile|null>{const {data:authData,error:authError}=await supabase.auth.getUser();if(authError||!authData.user)return null;const {data,error}=await supabase.from('admins').select('auth_user_id,username,full_name,role,active,created_at,updated_at').eq('auth_user_id',authData.user.id).eq('active',true).maybeSingle();if(error)throw new Error(error.message);return (data as AdminProfile)||null;}
-export async function signInAdmin(email:string,password:string):Promise<AdminProfile>{const {error}=await supabase.auth.signInWithPassword({email:email.trim(),password});if(error)throw new Error(error.message);const profile=await getCurrentAdminProfile();if(!profile){await supabase.auth.signOut();throw new Error('Authenticated user is not registered as an active RagDay27 admin.');}return profile;}
-export async function signOutAdmin():Promise<void>{const {error}=await supabase.auth.signOut();if(error)throw new Error(error.message);}
-export async function lookupApprovedRegistration(registrationNo:string):Promise<InvitationRecord|null>{const {data,error}=await supabase.rpc('lookup_registration',{p_registration_no:numericReg(registrationNo)});if(error)throw new Error(error.message);const row=Array.isArray(data)?data[0]:data;return row?mapDbToInvitation(row):null;}
-export async function uploadFileToStorage(file:File|Blob,type:'branding'|'jersey'|'studentPhoto',customFileName?:string):Promise<string>{const bucket=type==='branding'?STORAGE_BUCKETS.branding:type==='jersey'?STORAGE_BUCKETS.jerseys:STORAGE_BUCKETS.studentPhotos;const name=file instanceof File?file.name:'upload.png';const ext=name.split('.').pop()||'png';const base=(customFileName||crypto.randomUUID()).replace(/[^a-zA-Z0-9_-]/g,'_');const path=(type==='studentPhoto'?'students':type)+'/'+base+'.'+ext;const {data,error}=await supabase.storage.from(bucket).upload(path,file,{upsert:true,cacheControl:'3600',contentType:file.type||undefined});if(error)throw new Error(error.message);return type==='studentPhoto'?data.path:supabase.storage.from(bucket).getPublicUrl(data.path).data.publicUrl;}
-export interface SupabaseHealthStatus{connected:boolean;projectUrl:string;projectId:string;registrationsTable:boolean;adminsTable:boolean;siteContentTable:boolean;storageBuckets:string[];registrationCount:number;errorMessage?:string;}
-export async function checkSupabaseHealth():Promise<SupabaseHealthStatus>{const s:SupabaseHealthStatus={connected:false,projectUrl:SUPABASE_URL,projectId:'rqjlrbteaqjpgwkeomro',registrationsTable:false,adminsTable:false,siteContentTable:false,storageBuckets:[],registrationCount:0};try{const [r,a,c]=await Promise.all([supabase.from('registrations').select('registration_no',{count:'exact'}).limit(1),supabase.from('admins').select('auth_user_id').limit(1),supabase.from('site_content').select('id').eq('id','current').maybeSingle()]);s.connected=true;s.registrationsTable=!r.error;s.adminsTable=!a.error;s.siteContentTable=!c.error&&!!c.data;s.registrationCount=r.data?.length||0;const {data:b}=await supabase.storage.listBuckets();s.storageBuckets=(b||[]).map((x)=>x.id);}catch(e:any){s.errorMessage=e?.message||'Supabase connection failed';}return s;}
