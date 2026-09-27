@@ -1,6 +1,6 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import type { InvitationRecord, InvitationStatus, SiteContentRow, AdminProfile, EventCard } from '../types';
-import { getCurrentAdminProfile, signInAdmin, signOutAdmin } from '../lib/supabase';
+import { getCurrentAdminProfile, signInAdmin, signOutAdmin, fetchAdminsFromSupabase, saveAdminProfileToSupabase, deleteAdminProfileFromSupabase } from '../lib/supabase';
 import { generateRegistrationListPDF } from '../utils/pdfGenerator';
 import {
   X, Lock, LogIn, LogOut, Search, Check, XCircle,
@@ -62,6 +62,10 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
   const [rejectReason, setRejectReason] = useState('');
   const [saving, setSaving] = useState(false);
   const [draft, setDraft] = useState<SiteContentRow | null>(null);
+  const [adminRows, setAdminRows] = useState<AdminProfile[]>([]);
+  const [adminDraft, setAdminDraft] = useState<AdminProfile | null>(null);
+  const [adminError, setAdminError] = useState('');
+
 
   useEffect(() => {
     if (!isOpen) return;
@@ -86,6 +90,11 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
   }, [admin?.role, invitations, statusFilter, query]);
 
   if (!isOpen) return null;
+
+  useEffect(() => {
+    if (admin?.role !== 'super_admin') return;
+    void fetchAdminsFromSupabase().then(setAdminRows).catch((e:any) => setAdminError(e?.message || 'Unable to load admins.'));
+  }, [admin?.role]);
 
   const login = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -151,7 +160,7 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
     signatureArea:(siteContent?.content_blocks as any)?.pdf?.signatureText || 'Executive Convener',
     signatureTitle:'Authorized Rag Day 2027 Committee', approvalText:'',
     invitationCardTitle:'RAG DAY 27 - OFFICIAL INVITATION PASS', customNotes:''
-  } as any, (admin?.role === 'male_admin' ? 'male' : admin?.role === 'female_admin' ? 'female' : 'super') as any);
+  } as any, (siteContent ? ({ eventName: siteContent.event_name || siteContent.website_name || 'Rag Day 27', eventDescription: '', eventDate: siteContent.event_date || '', eventTime: siteContent.event_time || '', venue: siteContent.venue || '', registrationFee: String(siteContent.registration_fee || 500), lastRegDate: '', footerText: '', copyrightText: '', bannerText: '', bannerActive: false } as any) : ({} as any)), (admin?.role === 'male_admin' ? 'male' : admin?.role === 'female_admin' ? 'female' : 'super') as any);
 
   const roleTitle = admin?.role === 'super_admin' ? 'Super Admin' : admin?.role === 'male_admin' ? 'Male Admin' : 'Female Admin';
 
@@ -235,7 +244,21 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
             {GROUPS.flatMap(group=>['male','female'].map(gender=>({group,gender:g as any}))).map(({group,gender})=>{ const rows=sections.map((s:any,i:number)=>({...s,__index:i})).filter(s=>s.group===group&&s.gender===gender); return <div key={group+gender} className="rounded-2xl bg-white border p-4"><div className="flex items-center justify-between mb-3"><h3 className="font-black">{group} · {gender}</h3><button onClick={()=>addSection(gender,group)} className="px-2 py-1 rounded-lg bg-slate-900 text-white text-xs font-bold">Add Section</button></div><div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-2">{rows.map((s:any)=><div key={s.__index} className="flex items-center gap-2 rounded-lg border p-2"><input value={s.code||''} onChange={e=>setSection(s.__index,{code:e.target.value,displayName:e.target.value})} className="w-20 rounded border px-2 py-1 text-xs font-mono"/><button onClick={()=>setSection(s.__index,{active:s.active===false})} className="p-1.5 rounded border">{s.active===false?<EyeOff/>:<Eye/>}</button><button onClick={()=>removeSection(s.__index)} className="p-1.5 rounded border text-rose-600"><Trash2/></button></div>)}</div></div>})}
           </section>}
 
-          {tab==='admins' && admin.role==='super_admin' && <section className="p-4 sm:p-6"><div className="rounded-2xl bg-white border p-5"><h2 className="text-xl font-black">Admin Identity Management</h2><p className="text-sm text-slate-600 mt-1">Admin rows are stored in the admins table. New users must first exist in Supabase Auth; their auth_user_id is then linked by a secured server-side/admin workflow.</p></div></section>}
+          {tab==='admins' && admin.role==='super_admin' && <section className="p-4 sm:p-6 space-y-4">
+            <div className="rounded-2xl bg-white border p-5">
+              <div className="flex items-center justify-between gap-3"><div><h2 className="text-xl font-black">Admin Identity Management</h2><p className="text-sm text-slate-600 mt-1">Link an existing Supabase Auth user to an admin role. Auth accounts themselves must be created through Supabase Auth.</p></div><button onClick={()=>{setAdminDraft({auth_user_id:crypto.randomUUID(),username:'',full_name:'',role:'male_admin',active:true,created_at:new Date().toISOString(),updated_at:new Date().toISOString()});setAdminError('');}} className="px-3 py-2 rounded-lg bg-slate-900 text-white text-xs font-bold"><Plus className="w-4 h-4 inline mr-1"/>Add Link</button></div>
+              {adminError && <div className="mt-3 rounded-lg bg-rose-50 border border-rose-200 text-rose-700 p-3 text-xs">{adminError}</div>}
+            </div>
+            {adminDraft && <div className="rounded-2xl bg-white border p-4 grid md:grid-cols-2 gap-3">
+              <label className="text-xs font-bold">Auth User ID<input value={adminDraft.auth_user_id} onChange={e=>setAdminDraft({...adminDraft,auth_user_id:e.target.value})} className="mt-1 w-full rounded-lg border px-3 py-2 font-mono text-xs"/></label>
+              <label className="text-xs font-bold">Username<input value={adminDraft.username||''} onChange={e=>setAdminDraft({...adminDraft,username:e.target.value})} className="mt-1 w-full rounded-lg border px-3 py-2 text-xs"/></label>
+              <label className="text-xs font-bold">Full Name<input value={adminDraft.full_name} onChange={e=>setAdminDraft({...adminDraft,full_name:e.target.value})} className="mt-1 w-full rounded-lg border px-3 py-2 text-xs"/></label>
+              <label className="text-xs font-bold">Role<select value={adminDraft.role} onChange={e=>setAdminDraft({...adminDraft,role:e.target.value as any})} className="mt-1 w-full rounded-lg border px-3 py-2 text-xs"><option value="super_admin">Super Admin</option><option value="male_admin">Male Admin</option><option value="female_admin">Female Admin</option></select></label>
+              <label className="text-xs font-bold flex items-center gap-2"><input type="checkbox" checked={adminDraft.active} onChange={e=>setAdminDraft({...adminDraft,active:e.target.checked})}/> Active</label>
+              <div className="md:col-span-2 flex justify-end gap-2"><button onClick={()=>setAdminDraft(null)} className="px-3 py-2 rounded-lg border text-xs font-bold">Cancel</button><button onClick={()=>void (async()=>{try{const saved=await saveAdminProfileToSupabase({...adminDraft,updated_at:new Date().toISOString()});setAdminRows(prev=>[...prev.filter(x=>x.auth_user_id!==saved.auth_user_id),saved].sort((a,b)=>a.created_at.localeCompare(b.created_at)));setAdminDraft(null);setAdminError('');}catch(e:any){setAdminError(e?.message||'Unable to save admin.');}})()} className="px-3 py-2 rounded-lg bg-indigo-600 text-white text-xs font-bold"><Save className="w-4 h-4 inline mr-1"/>Save</button></div>
+            </div>}
+            <div className="grid gap-3">{adminRows.map(a=><article key={a.auth_user_id} className="rounded-2xl bg-white border p-4 flex flex-wrap gap-3 items-center justify-between"><div><div className="font-bold">{a.full_name}</div><div className="text-xs text-slate-500 font-mono break-all">{a.auth_user_id}</div><div className="text-xs text-slate-500 mt-1">{a.username || 'No username'} · {a.role} · {a.active?'Active':'Disabled'}</div></div><div className="flex gap-2"><button onClick={()=>setAdminDraft({...a})} className="px-3 py-2 rounded-lg border text-xs font-bold">Edit</button><button onClick={()=>void (async()=>{try{await deleteAdminProfileFromSupabase(a.auth_user_id);setAdminRows(prev=>prev.filter(x=>x.auth_user_id!==a.auth_user_id));}catch(e:any){setAdminError(e?.message||'Unable to remove admin link.');}})()} className="px-3 py-2 rounded-lg border border-rose-200 text-rose-700 text-xs font-bold">Remove</button></div></article>)}</div>
+          </section>}
         </div>
       )}
 
