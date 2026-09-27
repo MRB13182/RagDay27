@@ -428,18 +428,19 @@ export const InvitationCardPage: React.FC<InvitationCardPageProps> = ({
 
                       <div className="p-3 rounded-xl bg-slate-900/60 border border-slate-700/60">
                         <span className="text-[10px] uppercase font-bold text-slate-400 block mb-0.5">
-                          Seating Zone
+                          Gender
                         </span>
                         <span className="font-medium text-white truncate block">
+                          {matchedRecord.gender}
                         </span>
                       </div>
 
                       <div className="p-3 rounded-xl bg-slate-900/60 border border-slate-700/60">
                         <span className="text-[10px] uppercase font-bold text-slate-400 block mb-0.5">
-                          Entry Gate
+                          Verification
                         </span>
                         <span className="font-medium text-emerald-400 truncate block">
-                          Verified after approval
+                          Approved
                         </span>
                       </div>
                     </div>
