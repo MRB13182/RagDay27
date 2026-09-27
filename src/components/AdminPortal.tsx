@@ -151,16 +151,39 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
     setRejecting(null); setRejectReason('');
   };
 
-  const exportPdf = () => generateRegistrationListPDF(scopedRows as any, {
-    pdfLogo: (siteContent?.content_blocks as any)?.pdf?.logo || siteContent?.logo || '',
-    pdfHeader: (siteContent?.content_blocks as any)?.pdf?.title || 'RAG DAY 27 (RD27)',
-    pdfSubHeader: (siteContent?.content_blocks as any)?.pdf?.subtitle || 'Official Registration Ledger',
-    watermarkLogo:'RD27 OFFICIAL', watermarkOpacity:0.08,
-    footerText:(siteContent?.content_blocks as any)?.pdf?.footerText || '',
-    signatureArea:(siteContent?.content_blocks as any)?.pdf?.signatureText || 'Executive Convener',
-    signatureTitle:'Authorized Rag Day 2027 Committee', approvalText:'',
-    invitationCardTitle:'RAG DAY 27 - OFFICIAL INVITATION PASS', customNotes:''
-  } as any, (siteContent ? ({ eventName: siteContent.event_name || siteContent.website_name || 'Rag Day 27', eventDescription: '', eventDate: siteContent.event_date || '', eventTime: siteContent.event_time || '', venue: siteContent.venue || '', registrationFee: String(siteContent.registration_fee || 500), lastRegDate: '', footerText: '', copyrightText: '', bannerText: '', bannerActive: false } as any) : ({} as any)), (admin?.role === 'male_admin' ? 'male' : admin?.role === 'female_admin' ? 'female' : 'super') as any);
+  const exportPdf = () => {
+    const pdf = (siteContent?.content_blocks as any)?.pdf || {};
+    generateRegistrationListPDF(
+      scopedRows,
+      {
+        pdfLogo: pdf.logo || siteContent?.logo || '',
+        pdfHeader: pdf.title || 'RAG DAY 27 (RD27)',
+        pdfSubHeader: pdf.subtitle || 'Official Registration Ledger',
+        watermarkLogo: 'RD27 OFFICIAL',
+        watermarkOpacity: 0.08,
+        footerText: pdf.footerText || '',
+        signatureArea: pdf.signatureText || 'Executive Convener',
+        signatureTitle: 'Authorized Rag Day 2027 Committee',
+        approvalText: '',
+        invitationCardTitle: 'RAG DAY 27 - OFFICIAL INVITATION PASS',
+        customNotes: '',
+      } as any,
+      {
+        eventName: siteContent?.event_name || siteContent?.website_name || 'Rag Day 27',
+        eventDescription: '',
+        eventDate: siteContent?.event_date || '',
+        eventTime: siteContent?.event_time || '',
+        venue: siteContent?.venue || '',
+        registrationFee: String(siteContent?.registration_fee || 500) + ' BDT',
+        lastRegDate: '',
+        footerText: '',
+        copyrightText: '',
+        bannerText: '',
+        bannerActive: false,
+      },
+      (admin?.role === 'male_admin' ? 'male_admin' : admin?.role === 'female_admin' ? 'female_admin' : 'super_admin')
+    );
+  };
 
   const roleTitle = admin?.role === 'super_admin' ? 'Super Admin' : admin?.role === 'male_admin' ? 'Male Admin' : 'Female Admin';
 
