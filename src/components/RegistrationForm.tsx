@@ -9,8 +9,7 @@ import {
 } from '../types';
 import { DEFAULT_PAYMENT_SETTINGS } from '../data/mockData';
 import {
-  getNextAvailableRegistrationNumber,
-  getNextSerialNumber,
+  getAvailableSections as getSectionsFromContent,
   uploadFileToStorage,
   saveRegistrationToSupabase,
 } from '../lib/supabase';
@@ -36,29 +35,18 @@ interface RegistrationFormProps {
   onSuccessSubmit: (newRecord: InvitationRecord) => void;
   onGoToInvitation: (regNo: string) => void;
   paymentSettings?: PaymentSettings;
-  existingRegistrations?: InvitationRecord[];
+  sections?: unknown[];
 }
 
 const JERSEY_SIZES: JerseySize[] = ['S', 'M', 'L', 'XL', '2XL', '3XL', '4XL'];
 
-export const getAvailableSections = (gender: GenderType, group: string): string[] => {
-  if (gender === 'male') {
-    if (group === 'Science') return ['SCB1', 'SCB2', 'SCB3', 'SCB4', 'SCB5'];
-    if (group === 'Business Studies') return ['BSB1', 'BSB2', 'BSB3', 'BSB4', 'BSB5'];
-    if (group === 'Humanities') return ['HUB1', 'HUB2', 'HUB3', 'HUB4', 'HUB5'];
-  } else if (gender === 'female') {
-    if (group === 'Science') return ['SCG1', 'SCG2', 'SCG3', 'SCG4', 'SCG5'];
-    if (group === 'Business Studies') return ['BSG1', 'BSG2', 'BSG3', 'BSG4', 'BSG5'];
-    if (group === 'Humanities') return ['HUG1', 'HUG2', 'HUG3', 'HUG4', 'HUG5'];
-  }
-  return [];
-};
+export const getAvailableSections = getSectionsFromContent;
 
 export const RegistrationForm: React.FC<RegistrationFormProps> = ({
   onSuccessSubmit,
   onGoToInvitation,
   paymentSettings = DEFAULT_PAYMENT_SETTINGS,
-  existingRegistrations = [],
+  sections = [],
 }) => {
   const activeFee = paymentSettings?.registrationFee ?? 500;
   const activeCurrency = paymentSettings?.currency ?? 'BDT';
@@ -70,7 +58,6 @@ export const RegistrationForm: React.FC<RegistrationFormProps> = ({
     id: '',
     group: '',
     section: '',
-    contactNumber: '',
     photoUrl: null,
     amount: activeFee,
     paymentMethod: paymentSettings?.bkashEnabled ? 'bkash' : 'nagad',
@@ -102,12 +89,7 @@ export const RegistrationForm: React.FC<RegistrationFormProps> = ({
 
   const [copiedAccount, setCopiedAccount] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [successModalData, setSuccessModalData] = useState<{
-    name: string;
-    regNo: string;
-    serialNo?: number;
-    gender: GenderType;
-  } | null>(null);
+  const [successModalData, setSuccessModalData] = useState<{ name: string; regNo: string; gender: GenderType } | null>(null);
   const [formErrors, setFormErrors] = useState<{ [key: string]: string }>({});
 
   // Gender-based theme configuration solely for the Registration Form Container
@@ -234,7 +216,6 @@ export const RegistrationForm: React.FC<RegistrationFormProps> = ({
       errors.section = 'Invalid section for selected Gender and Group';
     }
 
-    if (!formData.contactNumber.trim()) errors.contactNumber = 'Contact number is required';
     if (!formData.senderNumber.trim()) errors.senderNumber = 'Sender number is required';
     if (!formData.paymentTime.trim()) errors.paymentTime = 'Payment time is required';
     // Transaction ID is optional per requirements
@@ -252,24 +233,13 @@ export const RegistrationForm: React.FC<RegistrationFormProps> = ({
     setIsSubmitting(true);
 
     try {
-      // 1. Generate unique Registration Number and separate Serial Number
-      const newRegNo = getNextAvailableRegistrationNumber(existingRegistrations);
-      const newSerialNo = getNextSerialNumber(existingRegistrations);
-
-      // 2. Upload student photo to Supabase Storage if file provided
-      let photoUrl = formData.photoUrl || '';
+      let photoPath = formData.photoUrl || null;
       if (formData.photoFile) {
-        photoUrl = await uploadFileToStorage(formData.photoFile, 'students', newRegNo);
-      } else if (!photoUrl) {
-        photoUrl =
-          formData.gender === 'female'
-            ? 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&w=400&q=80'
-            : 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=400&q=80';
+        photoPath = await uploadFileToStorage(formData.photoFile, 'studentPhoto');
       }
 
       const newRecord: InvitationRecord = {
-        registrationNo: newRegNo,
-        serialNo: newSerialNo,
+        registrationNo: '',
         name: formData.name.trim(),
         roll: formData.roll.trim(),
         id: formData.id.trim(),
@@ -277,8 +247,7 @@ export const RegistrationForm: React.FC<RegistrationFormProps> = ({
         section: formData.section,
         status: 'pending',
         gender: formData.gender === 'female' ? 'female' : 'male',
-        photoUrl,
-        contactNumber: formData.contactNumber.trim(),
+        photoUrl: photoPath,
         jerseyName: formData.jerseyName.toUpperCase().trim(),
         jerseyNumber: formData.jerseyNumber || '27',
         jerseySize: formData.jerseySize,
@@ -294,12 +263,7 @@ export const RegistrationForm: React.FC<RegistrationFormProps> = ({
       const finalRecord = saveResult.data || newRecord;
 
       onSuccessSubmit(finalRecord);
-      setSuccessModalData({
-        name: formData.name,
-        regNo: newRegNo,
-        serialNo: newSerialNo,
-        gender: formData.gender,
-      });
+      setSuccessModalData({ name: finalRecord.name, regNo: finalRecord.registrationNo, gender: finalRecord.gender });
     } catch (err) {
       console.error('Registration submission error:', err);
     } finally {
@@ -465,7 +429,7 @@ export const RegistrationForm: React.FC<RegistrationFormProps> = ({
                     (formData.gender === 'male' || formData.gender === 'female') &&
                     Boolean(formData.group);
                   const availableSections = isSectionEnabled
-                    ? getAvailableSections(formData.gender, formData.group)
+                    ? getAvailableSections(formData.gender, formData.group, sections)
                     : [];
 
                   return (
@@ -503,26 +467,6 @@ export const RegistrationForm: React.FC<RegistrationFormProps> = ({
                     </>
                   );
                 })()}
-              </div>
-
-              {/* Contact Number */}
-              <div className="sm:col-span-2">
-                <label className={`block text-xs font-bold uppercase tracking-wider mb-1.5 ${labelClasses}`}>
-                  Contact Number <span className="text-rose-500">*</span>
-                </label>
-                <input
-                  type="tel"
-                  placeholder="e.g. 01712-345678"
-                  value={formData.contactNumber}
-                  onChange={e => {
-                    setFormData({ ...formData, contactNumber: e.target.value });
-                    if (formErrors.contactNumber) setFormErrors(prev => ({ ...prev, contactNumber: '' }));
-                  }}
-                  className={`w-full px-4 py-3 rounded-xl text-sm transition-colors outline-none ${inputClasses}`}
-                />
-                {formErrors.contactNumber && (
-                  <p className="text-rose-400 text-xs mt-1">{formErrors.contactNumber}</p>
-                )}
               </div>
 
               {/* Photo Upload System */}
@@ -981,16 +925,14 @@ export const RegistrationForm: React.FC<RegistrationFormProps> = ({
                 <span className="text-sm font-bold">{successModalData.name}</span>
               </div>
               <div className="flex items-center justify-between pb-2 border-b border-current/10">
-                <span className="opacity-75 uppercase font-semibold">Serial Number:</span>
+                <span className="opacity-75 uppercase font-semibold">Registration Number:</span>
                 <span className="text-sm font-bold font-mono">
-                  #{successModalData.serialNo || 1}
+                  {successModalData.regNo}
                 </span>
               </div>
               <div className="flex items-center justify-between pb-2 border-b border-current/10">
                 <span className="opacity-75 uppercase font-semibold">Registration No:</span>
-                <span className="text-base font-extrabold font-mono tracking-wider text-emerald-500">
-                  {successModalData.regNo}
-                </span>
+
               </div>
               <div className="flex items-center justify-between text-[11px] pt-1">
                 <span className="opacity-75">Database:</span>
