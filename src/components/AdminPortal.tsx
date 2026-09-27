@@ -1,10 +1,10 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import type { InvitationRecord, InvitationStatus, SiteContentRow, AdminProfile, EventCard } from '../types';
-import { getCurrentAdminProfile, signInAdmin, signOutAdmin, saveSiteContentToSupabase } from '../lib/supabase';
+import { getCurrentAdminProfile, signInAdmin, signOutAdmin } from '../lib/supabase';
 import { generateRegistrationListPDF } from '../utils/pdfGenerator';
 import {
-  X, Lock, LogIn, LogOut, ShieldCheck, Users, Search, Check, XCircle,
-  Trash2, Download, Save, Plus, ArrowUp, ArrowDown, Eye, EyeOff
+  X, Lock, LogIn, LogOut, Search, Check, XCircle,
+  Trash2, Download, Save, Plus, Eye, EyeOff
 } from 'lucide-react';
 
 interface AdminPortalProps {
