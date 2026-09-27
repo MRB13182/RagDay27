@@ -114,6 +114,31 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
     try { await onSaveSiteContent(draft); } finally { setSaving(false); }
   };
 
+  const saveAdminDraft = async () => {
+    if (!adminDraft?.auth_user_id.trim()) {
+      setAdminError('A real Supabase Auth user UUID is required.');
+      return;
+    }
+    if (!adminDraft.full_name.trim()) {
+      setAdminError('Full name is required.');
+      return;
+    }
+    try {
+      const saved = await saveAdminProfileToSupabase({
+        ...adminDraft,
+        auth_user_id: adminDraft.auth_user_id.trim(),
+        full_name: adminDraft.full_name.trim(),
+        username: adminDraft.username?.trim() || null,
+        updated_at: new Date().toISOString(),
+      });
+      setAdminRows(prev => [...prev.filter(x => x.auth_user_id !== saved.auth_user_id), saved].sort((a,b) => a.created_at.localeCompare(b.created_at)));
+      setAdminDraft(null);
+      setAdminError('');
+    } catch (e:any) {
+      setAdminError(e?.message || 'Unable to save admin.');
+    }
+  };
+
   const setCard = (index:number, patch:Partial<EventCard>) => {
     if (!draft) return;
     const cards = Array.isArray(draft.cards) ? [...draft.cards] : [];
@@ -269,7 +294,7 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
 
           {tab==='admins' && admin.role==='super_admin' && <section className="p-4 sm:p-6 space-y-4">
             <div className="rounded-2xl bg-white border p-5">
-              <div className="flex items-center justify-between gap-3"><div><h2 className="text-xl font-black">Admin Identity Management</h2><p className="text-sm text-slate-600 mt-1">Link an existing Supabase Auth user to an admin role. Auth accounts themselves must be created through Supabase Auth.</p></div><button onClick={()=>{setAdminDraft({auth_user_id:crypto.randomUUID(),username:'',full_name:'',role:'male_admin',active:true,created_at:new Date().toISOString(),updated_at:new Date().toISOString()});setAdminError('');}} className="px-3 py-2 rounded-lg bg-slate-900 text-white text-xs font-bold"><Plus className="w-4 h-4 inline mr-1"/>Add Link</button></div>
+              <div className="flex items-center justify-between gap-3"><div><h2 className="text-xl font-black">Admin Identity Management</h2><p className="text-sm text-slate-600 mt-1">Link an existing Supabase Auth user to an admin role. Auth accounts themselves must be created through Supabase Auth.</p></div><button onClick={()=>{setAdminDraft({auth_user_id:'',username:'',full_name:'',role:'male_admin',active:true,created_at:new Date().toISOString(),updated_at:new Date().toISOString()});setAdminError('');}} className="px-3 py-2 rounded-lg bg-slate-900 text-white text-xs font-bold"><Plus className="w-4 h-4 inline mr-1"/>Add Link</button></div>
               {adminError && <div className="mt-3 rounded-lg bg-rose-50 border border-rose-200 text-rose-700 p-3 text-xs">{adminError}</div>}
             </div>
             {adminDraft && <div className="rounded-2xl bg-white border p-4 grid md:grid-cols-2 gap-3">
@@ -278,7 +303,7 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
               <label className="text-xs font-bold">Full Name<input value={adminDraft.full_name} onChange={e=>setAdminDraft({...adminDraft,full_name:e.target.value})} className="mt-1 w-full rounded-lg border px-3 py-2 text-xs"/></label>
               <label className="text-xs font-bold">Role<select value={adminDraft.role} onChange={e=>setAdminDraft({...adminDraft,role:e.target.value as any})} className="mt-1 w-full rounded-lg border px-3 py-2 text-xs"><option value="super_admin">Super Admin</option><option value="male_admin">Male Admin</option><option value="female_admin">Female Admin</option></select></label>
               <label className="text-xs font-bold flex items-center gap-2"><input type="checkbox" checked={adminDraft.active} onChange={e=>setAdminDraft({...adminDraft,active:e.target.checked})}/> Active</label>
-              <div className="md:col-span-2 flex justify-end gap-2"><button onClick={()=>setAdminDraft(null)} className="px-3 py-2 rounded-lg border text-xs font-bold">Cancel</button><button onClick={()=>void (async()=>{try{const saved=await saveAdminProfileToSupabase({...adminDraft,updated_at:new Date().toISOString()});setAdminRows(prev=>[...prev.filter(x=>x.auth_user_id!==saved.auth_user_id),saved].sort((a,b)=>a.created_at.localeCompare(b.created_at)));setAdminDraft(null);setAdminError('');}catch(e:any){setAdminError(e?.message||'Unable to save admin.');}})()} className="px-3 py-2 rounded-lg bg-indigo-600 text-white text-xs font-bold"><Save className="w-4 h-4 inline mr-1"/>Save</button></div>
+              <div className="md:col-span-2 flex justify-end gap-2"><button onClick={()=>setAdminDraft(null)} className="px-3 py-2 rounded-lg border text-xs font-bold">Cancel</button><button onClick={()=>void saveAdminDraft()} className="px-3 py-2 rounded-lg bg-indigo-600 text-white text-xs font-bold"><Save className="w-4 h-4 inline mr-1"/>Save</button></div>
             </div>}
             <div className="grid gap-3">{adminRows.map(a=><article key={a.auth_user_id} className="rounded-2xl bg-white border p-4 flex flex-wrap gap-3 items-center justify-between"><div><div className="font-bold">{a.full_name}</div><div className="text-xs text-slate-500 font-mono break-all">{a.auth_user_id}</div><div className="text-xs text-slate-500 mt-1">{a.username || 'No username'} · {a.role} · {a.active?'Active':'Disabled'}</div></div><div className="flex gap-2"><button onClick={()=>setAdminDraft({...a})} className="px-3 py-2 rounded-lg border text-xs font-bold">Edit</button><button onClick={()=>void (async()=>{try{await deleteAdminProfileFromSupabase(a.auth_user_id);setAdminRows(prev=>prev.filter(x=>x.auth_user_id!==a.auth_user_id));}catch(e:any){setAdminError(e?.message||'Unable to remove admin link.');}})()} className="px-3 py-2 rounded-lg border border-rose-200 text-rose-700 text-xs font-bold">Remove</button></div></article>)}</div>
           </section>}
