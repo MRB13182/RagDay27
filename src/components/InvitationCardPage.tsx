@@ -34,7 +34,6 @@ export const InvitationCardPage: React.FC<InvitationCardPageProps> = ({
   pdfSettings,
   websiteSettings,
 }) => {
-  const [searchName, setSearchName] = useState('');
   const [searchRegNo, setSearchRegNo] = useState(initialSearchRegNo);
   const [searched, setSearched] = useState(false);
   const [matchedRecord, setMatchedRecord] = useState<InvitationRecord | null>(null);
@@ -43,39 +42,25 @@ export const InvitationCardPage: React.FC<InvitationCardPageProps> = ({
   useEffect(() => {
     if (initialSearchRegNo) {
       setSearchRegNo(initialSearchRegNo);
-      handleSearchWith(initialSearchRegNo, '');
+      handleSearchWith(initialSearchRegNo);
     }
   }, [initialSearchRegNo]);
 
-  const handleSearchWith = (regNoVal: string, nameVal: string) => {
-    const cleanedReg = regNoVal.trim().toUpperCase();
-    const cleanedName = nameVal.trim().toLowerCase();
-
+  const handleSearchWith = (regNoVal: string) => {
+    const cleanedReg = regNoVal.trim().replace(/[^0-9]/g, '');
     setSearched(true);
-
-    if (!cleanedReg && !cleanedName) {
+    if (!cleanedReg) {
       setMatchedRecord(null);
       return;
     }
-
-    if (cleanedReg) {
-      void lookupApprovedRegistration(cleanedReg).then((record) => setMatchedRecord(record)).catch(() => setMatchedRecord(null));
-      return;
-    }
-
-    const found = invitations.find(item => cleanedName ? item.name.toLowerCase().includes(cleanedName) : false);
-    setMatchedRecord(found || null);
+    void lookupApprovedRegistration(cleanedReg)
+      .then((record) => setMatchedRecord(record))
+      .catch(() => setMatchedRecord(null));
   };
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
-    handleSearchWith(searchRegNo, searchName);
-  };
-
-  const handlePresetSelect = (regNo: string, name: string) => {
-    setSearchRegNo(regNo);
-    setSearchName(name);
-    handleSearchWith(regNo, name);
+    handleSearchWith(searchRegNo);
   };
 
   const handleDownloadPDF = () => {
