@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { InvitationRecord, PdfSettings, WebsiteSettings } from '../types';
 import {
   Search,
@@ -16,6 +16,7 @@ import {
   AlertTriangle,
 } from 'lucide-react';
 import { generateInvitationCardPDF } from '../utils/pdfGenerator';
+import { lookupApprovedRegistration } from '../lib/supabase';
 import badgeImage from '../assets/images/rd27_invitation_badge_1790159004807.jpg';
 
 interface InvitationCardPageProps {
@@ -57,14 +58,12 @@ export const InvitationCardPage: React.FC<InvitationCardPageProps> = ({
       return;
     }
 
-    const found = invitations.find(item => {
-      const matchReg = cleanedReg ? item.registrationNo.toUpperCase() === cleanedReg : true;
-      const matchName = cleanedName
-        ? item.name.toLowerCase().includes(cleanedName)
-        : true;
-      return matchReg && matchName;
-    });
+    if (cleanedReg) {
+      void lookupApprovedRegistration(cleanedReg).then((record) => setMatchedRecord(record)).catch(() => setMatchedRecord(null));
+      return;
+    }
 
+    const found = invitations.find(item => cleanedName ? item.name.toLowerCase().includes(cleanedName) : false);
     setMatchedRecord(found || null);
   };
 
