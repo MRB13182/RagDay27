@@ -100,41 +100,8 @@ export const InvitationCardPage: React.FC<InvitationCardPageProps> = ({
           Verify & Download Invitation Card
         </h1>
         <p className="text-sm text-slate-600 mt-2">
-          Enter your student name or registered <strong>Registration Number</strong> to review committee authorization, seat allocation, and download your entry ticket.
+          Enter your <strong>Registration Number</strong> to check your registration status and, after approval, download your invitation card.
         </p>
-      </div>
-
-      {/* Instant Demo Presets Bar */}
-      <div className="mb-6 p-4 rounded-2xl bg-white/80 backdrop-blur-md border border-slate-200/90 shadow-sm flex flex-col sm:flex-row items-center justify-between gap-3">
-        <div className="text-xs font-semibold text-slate-600 flex items-center gap-1.5">
-          <span className="w-2 h-2 rounded-full bg-[#5B5FEF]" />
-          <span>Quick Demo Test Cases:</span>
-        </div>
-        <div className="flex flex-wrap items-center gap-2">
-          <button
-            type="button"
-            onClick={() => handlePresetSelect('1', 'John Doe')}
-            className="px-3 py-1.5 rounded-lg text-xs font-bold bg-emerald-50 text-emerald-700 border border-emerald-300 hover:bg-emerald-100 transition-colors flex items-center gap-1 cursor-pointer"
-          >
-            <CheckCircle2 className="w-3 h-3" /> Approved: 1
-          </button>
-
-          <button
-            type="button"
-            onClick={() => handlePresetSelect('101', 'Sohan Chowdhury')}
-            className="px-3 py-1.5 rounded-lg text-xs font-bold bg-amber-50 text-amber-700 border border-amber-300 hover:bg-amber-100 transition-colors flex items-center gap-1 cursor-pointer"
-          >
-            <Clock className="w-3 h-3" /> Pending: 101
-          </button>
-
-          <button
-            type="button"
-            onClick={() => handlePresetSelect('999', 'Tanvir Ahmed')}
-            className="px-3 py-1.5 rounded-lg text-xs font-bold bg-rose-50 text-rose-700 border border-rose-300 hover:bg-rose-100 transition-colors flex items-center gap-1 cursor-pointer"
-          >
-            <XCircle className="w-3 h-3" /> Rejected: 999
-          </button>
-        </div>
       </div>
 
       {/* Search Layout (Form) */}
