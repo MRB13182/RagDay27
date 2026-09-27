@@ -47,467 +47,197 @@ import {
 } from './lib/supabase';
 import { ArrowRight, Bell, CheckCircle2, AlertCircle, Info, X } from 'lucide-react';
 
-export default function App() {
-  const [activeTab, setActiveTab] = useState<'home' | 'register' | 'invitation'>('home');
-  const [invitations, setInvitations] = useState<InvitationRecord[]>(INITIAL_INVITATIONS);
-  const [invitationSearchTarget, setInvitationSearchTarget] = useState<string>('');
-  const [isAdminOpen, setIsAdminOpen] = useState(false);
+import { Navbar } from './components/Navbar';
+import { HeroSection } from './components/HeroSection';
+import { EventInformationSection } from './components/EventInformationSection';
+import { RegistrationForm } from './components/RegistrationForm';
+import { InvitationCardPage } from './components/InvitationCardPage';
+import { Footer } from './components/Footer';
+import { AdminPortal } from './components/AdminPortal';
+import { JerseyShowcaseSection } from './components/JerseyShowcaseSection';
+import { INITIAL_INVITATIONS, DEFAULT_EVENT_CARDS, DEFAULT_WEBSITE_SETTINGS, DEFAULT_BRANDING_SETTINGS, DEFAULT_PDF_SETTINGS, DEFAULT_PAYMENT_SETTINGS, DEFAULT_JERSEY_SHOWCASE_SETTINGS } from './data/mockData';
+import { InvitationRecord, InvitationStatus, SiteContentRow, WebsiteSettings, BrandingSettings, PdfSettings, PaymentSettings, EventCard, JerseyShowcaseSettings } from './types';
+import { supabase, fetchSiteContentFromSupabase, fetchRegistrationsFromSupabase, mapSiteContent, saveSiteContentToSupabase, lookupApprovedRegistration, updateRegistrationStatusInSupabase, deleteRegistrationFromSupabase, updateRegistrationDetailsInSupabase } from './lib/supabase';
+import { ArrowRight, Bell, CheckCircle2, AlertCircle, Info, X } from 'lucide-react';
 
-  // Dynamic Admin Controlled Settings
+export default function App() {
+  const [activeTab, setActiveTab] = useState<'home'|'register'|'invitation'>('home');
+  const [invitations, setInvitations] = useState<InvitationRecord[]>(INITIAL_INVITATIONS);
+  const [invitationSearchTarget, setInvitationSearchTarget] = useState('');
+  const [isAdminOpen, setIsAdminOpen] = useState(false);
+  const [siteContent, setSiteContent] = useState<SiteContentRow | null>(null);
   const [websiteSettings, setWebsiteSettings] = useState<WebsiteSettings>(DEFAULT_WEBSITE_SETTINGS);
   const [brandingSettings, setBrandingSettings] = useState<BrandingSettings>(DEFAULT_BRANDING_SETTINGS);
   const [pdfSettings, setPdfSettings] = useState<PdfSettings>(DEFAULT_PDF_SETTINGS);
   const [paymentSettings, setPaymentSettings] = useState<PaymentSettings>(DEFAULT_PAYMENT_SETTINGS);
   const [eventCards, setEventCards] = useState<EventCard[]>(DEFAULT_EVENT_CARDS);
-  const [jerseyShowcaseSettings, setJerseyShowcaseSettings] = useState<JerseyShowcaseSettings>(
-    DEFAULT_JERSEY_SHOWCASE_SETTINGS
-  );
+  const [jerseyShowcaseSettings, setJerseyShowcaseSettings] = useState<JerseyShowcaseSettings>(DEFAULT_JERSEY_SHOWCASE_SETTINGS);
+  const [toast, setToast] = useState<{message:string;type:'success'|'error'|'info'}|null>(null);
 
-  // Database Action Toast Notification
-  const [toast, setToast] = useState<{ message: string; type: 'success' | 'error' | 'info' } | null>(null);
-
-  const showToast = (message: string, type: 'success' | 'error' | 'info' = 'success') => {
-    setToast({ message, type });
-    setTimeout(() => {
-      setToast(prev => (prev?.message === message ? null : prev));
-    }, 4000);
+  const showToast = (message:string,type:'success'|'error'|'info'='success') => {
+    setToast({message,type});
+    window.setTimeout(()=>setToast(prev=>prev?.message===message?null:prev),4000);
   };
 
-  // ============================================================================
-  // 1. FETCH ALL DATA DIRECTLY FROM SUPABASE ON INITIAL MOUNT
-  // ============================================================================
-  useEffect(() => {
-    let isMounted = true;
-
-    async function loadDataFromSupabase() {
-      try {
-        const [
-          regResult,
-          eventRes,
-          brandRes,
-          payRes,
-          pdfRes,
-          cardsRes,
-          showcaseRes,
-        ] = await Promise.all([
-          fetchRegistrationsFromSupabase(),
-          fetchEventSettingsFromSupabase(),
-          fetchBrandingSettingsFromSupabase(),
-          fetchPaymentSettingsFromSupabase(),
-          fetchPdfSettingsFromSupabase(),
-          fetchEventCardsFromSupabase(),
-          fetchJerseyShowcaseFromSupabase(),
-        ]);
-
-        if (!isMounted) return;
-
-        if (regResult && Array.isArray(regResult.data)) {
-          setInvitations(regResult.data);
-        }
-        if (eventRes) setWebsiteSettings(eventRes);
-        if (brandRes) setBrandingSettings(brandRes);
-        if (payRes) setPaymentSettings(payRes);
-        if (pdfRes) setPdfSettings(pdfRes);
-        if (cardsRes && cardsRes.length > 0) setEventCards(cardsRes);
-        if (showcaseRes) setJerseyShowcaseSettings(showcaseRes);
-      } catch (err) {
-        console.warn('Initial Supabase fetch warning:', err);
-      }
+  const applySiteContent = (row: SiteContentRow) => {
+    const mapped = mapSiteContent(row);
+    setSiteContent(row);
+    setWebsiteSettings(mapped.website);
+    setBrandingSettings(mapped.branding);
+    setPaymentSettings(mapped.payment);
+    setPdfSettings(mapped.pdf);
+    setEventCards(mapped.cards);
+    setJerseyShowcaseSettings(mapped.jerseyShowcase);
+    document.title = mapped.website.eventName;
+    if (mapped.branding.favicon) {
+      let link = document.querySelector("link[rel*='icon']") as HTMLLinkElement | null;
+      if (!link) { link = document.createElement('link'); link.rel='icon'; document.head.appendChild(link); }
+      link.href = mapped.branding.favicon;
     }
+  };
 
-    loadDataFromSupabase();
+  useEffect(() => {
+    let mounted = true;
+    const load = async () => {
+      try {
+        const [site, regs] = await Promise.all([fetchSiteContentFromSupabase(), fetchRegistrationsFromSupabase()]);
+        if (!mounted) return;
+        if (site) applySiteContent(site);
+        if (regs.data) setInvitations(regs.data);
+      } catch (error) {
+        console.warn('Initial Supabase load failed:', error);
+        showToast('Supabase data could not be loaded; showing safe local defaults.', 'info');
+      }
+    };
+    void load();
 
-    // ==========================================================================
-    // 2. REAL-TIME SUBSCRIPTION TO SUPABASE DATABASE CHANGES
-    // ==========================================================================
     const channel = supabase
-      .channel('public:realtime_updates')
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'registrations' }, async () => {
-        const res = await fetchRegistrationsFromSupabase();
-        if (res && res.data) setInvitations(res.data);
+      .channel('ragday27-core')
+      .on('postgres_changes',{event:'*',schema:'public',table:'site_content'}, async () => {
+        try { const row = await fetchSiteContentFromSupabase(); if (row && mounted) applySiteContent(row); } catch(e) { console.error(e); }
       })
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'event_settings' }, async () => {
-        const res = await fetchEventSettingsFromSupabase();
-        if (res) setWebsiteSettings(res);
-      })
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'branding_settings' }, async () => {
-        const res = await fetchBrandingSettingsFromSupabase();
-        if (res) setBrandingSettings(res);
-      })
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'payment_settings' }, async () => {
-        const res = await fetchPaymentSettingsFromSupabase();
-        if (res) setPaymentSettings(res);
-      })
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'pdf_settings' }, async () => {
-        const res = await fetchPdfSettingsFromSupabase();
-        if (res) setPdfSettings(res);
-      })
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'event_cards' }, async () => {
-        const res = await fetchEventCardsFromSupabase();
-        if (res) setEventCards(res);
-      })
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'jersey_showcase' }, async () => {
-        const res = await fetchJerseyShowcaseFromSupabase();
-        if (res) setJerseyShowcaseSettings(res);
+      .on('postgres_changes',{event:'*',schema:'public',table:'registrations'}, async () => {
+        try { const rows = await fetchRegistrationsFromSupabase(); if (mounted) setInvitations(rows.data); } catch(e) { console.error(e); }
       })
       .subscribe();
 
-    return () => {
-      isMounted = false;
-      supabase.removeChannel(channel);
-    };
+    return () => { mounted=false; void supabase.removeChannel(channel); };
   }, []);
 
-  // Sync document title with Admin Controlled Website Name
-  useEffect(() => {
-    if (websiteSettings.eventName) {
-      document.title = websiteSettings.eventName;
-    }
-  }, [websiteSettings.eventName]);
-
-  // Sync document favicon with Admin Controlled Favicon
-  useEffect(() => {
-    if (brandingSettings.favicon) {
-      let link: HTMLLinkElement | null = document.querySelector("link[rel*='icon']");
-      if (!link) {
-        link = document.createElement('link');
-        link.rel = 'shortcut icon';
-        document.getElementsByTagName('head')[0].appendChild(link);
-      }
-      link.href = brandingSettings.favicon;
-    }
-  }, [brandingSettings.favicon]);
-
-  // ============================================================================
-  // 3. ADMIN SETTINGS SUPABASE PERSISTENCE HANDLERS
-  // ============================================================================
-
-  const handleUpdateWebsiteSettings = async (newSettings: WebsiteSettings) => {
-    setWebsiteSettings(newSettings);
-    const res = await saveEventSettingsToSupabase(newSettings);
-    if (res.success) {
-      showToast('Event settings saved to Supabase database!', 'success');
+  const handleSiteContentSave = async (next: SiteContentRow) => {
+    try {
+      const saved = await saveSiteContentToSupabase(next);
+      applySiteContent(saved);
+      showToast('Website content saved to Supabase.', 'success');
+    } catch (error:any) {
+      showToast(error?.message || 'Could not save website content.', 'error');
+      throw error;
     }
   };
 
-  const handleUpdateBrandingSettings = async (newSettings: BrandingSettings) => {
-    setBrandingSettings(newSettings);
-    const res = await saveBrandingSettingsToSupabase(newSettings);
-    if (res.success) {
-      showToast('Visual branding assets saved to Supabase database!', 'success');
+  const handleSuccessSubmit = (record: InvitationRecord) => {
+    setInvitations(prev => [record, ...prev.filter(item => item.registrationNo !== record.registrationNo)]);
+    showToast('Registration ' + record.registrationNo + ' successfully stored.', 'success');
+  };
+
+  const handleUpdateRegistrationStatus = async (registrationNo:string,status:InvitationStatus,reason?:string) => {
+    try {
+      await updateRegistrationStatusInSupabase(registrationNo,status,reason);
+      const refreshed = await fetchRegistrationsFromSupabase();
+      setInvitations(refreshed.data);
+      showToast('Registration ' + registrationNo + ' updated.', 'success');
+    } catch(error:any) {
+      showToast(error?.message || 'Registration update failed.', 'error');
+      throw error;
     }
   };
 
-  const handleUpdatePaymentSettings = async (newPaymentSettings: PaymentSettings) => {
-    setPaymentSettings(newPaymentSettings);
-    const formattedFee = `${newPaymentSettings.registrationFee} ${newPaymentSettings.currency}`;
-    const updatedWebsite = { ...websiteSettings, registrationFee: formattedFee };
-    setWebsiteSettings(updatedWebsite);
-
-    const updatedCards = eventCards.map(c =>
-      c.id === 'card-3' || c.title.toLowerCase().includes('fee')
-        ? { ...c, description: formattedFee }
-        : c
-    );
-    setEventCards(updatedCards);
-
-    await Promise.all([
-      savePaymentSettingsToSupabase(newPaymentSettings),
-      saveEventSettingsToSupabase(updatedWebsite),
-      saveEventCardsToSupabase(updatedCards),
-    ]);
-    showToast('Payment settings and fee synchronized in Supabase!', 'success');
-  };
-
-  const handleUpdatePdfSettings = async (newSettings: PdfSettings) => {
-    setPdfSettings(newSettings);
-    const res = await savePdfSettingsToSupabase(newSettings);
-    if (res.success) {
-      showToast('PDF Ledger settings saved to Supabase database!', 'success');
+  const handleDeleteRegistration = async (registrationNo:string) => {
+    try {
+      await deleteRegistrationFromSupabase(registrationNo);
+      const refreshed = await fetchRegistrationsFromSupabase();
+      setInvitations(refreshed.data);
+      showToast('Rejected registration ' + registrationNo + ' deleted. Its number remains consumed by the sequence.', 'success');
+    } catch(error:any) {
+      showToast(error?.message || 'Registration deletion failed.', 'error');
+      throw error;
     }
   };
 
-  const handleUpdateEventCards = async (cards: EventCard[]) => {
-    setEventCards(cards);
-    const res = await saveEventCardsToSupabase(cards);
-    if (res.success) {
-      showToast('Event cards saved to Supabase database!', 'success');
-    }
-  };
-
-  const handleUpdateJerseyShowcase = async (newSettings: JerseyShowcaseSettings) => {
-    setJerseyShowcaseSettings(newSettings);
-    const res = await saveJerseyShowcaseToSupabase(newSettings);
-    if (res.success) {
-      showToast('Jersey Showcase settings saved to Supabase database!', 'success');
-    }
-  };
-
-  // ============================================================================
-  // 4. REGISTRATION SUPABASE PERSISTENCE HANDLERS
-  // ============================================================================
-
-  const handleSuccessSubmit = (newRecord: InvitationRecord) => {
-    setInvitations(prev => [newRecord, ...prev.filter(x => x.registrationNo !== newRecord.registrationNo)]);
-    showToast(`Registration ${newRecord.registrationNo} successfully stored in Supabase!`, 'success');
-  };
-
-  const handleGoToInvitation = (regNo: string) => {
-    setInvitationSearchTarget(regNo);
-    setActiveTab('invitation');
-    window.scrollTo({ top: 0, behavior: 'smooth' });
-  };
-
-  const handleUpdateRegistrationStatus = async (
-    registrationNo: string,
-    newStatus: InvitationStatus,
-    reason?: string
-  ) => {
-    setInvitations(prev =>
-      prev.map(item =>
-        item.registrationNo === registrationNo
-          ? {
-              ...item,
-              status: newStatus,
-              rejectionReason: reason || item.rejectionReason,
-              seatZone:
-                newStatus === 'approved'
-                  ? item.seatZone || 'Zone A - Amphitheatre Front Row'
-                  : item.seatZone,
-              gate:
-                newStatus === 'approved'
-                  ? item.gate || 'Gate 02 (North Pavilion)'
-                  : item.gate,
-            }
-          : item
-      )
-    );
-
-    const res = await updateRegistrationStatusInSupabase(registrationNo, newStatus, reason);
-    if (res.success) {
-      showToast(
-        newStatus === 'approved'
-          ? `Registration ${registrationNo} approved in Supabase!`
-          : `Registration ${registrationNo} rejected in Supabase.`,
-        'success'
-      );
-    }
-  };
-
-  const handleDeleteRegistration = async (registrationNo: string) => {
-    setInvitations(prev => prev.filter(item => item.registrationNo !== registrationNo));
-    const res = await deleteRegistrationFromSupabase(registrationNo);
-    if (res.success) {
-      showToast(`Registration ${registrationNo} deleted from Supabase. Number is now available for reuse.`, 'success');
-    }
-  };
-
-  const handleEditRegistration = async (
-    registrationNo: string,
-    updates: Partial<InvitationRecord>
-  ) => {
-    setInvitations(prev =>
-      prev.map(item => (item.registrationNo === registrationNo ? { ...item, ...updates } : item))
-    );
-    const res = await updateRegistrationDetailsInSupabase(registrationNo, updates);
-    if (res.success) {
-      showToast(`Registration ${registrationNo} updated in Supabase database!`, 'success');
+  const handleEditRegistration = async (registrationNo:string, updates:Partial<InvitationRecord>) => {
+    try {
+      await updateRegistrationDetailsInSupabase(registrationNo,updates);
+      const refreshed = await fetchRegistrationsFromSupabase();
+      setInvitations(refreshed.data);
+      showToast('Registration ' + registrationNo + ' updated.', 'success');
+    } catch(error:any) {
+      showToast(error?.message || 'Registration edit failed.', 'error');
+      throw error;
     }
   };
 
   return (
     <div className="min-h-screen flex flex-col bg-[#F8F9FC] text-[#111827] selection:bg-[#5B5FEF] selection:text-white relative">
-      {/* Floating Database Notification Toast */}
-      {toast && (
-        <aside
-          aria-label="Notification"
-          className="fixed top-20 right-4 sm:right-6 z-[100] max-w-sm sm:max-w-md animate-slideDown shadow-2xl rounded-2xl p-4 border flex items-center gap-3 backdrop-blur-xl bg-white/95 text-slate-900 border-slate-200"
-        >
-          {toast.type === 'success' && (
-            <div className="w-8 h-8 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center shrink-0">
-              <CheckCircle2 className="w-5 h-5" />
-            </div>
-          )}
-          {toast.type === 'error' && (
-            <div className="w-8 h-8 rounded-xl bg-rose-50 text-rose-600 flex items-center justify-center shrink-0">
-              <AlertCircle className="w-5 h-5" />
-            </div>
-          )}
-          {toast.type === 'info' && (
-            <div className="w-8 h-8 rounded-xl bg-indigo-50 text-indigo-600 flex items-center justify-center shrink-0">
-              <Info className="w-5 h-5" />
-            </div>
-          )}
-          <div className="flex-1 text-xs sm:text-sm font-semibold text-slate-800 leading-snug">
-            {toast.message}
-          </div>
-          <button
-            onClick={() => setToast(null)}
-            className="p-1 rounded-lg text-slate-400 hover:text-slate-700 hover:bg-slate-100 transition-colors"
-          >
-            <X className="w-4 h-4" />
-          </button>
-        </aside>
-      )}
+      {toast && <aside aria-label="Notification" className="fixed top-20 right-4 z-[100] max-w-sm animate-slideDown shadow-2xl rounded-2xl p-4 border flex items-center gap-3 backdrop-blur-xl bg-white/95 text-slate-900 border-slate-200">
+        {toast.type==='success' && <CheckCircle2 className="w-5 h-5 text-emerald-600"/>}
+        {toast.type==='error' && <AlertCircle className="w-5 h-5 text-rose-600"/>}
+        {toast.type==='info' && <Info className="w-5 h-5 text-indigo-600"/>}
+        <div className="flex-1 text-xs sm:text-sm font-semibold">{toast.message}</div>
+        <button onClick={()=>setToast(null)} aria-label="Close notification"><X className="w-4 h-4"/></button>
+      </aside>}
 
-      {/* 1. Sticky/Fixed Navbar */}
-      <Navbar
-        activeTab={activeTab}
-        onNavigate={tab => {
-          setActiveTab(tab);
-          window.scrollTo({ top: 0, behavior: 'smooth' });
-        }}
-        websiteLogo={brandingSettings.websiteLogo}
-        eventName={websiteSettings.eventName}
-      />
+      <Navbar activeTab={activeTab} onNavigate={tab=>{setActiveTab(tab);window.scrollTo({top:0,behavior:'smooth'});}} websiteLogo={brandingSettings.websiteLogo} eventName={websiteSettings.eventName}/>
 
-      {/* Main Content Area */}
       <div className="pt-16 sm:pt-18 flex-1 flex flex-col">
-        {/* Optional Announcement Banner */}
-        {websiteSettings.bannerActive && websiteSettings.bannerText && (
-          <aside
-            aria-label="Announcement"
-            className="w-full bg-gradient-to-r from-[#5B5FEF] to-[#7A6CFF] text-white px-4 py-2 text-xs font-semibold shadow-sm flex items-center justify-center gap-2"
-          >
-            <Bell className="w-3.5 h-3.5 shrink-0" />
-            <span className="truncate">{websiteSettings.bannerText}</span>
-          </aside>
-        )}
+        {websiteSettings.bannerActive && websiteSettings.bannerText && <aside aria-label="Announcement" className="w-full bg-gradient-to-r from-[#5B5FEF] to-[#7A6CFF] text-white px-4 py-2 text-xs font-semibold shadow-sm flex items-center justify-center gap-2"><Bell className="w-3.5 h-3.5"/><span className="truncate">{websiteSettings.bannerText}</span></aside>}
 
         <main className="flex-1">
-          {/* ======================================================== */}
-          {/* HOMEPAGE STRUCTURE (Super Admin Controlled Reordering) */}
-          {/* ======================================================== */}
-          {activeTab === 'home' && (
-            <div className="animate-fadeIn">
-              {/* 1. Hero Section */}
-              <HeroSection
-                onRegisterClick={() => {
-                  setActiveTab('register');
-                  window.scrollTo({ top: 0, behavior: 'smooth' });
-                }}
-                onInvitationClick={() => {
-                  setActiveTab('invitation');
-                  window.scrollTo({ top: 0, behavior: 'smooth' });
-                }}
-                websiteSettings={websiteSettings}
-                brandingSettings={brandingSettings}
-                jerseySettings={jerseyShowcaseSettings}
-              />
+          {activeTab==='home' && <div className="animate-fadeIn">
+            <HeroSection
+              onRegisterClick={()=>{setActiveTab('register');window.scrollTo({top:0,behavior:'smooth'});}}
+              onInvitationClick={()=>{setActiveTab('invitation');window.scrollTo({top:0,behavior:'smooth'});}}
+              websiteSettings={websiteSettings}
+              brandingSettings={brandingSettings}
+              jerseySettings={jerseyShowcaseSettings}
+            />
+            {jerseyShowcaseSettings.sectionOrder==='showcase_first' ? <>
+              {jerseyShowcaseSettings.enabled && <JerseyShowcaseSection settings={jerseyShowcaseSettings} onRegisterClick={()=>setActiveTab('register')}/>}
+              <EventInformationSection cards={eventCards}/>
+            </> : <>
+              <EventInformationSection cards={eventCards}/>
+              {jerseyShowcaseSettings.enabled && <JerseyShowcaseSection settings={jerseyShowcaseSettings} onRegisterClick={()=>setActiveTab('register')}/>}
+            </>}
+            <section className="py-8 sm:py-12 text-center"><div className="max-w-md mx-auto px-4"><button onClick={()=>setActiveTab('register')} className="w-full sm:w-auto inline-flex items-center justify-center gap-3 px-8 py-4 rounded-2xl bg-gradient-to-r from-[#5B5FEF] via-[#7A6CFF] to-[#5B5FEF] text-white font-extrabold text-base shadow-xl shadow-[#5B5FEF]/30"><span>Register Now</span><ArrowRight className="w-4 h-4"/></button><p className="text-xs text-slate-500 mt-2.5">Registration closes on {websiteSettings.lastRegDate || 'the published deadline'}</p></div></section>
+          </div>}
 
-              {/* Dynamic Section Ordering between Jersey Showcase & Event Cards */}
-              {jerseyShowcaseSettings.sectionOrder === 'showcase_first' ? (
-                <>
-                  {/* Option A: Hero -> Jersey Showcase -> Event Cards */}
-                  {jerseyShowcaseSettings.enabled && (
-                    <JerseyShowcaseSection
-                      settings={jerseyShowcaseSettings}
-                      onRegisterClick={() => {
-                        setActiveTab('register');
-                        window.scrollTo({ top: 0, behavior: 'smooth' });
-                      }}
-                    />
-                  )}
-                  <EventInformationSection cards={eventCards} />
-                </>
-              ) : (
-                <>
-                  {/* Option B: Hero -> Event Cards -> Jersey Showcase */}
-                  <EventInformationSection cards={eventCards} />
-                  {jerseyShowcaseSettings.enabled && (
-                    <JerseyShowcaseSection
-                      settings={jerseyShowcaseSettings}
-                      onRegisterClick={() => {
-                        setActiveTab('register');
-                        window.scrollTo({ top: 0, behavior: 'smooth' });
-                      }}
-                    />
-                  )}
-                </>
-              )}
-
-              {/* 3. Register Now Button Section */}
-              <section className="py-8 sm:py-12 text-center">
-                <div className="max-w-md mx-auto px-4">
-                  <button
-                    onClick={() => {
-                      setActiveTab('register');
-                      window.scrollTo({ top: 0, behavior: 'smooth' });
-                    }}
-                    className="w-full sm:w-auto inline-flex items-center justify-center gap-3 px-8 py-4 rounded-2xl bg-gradient-to-r from-[#5B5FEF] via-[#7A6CFF] to-[#5B5FEF] text-white font-extrabold text-base shadow-xl shadow-[#5B5FEF]/30 hover:shadow-2xl hover:shadow-[#5B5FEF]/40 hover:-translate-y-1 active:translate-y-0 transition-all duration-200 cursor-pointer group"
-                  >
-                    <span>Register Now</span>
-                    <ArrowRight className="w-4 h-4 transition-transform group-hover:translate-x-1" />
-                  </button>
-                  <p className="text-xs text-slate-500 mt-2.5">
-                    Registration closes on {websiteSettings.lastRegDate} · Limited batch custom print slots
-                  </p>
-                </div>
-              </section>
-            </div>
-          )}
-
-          {/* ======================================================== */}
-          {/* REGISTRATION PAGE */}
-          {/* ======================================================== */}
-          {activeTab === 'register' && (
-            <div className="animate-fadeIn">
-              <RegistrationForm
-                onSuccessSubmit={handleSuccessSubmit}
-                onGoToInvitation={handleGoToInvitation}
-                paymentSettings={paymentSettings}
-                existingRegistrations={invitations}
-              />
-            </div>
-          )}
-
-          {/* ======================================================== */}
-          {/* INVITATION CARD VERIFICATION & DOWNLOAD PAGE */}
-          {/* ======================================================== */}
-          {activeTab === 'invitation' && (
-            <div className="animate-fadeIn">
-              <InvitationCardPage
-                invitations={invitations}
-                initialSearchRegNo={invitationSearchTarget}
-                onNavigateToRegister={() => {
-                  setActiveTab('register');
-                  window.scrollTo({ top: 0, behavior: 'smooth' });
-                }}
-                pdfSettings={pdfSettings}
-                websiteSettings={websiteSettings}
-              />
-            </div>
-          )}
+          {activeTab==='register' && <RegistrationForm onSuccessSubmit={handleSuccessSubmit} onGoToInvitation={(regNo)=>{setInvitationSearchTarget(regNo);setActiveTab('invitation');}} paymentSettings={paymentSettings} sections={siteContent?.sections || []}/>}
+          {activeTab==='invitation' && <InvitationCardPage invitations={invitations} initialSearchRegNo={invitationSearchTarget} onNavigateToRegister={()=>setActiveTab('register')} pdfSettings={pdfSettings} websiteSettings={websiteSettings}/>}
         </main>
       </div>
 
-      {/* 4. Footer with Admin Access */}
-      <Footer
-        onOpenAdmin={() => setIsAdminOpen(true)}
-        websiteSettings={websiteSettings}
-        brandingSettings={brandingSettings}
-      />
+      <Footer onOpenAdmin={()=>setIsAdminOpen(true)} websiteSettings={websiteSettings} brandingSettings={brandingSettings}/>
 
-      {/* Admin Portal Modal (Super Admin, Male Admin, Female Admin) */}
       <AdminPortal
         isOpen={isAdminOpen}
-        onClose={() => setIsAdminOpen(false)}
+        onClose={()=>setIsAdminOpen(false)}
         invitations={invitations}
         onUpdateStatus={handleUpdateRegistrationStatus}
         onDeleteRegistration={handleDeleteRegistration}
         onEditRegistration={handleEditRegistration}
         websiteSettings={websiteSettings}
-        onUpdateWebsiteSettings={handleUpdateWebsiteSettings}
+        onUpdateWebsiteSettings={async()=>{}}
         brandingSettings={brandingSettings}
-        onUpdateBrandingSettings={handleUpdateBrandingSettings}
+        onUpdateBrandingSettings={async()=>{}}
         pdfSettings={pdfSettings}
-        onUpdatePdfSettings={handleUpdatePdfSettings}
+        onUpdatePdfSettings={async()=>{}}
         paymentSettings={paymentSettings}
-        onUpdatePaymentSettings={handleUpdatePaymentSettings}
+        onUpdatePaymentSettings={async()=>{}}
         eventCards={eventCards}
-        onUpdateEventCards={handleUpdateEventCards}
+        onUpdateEventCards={async()=>{}}
         jerseyShowcaseSettings={jerseyShowcaseSettings}
-        onUpdateJerseyShowcase={handleUpdateJerseyShowcase}
+        onUpdateJerseyShowcase={async()=>{}}
+        siteContent={siteContent}
+        onSaveSiteContent={handleSiteContentSave}
       />
     </div>
   );
