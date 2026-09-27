@@ -258,7 +258,7 @@ export const generateRegistrationListPDF = (
     });
   }
 
-  const cleanFilename = `${title.replace(/[^a-zA-Z0-9_]/g, '_')}.pdf`;
+  const cleanFilename = `${pdfSettings.pdfHeader || websiteSettings.eventName || 'RagDay27'}-registrations.pdf`;
   doc.save(cleanFilename);
 };
 
