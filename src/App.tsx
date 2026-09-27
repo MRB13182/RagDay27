@@ -7,14 +7,14 @@ import { InvitationCardPage } from './components/InvitationCardPage';
 import { Footer } from './components/Footer';
 import { AdminPortal } from './components/AdminPortal';
 import { JerseyShowcaseSection } from './components/JerseyShowcaseSection';
-import { INITIAL_INVITATIONS, DEFAULT_EVENT_CARDS, DEFAULT_WEBSITE_SETTINGS, DEFAULT_BRANDING_SETTINGS, DEFAULT_PDF_SETTINGS, DEFAULT_PAYMENT_SETTINGS, DEFAULT_JERSEY_SHOWCASE_SETTINGS } from './data/mockData';
+import { DEFAULT_EVENT_CARDS, DEFAULT_WEBSITE_SETTINGS, DEFAULT_BRANDING_SETTINGS, DEFAULT_PDF_SETTINGS, DEFAULT_PAYMENT_SETTINGS, DEFAULT_JERSEY_SHOWCASE_SETTINGS } from './data/mockData';
 import { InvitationRecord, InvitationStatus, SiteContentRow, WebsiteSettings, BrandingSettings, PdfSettings, PaymentSettings, EventCard, JerseyShowcaseSettings } from './types';
 import { supabase, fetchSiteContentFromSupabase, fetchRegistrationsFromSupabase, mapSiteContent, saveSiteContentToSupabase, updateRegistrationStatusInSupabase, deleteRegistrationFromSupabase, updateRegistrationDetailsInSupabase } from './lib/supabase';
 import { ArrowRight, Bell, CheckCircle2, AlertCircle, Info, X } from 'lucide-react';
 
 export default function App() {
   const [activeTab, setActiveTab] = useState<'home'|'register'|'invitation'>('home');
-  const [invitations, setInvitations] = useState<InvitationRecord[]>(INITIAL_INVITATIONS);
+  const [invitations, setInvitations] = useState<InvitationRecord[]>([]);
   const [invitationSearchTarget, setInvitationSearchTarget] = useState('');
   const [isAdminOpen, setIsAdminOpen] = useState(false);
   const [siteContent, setSiteContent] = useState<SiteContentRow | null>(null);
