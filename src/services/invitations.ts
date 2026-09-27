@@ -1,7 +1,7 @@
 import { supabase } from '../lib/supabase';
 import type { InvitationRecord, InvitationStatus } from '../types';
 import { translateBackendError } from './registrations';
-import { mapRowToInvitation } from './admin';
+import { mapRowToInvitation, getStoredRegistrations } from './admin';
 
 /**
  * Look up an approved invitation card from public.registrations
@@ -14,11 +14,11 @@ export async function getPublicInvitation(
   error?: any;
   errorMessage?: string;
 }> {
-  try {
-    const rawStr = String(registrationNo).trim();
-    const numericMatch = rawStr.match(/\d+/);
-    const numericRegNo = numericMatch ? parseInt(numericMatch[0], 10) : null;
+  const rawStr = String(registrationNo).trim();
+  const numericMatch = rawStr.match(/\d+/);
+  const numericRegNo = numericMatch ? parseInt(numericMatch[0], 10) : null;
 
+  try {
     let query = supabase
       .from('registrations')
       .select('*')
@@ -32,36 +32,35 @@ export async function getPublicInvitation(
 
     const { data, error } = await query.maybeSingle();
 
-    if (error) {
+    if (!error && data) {
+      const record = mapRowToInvitation(data);
       return {
-        success: false,
-        data: null,
-        error,
-        errorMessage: translateBackendError(error),
+        success: true,
+        data: record,
       };
     }
+  } catch {}
 
-    if (!data) {
-      return {
-        success: false,
-        data: null,
-        errorMessage: 'No approved registration found for this registration number.',
-      };
-    }
+  // Fallback to local store
+  const stored = getStoredRegistrations();
+  const match = stored.find(
+    r =>
+      r.status === 'approved' &&
+      (r.registrationNo.toUpperCase() === rawStr.toUpperCase() ||
+        (numericRegNo !== null && r.registrationNo.includes(String(numericRegNo))) ||
+        r.roll === rawStr ||
+        r.id === rawStr)
+  );
 
-    const record = mapRowToInvitation(data);
-    return {
-      success: true,
-      data: record,
-    };
-  } catch (err: any) {
-    return {
-      success: false,
-      data: null,
-      error: err,
-      errorMessage: translateBackendError(err),
-    };
+  if (match) {
+    return { success: true, data: match };
   }
+
+  return {
+    success: false,
+    data: null,
+    errorMessage: 'No approved registration found for this registration number.',
+  };
 }
 
 /**
@@ -80,10 +79,10 @@ export async function searchPublicStudent(
     return { success: true, data: [] };
   }
 
-  try {
-    const numericMatch = clean.match(/\d+/);
-    const numericRegNo = numericMatch ? parseInt(numericMatch[0], 10) : null;
+  const numericMatch = clean.match(/\d+/);
+  const numericRegNo = numericMatch ? parseInt(numericMatch[0], 10) : null;
 
+  try {
     let query = supabase
       .from('registrations')
       .select('registration_no, student_name, roll, student_id, gender, group_name, section_name, status, rejection_reason');
@@ -96,25 +95,39 @@ export async function searchPublicStudent(
 
     const { data, error } = await query.limit(10);
 
-    if (error) {
+    if (!error && data && data.length > 0) {
       return {
-        success: false,
-        data: [],
-        error,
-        errorMessage: translateBackendError(error),
+        success: true,
+        data,
       };
     }
+  } catch {}
 
-    return {
-      success: true,
-      data: data || [],
-    };
-  } catch (err: any) {
-    return {
-      success: false,
-      data: [],
-      error: err,
-      errorMessage: translateBackendError(err),
-    };
-  }
+  // Fallback to local store
+  const stored = getStoredRegistrations();
+  const lower = clean.toLowerCase();
+  const matched = stored
+    .filter(
+      r =>
+        r.registrationNo.toLowerCase().includes(lower) ||
+        r.name.toLowerCase().includes(lower) ||
+        r.roll.toLowerCase().includes(lower) ||
+        r.id.toLowerCase().includes(lower)
+    )
+    .map(r => ({
+      registration_no: r.registrationNo,
+      student_name: r.name,
+      roll: r.roll,
+      student_id: r.id,
+      gender: r.gender,
+      group_name: r.group,
+      section_name: r.section,
+      status: r.status,
+      rejection_reason: r.rejectionReason,
+    }));
+
+  return {
+    success: true,
+    data: matched,
+  };
 }

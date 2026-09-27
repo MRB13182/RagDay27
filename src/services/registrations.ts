@@ -200,9 +200,24 @@ export async function createRegistration(
       };
     }
 
+    // Determine sequential registration number
+    let existingList: InvitationRecord[] = [];
+    try {
+      const raw = localStorage.getItem('rd27_registrations_store');
+      if (raw) existingList = JSON.parse(raw);
+    } catch {}
+
+    const highestNum = existingList.reduce((acc, curr) => {
+      const match = curr.registrationNo.match(/\d+/);
+      const n = match ? parseInt(match[0], 10) : 0;
+      return Math.max(acc, n);
+    }, 0);
+    const assignedRegNo = `RD27-${String(highestNum + 1).padStart(3, '0')}`;
+
     // Successfully recorded
-    const dummyRecord: InvitationRecord = {
-      registrationNo: 'Pending Review',
+    const confirmedRecord: InvitationRecord = {
+      dbId: crypto.randomUUID(),
+      registrationNo: assignedRegNo,
       name: form.name.trim(),
       roll: form.roll.trim(),
       id: form.id.trim(),
@@ -224,9 +239,14 @@ export async function createRegistration(
       updatedAt: new Date().toISOString(),
     };
 
+    try {
+      const updatedList = [confirmedRecord, ...existingList.filter(x => x.registrationNo !== assignedRegNo)];
+      localStorage.setItem('rd27_registrations_store', JSON.stringify(updatedList));
+    } catch {}
+
     return {
       success: true,
-      data: dummyRecord,
+      data: confirmedRecord,
     };
   } catch (err: any) {
     return {

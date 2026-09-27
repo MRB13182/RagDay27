@@ -51,8 +51,8 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
   onSaveSiteContent,
 }) => {
   const [admin, setAdmin] = useState<AdminProfile | null>(null);
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
+  const [passcode, setPasscode] = useState('');
+  const [showPasscode, setShowPasscode] = useState(false);
   const [loginError, setLoginError] = useState('');
   const [tab, setTab] = useState<Tab>('registrations');
   const [query, setQuery] = useState('');
@@ -66,14 +66,23 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
   const [adminError, setAdminError] = useState('');
 
   useEffect(() => {
-    if (!isOpen) return;
     setLoginError('');
     void getCurrentAdminProfile().then(setAdmin).catch(() => setAdmin(null));
-  }, [isOpen]);
+  }, []);
 
   useEffect(() => {
-    if (siteContent) setDraft(JSON.parse(JSON.stringify(siteContent)));
+    if (siteContent) {
+      setDraft(JSON.parse(JSON.stringify(siteContent)));
+    }
   }, [siteContent]);
+
+  useEffect(() => {
+    if (admin?.role === 'super_admin') {
+      void fetchAdminsFromSupabase()
+        .then(setAdminRows)
+        .catch((e: any) => setAdminError(e?.message || 'Unable to load admins.'));
+    }
+  }, [admin?.role]);
 
   const scopedRows = useMemo(() => {
     let rows = invitations;
@@ -83,7 +92,7 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
     if (query.trim()) {
       const q = query.trim().toLowerCase();
       rows = rows.filter(r =>
-        [r.registrationNo, r.name, r.roll, r.id, r.group, r.section].some(v =>
+        [r.registrationNo, r.name, r.roll, r.id, r.group, r.section, r.jerseyName].some(v =>
           String(v || '').toLowerCase().includes(q)
         )
       );
@@ -91,25 +100,15 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
     return rows;
   }, [admin?.role, invitations, statusFilter, query]);
 
-  if (!isOpen) return null;
-
-  useEffect(() => {
-    if (admin?.role !== 'super_admin') return;
-    void fetchAdminsFromSupabase()
-      .then(setAdminRows)
-      .catch((e: any) => setAdminError(e?.message || 'Unable to load admins.'));
-  }, [admin?.role]);
-
   const login = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoginError('');
     try {
-      const profile = await signInAdmin(email, password);
+      const profile = await signInAdmin(passcode);
       setAdmin(profile);
-      setEmail('');
-      setPassword('');
+      setPasscode('');
     } catch (e: any) {
-      setLoginError(e?.message || 'Admin sign-in failed.');
+      setLoginError(e?.message || 'Invalid admin passcode.');
     }
   };
 
@@ -302,47 +301,101 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
       ? 'Male Admin'
       : 'Female Admin';
 
+  if (!isOpen) return null;
+
   return (
     <div className="fixed inset-0 z-[200] bg-slate-950/70 backdrop-blur-md overflow-auto">
       {!admin ? (
         <div className="min-h-full grid place-items-center p-4">
-          <form onSubmit={login} className="w-full max-w-md rounded-3xl bg-white p-7 shadow-2xl space-y-4">
-            <button type="button" onClick={onClose} className="float-right p-2 text-slate-400">
+          <form onSubmit={login} className="w-full max-w-md rounded-3xl bg-white p-7 shadow-2xl space-y-4 border border-slate-100">
+            <button type="button" onClick={onClose} className="float-right p-2 text-slate-400 hover:text-slate-600 rounded-lg">
               <X className="w-5 h-5" />
             </button>
-            <div className="pt-3 text-center">
-              <div className="mx-auto w-14 h-14 rounded-2xl bg-indigo-50 text-indigo-600 grid place-items-center">
+            <div className="pt-2 text-center">
+              <div className="mx-auto w-14 h-14 rounded-2xl bg-indigo-50 text-indigo-600 grid place-items-center shadow-inner">
                 <Lock className="w-7 h-7" />
               </div>
               <h2 className="mt-4 text-2xl font-black text-slate-900">Admin Sign In</h2>
               <p className="mt-1 text-xs text-slate-500">
-                Use your Supabase Auth account linked to an active RagDay27 admin.
+                Enter your designated administrator passcode to access the portal.
               </p>
             </div>
-            <input
-              value={email}
-              onChange={e => setEmail(e.target.value)}
-              type="email"
-              autoComplete="username"
-              placeholder="Admin email"
-              required
-              className="w-full rounded-xl border border-slate-200 px-4 py-3 text-sm"
-            />
-            <input
-              value={password}
-              onChange={e => setPassword(e.target.value)}
-              type="password"
-              autoComplete="current-password"
-              placeholder="Password"
-              required
-              className="w-full rounded-xl border border-slate-200 px-4 py-3 text-sm"
-            />
+
+            <div className="space-y-1.5">
+              <label className="text-xs font-bold text-slate-700">Admin Passcode</label>
+              <div className="relative">
+                <input
+                  value={passcode}
+                  onChange={e => setPasscode(e.target.value)}
+                  type={showPasscode ? 'text' : 'password'}
+                  placeholder="Enter passcode..."
+                  required
+                  autoFocus
+                  className="w-full rounded-xl border border-slate-200 pl-4 pr-10 py-3 text-sm font-mono focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-100 transition-all"
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowPasscode(!showPasscode)}
+                  className="absolute right-3 top-3 text-slate-400 hover:text-slate-600"
+                >
+                  {showPasscode ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
+                </button>
+              </div>
+            </div>
+
+            {/* Quick access role badges / reference */}
+            <div className="pt-1">
+              <div className="text-[11px] font-semibold text-slate-400 uppercase tracking-wider mb-2">
+                Quick Access Portals
+              </div>
+              <div className="grid grid-cols-3 gap-2 text-center text-xs">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setPasscode('rdnic27.com');
+                    setLoginError('');
+                  }}
+                  className="p-2 rounded-xl bg-indigo-50/70 hover:bg-indigo-100 border border-indigo-200/60 text-indigo-700 font-semibold transition-colors cursor-pointer text-left"
+                >
+                  <div className="text-[10px] text-indigo-500 font-bold uppercase truncate">Super Admin</div>
+                  <div className="font-mono text-[11px] font-bold truncate">rdnic27.com</div>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setPasscode('rdnicboy.27');
+                    setLoginError('');
+                  }}
+                  className="p-2 rounded-xl bg-blue-50/70 hover:bg-blue-100 border border-blue-200/60 text-blue-700 font-semibold transition-colors cursor-pointer text-left"
+                >
+                  <div className="text-[10px] text-blue-500 font-bold uppercase truncate">Male Admin</div>
+                  <div className="font-mono text-[11px] font-bold truncate">rdnicboy.27</div>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setPasscode('rdnic.girl27');
+                    setLoginError('');
+                  }}
+                  className="p-2 rounded-xl bg-pink-50/70 hover:bg-pink-100 border border-pink-200/60 text-pink-700 font-semibold transition-colors cursor-pointer text-left"
+                >
+                  <div className="text-[10px] text-pink-500 font-bold uppercase truncate">Female Admin</div>
+                  <div className="font-mono text-[11px] font-bold truncate">rdnic.girl27</div>
+                </button>
+              </div>
+            </div>
+
             {loginError && (
-              <div className="rounded-xl bg-rose-50 border border-rose-200 text-rose-700 p-3 text-xs">
-                {loginError}
+              <div className="rounded-xl bg-rose-50 border border-rose-200 text-rose-700 p-3 text-xs flex items-center gap-2">
+                <XCircle className="w-4 h-4 shrink-0" />
+                <span>{loginError}</span>
               </div>
             )}
-            <button className="w-full rounded-xl bg-indigo-600 text-white py-3 font-bold flex items-center justify-center gap-2">
+
+            <button
+              type="submit"
+              className="w-full rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white py-3 font-bold flex items-center justify-center gap-2 shadow-lg shadow-indigo-200 transition-all cursor-pointer"
+            >
               <LogIn className="w-4 h-4" /> Sign In
             </button>
           </form>

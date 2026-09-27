@@ -495,28 +495,30 @@ export default function App() {
       />
 
       {/* Admin Portal Modal (Super Admin, Male Admin, Female Admin) */}
-      <AdminPortal
-        isOpen={isAdminOpen}
-        onClose={() => setIsAdminOpen(false)}
-        invitations={invitations}
-        onUpdateStatus={handleUpdateRegistrationStatus}
-        onDeleteRegistration={handleDeleteRegistration}
-        onEditRegistration={handleEditRegistration}
-        siteContent={siteContent}
-        onSaveSiteContent={handleSaveSiteContent}
-        websiteSettings={websiteSettings}
-        onUpdateWebsiteSettings={handleUpdateWebsiteSettings}
-        brandingSettings={brandingSettings}
-        onUpdateBrandingSettings={handleUpdateBrandingSettings}
-        pdfSettings={pdfSettings}
-        onUpdatePdfSettings={handleUpdatePdfSettings}
-        paymentSettings={paymentSettings}
-        onUpdatePaymentSettings={handleUpdatePaymentSettings}
-        eventCards={eventCards}
-        onUpdateEventCards={handleUpdateEventCards}
-        jerseyShowcaseSettings={jerseyShowcaseSettings}
-        onUpdateJerseyShowcase={handleUpdateJerseyShowcase}
-      />
+      {isAdminOpen && (
+        <AdminPortal
+          isOpen={isAdminOpen}
+          onClose={() => setIsAdminOpen(false)}
+          invitations={invitations}
+          onUpdateStatus={handleUpdateRegistrationStatus}
+          onDeleteRegistration={handleDeleteRegistration}
+          onEditRegistration={handleEditRegistration}
+          siteContent={siteContent}
+          onSaveSiteContent={handleSaveSiteContent}
+          websiteSettings={websiteSettings}
+          onUpdateWebsiteSettings={handleUpdateWebsiteSettings}
+          brandingSettings={brandingSettings}
+          onUpdateBrandingSettings={handleUpdateBrandingSettings}
+          pdfSettings={pdfSettings}
+          onUpdatePdfSettings={handleUpdatePdfSettings}
+          paymentSettings={paymentSettings}
+          onUpdatePaymentSettings={handleUpdatePaymentSettings}
+          eventCards={eventCards}
+          onUpdateEventCards={handleUpdateEventCards}
+          jerseyShowcaseSettings={jerseyShowcaseSettings}
+          onUpdateJerseyShowcase={handleUpdateJerseyShowcase}
+        />
+      )}
     </div>
   );
 }
