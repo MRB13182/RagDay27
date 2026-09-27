@@ -107,39 +107,22 @@ export const InvitationCardPage: React.FC<InvitationCardPageProps> = ({
       {/* Search Layout (Form) */}
       <div className="p-6 sm:p-8 rounded-3xl bg-white/80 backdrop-blur-xl border border-white/90 shadow-[0_20px_45px_-15px_rgba(91,95,239,0.08)] mb-8">
         <form onSubmit={handleSearch} className="grid grid-cols-1 sm:grid-cols-12 gap-4">
-          <div className="sm:col-span-5">
+          <div className="sm:col-span-10">
             <label className="block text-xs font-bold uppercase tracking-wider text-slate-700 mb-1.5">
-              Student Full Name
-            </label>
-            <input
-              type="text"
-              placeholder="e.g. John Doe"
-              value={searchName}
-              onChange={e => setSearchName(e.target.value)}
-              className="w-full px-4 py-3 rounded-xl text-sm bg-slate-50 border border-slate-200 text-slate-900 placeholder-slate-400 focus:bg-white focus:border-[#5B5FEF] focus:ring-2 focus:ring-[#5B5FEF]/20 outline-none transition-all"
-            />
-          </div>
-
-          <div className="sm:col-span-5">
-            <label className="block text-xs font-bold uppercase tracking-wider text-slate-700 mb-1.5">
-              Registration Number <span className="text-slate-400 font-normal">(e.g. 1)</span>
+              Registration Number <span className="text-rose-500">*</span>
             </label>
             <input
               type="text"
               placeholder="e.g. 1"
               value={searchRegNo}
-              onChange={e => setSearchRegNo(e.target.value.toUpperCase())}
+              onChange={e => setSearchRegNo(e.target.value.replace(/[^0-9]/g, ''))}
+              required
               className="w-full px-4 py-3 rounded-xl text-sm font-mono font-bold bg-slate-50 border border-slate-200 text-slate-900 placeholder-slate-400 focus:bg-white focus:border-[#5B5FEF] focus:ring-2 focus:ring-[#5B5FEF]/20 outline-none transition-all"
             />
           </div>
-
           <div className="sm:col-span-2 flex items-end">
-            <button
-              type="submit"
-              className="w-full py-3.5 px-4 rounded-xl bg-gradient-to-r from-[#5B5FEF] to-[#7A6CFF] text-white font-bold text-sm shadow-md shadow-[#5B5FEF]/25 hover:shadow-lg hover:shadow-[#5B5FEF]/35 transition-all flex items-center justify-center gap-2 cursor-pointer"
-            >
-              <Search className="w-4 h-4" />
-              <span>Search</span>
+            <button type="submit" className="w-full py-3.5 px-4 rounded-xl bg-gradient-to-r from-[#5B5FEF] to-[#7A6CFF] text-white font-bold text-sm shadow-md shadow-[#5B5FEF]/25 flex items-center justify-center gap-2 cursor-pointer">
+              <Search className="w-4 h-4" /><span>Search</span>
             </button>
           </div>
         </form>
