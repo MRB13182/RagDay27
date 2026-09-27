@@ -1,52 +1,4 @@
-import React, { useState, useEffect } from 'react';
-import { Navbar } from './components/Navbar';
-import { HeroSection } from './components/HeroSection';
-import { EventInformationSection } from './components/EventInformationSection';
-import { RegistrationForm } from './components/RegistrationForm';
-import { InvitationCardPage } from './components/InvitationCardPage';
-import { Footer } from './components/Footer';
-import { AdminPortal } from './components/AdminPortal';
-import { JerseyShowcaseSection } from './components/JerseyShowcaseSection';
-import {
-  INITIAL_INVITATIONS,
-  DEFAULT_EVENT_CARDS,
-  DEFAULT_WEBSITE_SETTINGS,
-  DEFAULT_BRANDING_SETTINGS,
-  DEFAULT_PDF_SETTINGS,
-  DEFAULT_PAYMENT_SETTINGS,
-  DEFAULT_JERSEY_SHOWCASE_SETTINGS,
-} from './data/mockData';
-import {
-  InvitationRecord,
-  InvitationStatus,
-  EventCard,
-  WebsiteSettings,
-  BrandingSettings,
-  PdfSettings,
-  PaymentSettings,
-  JerseyShowcaseSettings,
-} from './types';
-import {
-  supabase,
-  fetchRegistrationsFromSupabase,
-  fetchEventSettingsFromSupabase,
-  saveEventSettingsToSupabase,
-  fetchBrandingSettingsFromSupabase,
-  saveBrandingSettingsToSupabase,
-  fetchPaymentSettingsFromSupabase,
-  savePaymentSettingsToSupabase,
-  fetchPdfSettingsFromSupabase,
-  savePdfSettingsToSupabase,
-  fetchEventCardsFromSupabase,
-  saveEventCardsToSupabase,
-  fetchJerseyShowcaseFromSupabase,
-  saveJerseyShowcaseToSupabase,
-  updateRegistrationStatusInSupabase,
-  deleteRegistrationFromSupabase,
-  updateRegistrationDetailsInSupabase,
-} from './lib/supabase';
-import { ArrowRight, Bell, CheckCircle2, AlertCircle, Info, X } from 'lucide-react';
-
+import React, { useEffect, useState } from 'react';
 import { Navbar } from './components/Navbar';
 import { HeroSection } from './components/HeroSection';
 import { EventInformationSection } from './components/EventInformationSection';
@@ -57,7 +9,7 @@ import { AdminPortal } from './components/AdminPortal';
 import { JerseyShowcaseSection } from './components/JerseyShowcaseSection';
 import { INITIAL_INVITATIONS, DEFAULT_EVENT_CARDS, DEFAULT_WEBSITE_SETTINGS, DEFAULT_BRANDING_SETTINGS, DEFAULT_PDF_SETTINGS, DEFAULT_PAYMENT_SETTINGS, DEFAULT_JERSEY_SHOWCASE_SETTINGS } from './data/mockData';
 import { InvitationRecord, InvitationStatus, SiteContentRow, WebsiteSettings, BrandingSettings, PdfSettings, PaymentSettings, EventCard, JerseyShowcaseSettings } from './types';
-import { supabase, fetchSiteContentFromSupabase, fetchRegistrationsFromSupabase, mapSiteContent, saveSiteContentToSupabase, lookupApprovedRegistration, updateRegistrationStatusInSupabase, deleteRegistrationFromSupabase, updateRegistrationDetailsInSupabase } from './lib/supabase';
+import { supabase, fetchSiteContentFromSupabase, fetchRegistrationsFromSupabase, mapSiteContent, saveSiteContentToSupabase, updateRegistrationStatusInSupabase, deleteRegistrationFromSupabase, updateRegistrationDetailsInSupabase } from './lib/supabase';
 import { ArrowRight, Bell, CheckCircle2, AlertCircle, Info, X } from 'lucide-react';
 
 export default function App() {
