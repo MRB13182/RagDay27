@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { InvitationRecord, PdfSettings, WebsiteSettings } from '../types';
 import {
   Search,
@@ -16,6 +16,7 @@ import {
   AlertTriangle,
 } from 'lucide-react';
 import { generateInvitationCardPDF } from '../utils/pdfGenerator';
+import { lookupApprovedRegistration } from '../lib/supabase';
 import badgeImage from '../assets/images/rd27_invitation_badge_1790159004807.jpg';
 
 interface InvitationCardPageProps {
@@ -33,7 +34,6 @@ export const InvitationCardPage: React.FC<InvitationCardPageProps> = ({
   pdfSettings,
   websiteSettings,
 }) => {
-  const [searchName, setSearchName] = useState('');
   const [searchRegNo, setSearchRegNo] = useState(initialSearchRegNo);
   const [searched, setSearched] = useState(false);
   const [matchedRecord, setMatchedRecord] = useState<InvitationRecord | null>(null);
@@ -42,41 +42,25 @@ export const InvitationCardPage: React.FC<InvitationCardPageProps> = ({
   useEffect(() => {
     if (initialSearchRegNo) {
       setSearchRegNo(initialSearchRegNo);
-      handleSearchWith(initialSearchRegNo, '');
+      handleSearchWith(initialSearchRegNo);
     }
   }, [initialSearchRegNo]);
 
-  const handleSearchWith = (regNoVal: string, nameVal: string) => {
-    const cleanedReg = regNoVal.trim().toUpperCase();
-    const cleanedName = nameVal.trim().toLowerCase();
-
+  const handleSearchWith = (regNoVal: string) => {
+    const cleanedReg = regNoVal.trim().replace(/[^0-9]/g, '');
     setSearched(true);
-
-    if (!cleanedReg && !cleanedName) {
+    if (!cleanedReg) {
       setMatchedRecord(null);
       return;
     }
-
-    const found = invitations.find(item => {
-      const matchReg = cleanedReg ? item.registrationNo.toUpperCase() === cleanedReg : true;
-      const matchName = cleanedName
-        ? item.name.toLowerCase().includes(cleanedName)
-        : true;
-      return matchReg && matchName;
-    });
-
-    setMatchedRecord(found || null);
+    void lookupApprovedRegistration(cleanedReg)
+      .then((record) => setMatchedRecord(record))
+      .catch(() => setMatchedRecord(null));
   };
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
-    handleSearchWith(searchRegNo, searchName);
-  };
-
-  const handlePresetSelect = (regNo: string, name: string) => {
-    setSearchRegNo(regNo);
-    setSearchName(name);
-    handleSearchWith(regNo, name);
+    handleSearchWith(searchRegNo);
   };
 
   const handleDownloadPDF = () => {
@@ -101,79 +85,29 @@ export const InvitationCardPage: React.FC<InvitationCardPageProps> = ({
           Verify & Download Invitation Card
         </h1>
         <p className="text-sm text-slate-600 mt-2">
-          Enter your student name or registered <strong>Registration Number</strong> to review committee authorization, seat allocation, and download your entry ticket.
+          Enter your <strong>Registration Number</strong> to check your registration status and, after approval, download your invitation card.
         </p>
-      </div>
-
-      {/* Instant Demo Presets Bar */}
-      <div className="mb-6 p-4 rounded-2xl bg-white/80 backdrop-blur-md border border-slate-200/90 shadow-sm flex flex-col sm:flex-row items-center justify-between gap-3">
-        <div className="text-xs font-semibold text-slate-600 flex items-center gap-1.5">
-          <span className="w-2 h-2 rounded-full bg-[#5B5FEF]" />
-          <span>Quick Demo Test Cases:</span>
-        </div>
-        <div className="flex flex-wrap items-center gap-2">
-          <button
-            type="button"
-            onClick={() => handlePresetSelect('RD27-001', 'John Doe')}
-            className="px-3 py-1.5 rounded-lg text-xs font-bold bg-emerald-50 text-emerald-700 border border-emerald-300 hover:bg-emerald-100 transition-colors flex items-center gap-1 cursor-pointer"
-          >
-            <CheckCircle2 className="w-3 h-3" /> Approved: RD27-001
-          </button>
-
-          <button
-            type="button"
-            onClick={() => handlePresetSelect('RD27-101', 'Sohan Chowdhury')}
-            className="px-3 py-1.5 rounded-lg text-xs font-bold bg-amber-50 text-amber-700 border border-amber-300 hover:bg-amber-100 transition-colors flex items-center gap-1 cursor-pointer"
-          >
-            <Clock className="w-3 h-3" /> Pending: RD27-101
-          </button>
-
-          <button
-            type="button"
-            onClick={() => handlePresetSelect('RD27-999', 'Tanvir Ahmed')}
-            className="px-3 py-1.5 rounded-lg text-xs font-bold bg-rose-50 text-rose-700 border border-rose-300 hover:bg-rose-100 transition-colors flex items-center gap-1 cursor-pointer"
-          >
-            <XCircle className="w-3 h-3" /> Rejected: RD27-999
-          </button>
-        </div>
       </div>
 
       {/* Search Layout (Form) */}
       <div className="p-6 sm:p-8 rounded-3xl bg-white/80 backdrop-blur-xl border border-white/90 shadow-[0_20px_45px_-15px_rgba(91,95,239,0.08)] mb-8">
         <form onSubmit={handleSearch} className="grid grid-cols-1 sm:grid-cols-12 gap-4">
-          <div className="sm:col-span-5">
+          <div className="sm:col-span-10">
             <label className="block text-xs font-bold uppercase tracking-wider text-slate-700 mb-1.5">
-              Student Full Name
+              Registration Number <span className="text-rose-500">*</span>
             </label>
             <input
               type="text"
-              placeholder="e.g. John Doe"
-              value={searchName}
-              onChange={e => setSearchName(e.target.value)}
-              className="w-full px-4 py-3 rounded-xl text-sm bg-slate-50 border border-slate-200 text-slate-900 placeholder-slate-400 focus:bg-white focus:border-[#5B5FEF] focus:ring-2 focus:ring-[#5B5FEF]/20 outline-none transition-all"
-            />
-          </div>
-
-          <div className="sm:col-span-5">
-            <label className="block text-xs font-bold uppercase tracking-wider text-slate-700 mb-1.5">
-              Registration Number <span className="text-slate-400 font-normal">(e.g. RD27-001)</span>
-            </label>
-            <input
-              type="text"
-              placeholder="e.g. RD27-001"
+              placeholder="e.g. 1"
               value={searchRegNo}
-              onChange={e => setSearchRegNo(e.target.value.toUpperCase())}
+              onChange={e => setSearchRegNo(e.target.value.replace(/[^0-9]/g, ''))}
+              required
               className="w-full px-4 py-3 rounded-xl text-sm font-mono font-bold bg-slate-50 border border-slate-200 text-slate-900 placeholder-slate-400 focus:bg-white focus:border-[#5B5FEF] focus:ring-2 focus:ring-[#5B5FEF]/20 outline-none transition-all"
             />
           </div>
-
           <div className="sm:col-span-2 flex items-end">
-            <button
-              type="submit"
-              className="w-full py-3.5 px-4 rounded-xl bg-gradient-to-r from-[#5B5FEF] to-[#7A6CFF] text-white font-bold text-sm shadow-md shadow-[#5B5FEF]/25 hover:shadow-lg hover:shadow-[#5B5FEF]/35 transition-all flex items-center justify-center gap-2 cursor-pointer"
-            >
-              <Search className="w-4 h-4" />
-              <span>Search</span>
+            <button type="submit" className="w-full py-3.5 px-4 rounded-xl bg-gradient-to-r from-[#5B5FEF] to-[#7A6CFF] text-white font-bold text-sm shadow-md shadow-[#5B5FEF]/25 flex items-center justify-center gap-2 cursor-pointer">
+              <Search className="w-4 h-4" /><span>Search</span>
             </button>
           </div>
         </form>
@@ -192,7 +126,7 @@ export const InvitationCardPage: React.FC<InvitationCardPageProps> = ({
                 No Record Found
               </h3>
               <p className="text-xs text-slate-500 max-w-md mx-auto mt-1 mb-4">
-                We could not find any registration matching "{searchRegNo || searchName}". Please verify your registration number or submit a fresh registration form.
+                We could not find any registration matching "{searchRegNo}". Please verify your registration number or submit a fresh registration form.
               </p>
               <button
                 onClick={onNavigateToRegister}
@@ -429,19 +363,19 @@ export const InvitationCardPage: React.FC<InvitationCardPageProps> = ({
 
                       <div className="p-3 rounded-xl bg-slate-900/60 border border-slate-700/60">
                         <span className="text-[10px] uppercase font-bold text-slate-400 block mb-0.5">
-                          Seating Zone
+                          Gender
                         </span>
                         <span className="font-medium text-white truncate block">
-                          {matchedRecord.seatZone || 'Zone A - Amphitheatre'}
+                          {matchedRecord.gender}
                         </span>
                       </div>
 
                       <div className="p-3 rounded-xl bg-slate-900/60 border border-slate-700/60">
                         <span className="text-[10px] uppercase font-bold text-slate-400 block mb-0.5">
-                          Entry Gate
+                          Verification
                         </span>
                         <span className="font-medium text-emerald-400 truncate block">
-                          {matchedRecord.gate || 'Gate 02 (North)'}
+                          Approved
                         </span>
                       </div>
                     </div>

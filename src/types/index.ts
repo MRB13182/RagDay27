@@ -13,10 +13,8 @@ export interface RegistrationFormData {
   id: string;
   group: string;
   section: string;
-  contactNumber: string;
   photoUrl: string | null;
   photoFile?: File | null;
-  photoBlob?: Blob | null;
   amount: number;
   paymentMethod: PaymentMethod;
   senderNumber: string;
@@ -29,25 +27,20 @@ export interface RegistrationFormData {
 
 export interface InvitationRecord {
   dbId?: string;
-  serialNo?: number;
   registrationNo: string;
   name: string;
   roll: string;
-  id: string; // Student ID
+  id: string;
   group: string;
   section: string;
   status: InvitationStatus;
   gender: 'male' | 'female';
-  photoUrl: string;
-  contactNumber?: string;
+  photoUrl: string | null;
   jerseyName: string;
   jerseyNumber: string;
   jerseySize: string;
   paymentMethod?: PaymentMethod;
   amount?: number;
-  seatZone?: string;
-  gate?: string;
-  issuedAt?: string;
   rejectionReason?: string;
   senderNumber?: string;
   paymentTime?: string;
@@ -56,13 +49,54 @@ export interface InvitationRecord {
   updatedAt?: string;
 }
 
+export interface SiteContentRow {
+  id: string;
+  logo: string | null;
+  favicon: string | null;
+  banner: string | null;
+  hero_background: string | null;
+  male_front: string | null;
+  male_back: string | null;
+  female_front: string | null;
+  female_back: string | null;
+  jersey_preview: string | null;
+  website_name: string | null;
+  event_name: string | null;
+  hero_title: string | null;
+  hero_subtitle: string | null;
+  event_date: string | null;
+  event_time: string | null;
+  registration_fee: number | null;
+  venue: string | null;
+  cards: unknown[];
+  sections: unknown[];
+  content_blocks: Record<string, unknown>;
+  visible: boolean;
+  sort_order: number;
+  updated_by: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
+export type AdminRole = 'super_admin' | 'male_admin' | 'female_admin';
+
+export interface AdminProfile {
+  auth_user_id: string;
+  username: string | null;
+  full_name: string;
+  role: AdminRole;
+  active: boolean;
+  created_at: string;
+  updated_at: string;
+}
+
 export interface EventCard {
   id: string;
-  icon: string; // 'calendar' | 'map-pin' | 'credit-card' | 'clock' | 'sparkles' | 'award' | 'shirt' | 'users' | 'music'
+  icon: string;
   title: string;
   description: string;
   subDetail?: string;
-  customColor: string; // 'indigo' | 'cyan' | 'emerald' | 'amber' | 'rose' | 'purple' | 'blue'
+  customColor: string;
   order: number;
   visible: boolean;
 }
@@ -127,42 +161,19 @@ export type SectionOrder = 'showcase_first' | 'cards_first';
 export interface JerseyItem {
   id: string;
   name: string;
-  badgeText: string; // e.g. "Signature Batch Edition", "Official Rag Day Jersey", "Premium Edition"
-  tagText: string; // e.g. "RD27", "RD28", "Batch 2027", "Official Edition"
-  frontImage: string; // URL or base64
-  backImage: string; // URL or base64
-  subtitle: string; // e.g. "Custom Squad Kit"
-  title: string; // e.g. "Back Name & Number Print Included"
-  badge1: string; // e.g. "Custom Fit"
-  badge1Sub: string; // e.g. "Sizes S to 4XL"
-  badge2: string; // e.g. "100% Cotton & Mesh"
+  badgeText: string;
+  tagText: string;
+  frontImage: string;
+  backImage: string;
+  subtitle: string;
+  title: string;
+  badge1: string;
+  badge1Sub: string;
+  badge2: string;
 }
 
 export interface JerseyShowcaseSettings {
   enabled: boolean;
-  sectionOrder: SectionOrder; // 'showcase_first': Hero -> Jersey Showcase -> Event Cards -> Register; 'cards_first': Hero -> Event Cards -> Jersey Showcase -> Register
+  sectionOrder: SectionOrder;
   jerseys: JerseyItem[];
 }
-
-export type AdminFileCategory =
-  | 'logo'
-  | 'banner'
-  | 'jersey'
-  | 'certificate'
-  | 'resume'
-  | 'invitation'
-  | 'project'
-  | 'skill';
-
-export interface AdminFileItem {
-  id: string;
-  category: AdminFileCategory;
-  title: string;
-  description?: string;
-  fileUrl: string;
-  fileName?: string;
-  fileSize?: string;
-  fileType?: string;
-  uploadedAt: string;
-}
-

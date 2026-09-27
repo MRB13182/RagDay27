@@ -4,10 +4,9 @@ import { InvitationRecord, PdfSettings, WebsiteSettings } from '../types';
 
 export const generateRegistrationListPDF = (
   records: InvitationRecord[],
-  title: string,
-  adminRole: 'super_admin' | 'male_admin' | 'female_admin' | string,
   pdfSettings: PdfSettings,
-  websiteSettings: WebsiteSettings
+  websiteSettings: WebsiteSettings,
+  adminRole: 'super_admin' | 'male_admin' | 'female_admin' | string
 ) => {
   const doc = new jsPDF({
     orientation: 'landscape',
@@ -101,9 +100,7 @@ export const generateRegistrationListPDF = (
   if (isSuperAdmin) {
     // 7. SUPER ADMIN PDF FORMAT
     // No gender separation. Show all registrations together.
-    // Columns: Reg No, Student Name, Gender, Roll & ID, Group, Section
-    // Do NOT include: Jersey Name, Jersey Number, Jersey Size.
-    headCols = ['#', 'Reg No', 'Student Name', 'Gender', 'Roll & ID', 'Group', 'Section'];
+    headCols = ['#', 'Reg No', 'Student Name', 'Gender', 'Roll & ID', 'Group', 'Section', 'Jersey Name', 'Jersey Number', 'Jersey Size'];
     tableData = records.map((record, index) => [
       index + 1,
       record.registrationNo,
@@ -112,15 +109,21 @@ export const generateRegistrationListPDF = (
       `Roll: ${record.roll}\nID: ${record.id}`,
       record.group,
       record.section,
+      record.jerseyName,
+      '#' + record.jerseyNumber,
+      record.jerseySize,
     ]);
     columnStyles = {
-      0: { cellWidth: 14, halign: 'center' },
-      1: { cellWidth: 32, fontStyle: 'bold', halign: 'center' },
-      2: { cellWidth: 54, fontStyle: 'bold' },
-      3: { cellWidth: 26, halign: 'center' },
-      4: { cellWidth: 50 },
-      5: { cellWidth: 48 },
-      6: { cellWidth: 40, halign: 'center', fontStyle: 'bold' },
+      0: { cellWidth: 10, halign: 'center' },
+      1: { cellWidth: 22, fontStyle: 'bold', halign: 'center' },
+      2: { cellWidth: 36, fontStyle: 'bold' },
+      3: { cellWidth: 18, halign: 'center' },
+      4: { cellWidth: 32 },
+      5: { cellWidth: 30 },
+      6: { cellWidth: 24, halign: 'center', fontStyle: 'bold' },
+      7: { cellWidth: 30, fontStyle: 'bold' },
+      8: { cellWidth: 20, halign: 'center' },
+      9: { cellWidth: 18, halign: 'center' },
     };
   } else {
     // 5 & 6. MALE & FEMALE ADMIN PDF FORMAT
@@ -255,7 +258,7 @@ export const generateRegistrationListPDF = (
     });
   }
 
-  const cleanFilename = `${title.replace(/[^a-zA-Z0-9_]/g, '_')}.pdf`;
+  const cleanFilename = `${pdfSettings.pdfHeader || websiteSettings.eventName || 'RagDay27'}-registrations.pdf`;
   doc.save(cleanFilename);
 };
 
@@ -405,24 +408,16 @@ export const generateInvitationCardPDF = (
     141
   );
 
-  // Seat & Gate Allocation
-  doc.setFillColor(255, 255, 255);
+  // Verification status
+  doc.setFillColor(248, 250, 252);
   doc.roundedRect(12, 149, pageWidth - 24, 20, 3, 3, 'FD');
-
   doc.setFontSize(8);
   doc.setFont('helvetica', 'normal');
   doc.setTextColor(100, 116, 139);
-  doc.text('SEATING ZONE:', 18, 156);
+  doc.text('VERIFICATION STATUS:', 18, 156);
   doc.setFont('helvetica', 'bold');
   doc.setTextColor(15, 23, 42);
-  doc.text(record.seatZone || 'Zone A - Amphitheatre', 18, 163);
-
-  doc.setFont('helvetica', 'normal');
-  doc.setTextColor(100, 116, 139);
-  doc.text('ENTRY GATE:', pageWidth - 55, 156);
-  doc.setFont('helvetica', 'bold');
-  doc.setTextColor(15, 23, 42);
-  doc.text(record.gate || 'Gate 02 (North)', pageWidth - 55, 163);
+  doc.text('APPROVED', 60, 156);
 
   // Bottom Notice & Signatures
   doc.setFontSize(7);
