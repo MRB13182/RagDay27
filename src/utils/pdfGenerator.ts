@@ -408,22 +408,16 @@ export const generateInvitationCardPDF = (
     141
   );
 
-  // Seat & Gate Allocation
-  doc.setFillColor(255, 255, 255);
+  // Verification status
+  doc.setFillColor(248, 250, 252);
   doc.roundedRect(12, 149, pageWidth - 24, 20, 3, 3, 'FD');
-
   doc.setFontSize(8);
   doc.setFont('helvetica', 'normal');
   doc.setTextColor(100, 116, 139);
-  doc.text('SEATING ZONE:', 18, 156);
+  doc.text('VERIFICATION STATUS:', 18, 156);
   doc.setFont('helvetica', 'bold');
   doc.setTextColor(15, 23, 42);
-
-  doc.setFont('helvetica', 'normal');
-  doc.setTextColor(100, 116, 139);
-  doc.text('ENTRY GATE:', pageWidth - 55, 156);
-  doc.setFont('helvetica', 'bold');
-  doc.setTextColor(15, 23, 42);
+  doc.text('APPROVED', 60, 156);
 
   // Bottom Notice & Signatures
   doc.setFontSize(7);
