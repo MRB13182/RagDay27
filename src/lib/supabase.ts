@@ -1,26 +1,173 @@
-import { createClient } from '@supabase/supabase-js';
+import { createClient, SupabaseClient } from '@supabase/supabase-js';
 import type { AdminProfile } from '../types';
 
-// Environment variables for Supabase
-export const SUPABASE_URL =
+// Default environment variables for Supabase
+const DEFAULT_SUPABASE_URL =
   (typeof import.meta !== 'undefined' && import.meta.env?.VITE_SUPABASE_URL) ||
   'https://rqjlrbteaqjpgwkeomro.supabase.co';
 
-export const SUPABASE_PUBLISHABLE_KEY =
+const DEFAULT_SUPABASE_KEY =
   (typeof import.meta !== 'undefined' &&
     (import.meta.env?.VITE_SUPABASE_PUBLISHABLE_KEY || import.meta.env?.VITE_SUPABASE_ANON_KEY)) ||
   'sb_publishable_BcoEceXY8X9BxifFSMRjoA_neWVF9wb';
 
-// Central Supabase Client (browser-safe publishable/anon key only)
-export const supabase = createClient(SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY, {
-  auth: {
-    persistSession: true,
-    autoRefreshToken: true,
-  },
-});
+const STORAGE_CUSTOM_URL_KEY = 'rd27_custom_supabase_url';
+const STORAGE_CUSTOM_KEY_KEY = 'rd27_custom_supabase_key';
+
+/**
+ * Returns current Supabase connection configuration.
+ * Checks localStorage overrides first, then defaults to env vars.
+ */
+export function getSupabaseConfig(): { url: string; key: string; isCustom: boolean } {
+  try {
+    const customUrl = localStorage.getItem(STORAGE_CUSTOM_URL_KEY);
+    const customKey = localStorage.getItem(STORAGE_CUSTOM_KEY_KEY);
+    if (customUrl && customKey) {
+      return { url: customUrl.trim(), key: customKey.trim(), isCustom: true };
+    }
+  } catch {}
+  return {
+    url: DEFAULT_SUPABASE_URL,
+    key: DEFAULT_SUPABASE_KEY,
+    isCustom: false,
+  };
+}
+
+const currentConfig = getSupabaseConfig();
+export const SUPABASE_URL = currentConfig.url;
+export const SUPABASE_PUBLISHABLE_KEY = currentConfig.key;
+
+function createClientInstance(url: string, key: string): SupabaseClient {
+  return createClient(url, key, {
+    auth: {
+      persistSession: true,
+      autoRefreshToken: true,
+    },
+  });
+}
+
+// Central Supabase Client (browser-safe publishable/anon key)
+export let supabase = createClientInstance(currentConfig.url, currentConfig.key);
+
+/**
+ * Set custom Supabase project credentials in localStorage and re-initialize client
+ */
+export function setSupabaseConfig(url: string, key: string): void {
+  const cleanUrl = url.trim().replace(/\/+$/, '');
+  const cleanKey = key.trim();
+  try {
+    localStorage.setItem(STORAGE_CUSTOM_URL_KEY, cleanUrl);
+    localStorage.setItem(STORAGE_CUSTOM_KEY_KEY, cleanKey);
+  } catch {}
+  supabase = createClientInstance(cleanUrl, cleanKey);
+}
+
+/**
+ * Reset to default Supabase credentials
+ */
+export function resetSupabaseConfig(): void {
+  try {
+    localStorage.removeItem(STORAGE_CUSTOM_URL_KEY);
+    localStorage.removeItem(STORAGE_CUSTOM_KEY_KEY);
+  } catch {}
+  supabase = createClientInstance(DEFAULT_SUPABASE_URL, DEFAULT_SUPABASE_KEY);
+}
 
 // Storage Bucket Name
 export const STORAGE_BUCKET = 'uploads';
+
+export interface SupabaseHealthCheckResult {
+  connected: boolean;
+  registrationsTable: boolean;
+  siteContentTable: boolean;
+  adminsTable: boolean;
+  storageBucket: boolean;
+  details: {
+    registrationsCount?: number;
+    siteContentFound?: boolean;
+    adminsFound?: boolean;
+    storageAccessible?: boolean;
+    error?: string;
+  };
+}
+
+/**
+ * Tests connection to the connected Supabase database and checks table status
+ */
+export async function testSupabaseConnection(): Promise<SupabaseHealthCheckResult> {
+  const result: SupabaseHealthCheckResult = {
+    connected: false,
+    registrationsTable: false,
+    siteContentTable: false,
+    adminsTable: false,
+    storageBucket: false,
+    details: {},
+  };
+
+  try {
+    // 1. Check site_content table
+    try {
+      const { data: siteData, error: siteErr } = await supabase
+        .from('site_content')
+        .select('id')
+        .eq('id', 'current')
+        .maybeSingle();
+
+      if (!siteErr) {
+        result.connected = true;
+        result.siteContentTable = true;
+        result.details.siteContentFound = !!siteData;
+      } else if (siteErr.code !== 'PGRST205' && siteErr.code !== '42P01') {
+        result.connected = true; // Endpoint reachable even if error is permission or column
+      }
+    } catch (e: any) {
+      result.details.error = e?.message;
+    }
+
+    // 2. Check registrations table
+    try {
+      const { count, error: regErr } = await supabase
+        .from('registrations')
+        .select('*', { count: 'exact', head: true });
+
+      if (!regErr) {
+        result.connected = true;
+        result.registrationsTable = true;
+        result.details.registrationsCount = count ?? 0;
+      } else if (regErr.code !== 'PGRST205' && regErr.code !== '42P01') {
+        result.connected = true;
+      }
+    } catch {}
+
+    // 3. Check admins table
+    try {
+      const { error: adminErr } = await supabase
+        .from('admins')
+        .select('id', { head: true });
+
+      if (!adminErr) {
+        result.connected = true;
+        result.adminsTable = true;
+        result.details.adminsFound = true;
+      }
+    } catch {}
+
+    // 4. Check storage uploads bucket
+    try {
+      const { data: bucketList, error: bucketErr } = await supabase.storage.listBuckets();
+      if (!bucketErr && Array.isArray(bucketList)) {
+        result.connected = true;
+        result.storageBucket = bucketList.some(b => b.name === STORAGE_BUCKET || b.id === STORAGE_BUCKET);
+        result.details.storageAccessible = true;
+      }
+    } catch {}
+
+    return result;
+  } catch (err: any) {
+    result.details.error = err?.message || 'Connection test failed';
+    return result;
+  }
+}
 
 // ============================================================================
 // ADMIN PASSCODES & ROLES

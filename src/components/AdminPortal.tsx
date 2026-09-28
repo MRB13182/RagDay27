@@ -7,15 +7,23 @@ import {
   fetchAdminsFromSupabase,
   saveAdminProfileToSupabase,
   deleteAdminProfileFromSupabase,
+  getSupabaseConfig,
+  setSupabaseConfig,
+  resetSupabaseConfig,
+  testSupabaseConnection,
+  SupabaseHealthCheckResult,
 } from '../lib/supabase';
 import { uploadBrandingAsset } from '../services/storage';
 import { generateRegistrationListPDF, generateInvitationCardPDF } from '../utils/pdfGenerator';
 import { DEFAULT_SECTIONS } from '../data/mockData';
+import { SUPABASE_SQL_SCHEMA } from '../data/supabaseSchemaSql';
+import { syncLocalRegistrationsToSupabase } from '../services/admin';
 import {
   X, Lock, LogIn, LogOut, Search, Check, XCircle,
   Trash2, Download, Save, Plus, Eye, EyeOff, Upload,
-  Sliders, FileText, CheckCircle2, AlertTriangle, Sparkles,
-  CreditCard, ShieldCheck, QrCode, ImageIcon
+  Sliders, FileText, CheckCircle2, AlertTriangle, AlertCircle, Sparkles,
+  CreditCard, ShieldCheck, QrCode, ImageIcon, Database,
+  Server, RefreshCw, Copy, ExternalLink, Key, Terminal
 } from 'lucide-react';
 
 interface AdminPortalProps {
@@ -41,7 +49,7 @@ interface AdminPortalProps {
   onUpdateJerseyShowcase: (value: any) => void;
 }
 
-type Tab = 'registrations' | 'site' | 'pdf' | 'sections' | 'admins';
+type Tab = 'registrations' | 'site' | 'pdf' | 'sections' | 'admins' | 'database';
 
 const GROUPS = ['Science', 'Business Studies', 'Humanities'];
 
@@ -72,6 +80,79 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
   const [adminRows, setAdminRows] = useState<AdminProfile[]>([]);
   const [adminDraft, setAdminDraft] = useState<AdminProfile | null>(null);
   const [adminError, setAdminError] = useState('');
+
+  // Database configuration & health check state
+  const [dbConfig, setDbConfig] = useState(getSupabaseConfig());
+  const [dbUrlInput, setDbUrlInput] = useState(dbConfig.url);
+  const [dbKeyInput, setDbKeyInput] = useState(dbConfig.key);
+  const [showDbKey, setShowDbKey] = useState(false);
+  const [healthCheck, setHealthCheck] = useState<SupabaseHealthCheckResult | null>(null);
+  const [testingDb, setTestingDb] = useState(false);
+  const [syncingDb, setSyncingDb] = useState(false);
+  const [copiedSql, setCopiedSql] = useState(false);
+
+  const runHealthCheck = async () => {
+    setTestingDb(true);
+    try {
+      const res = await testSupabaseConnection();
+      setHealthCheck(res);
+      if (res.connected) {
+        showToast('Supabase connection verified.');
+      } else {
+        showToast('Supabase connection test failed. Check URL or credentials.');
+      }
+    } catch {
+      showToast('Connection test error.');
+    } finally {
+      setTestingDb(false);
+    }
+  };
+
+  const handleSaveDbConfig = () => {
+    if (!dbUrlInput.trim() || !dbKeyInput.trim()) {
+      showToast('Please provide both Project URL and Anon Key.');
+      return;
+    }
+    setSupabaseConfig(dbUrlInput.trim(), dbKeyInput.trim());
+    const updated = getSupabaseConfig();
+    setDbConfig(updated);
+    showToast('Supabase configuration saved. Testing connection...');
+    void runHealthCheck();
+  };
+
+  const handleResetDbConfig = () => {
+    resetSupabaseConfig();
+    const def = getSupabaseConfig();
+    setDbConfig(def);
+    setDbUrlInput(def.url);
+    setDbKeyInput(def.key);
+    showToast('Reset to default Supabase configuration.');
+    void runHealthCheck();
+  };
+
+  const handleCopySql = () => {
+    try {
+      navigator.clipboard.writeText(SUPABASE_SQL_SCHEMA);
+      setCopiedSql(true);
+      showToast('Full Supabase SQL Schema copied to clipboard!');
+      setTimeout(() => setCopiedSql(false), 3000);
+    } catch {
+      showToast('Failed to copy automatically. Please select text manually.');
+    }
+  };
+
+  const handleSyncLocal = async () => {
+    setSyncingDb(true);
+    try {
+      const res = await syncLocalRegistrationsToSupabase();
+      showToast(res.message);
+      void runHealthCheck();
+    } catch {
+      showToast('Sync to Supabase failed.');
+    } finally {
+      setSyncingDb(false);
+    }
+  };
 
   // File input refs for image uploads
   const logoInputRef = useRef<HTMLInputElement | null>(null);
@@ -588,6 +669,21 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
                   }
                 >
                   <span>Admins</span>
+                </button>
+                <button
+                  onClick={() => {
+                    setTab('database');
+                    void runHealthCheck();
+                  }}
+                  className={
+                    'px-4 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 ' +
+                    (tab === 'database'
+                      ? 'bg-indigo-600 text-white shadow-sm'
+                      : 'text-slate-600 hover:bg-slate-100')
+                  }
+                >
+                  <Database className="w-3.5 h-3.5" />
+                  <span>Supabase & Database</span>
                 </button>
               </>
             )}
@@ -1909,6 +2005,340 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
                     </div>
                   </article>
                 ))}
+              </div>
+            </section>
+          )}
+
+          {/* ================================================================ */}
+          {/* 6. SUPABASE & DATABASE MANAGEMENT (Super Admin Only)             */}
+          {/* ================================================================ */}
+          {tab === 'database' && admin.role === 'super_admin' && (
+            <section className="space-y-6 animate-fadeIn pb-12">
+              {/* Header & Quick Action Buttons */}
+              <div className="flex flex-wrap items-center justify-between gap-4 border-b border-slate-200 pb-5">
+                <div>
+                  <div className="flex items-center gap-2">
+                    <Database className="w-5 h-5 text-indigo-600" />
+                    <h2 className="text-xl font-black text-slate-900">Supabase Database & Cloud Storage</h2>
+                  </div>
+                  <p className="text-xs text-slate-500 mt-1">
+                    Live connection diagnostics, table schema setup, credentials management, and sync operations.
+                  </p>
+                </div>
+                <div className="flex flex-wrap items-center gap-2">
+                  <button
+                    type="button"
+                    onClick={() => void runHealthCheck()}
+                    disabled={testingDb}
+                    className="px-4 py-2.5 rounded-xl border border-slate-300 hover:bg-slate-50 text-slate-700 text-xs font-bold flex items-center gap-2 transition-all cursor-pointer shadow-sm disabled:opacity-50"
+                  >
+                    <RefreshCw className={`w-3.5 h-3.5 ${testingDb ? 'animate-spin text-indigo-600' : ''}`} />
+                    <span>{testingDb ? 'Testing Connection...' : 'Test Connection'}</span>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => void handleSyncLocal()}
+                    disabled={syncingDb}
+                    className="px-4 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold flex items-center gap-2 transition-all cursor-pointer shadow-sm shadow-emerald-200 disabled:opacity-50"
+                  >
+                    <Upload className="w-3.5 h-3.5" />
+                    <span>{syncingDb ? 'Syncing to Supabase...' : 'Sync Local to Cloud'}</span>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={handleCopySql}
+                    className="px-4 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold flex items-center gap-2 transition-all cursor-pointer shadow-sm shadow-indigo-200"
+                  >
+                    {copiedSql ? <Check className="w-3.5 h-3.5" /> : <Copy className="w-3.5 h-3.5" />}
+                    <span>{copiedSql ? 'Schema Copied!' : 'Copy SQL Schema'}</span>
+                  </button>
+                </div>
+              </div>
+
+              {/* Status Alert Banner */}
+              {healthCheck && (
+                <div
+                  className={`p-4 rounded-2xl border flex items-start gap-3 text-xs ${
+                    healthCheck.registrationsTable && healthCheck.siteContentTable
+                      ? 'bg-emerald-50 border-emerald-200 text-emerald-800'
+                      : healthCheck.connected
+                      ? 'bg-amber-50 border-amber-200 text-amber-800'
+                      : 'bg-rose-50 border-rose-200 text-rose-800'
+                  }`}
+                >
+                  {healthCheck.registrationsTable && healthCheck.siteContentTable ? (
+                    <CheckCircle2 className="w-5 h-5 text-emerald-600 shrink-0 mt-0.5" />
+                  ) : healthCheck.connected ? (
+                    <AlertTriangle className="w-5 h-5 text-amber-600 shrink-0 mt-0.5" />
+                  ) : (
+                    <AlertCircle className="w-5 h-5 text-rose-600 shrink-0 mt-0.5" />
+                  )}
+                  <div className="space-y-1">
+                    <strong className="font-extrabold text-sm block">
+                      {healthCheck.registrationsTable && healthCheck.siteContentTable
+                        ? 'Supabase Connected & Fully Operational'
+                        : healthCheck.connected
+                        ? 'Connected to Supabase, but some tables require initialization'
+                        : 'Cannot Connect to Supabase Endpoint'}
+                    </strong>
+                    <p className="leading-relaxed opacity-90">
+                      {healthCheck.registrationsTable && healthCheck.siteContentTable
+                        ? 'The database tables (registrations, site_content, admins) and storage bucket are active. All registration and setting changes persist directly in the cloud in real-time.'
+                        : healthCheck.connected
+                        ? 'Connection to your Supabase project is active. Please run the SQL schema script below in your Supabase SQL Editor to initialize the missing tables.'
+                        : 'Check your internet connection and verify that your Supabase Project URL and Anon/Publishable Key are correct.'}
+                    </p>
+                  </div>
+                </div>
+              )}
+
+              {/* 4 Status Diagnostic Cards */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                {/* 1. Registrations Table */}
+                <div className="p-4 rounded-2xl bg-white border border-slate-200 shadow-sm space-y-2">
+                  <div className="flex items-center justify-between">
+                    <span className="text-xs font-mono font-bold text-slate-500">public.registrations</span>
+                    {healthCheck?.registrationsTable ? (
+                      <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-100 text-emerald-700 flex items-center gap-1">
+                        <Check className="w-3 h-3" /> Ready
+                      </span>
+                    ) : (
+                      <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-100 text-amber-700">
+                        {healthCheck ? 'Needs Setup' : 'Checking...'}
+                      </span>
+                    )}
+                  </div>
+                  <div className="text-lg font-black text-slate-900">
+                    {healthCheck?.registrationsTable
+                      ? `${healthCheck.details.registrationsCount ?? 0} Registrations`
+                      : 'Pending Table'}
+                  </div>
+                  <p className="text-[11px] text-slate-500 leading-snug">
+                    Stores student registrations, jersey sizes, transaction IDs, approval statuses, and rejection reasons.
+                  </p>
+                </div>
+
+                {/* 2. Site Content Table */}
+                <div className="p-4 rounded-2xl bg-white border border-slate-200 shadow-sm space-y-2">
+                  <div className="flex items-center justify-between">
+                    <span className="text-xs font-mono font-bold text-slate-500">public.site_content</span>
+                    {healthCheck?.siteContentTable ? (
+                      <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-100 text-emerald-700 flex items-center gap-1">
+                        <Check className="w-3 h-3" /> Ready
+                      </span>
+                    ) : (
+                      <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-100 text-amber-700">
+                        {healthCheck ? 'Needs Setup' : 'Checking...'}
+                      </span>
+                    )}
+                  </div>
+                  <div className="text-lg font-black text-slate-900">
+                    {healthCheck?.siteContentTable ? 'Row "current" Active' : 'Pending Table'}
+                  </div>
+                  <p className="text-[11px] text-slate-500 leading-snug">
+                    Stores branding assets (logo, banner, favicon), event details, payment numbers, and dynamic sections.
+                  </p>
+                </div>
+
+                {/* 3. Admins Table */}
+                <div className="p-4 rounded-2xl bg-white border border-slate-200 shadow-sm space-y-2">
+                  <div className="flex items-center justify-between">
+                    <span className="text-xs font-mono font-bold text-slate-500">public.admins</span>
+                    {healthCheck?.adminsTable ? (
+                      <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-100 text-emerald-700 flex items-center gap-1">
+                        <Check className="w-3 h-3" /> Ready
+                      </span>
+                    ) : (
+                      <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-slate-100 text-slate-600">
+                        Passcodes Active
+                      </span>
+                    )}
+                  </div>
+                  <div className="text-lg font-black text-slate-900">
+                    3 Admin Roles
+                  </div>
+                  <p className="text-[11px] text-slate-500 leading-snug">
+                    Hardened access for Super Admin (rdnic27.com), Male Admin (rdnicboy.27), and Female Admin (rdnic.girl27).
+                  </p>
+                </div>
+
+                {/* 4. Storage Bucket */}
+                <div className="p-4 rounded-2xl bg-white border border-slate-200 shadow-sm space-y-2">
+                  <div className="flex items-center justify-between">
+                    <span className="text-xs font-mono font-bold text-slate-500">storage.buckets/uploads</span>
+                    {healthCheck?.storageBucket ? (
+                      <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-100 text-emerald-700 flex items-center gap-1">
+                        <Check className="w-3 h-3" /> Public
+                      </span>
+                    ) : (
+                      <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-100 text-amber-700">
+                        {healthCheck ? 'Needs Setup' : 'Checking...'}
+                      </span>
+                    )}
+                  </div>
+                  <div className="text-lg font-black text-slate-900">
+                    Uploads Bucket
+                  </div>
+                  <p className="text-[11px] text-slate-500 leading-snug">
+                    Dedicated public CDN bucket for student photos, logos, banners, jerseys, and favicons.
+                  </p>
+                </div>
+              </div>
+
+              {/* Connection Credentials Configuration Card */}
+              <div className="p-6 rounded-3xl bg-white border border-slate-200 shadow-sm space-y-5">
+                <div className="flex flex-wrap items-center justify-between gap-3">
+                  <div>
+                    <h3 className="font-extrabold text-slate-900 text-base flex items-center gap-2">
+                      <Key className="w-4 h-4 text-indigo-600" />
+                      <span>Supabase Project Credentials</span>
+                    </h3>
+                    <p className="text-xs text-slate-500 mt-0.5">
+                      Configure connection to your self-hosted or cloud Supabase instance.
+                    </p>
+                  </div>
+                  {dbConfig.isCustom && (
+                    <span className="px-3 py-1 rounded-full text-xs font-bold bg-indigo-50 text-indigo-700 border border-indigo-200">
+                      Using Custom Project Credentials
+                    </span>
+                  )}
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="space-y-1.5">
+                    <label className="text-xs font-bold uppercase tracking-wider text-slate-700">
+                      Supabase Project URL
+                    </label>
+                    <input
+                      type="text"
+                      value={dbUrlInput}
+                      onChange={e => setDbUrlInput(e.target.value)}
+                      placeholder="https://your-project-id.supabase.co"
+                      className="w-full rounded-xl border border-slate-300 p-2.5 text-xs font-mono focus:border-indigo-500 focus:ring-2 focus:ring-indigo-100 outline-none"
+                    />
+                  </div>
+
+                  <div className="space-y-1.5">
+                    <label className="text-xs font-bold uppercase tracking-wider text-slate-700">
+                      Publishable / Anon API Key
+                    </label>
+                    <div className="relative">
+                      <input
+                        type={showDbKey ? 'text' : 'password'}
+                        value={dbKeyInput}
+                        onChange={e => setDbKeyInput(e.target.value)}
+                        placeholder="sb_publishable_... or eyJhbGciOi..."
+                        className="w-full rounded-xl border border-slate-300 p-2.5 pr-10 text-xs font-mono focus:border-indigo-500 focus:ring-2 focus:ring-indigo-100 outline-none"
+                      />
+                      <button
+                        type="button"
+                        onClick={() => setShowDbKey(prev => !prev)}
+                        className="absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 p-1"
+                      >
+                        {showDbKey ? <EyeOff className="w-3.5 h-3.5" /> : <Eye className="w-3.5 h-3.5" />}
+                      </button>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="flex flex-wrap items-center justify-between gap-3 pt-1">
+                  <div className="text-[11px] text-slate-500">
+                    Keys are safely stored in browser local storage and communicate directly with Supabase via HTTPS.
+                  </div>
+                  <div className="flex items-center gap-2">
+                    {dbConfig.isCustom && (
+                      <button
+                        type="button"
+                        onClick={handleResetDbConfig}
+                        className="px-4 py-2 rounded-xl border border-slate-200 hover:bg-slate-50 text-slate-600 text-xs font-bold cursor-pointer"
+                      >
+                        Reset to Default Project
+                      </button>
+                    )}
+                    <button
+                      type="button"
+                      onClick={handleSaveDbConfig}
+                      className="px-5 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold flex items-center gap-1.5 shadow-md shadow-indigo-200 cursor-pointer"
+                    >
+                      <Save className="w-3.5 h-3.5" />
+                      <span>Save & Reconnect</span>
+                    </button>
+                  </div>
+                </div>
+              </div>
+
+              {/* 1-Click Complete SQL Setup & Schema Runner Card */}
+              <div className="p-6 rounded-3xl bg-white border border-slate-200 shadow-sm space-y-5">
+                <div className="flex flex-wrap items-center justify-between gap-3">
+                  <div>
+                    <h3 className="font-extrabold text-slate-900 text-base flex items-center gap-2">
+                      <Terminal className="w-4 h-4 text-indigo-600" />
+                      <span>Supabase SQL Table Schema & Setup Instructions</span>
+                    </h3>
+                    <p className="text-xs text-slate-500 mt-0.5">
+                      Run this canonical SQL script once in your Supabase SQL Editor to create all tables, sequences, RLS policies, and storage buckets.
+                    </p>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={handleCopySql}
+                    className="px-5 py-2.5 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 text-white text-xs font-bold flex items-center gap-2 shadow-md shadow-emerald-200 transition-all cursor-pointer"
+                  >
+                    {copiedSql ? <Check className="w-4 h-4" /> : <Copy className="w-4 h-4" />}
+                    <span>{copiedSql ? 'Schema Copied to Clipboard!' : 'Copy Full SQL Schema'}</span>
+                  </button>
+                </div>
+
+                {/* 3 Step Walkthrough */}
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+                  <div className="p-3.5 rounded-2xl bg-slate-50 border border-slate-200 space-y-1">
+                    <span className="w-6 h-6 rounded-lg bg-indigo-600 text-white text-xs font-black grid place-items-center mb-1.5">
+                      1
+                    </span>
+                    <strong className="text-xs font-extrabold text-slate-900 block">Open Supabase Dashboard</strong>
+                    <p className="text-[11px] text-slate-500 leading-snug">
+                      Go to your project at <a href="https://supabase.com/dashboard" target="_blank" rel="noreferrer" className="text-indigo-600 underline font-semibold">supabase.com</a> and click on <strong>SQL Editor</strong> in the left sidebar.
+                    </p>
+                  </div>
+
+                  <div className="p-3.5 rounded-2xl bg-slate-50 border border-slate-200 space-y-1">
+                    <span className="w-6 h-6 rounded-lg bg-indigo-600 text-white text-xs font-black grid place-items-center mb-1.5">
+                      2
+                    </span>
+                    <strong className="text-xs font-extrabold text-slate-900 block">Paste & Run Query</strong>
+                    <p className="text-[11px] text-slate-500 leading-snug">
+                      Click <strong>New query</strong>, click <strong>"Copy Full SQL Schema"</strong> above, paste it into the editor, and click <strong>Run</strong>.
+                    </p>
+                  </div>
+
+                  <div className="p-3.5 rounded-2xl bg-slate-50 border border-slate-200 space-y-1">
+                    <span className="w-6 h-6 rounded-lg bg-indigo-600 text-white text-xs font-black grid place-items-center mb-1.5">
+                      3
+                    </span>
+                    <strong className="text-xs font-extrabold text-slate-900 block">Instant Synchronization</strong>
+                    <p className="text-[11px] text-slate-500 leading-snug">
+                      Click <strong>"Test Connection"</strong> above. All tables, sequences, storage buckets, and realtime events will immediately link with zero further setup.
+                    </p>
+                  </div>
+                </div>
+
+                {/* SQL Code Preview Block */}
+                <div className="relative rounded-2xl bg-slate-950 text-slate-200 p-4 border border-slate-800 font-mono text-xs overflow-hidden">
+                  <div className="flex items-center justify-between pb-3 mb-3 border-b border-slate-800 text-[11px] text-slate-400">
+                    <span className="font-bold text-slate-300">supabase_schema.sql</span>
+                    <button
+                      type="button"
+                      onClick={handleCopySql}
+                      className="px-2.5 py-1 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-200 flex items-center gap-1.5 transition-colors cursor-pointer"
+                    >
+                      {copiedSql ? <Check className="w-3 h-3 text-emerald-400" /> : <Copy className="w-3 h-3" />}
+                      <span>{copiedSql ? 'Copied' : 'Copy'}</span>
+                    </button>
+                  </div>
+                  <pre className="max-h-80 overflow-auto text-[11px] leading-relaxed text-slate-300 scrollbar-thin">
+                    {SUPABASE_SQL_SCHEMA}
+                  </pre>
+                </div>
               </div>
             </section>
           )}

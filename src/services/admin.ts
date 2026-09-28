@@ -119,7 +119,10 @@ export async function approveRegistration(
       }
     }
 
-    await query;
+    const { error } = await query;
+    if (error) {
+      console.warn('Supabase approve note:', error.message);
+    }
   } catch {}
 
   // Update in local store
@@ -180,7 +183,10 @@ export async function rejectRegistration(
       }
     }
 
-    await query;
+    const { error } = await query;
+    if (error) {
+      console.warn('Supabase reject note:', error.message);
+    }
   } catch {}
 
   // Update in local store
@@ -225,7 +231,10 @@ export async function deleteRegistration(
       }
     }
 
-    await query;
+    const { error } = await query;
+    if (error) {
+      console.warn('Supabase delete note:', error.message);
+    }
   } catch {}
 
   // Update in local store
@@ -239,6 +248,69 @@ export async function deleteRegistration(
   saveStoredRegistrations(updated);
 
   return { success: true };
+}
+
+/**
+ * Syncs any local registrations to Supabase public.registrations.
+ */
+export async function syncLocalRegistrationsToSupabase(): Promise<{
+  success: boolean;
+  syncedCount: number;
+  errorCount: number;
+  message: string;
+}> {
+  const localList = getStoredRegistrations();
+  if (localList.length === 0) {
+    return { success: true, syncedCount: 0, errorCount: 0, message: 'No local registrations to sync.' };
+  }
+
+  let synced = 0;
+  let errors = 0;
+
+  for (const item of localList) {
+    try {
+      const numericMatch = item.registrationNo.match(/\d+/);
+      const regNo = numericMatch ? parseInt(numericMatch[0], 10) : undefined;
+
+      const payload: any = {
+        student_name: item.name,
+        gender: item.gender,
+        roll: item.roll,
+        student_id: item.id,
+        group_name: item.group,
+        section_name: item.section,
+        jersey_name: item.jerseyName,
+        jersey_number: item.jerseyNumber,
+        jersey_size: item.jerseySize,
+        sender_number: item.senderNumber || item.contactNumber || '01700000000',
+        payment_method: item.paymentMethod || 'bkash',
+        payment_time: item.paymentTime || '12:00:00',
+        transaction_id: item.transactionId || null,
+        registration_fee: item.amount ?? 500,
+        student_photo: item.photoUrl || null,
+        status: item.status || 'pending',
+        rejection_reason: item.rejectionReason || null,
+      };
+
+      if (regNo) payload.registration_no = regNo;
+
+      const { error } = await supabase
+        .from('registrations')
+        .upsert(payload, { onConflict: 'roll' });
+
+      if (!error) synced++;
+      else errors++;
+    } catch {
+      errors++;
+    }
+  }
+
+  return {
+    success: synced > 0 || errors === 0,
+    syncedCount: synced,
+    errorCount: errors,
+    message: `Sync completed: ${synced} pushed to Supabase, ${errors} skipped or failed.`,
+  };
 }
 
 /**

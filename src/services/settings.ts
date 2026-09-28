@@ -52,11 +52,34 @@ export async function fetchSiteContent(): Promise<SiteContentRow | null> {
       .from('site_content')
       .select('*')
       .eq('id', 'current')
-      .eq('visible', true)
-      .single();
+      .maybeSingle();
 
     if (!error && data) {
-      baseContent = data;
+      baseContent = {
+        ...data,
+        website_name: data.website_name || data.event_name || 'Rag Day 27',
+        event_name: data.event_name || data.website_name || 'Rag Day 27 (RD27)',
+        hero_title: data.hero_title || data.event_name || 'Official Rag Day 27 Celebration',
+        hero_subtitle: data.hero_subtitle || 'Celebrate our journey together with the official batch 27 grand gathering.',
+        banner: data.banner || data.hero_banner || null,
+        male_front: data.male_front || data.jersey_front_design || null,
+        male_back: data.male_back || data.jersey_back_design || null,
+        cards_json: Array.isArray(data.cards_json)
+          ? data.cards_json
+          : Array.isArray(data.quick_information) && data.quick_information.length > 0
+          ? data.quick_information
+          : DEFAULT_EVENT_CARDS,
+        sections_json:
+          Array.isArray(data.sections_json) && data.sections_json.length > 0
+            ? data.sections_json
+            : DEFAULT_SECTIONS,
+        content_blocks_json:
+          data.content_blocks_json && typeof data.content_blocks_json === 'object'
+            ? data.content_blocks_json
+            : data.other_settings && typeof data.other_settings === 'object'
+            ? data.other_settings
+            : {},
+      };
     }
   } catch (err) {
     console.warn('Failed to fetch site_content from database:', err);
@@ -89,7 +112,7 @@ export async function fetchSiteContent(): Promise<SiteContentRow | null> {
 
   return {
     ...merged,
-    cards_json: Array.isArray(merged.cards_json) ? merged.cards_json : DEFAULT_EVENT_CARDS,
+    cards_json: Array.isArray(merged.cards_json) && merged.cards_json.length > 0 ? merged.cards_json : DEFAULT_EVENT_CARDS,
     sections_json:
       Array.isArray(merged.sections_json) && merged.sections_json.length > 0
         ? merged.sections_json
@@ -107,11 +130,19 @@ export async function fetchSiteContent(): Promise<SiteContentRow | null> {
 export async function saveSiteContent(
   updates: Partial<SiteContentRow>
 ): Promise<{ success: boolean; data?: SiteContentRow; error?: any; errorMessage?: string }> {
-  const payload = {
+  const payload: any = {
     ...updates,
     id: 'current',
     updated_at: new Date().toISOString(),
   };
+
+  // Support both canonical and legacy column naming for compatibility
+  if (updates.banner) payload.hero_banner = updates.banner;
+  if (updates.male_front) payload.jersey_front_design = updates.male_front;
+  if (updates.male_back) payload.jersey_back_design = updates.male_back;
+  if (updates.event_name) payload.website_name = updates.event_name;
+  if (updates.cards_json) payload.quick_information = updates.cards_json;
+  if (updates.content_blocks_json) payload.other_settings = updates.content_blocks_json;
 
   // Always save to local override cache to guarantee immediate persistence
   saveLocalSiteOverride(payload);
@@ -137,9 +168,14 @@ export async function saveSiteContent(
         },
       };
     }
-  } catch {}
+    if (error) {
+      console.warn('Supabase site_content upsert notice:', error.message);
+    }
+  } catch (err: any) {
+    console.warn('Supabase site_content error:', err);
+  }
 
-  // Fallback to locally merged row if database permissions are restricted
+  // Fallback to locally merged row if database permissions are restricted or schema pending
   const fresh = await fetchSiteContent();
   return {
     success: true,

@@ -1,4 +1,4 @@
--- ============================================================================
+export const SUPABASE_SQL_SCHEMA = `-- ============================================================================
 -- RAG DAY 27 (RD27) - COMPLETE CANONICAL SUPABASE DATABASE SCHEMA
 -- ============================================================================
 -- How to apply this schema:
@@ -252,3 +252,4 @@ begin
   alter publication supabase_realtime add table public.site_content;
 exception when others then null;
 end $$;
+`;

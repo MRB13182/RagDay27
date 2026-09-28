@@ -82,18 +82,19 @@ export const InvitationCardPage: React.FC<InvitationCardPageProps> = ({
           regNoStr = `RD27-${regNoStr.padStart(3, '0')}`;
         }
         setMatchedRecord({
+          dbId: first.id,
           registrationNo: regNoStr,
           name: first.student_name || first.name || '',
           roll: first.roll || '',
           id: first.student_id || '',
-          group: '',
-          section: '',
+          group: first.group_name || '',
+          section: first.section_name || '',
           status: first.status,
           gender: (first.gender as any) || 'male',
-          photoUrl: '',
-          jerseyName: '',
-          jerseyNumber: '27',
-          jerseySize: 'L',
+          photoUrl: first.student_photo || '',
+          jerseyName: first.jersey_name || '',
+          jerseyNumber: first.jersey_number || '27',
+          jerseySize: first.jersey_size || 'L',
           rejectionReason: first.rejection_reason,
         });
         setIsSearching(false);

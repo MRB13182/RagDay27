@@ -85,7 +85,7 @@ export async function searchPublicStudent(
   try {
     let query = supabase
       .from('registrations')
-      .select('registration_no, student_name, roll, student_id, gender, group_name, section_name, status, rejection_reason');
+      .select('id, registration_no, student_name, roll, student_id, gender, group_name, section_name, jersey_name, jersey_number, jersey_size, student_photo, status, rejection_reason');
 
     if (clean.toUpperCase().startsWith('RD27') && numericRegNo !== null) {
       query = query.eq('registration_no', numericRegNo);

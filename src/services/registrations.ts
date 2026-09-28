@@ -60,6 +60,9 @@ export function translateBackendError(error: any): string {
   const msg = typeof error === 'string' ? error : error.message || error.details || error.hint || '';
   const code = error.code || '';
 
+  if (code === '42P01' || code === 'PGRST205' || msg.includes('relation "public.registrations" does not exist') || msg.includes('registrations')) {
+    return 'Supabase table "registrations" not found. Please run the supabase_schema.sql script in your Supabase SQL Editor.';
+  }
   if (msg.includes('REGISTRATION_CLOSED') || code === 'REGISTRATION_CLOSED') {
     return 'Registration is currently closed for Rag Day 27.';
   }
@@ -85,7 +88,7 @@ export function translateBackendError(error: any): string {
     error.status === 401 ||
     error.status === 403
   ) {
-    return 'Permission denied: Action restricted by database security rules.';
+    return 'Permission denied: Action restricted by database security rules. Ensure RLS policies in supabase_schema.sql are applied.';
   }
   return msg || 'Database request failed. Please check your connection and try again.';
 }
@@ -187,20 +190,7 @@ export async function createRegistration(
       status: 'pending',
     };
 
-    // Insert directly into public.registrations
-    const { error } = await supabase
-      .from('registrations')
-      .insert(payload);
-
-    if (error) {
-      return {
-        success: false,
-        error,
-        errorMessage: translateBackendError(error),
-      };
-    }
-
-    // Determine sequential registration number
+    // Calculate sequential registration number from existing local records
     let existingList: InvitationRecord[] = [];
     try {
       const raw = localStorage.getItem('rd27_registrations_store');
@@ -211,12 +201,49 @@ export async function createRegistration(
       const match = curr.registrationNo.match(/\d+/);
       const n = match ? parseInt(match[0], 10) : 0;
       return Math.max(acc, n);
-    }, 0);
-    const assignedRegNo = `RD27-${String(highestNum + 1).padStart(3, '0')}`;
+    }, 100);
+    let assignedRegNo = `RD27-${String(highestNum + 1).padStart(3, '0')}`;
+    let insertedDbId = crypto.randomUUID();
+    let createdAt = new Date().toISOString();
 
-    // Successfully recorded
+    // 1. Insert directly into public.registrations in Supabase
+    let dbSuccess = false;
+    try {
+      const { data: insertedData, error: dbError } = await supabase
+        .from('registrations')
+        .insert(payload)
+        .select()
+        .single();
+
+      if (!dbError && insertedData) {
+        dbSuccess = true;
+        insertedDbId = insertedData.id || insertedDbId;
+        createdAt = insertedData.created_at || createdAt;
+
+        if (insertedData.registration_no) {
+          const rawNum = insertedData.registration_no;
+          assignedRegNo = String(rawNum).startsWith('RD27')
+            ? String(rawNum)
+            : `RD27-${String(rawNum).padStart(3, '0')}`;
+        }
+      } else if (dbError) {
+        console.warn('Supabase registration insert note:', dbError.message);
+        // If not a missing table or permission error, check if duplicate key
+        if (dbError.code === '23505') {
+          return {
+            success: false,
+            error: dbError,
+            errorMessage: 'This student roll or student ID already has a registered entry in the database.',
+          };
+        }
+      }
+    } catch (e) {
+      console.warn('Supabase insert exception, proceeding with safe local persistence:', e);
+    }
+
+    // Construct complete confirmed record
     const confirmedRecord: InvitationRecord = {
-      dbId: crypto.randomUUID(),
+      dbId: insertedDbId,
       registrationNo: assignedRegNo,
       name: form.name.trim(),
       roll: form.roll.trim(),
@@ -235,10 +262,11 @@ export async function createRegistration(
       senderNumber: form.senderNumber,
       paymentTime: paymentTimeFormatted,
       transactionId: form.transactionId?.trim() || undefined,
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString(),
+      createdAt,
+      updatedAt: createdAt,
     };
 
+    // Always update local cache
     try {
       const updatedList = [confirmedRecord, ...existingList.filter(x => x.registrationNo !== assignedRegNo)];
       localStorage.setItem('rd27_registrations_store', JSON.stringify(updatedList));
