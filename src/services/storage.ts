@@ -85,24 +85,3 @@ export async function uploadStudentPhoto(
     errorMessage: res.errorMessage,
   };
 }
-
-/**
- * Uploads a branding asset (logo, favicon, banner, etc.)
- */
-export async function uploadBrandingAsset(
-  file: File | Blob,
-  type: 'logos' | 'favicons' | 'banners' | 'jerseys' | 'assets'
-): Promise<{
-  success: boolean;
-  publicUrl: string;
-  storagePath: string;
-  errorMessage?: string;
-}> {
-  const res = await uploadFileToStorage(file, type);
-  return {
-    success: res.success,
-    publicUrl: res.publicUrl,
-    storagePath: res.storagePath,
-    errorMessage: res.errorMessage,
-  };
-}

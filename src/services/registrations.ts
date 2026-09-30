@@ -5,7 +5,7 @@ import type {
   GroupItem,
   SectionItem,
 } from '../types';
-import { fetchSiteContent } from './settings';
+import { DEFAULT_SECTIONS } from '../data/mockData';
 
 /**
  * Robustly format user-entered time into PostgreSQL TIME format (HH:MM:SS).
@@ -94,47 +94,25 @@ export function translateBackendError(error: any): string {
 }
 
 /**
- * Fetch academic groups (Canonical source: derived from site_content.sections_json)
+ * Fetch academic groups (Canonical source: DEFAULT_SECTIONS)
  */
 export async function fetchGroups(): Promise<GroupItem[]> {
-  try {
-    const site = await fetchSiteContent();
-    const sections = site?.sections_json || [];
-
-    const groupNames = Array.from(new Set(sections.map((s: any) => s.group || s.group_name).filter(Boolean))) as string[];
-    if (groupNames.length === 0) {
-      return [
-        { id: 'group-science', name: 'Science', active: true, sort_order: 1 },
-        { id: 'group-business', name: 'Business Studies', active: true, sort_order: 2 },
-        { id: 'group-humanities', name: 'Humanities', active: true, sort_order: 3 },
-      ];
-    }
-
-    return groupNames.map((name, index) => ({
-      id: `group-${name.toLowerCase().replace(/\s+/g, '-')}`,
-      name,
-      active: true,
-      sort_order: index + 1,
-    }));
-  } catch {
-    return [
-      { id: 'group-science', name: 'Science', active: true, sort_order: 1 },
-      { id: 'group-business', name: 'Business Studies', active: true, sort_order: 2 },
-      { id: 'group-humanities', name: 'Humanities', active: true, sort_order: 3 },
-    ];
-  }
+  return [
+    { id: 'group-science', name: 'Science', active: true, sort_order: 1 },
+    { id: 'group-business', name: 'Business Studies', active: true, sort_order: 2 },
+    { id: 'group-humanities', name: 'Humanities', active: true, sort_order: 3 },
+  ];
 }
 
 /**
- * Fetch sections from canonical site_content.sections_json
+ * Fetch sections from canonical DEFAULT_SECTIONS
  */
 export async function fetchSections(
   groupNameOrId?: string,
   gender?: 'male' | 'female'
 ): Promise<SectionItem[]> {
   try {
-    const site = await fetchSiteContent();
-    let sections = (site?.sections_json || []) as any[];
+    let sections = (DEFAULT_SECTIONS || []) as any[];
 
     if (groupNameOrId) {
       const cleanGroup = groupNameOrId.replace(/^group-/, '').toLowerCase();

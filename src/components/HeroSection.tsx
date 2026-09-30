@@ -101,14 +101,16 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
             </div>
 
             {/* Dynamic Event Countdown Timer (Configured by Super Admin) */}
-            <EventCountdown
-              day={websiteSettings.eventDay}
-              month={websiteSettings.eventMonth}
-              year={websiteSettings.eventYear}
-              time={websiteSettings.eventTime}
-              fallbackDateStr={websiteSettings.eventDate}
-              eventName={websiteSettings.eventName}
-            />
+            {websiteSettings.countdownEnabled !== false && (
+              <EventCountdown
+                day={websiteSettings.eventDay}
+                month={websiteSettings.eventMonth}
+                year={websiteSettings.eventYear}
+                time={websiteSettings.eventTime}
+                fallbackDateStr={websiteSettings.eventDate}
+                eventName={websiteSettings.eventName}
+              />
+            )}
 
             {/* Actions */}
             <div className="flex flex-wrap items-center gap-3 w-full sm:w-auto">

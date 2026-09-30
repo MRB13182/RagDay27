@@ -82,6 +82,7 @@ export interface WebsiteSettings {
   copyrightText: string;
   bannerText: string;
   bannerActive: boolean;
+  countdownEnabled?: boolean;
 }
 
 export interface BrandingSettings {
