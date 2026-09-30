@@ -8,7 +8,7 @@ import {
   registrationSettingsConfig,
   countdownSettingsConfig,
   importantNoticeConfig,
-} from '../super-admin';
+} from '../lib/superAdminConfig';
 import {
   X, Lock, LogIn, LogOut, Search, Check, XCircle,
   Trash2, Download, Eye, EyeOff, FileText, CheckCircle2,
@@ -598,7 +598,7 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
                         Super Admin Code-Based Configuration
                       </h2>
                       <p className="text-xs text-slate-500">
-                        All website settings are stored directly in source code configuration files under <code className="font-mono bg-slate-100 px-1.5 py-0.5 rounded text-indigo-600 font-bold">src/super-admin/</code>.
+                        All website settings are stored directly in source code configuration files under <code className="font-mono bg-slate-100 px-1.5 py-0.5 rounded text-indigo-600 font-bold">super-admin/</code>.
                       </p>
                     </div>
                   </div>
@@ -619,7 +619,7 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
                         </span>
                         <h3 className="font-extrabold text-sm text-slate-900">Website Identity</h3>
                       </div>
-                      <span className="font-mono text-[10px] text-slate-400">src/super-admin/1. Website Identity/</span>
+                      <span className="font-mono text-[10px] text-slate-400">super-admin/01. website-identity/</span>
                     </div>
                     <div className="space-y-1.5 text-xs">
                       <div><span className="font-bold text-slate-500">Website Name:</span> <span className="font-semibold text-slate-900">{websiteIdentityConfig.websiteName}</span></div>
@@ -639,7 +639,7 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
                         </span>
                         <h3 className="font-extrabold text-sm text-slate-900">Event Settings</h3>
                       </div>
-                      <span className="font-mono text-[10px] text-slate-400">src/super-admin/2. Event Settings/</span>
+                      <span className="font-mono text-[10px] text-slate-400">super-admin/02. event-settings/</span>
                     </div>
                     <div className="space-y-1.5 text-xs">
                       <div><span className="font-bold text-slate-500">Event Name:</span> <span className="font-semibold text-slate-900">{eventSettingsConfig.eventName}</span></div>
@@ -659,7 +659,7 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
                         </span>
                         <h3 className="font-extrabold text-sm text-slate-900">Registration Settings</h3>
                       </div>
-                      <span className="font-mono text-[10px] text-slate-400">src/super-admin/3. Registration Settings/</span>
+                      <span className="font-mono text-[10px] text-slate-400">super-admin/03. registration-settings/</span>
                     </div>
                     <div className="space-y-1.5 text-xs">
                       <div>
@@ -685,7 +685,7 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
                         </span>
                         <h3 className="font-extrabold text-sm text-slate-900">Countdown Settings</h3>
                       </div>
-                      <span className="font-mono text-[10px] text-slate-400">src/super-admin/4. Countdown Settings/</span>
+                      <span className="font-mono text-[10px] text-slate-400">super-admin/04. countdown-settings/</span>
                     </div>
                     <div className="space-y-1.5 text-xs">
                       <div>
@@ -708,7 +708,7 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
                         </span>
                         <h3 className="font-extrabold text-sm text-slate-900">Important Notice</h3>
                       </div>
-                      <span className="font-mono text-[10px] text-slate-400">src/super-admin/5. Important Notice/</span>
+                      <span className="font-mono text-[10px] text-slate-400">super-admin/05. important-notice/</span>
                     </div>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-3 text-xs">
                       <div className="space-y-1.5">

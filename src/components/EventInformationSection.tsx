@@ -15,6 +15,7 @@ import {
 
 interface EventInformationSectionProps {
   cards: EventCard[];
+  layout?: 'two-column' | 'one-column' | string;
 }
 
 export const renderCardIcon = (iconName: string, className = 'w-5 h-5') => {
@@ -107,12 +108,17 @@ const getColorConfig = (color: string) => {
   }
 };
 
-export const EventInformationSection: React.FC<EventInformationSectionProps> = ({ cards }) => {
+export const EventInformationSection: React.FC<EventInformationSectionProps> = ({
+  cards,
+  layout = 'two-column',
+}) => {
   const visibleCards = cards
     .filter(c => c.visible)
     .sort((a, b) => a.order - b.order);
 
   if (visibleCards.length === 0) return null;
+
+  const isOneColumn = layout === 'one-column';
 
   return (
     <section className="py-6 sm:py-8 relative">
@@ -129,17 +135,13 @@ export const EventInformationSection: React.FC<EventInformationSectionProps> = (
           </h2>
         </div>
 
-        {/* Dynamic Cards Grid */}
+        {/* Dynamic Cards Grid according to Super Admin event-card-layout */}
         <div
-          className={`grid grid-cols-1 sm:grid-cols-2 ${
-            visibleCards.length === 1
-              ? 'lg:grid-cols-1 max-w-md mx-auto'
-              : visibleCards.length === 2
-              ? 'lg:grid-cols-2 max-w-3xl mx-auto'
-              : visibleCards.length === 3
-              ? 'lg:grid-cols-3'
-              : 'lg:grid-cols-4'
-          } gap-4 sm:gap-6`}
+          className={
+            isOneColumn
+              ? 'grid grid-cols-1 max-w-2xl mx-auto gap-4 sm:gap-6'
+              : 'grid grid-cols-1 md:grid-cols-2 max-w-5xl mx-auto gap-4 sm:gap-6'
+          }
         >
           {visibleCards.map((card) => {
             const colors = getColorConfig(card.customColor);

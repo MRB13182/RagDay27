@@ -13,7 +13,7 @@ import {
   registrationSettingsConfig,
   countdownSettingsConfig,
   importantNoticeConfig,
-} from './super-admin';
+} from './lib/superAdminConfig';
 import type {
   InvitationRecord,
   InvitationStatus,
@@ -38,8 +38,20 @@ export default function App() {
   const [activeTab, setActiveTab] = useState<'home' | 'register' | 'invitation'>('home');
   const [invitations, setInvitations] = useState<InvitationRecord[]>([]);
   const [invitationSearchTarget, setInvitationSearchTarget] = useState<string>('');
+  const [reRegisterRecord, setReRegisterRecord] = useState<InvitationRecord | null>(null);
   const [isAdminOpen, setIsAdminOpen] = useState(false);
   const [isNoticePopupOpen, setIsNoticePopupOpen] = useState<boolean>(importantNoticeConfig.popupEnabled);
+  const [isRegClosedPopupOpen, setIsRegClosedPopupOpen] = useState<boolean>(false);
+
+  const handleOpenRegistration = () => {
+    if (!registrationSettingsConfig.registrationOpen) {
+      setIsRegClosedPopupOpen(true);
+      return;
+    }
+    setReRegisterRecord(null);
+    setActiveTab('register');
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
 
   // Database Action Toast Notification
   const [toast, setToast] = useState<{ message: string; type: 'success' | 'error' | 'info' } | null>(null);
@@ -352,10 +364,38 @@ export default function App() {
         </div>
       )}
 
+      {/* Registration Closed Modal Popup (Controlled by Super Admin - 03. registration-settings) */}
+      {isRegClosedPopupOpen && (
+        <div className="fixed inset-0 z-[160] flex items-center justify-center p-4 bg-slate-950/70 backdrop-blur-sm animate-fadeIn">
+          <div className="w-full max-w-md bg-white rounded-3xl p-6 sm:p-7 shadow-2xl border border-slate-100 text-slate-900 space-y-4 text-center">
+            <div className="w-14 h-14 rounded-2xl bg-amber-50 text-amber-600 grid place-items-center mx-auto">
+              <ShieldAlert className="w-7 h-7" />
+            </div>
+            <h3 className="text-xl font-black text-slate-900">Registration Closed</h3>
+            <p className="text-xs sm:text-sm text-slate-600 leading-relaxed">
+              Registration is currently closed. Please contact the organizers manually.
+            </p>
+            <div className="pt-2">
+              <button
+                type="button"
+                onClick={() => setIsRegClosedPopupOpen(false)}
+                className="w-full py-3 rounded-xl bg-slate-900 hover:bg-slate-800 text-white font-bold text-xs shadow-md cursor-pointer"
+              >
+                Close
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* 1. Sticky/Fixed Navbar */}
       <Navbar
         activeTab={activeTab}
         onNavigate={tab => {
+          if (tab === 'register') {
+            handleOpenRegistration();
+            return;
+          }
           setActiveTab(tab);
           window.scrollTo({ top: 0, behavior: 'smooth' });
         }}
@@ -384,10 +424,7 @@ export default function App() {
             <div className="animate-fadeIn">
               {/* 1. Hero Section */}
               <HeroSection
-                onRegisterClick={() => {
-                  setActiveTab('register');
-                  window.scrollTo({ top: 0, behavior: 'smooth' });
-                }}
+                onRegisterClick={handleOpenRegistration}
                 onInvitationClick={() => {
                   setActiveTab('invitation');
                   window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -403,24 +440,18 @@ export default function App() {
                   {jerseyShowcaseSettings.enabled && (
                     <JerseyShowcaseSection
                       settings={jerseyShowcaseSettings}
-                      onRegisterClick={() => {
-                        setActiveTab('register');
-                        window.scrollTo({ top: 0, behavior: 'smooth' });
-                      }}
+                      onRegisterClick={handleOpenRegistration}
                     />
                   )}
-                  <EventInformationSection cards={eventCards} />
+                  <EventInformationSection cards={eventCards} layout={eventSettingsConfig.eventCardLayout} />
                 </>
               ) : (
                 <>
-                  <EventInformationSection cards={eventCards} />
+                  <EventInformationSection cards={eventCards} layout={eventSettingsConfig.eventCardLayout} />
                   {jerseyShowcaseSettings.enabled && (
                     <JerseyShowcaseSection
                       settings={jerseyShowcaseSettings}
-                      onRegisterClick={() => {
-                        setActiveTab('register');
-                        window.scrollTo({ top: 0, behavior: 'smooth' });
-                      }}
+                      onRegisterClick={handleOpenRegistration}
                     />
                   )}
                 </>
@@ -432,10 +463,7 @@ export default function App() {
                   {registrationSettingsConfig.registrationOpen ? (
                     <>
                       <button
-                        onClick={() => {
-                          setActiveTab('register');
-                          window.scrollTo({ top: 0, behavior: 'smooth' });
-                        }}
+                        onClick={handleOpenRegistration}
                         className="w-full sm:w-auto inline-flex items-center justify-center gap-3 px-8 py-4 rounded-2xl bg-gradient-to-r from-[#5B5FEF] via-[#7A6CFF] to-[#5B5FEF] text-white font-extrabold text-base shadow-xl shadow-[#5B5FEF]/30 hover:shadow-2xl hover:shadow-[#5B5FEF]/40 hover:-translate-y-1 active:translate-y-0 transition-all duration-200 cursor-pointer group"
                       >
                         <span>Register Now</span>
@@ -446,9 +474,12 @@ export default function App() {
                       </p>
                     </>
                   ) : (
-                    <div className="p-4 rounded-2xl bg-amber-50 border border-amber-200 text-amber-800 text-xs font-semibold">
-                      Registration is currently closed for Rag Day 27.
-                    </div>
+                    <button
+                      onClick={() => setIsRegClosedPopupOpen(true)}
+                      className="w-full sm:w-auto p-4 rounded-2xl bg-amber-50 hover:bg-amber-100 border border-amber-200 text-amber-800 text-xs font-semibold cursor-pointer transition-colors shadow-sm"
+                    >
+                      Registration is currently closed. Please contact the organizers manually.
+                    </button>
                   )}
                 </div>
               </section>
@@ -460,34 +491,15 @@ export default function App() {
           {/* ======================================================== */}
           {activeTab === 'register' && (
             <div className="animate-fadeIn">
-              {registrationSettingsConfig.registrationOpen ? (
-                <RegistrationForm
-                  onSuccessSubmit={handleSuccessSubmit}
-                  onGoToInvitation={handleGoToInvitation}
-                  paymentSettings={paymentSettings}
-                  existingRegistrations={invitations}
-                />
-              ) : (
-                <div className="max-w-xl mx-auto px-4 py-16 text-center space-y-4">
-                  <div className="w-16 h-16 rounded-3xl bg-amber-50 text-amber-600 grid place-items-center mx-auto">
-                    <ShieldAlert className="w-8 h-8" />
-                  </div>
-                  <h2 className="text-2xl font-black text-slate-900">Registration is Closed</h2>
-                  <p className="text-sm text-slate-600 leading-relaxed">
-                    The registration window for Rag Day 27 is currently closed. If you have already registered, you can verify your registration and download your invitation card below.
-                  </p>
-                  <button
-                    onClick={() => {
-                      setActiveTab('invitation');
-                      window.scrollTo({ top: 0, behavior: 'smooth' });
-                    }}
-                    className="inline-flex items-center gap-2 px-6 py-3 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs shadow-md shadow-indigo-200 cursor-pointer"
-                  >
-                    <Ticket className="w-4 h-4" />
-                    <span>Check Invitation Card</span>
-                  </button>
-                </div>
-              )}
+              <RegistrationForm
+                onSuccessSubmit={handleSuccessSubmit}
+                onGoToInvitation={handleGoToInvitation}
+                paymentSettings={paymentSettings}
+                existingRegistrations={invitations}
+                initialRecord={reRegisterRecord}
+                registrationOpen={registrationSettingsConfig.registrationOpen}
+                onResetReRegister={() => setReRegisterRecord(null)}
+              />
             </div>
           )}
 
@@ -499,7 +511,12 @@ export default function App() {
               <InvitationCardPage
                 invitations={invitations}
                 initialSearchRegNo={invitationSearchTarget}
-                onNavigateToRegister={() => {
+                onNavigateToRegister={(record?: InvitationRecord) => {
+                  if (record) {
+                    setReRegisterRecord(record);
+                  } else {
+                    setReRegisterRecord(null);
+                  }
                   setActiveTab('register');
                   window.scrollTo({ top: 0, behavior: 'smooth' });
                 }}

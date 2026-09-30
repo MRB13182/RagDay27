@@ -24,7 +24,7 @@ export interface ImageOptimizationOptions {
   maxInputSizeBytes?: number;
 }
 
-export const MAX_PHOTO_SIZE_BYTES = 5 * 1024 * 1024; // 5 MB
+export const MAX_PHOTO_SIZE_BYTES = 3 * 1024 * 1024; // 3 MB
 
 export const ACCEPTED_IMAGE_TYPES = [
   'image/jpeg',

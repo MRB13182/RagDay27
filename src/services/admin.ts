@@ -7,11 +7,18 @@ import { translateBackendError } from './registrations';
  */
 export function mapRowToInvitation(row: any): InvitationRecord {
   const regNoNum = row.registration_no;
-  const regNoFormatted = regNoNum
-    ? String(regNoNum).startsWith('RD27')
-      ? String(regNoNum)
-      : `RD27-${String(regNoNum).padStart(3, '0')}`
-    : 'Pending';
+  const isFemale = row.gender === 'female';
+  const prefix = isFemale ? 'RDG27' : 'RDB27';
+
+  let regNoFormatted = 'Pending';
+  if (regNoNum) {
+    const str = String(regNoNum);
+    if (str.startsWith('RDB27-') || str.startsWith('RDG27-') || str.startsWith('RD27-')) {
+      regNoFormatted = str;
+    } else {
+      regNoFormatted = `${prefix}-${str.padStart(4, '0')}`;
+    }
+  }
 
   return {
     dbId: row.id,

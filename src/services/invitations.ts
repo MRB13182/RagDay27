@@ -87,8 +87,15 @@ export async function searchPublicStudent(
       .from('registrations')
       .select('id, registration_no, student_name, roll, student_id, gender, group_name, section_name, jersey_name, jersey_number, jersey_size, student_photo, status, rejection_reason');
 
-    if (clean.toUpperCase().startsWith('RD27') && numericRegNo !== null) {
-      query = query.eq('registration_no', numericRegNo);
+    const isRegPrefix =
+      clean.toUpperCase().startsWith('RDB27') ||
+      clean.toUpperCase().startsWith('RDG27') ||
+      clean.toUpperCase().startsWith('RD27');
+
+    if (isRegPrefix && numericRegNo !== null) {
+      query = query.or(
+        `registration_no.eq.${numericRegNo},student_id.eq.${clean},roll.eq.${clean},student_name.ilike.%${clean}%`
+      );
     } else {
       query = query.or(`roll.eq.${clean},student_id.eq.${clean},student_name.ilike.%${clean}%`);
     }

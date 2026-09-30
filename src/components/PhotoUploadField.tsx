@@ -41,7 +41,7 @@ export const PhotoUploadField: React.FC<PhotoUploadFieldProps> = ({
 
     // Immediate size check before any processing
     if (file.size > MAX_PHOTO_SIZE_BYTES) {
-      setErrorMessage('Photo size must be 5 MB or less.');
+      setErrorMessage('Photo size must be 3 MB or less.');
       return;
     }
 

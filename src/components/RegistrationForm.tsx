@@ -6,34 +6,33 @@ import {
   RegistrationFormData,
   InvitationRecord,
   PaymentSettings,
-  GroupItem,
-  SectionItem,
-  BackendRegistrationInput,
 } from '../types';
 import { DEFAULT_PAYMENT_SETTINGS } from '../data/mockData';
 import {
   createRegistration,
-  fetchGroups,
-  fetchSections,
   uploadStudentPhoto,
+  checkDuplicateRegistration,
 } from '../services';
 import { JerseyGraphic } from './JerseyGraphic';
 import { BkashLogo, NagadLogo } from './PaymentBrandLogos';
 import { PhotoUploadField } from './PhotoUploadField';
 import {
-  Upload,
   User,
   Copy,
   Check,
   Sparkles,
   ArrowRight,
-  Info,
-  Layers,
   Shirt,
   CreditCard,
   AlertCircle,
   AlertTriangle,
   Clock,
+  Lock,
+  Unlock,
+  ShieldCheck,
+  ShieldAlert,
+  X,
+  FileCheck,
 } from 'lucide-react';
 
 interface RegistrationFormProps {
@@ -41,20 +40,27 @@ interface RegistrationFormProps {
   onGoToInvitation: (regNo: string) => void;
   paymentSettings?: PaymentSettings;
   existingRegistrations?: InvitationRecord[];
-  sections?: any[];
+  initialRecord?: InvitationRecord | null;
+  registrationOpen?: boolean;
+  onResetReRegister?: () => void;
 }
 
 const JERSEY_SIZES: JerseySize[] = ['S', 'M', 'L', 'XL', '2XL', '3XL', '4XL'];
 
+/**
+ * Returns exact section codes based on Group and Gender
+ * Male: ScB1–ScB5, BsB1–BsB5, HuB1–HuB5
+ * Female: ScG1–ScG5, BsG1–BsG5, HuG1–HuG5
+ */
 export const getAvailableSections = (gender: GenderType, group: string): string[] => {
   if (gender === 'male') {
-    if (group === 'Science') return ['SCB1', 'SCB2', 'SCB3', 'SCB4', 'SCB5'];
-    if (group === 'Business Studies') return ['BSB1', 'BSB2', 'BSB3', 'BSB4', 'BSB5'];
-    if (group === 'Humanities') return ['HUB1', 'HUB2', 'HUB3', 'HUB4', 'HUB5'];
+    if (group === 'Science') return ['ScB1', 'ScB2', 'ScB3', 'ScB4', 'ScB5'];
+    if (group === 'Business Studies') return ['BsB1', 'BsB2', 'BsB3', 'BsB4', 'BsB5'];
+    if (group === 'Humanities') return ['HuB1', 'HuB2', 'HuB3', 'HuB4', 'HuB5'];
   } else if (gender === 'female') {
-    if (group === 'Science') return ['SCG1', 'SCG2', 'SCG3', 'SCG4', 'SCG5'];
-    if (group === 'Business Studies') return ['BSG1', 'BSG2', 'BSG3', 'BSG4', 'BSG5'];
-    if (group === 'Humanities') return ['HUG1', 'HUG2', 'HUG3', 'HUG4', 'HUG5'];
+    if (group === 'Science') return ['ScG1', 'ScG2', 'ScG3', 'ScG4', 'ScG5'];
+    if (group === 'Business Studies') return ['BsG1', 'BsG2', 'BsG3', 'BsG4', 'BsG5'];
+    if (group === 'Humanities') return ['HuG1', 'HuG2', 'HuG3', 'HuG4', 'HuG5'];
   }
   return [];
 };
@@ -64,10 +70,11 @@ export const RegistrationForm: React.FC<RegistrationFormProps> = ({
   onGoToInvitation,
   paymentSettings = DEFAULT_PAYMENT_SETTINGS,
   existingRegistrations = [],
-  sections,
+  initialRecord = null,
+  registrationOpen = true,
+  onResetReRegister,
 }) => {
   const activeFee = paymentSettings?.registrationFee ?? 500;
-  const activeCurrency = paymentSettings?.currency ?? 'BDT';
 
   const [formData, setFormData] = useState<RegistrationFormData>({
     gender: 'choose_one',
@@ -88,78 +95,79 @@ export const RegistrationForm: React.FC<RegistrationFormProps> = ({
     jerseySize: 'L',
   });
 
-  // Supabase groups & sections data state
-  const [groupsList, setGroupsList] = useState<GroupItem[]>([]);
-  const [sectionsList, setSectionsList] = useState<SectionItem[]>([]);
-  const [selectedGroupId, setSelectedGroupId] = useState<string>('');
-  const [selectedSectionId, setSelectedSectionId] = useState<string>('');
+  // Re-submission / editing state for rejected registrations
+  const [editingRegNo, setEditingRegNo] = useState<string | null>(null);
+  const [editingDbId, setEditingDbId] = useState<string | null>(null);
+
+  // Declaration checkbox state (Required: must be checked to submit)
+  const [declarationChecked, setDeclarationChecked] = useState(false);
+
+  // UI & Flow states
+  const [copiedAccount, setCopiedAccount] = useState<string | null>(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [formErrors, setFormErrors] = useState<{ [key: string]: string }>({});
   const [submitErrorMessage, setSubmitErrorMessage] = useState<string | null>(null);
 
-  // Sync sections from parent immediately whenever updated
-  useEffect(() => {
-    if (Array.isArray(sections) && sections.length > 0) {
-      setSectionsList(
-        sections.map((s, index) => ({
-          id: s.id || `sec-${index}`,
-          group_id: s.group || s.group_name || 'Science',
-          gender: s.gender || 'male',
-          code: s.code || s.displayName || `SEC${index + 1}`,
-          display_name: s.displayName || s.code || `SEC${index + 1}`,
-          active: s.active !== false,
-          sort_order: s.sortOrder || index + 1,
-        }))
-      );
-    }
-  }, [sections]);
+  // Duplicate detection popup state
+  const [duplicateModal, setDuplicateModal] = useState<{
+    type: 'approved' | 'pending' | 'rejected';
+    record: InvitationRecord;
+  } | null>(null);
 
-  // Load groups and sections from Supabase on mount
+  // Registration closed popup state
+  const [showClosedModal, setShowClosedModal] = useState(!registrationOpen);
+
   useEffect(() => {
-    fetchGroups().then(grps => {
-      if (grps && grps.length > 0) {
-        setGroupsList(grps);
-      }
-    });
-    if (!sections || sections.length === 0) {
-      fetchSections().then(sects => {
-        if (sects && sects.length > 0) {
-          setSectionsList(sects);
-        }
+    if (!registrationOpen) {
+      setShowClosedModal(true);
+    }
+  }, [registrationOpen]);
+
+  // Submission success modal state
+  const [successModalData, setSuccessModalData] = useState<{
+    name: string;
+    regNo: string;
+    gender: GenderType;
+  } | null>(null);
+
+  // Pre-load data if initialRecord is provided (e.g. from Invitation Card "Register Again")
+  useEffect(() => {
+    if (initialRecord) {
+      setFormData({
+        gender: initialRecord.gender || 'male',
+        name: initialRecord.name || '',
+        roll: initialRecord.roll || '',
+        id: initialRecord.id || '',
+        group: initialRecord.group || '',
+        section: initialRecord.section || '',
+        contactNumber: initialRecord.contactNumber || initialRecord.senderNumber || '',
+        photoUrl: initialRecord.photoUrl || null,
+        amount: initialRecord.amount ?? activeFee,
+        paymentMethod: initialRecord.paymentMethod || 'bkash',
+        senderNumber: initialRecord.senderNumber || initialRecord.contactNumber || '',
+        paymentTime: initialRecord.paymentTime || '',
+        transactionId: initialRecord.transactionId || '',
+        jerseyName: initialRecord.jerseyName || 'STRIKER',
+        jerseyNumber: initialRecord.jerseyNumber || '27',
+        jerseySize: (initialRecord.jerseySize as JerseySize) || 'L',
       });
+      setEditingRegNo(initialRecord.registrationNo);
+      setEditingDbId(initialRecord.dbId || null);
     }
-  }, [sections]);
+  }, [initialRecord, activeFee]);
 
-  // Keep amount in sync if admin updates registration fee
+  // Keep fee in sync
   useEffect(() => {
     if (paymentSettings?.registrationFee) {
       setFormData(prev => ({ ...prev, amount: paymentSettings.registrationFee }));
     }
   }, [paymentSettings?.registrationFee]);
 
-  // Keep payment method in sync if admin disables one
-  useEffect(() => {
-    const bkashOn = paymentSettings?.bkashEnabled ?? true;
-    const nagadOn = paymentSettings?.nagadEnabled ?? true;
-    if (!bkashOn && formData.paymentMethod === 'bkash' && nagadOn) {
-      setFormData(prev => ({ ...prev, paymentMethod: 'nagad' }));
-    } else if (!nagadOn && formData.paymentMethod === 'nagad' && bkashOn) {
-      setFormData(prev => ({ ...prev, paymentMethod: 'bkash' }));
-    }
-  }, [paymentSettings?.bkashEnabled, paymentSettings?.nagadEnabled, formData.paymentMethod]);
-
-  const [copiedAccount, setCopiedAccount] = useState<string | null>(null);
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  const [successModalData, setSuccessModalData] = useState<{
-    name: string;
-    regNo: string;
-    serialNo?: number;
-    gender: GenderType;
-  } | null>(null);
-  const [formErrors, setFormErrors] = useState<{ [key: string]: string }>({});
-
-  // Gender-based theme configuration solely for the Registration Form Container
+  const isGenderChosen = formData.gender === 'male' || formData.gender === 'female';
   const isMale = formData.gender === 'male';
   const isFemale = formData.gender === 'female';
 
+  // Container & styling classes based on selected gender
   const containerClasses = isMale
     ? 'glass-male text-white border-[#38BDF8]/40 shadow-[0_20px_60px_-15px_rgba(15,23,42,0.9),0_0_35px_-5px_rgba(56,189,248,0.25)]'
     : isFemale
@@ -190,62 +198,31 @@ export const RegistrationForm: React.FC<RegistrationFormProps> = ({
     ? 'bg-white/80 border border-pink-200 backdrop-blur-md shadow-sm'
     : 'bg-white/70 border border-slate-200/80 backdrop-blur-md shadow-sm';
 
+  // Dynamic payment numbers based on gender
+  const activeBkashNumber = isFemale
+    ? paymentSettings?.femaleBkashNumber || '01812-345678'
+    : paymentSettings?.maleBkashNumber || '01712-345678';
+
+  const activeNagadNumber = isFemale
+    ? paymentSettings?.femaleNagadNumber || '01812-345678'
+    : paymentSettings?.maleNagadNumber || '01712-345678';
+
   const handleCopyAccount = (number: string, label: string) => {
     navigator.clipboard.writeText(number);
     setCopiedAccount(label);
     setTimeout(() => setCopiedAccount(null), 2500);
   };
 
-  // Gender-based dynamic payment numbers (Hidden logic - no Desk UI)
-  const activeBkashNumber =
-    formData.gender === 'female'
-      ? (paymentSettings?.femaleBkashNumber || '01XXXXXXXXX')
-      : (paymentSettings?.maleBkashNumber || '01XXXXXXXXX');
-
-  const activeNagadNumber =
-    formData.gender === 'female'
-      ? (paymentSettings?.femaleNagadNumber || '01XXXXXXXXX')
-      : (paymentSettings?.maleNagadNumber || '01XXXXXXXXX');
-
-  const handlePhotoSelected = ({
-    photoUrl,
-    photoFile,
-    photoBlob,
-  }: {
-    photoUrl: string;
-    photoFile: File;
-    photoBlob: Blob;
-  }) => {
+  const handleGenderSelect = (selectedGender: 'male' | 'female') => {
     setFormData(prev => ({
       ...prev,
-      photoUrl,
-      photoFile,
-      photoBlob,
-    }));
-  };
-
-  const handlePhotoRemoved = () => {
-    setFormData(prev => ({
-      ...prev,
-      photoUrl: null,
-      photoFile: null,
-      photoBlob: null,
-    }));
-  };
-
-  const handleGenderChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
-    const val = e.target.value as GenderType;
-    setFormData(prev => ({
-      ...prev,
-      gender: val,
-      section: '', // Reset section automatically when gender changes
+      gender: selectedGender,
+      section: '', // Reset section when gender changes
       jerseyName:
-        prev.jerseyName === 'STRIKER' || prev.jerseyName === 'NOVA' || prev.jerseyName === 'HUNTER'
-          ? val === 'male'
+        prev.jerseyName === 'STRIKER' || prev.jerseyName === 'HUNTER' || prev.jerseyName === 'NOVA'
+          ? selectedGender === 'male'
             ? 'HUNTER'
-            : val === 'female'
-            ? 'NOVA'
-            : 'STRIKER'
+            : 'NOVA'
           : prev.jerseyName,
     }));
     if (formErrors.gender) {
@@ -253,57 +230,116 @@ export const RegistrationForm: React.FC<RegistrationFormProps> = ({
     }
   };
 
-  const handleGroupChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+  const handleGroupSelect = (e: React.ChangeEvent<HTMLSelectElement>) => {
     const val = e.target.value;
-    // Check if value is a UUID from groupsList or group name
-    const found = groupsList.find(g => g.id === val || g.name === val);
-    const grpId = found ? found.id : val;
-    const grpName = found ? found.name : val;
-
-    setSelectedGroupId(grpId);
-    setSelectedSectionId('');
     setFormData(prev => ({
       ...prev,
-      group: grpName,
-      section: '', // Reset section automatically when group changes
+      group: val,
+      section: '', // Reset section when group changes
     }));
     if (formErrors.group) {
       setFormErrors(prev => ({ ...prev, group: '' }));
     }
   };
 
-  const validateForm = () => {
-    const errors: { [key: string]: string } = {};
-    if (formData.gender === 'choose_one') errors.gender = 'Please select your gender';
-    if (!formData.name.trim()) errors.name = 'Full name is required';
-    if (!formData.roll.trim()) errors.roll = 'Roll number is required';
-    if (!formData.id.trim()) errors.id = 'Student ID is required';
-    if (!formData.group && !selectedGroupId) errors.group = 'Please select your academic group';
+  const availableSections = getAvailableSections(formData.gender, formData.group);
 
-    if (!formData.section && !selectedSectionId) {
-      errors.section = 'Please select your section';
+  // Perform Duplicate Detection Check
+  const runDuplicateCheck = async (): Promise<boolean> => {
+    // If user is currently editing their own rejected registration, bypass duplicate check for their own regNo
+    const match = await checkDuplicateRegistration(
+      formData.id,
+      formData.name,
+      formData.roll,
+      existingRegistrations
+    );
+
+    if (match) {
+      // If the match is the exact record being edited, allow continue
+      if (editingRegNo && match.registrationNo === editingRegNo) {
+        return false;
+      }
+
+      if (match.status === 'approved') {
+        setDuplicateModal({ type: 'approved', record: match });
+        return true;
+      }
+      if (match.status === 'pending') {
+        setDuplicateModal({ type: 'pending', record: match });
+        return true;
+      }
+      if (match.status === 'rejected') {
+        setDuplicateModal({ type: 'rejected', record: match });
+        return true;
+      }
     }
 
-    if (!formData.contactNumber.trim()) errors.contactNumber = 'Contact number is required';
-    if (!formData.senderNumber.trim()) errors.senderNumber = 'Sender number is required';
-    if (!formData.paymentTime.trim()) errors.paymentTime = 'Payment time is required';
-    // Transaction ID is optional per requirements
+    return false;
+  };
+
+  const validateForm = () => {
+    const errors: { [key: string]: string } = {};
+
+    if (!isGenderChosen) errors.gender = 'Please select your gender (Male / Female).';
+    if (!formData.name.trim()) errors.name = 'Full name is required.';
+    if (!formData.roll.trim()) errors.roll = 'Roll number is required.';
+    if (!formData.id.trim()) errors.id = 'Student ID is required.';
+    if (!formData.contactNumber.trim()) errors.contactNumber = 'Contact number is required.';
+    if (!formData.group.trim()) errors.group = 'Please select your academic group.';
+    if (!formData.section.trim()) errors.section = 'Please select your section.';
+
+    // Jersey Validation
+    if (!formData.jerseyName.trim()) errors.jerseyName = 'Jersey name is required.';
+    if (formData.jerseyName.trim().length > 14) {
+      errors.jerseyName = 'Jersey name must be 14 characters or less.';
+    }
+    const jerseyNumStr = formData.jerseyNumber.trim();
+    if (!jerseyNumStr) {
+      errors.jerseyNumber = 'Jersey number is required.';
+    } else if (!/^\d{1,2}$/.test(jerseyNumStr)) {
+      errors.jerseyNumber = 'Jersey number must be 00–99.';
+    }
+
+    // Payment Validation (Required: Sender Number & Payment Time; Transaction ID is optional)
+    if (!formData.senderNumber.trim()) errors.senderNumber = 'Sender payment number is required.';
+    if (!formData.paymentTime.trim()) errors.paymentTime = 'Payment time is required.';
+
+    // Declaration Checkbox Validation
+    if (!declarationChecked) {
+      errors.declaration = 'You must confirm the declaration statement to submit.';
+    }
+
     return errors;
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setSubmitErrorMessage(null);
+
+    // 1. Registration Open / Closed Check
+    if (!registrationOpen) {
+      setShowClosedModal(true);
+      return;
+    }
+
+    // 2. Validate Required Fields
     const errors = validateForm();
     if (Object.keys(errors).length > 0) {
       setFormErrors(errors);
       return;
     }
     setFormErrors({});
-    setIsSubmitting(true);
 
+    // 3. Duplicate Detection Check before submission
+    setIsSubmitting(true);
     try {
-      // 1. Upload student photo to Supabase Storage if file provided
+      const isDuplicate = await runDuplicateCheck();
+      if (isDuplicate) {
+        setIsSubmitting(false);
+        return;
+      }
+
+      // 4. Photo upload if file exists
       let photoStoragePath: string | null = null;
       let displayPhotoUrl = formData.photoUrl || '';
       if (formData.photoFile) {
@@ -314,59 +350,38 @@ export const RegistrationForm: React.FC<RegistrationFormProps> = ({
         }
       }
 
-      // Format payment time into valid ISO 8601 string for PostgreSQL timestamptz
-      let paymentTimeIso = new Date().toISOString();
-      if (formData.paymentTime.trim()) {
-        const parsed = new Date(formData.paymentTime.trim());
-        if (!isNaN(parsed.getTime())) {
-          paymentTimeIso = parsed.toISOString();
-        }
-      }
+      // 5. Submit or Re-submit registration
+      const result = await createRegistration(
+        {
+          ...formData,
+          photoUrl: photoStoragePath || displayPhotoUrl || null,
+        },
+        editingRegNo || undefined,
+        editingDbId || undefined
+      );
 
-      // 2. Prepare registration data matching registrations table contract
-      const result = await createRegistration({
-        ...formData,
-        photoUrl: photoStoragePath || displayPhotoUrl || null,
-      });
-
-      if (!result.success) {
-        setSubmitErrorMessage(result.errorMessage || 'Registration failed in Supabase database.');
+      if (!result.success || !result.data) {
+        setSubmitErrorMessage(result.errorMessage || 'Registration submission failed. Please try again.');
         setIsSubmitting(false);
         return;
       }
 
-      // 4. Extract confirmed registration number
-      const confirmedRegNo = result.data?.registrationNo || `RD27-${formData.roll.trim()}`;
+      const confirmedRecord = result.data;
 
-      const confirmedRecord: InvitationRecord = {
-        registrationNo: confirmedRegNo,
-        name: formData.name.trim(),
-        roll: formData.roll.trim(),
-        id: formData.id.trim(),
-        group: formData.group,
-        section: formData.section,
-        status: 'pending',
-        gender: formData.gender === 'female' ? 'female' : 'male',
-        photoUrl: displayPhotoUrl,
-        contactNumber: formData.contactNumber.trim(),
-        jerseyName: formData.jerseyName.toUpperCase().trim(),
-        jerseyNumber: formData.jerseyNumber || '27',
-        jerseySize: formData.jerseySize,
-        paymentMethod: formData.paymentMethod,
-        amount: formData.amount,
-        senderNumber: formData.senderNumber.trim(),
-        paymentTime: formData.paymentTime.trim(),
-        transactionId: formData.transactionId.trim() || undefined,
-      };
-
-      // Notify parent to refetch public/student data
+      // Notify parent app
       onSuccessSubmit(confirmedRecord);
 
+      // Open Success Modal
       setSuccessModalData({
-        name: formData.name,
-        regNo: confirmedRegNo,
-        gender: formData.gender,
+        name: confirmedRecord.name,
+        regNo: confirmedRecord.registrationNo,
+        gender: confirmedRecord.gender,
       });
+
+      // Clear edit state if any
+      setEditingRegNo(null);
+      setEditingDbId(null);
+      if (onResetReRegister) onResetReRegister();
     } catch (err: any) {
       console.error('Registration submission error:', err);
       setSubmitErrorMessage(err.message || 'An error occurred during submission.');
@@ -375,789 +390,897 @@ export const RegistrationForm: React.FC<RegistrationFormProps> = ({
     }
   };
 
+  const handleContinueRejectedRegistration = (record: InvitationRecord) => {
+    setFormData({
+      gender: record.gender || 'male',
+      name: record.name || '',
+      roll: record.roll || '',
+      id: record.id || '',
+      group: record.group || '',
+      section: record.section || '',
+      contactNumber: record.contactNumber || record.senderNumber || '',
+      photoUrl: record.photoUrl || null,
+      amount: record.amount ?? activeFee,
+      paymentMethod: record.paymentMethod || 'bkash',
+      senderNumber: record.senderNumber || record.contactNumber || '',
+      paymentTime: record.paymentTime || '',
+      transactionId: record.transactionId || '',
+      jerseyName: record.jerseyName || 'STRIKER',
+      jerseyNumber: record.jerseyNumber || '27',
+      jerseySize: (record.jerseySize as JerseySize) || 'L',
+    });
+    setEditingRegNo(record.registrationNo);
+    setEditingDbId(record.dbId || null);
+    setDuplicateModal(null);
+  };
+
   return (
     <div className="py-6 sm:py-10 max-w-4xl mx-auto px-3 sm:px-6 lg:px-8">
-      {/* Registration Container (Adapts internally based on gender selection) */}
+      {/* Re-submission Banner if editing previously rejected record */}
+      {editingRegNo && (
+        <div className="mb-6 p-4 rounded-2xl bg-amber-50 border-2 border-amber-300 text-amber-900 shadow-sm flex items-center justify-between gap-3 animate-fadeIn">
+          <div className="flex items-center gap-3">
+            <div className="w-9 h-9 rounded-xl bg-amber-500 text-white flex items-center justify-center font-bold">
+              <FileCheck className="w-5 h-5" />
+            </div>
+            <div>
+              <div className="text-xs font-bold uppercase tracking-wider text-amber-700">
+                Re-Submitting Registration
+              </div>
+              <div className="text-sm font-extrabold">
+                Registration No: <span className="font-mono text-indigo-700">{editingRegNo}</span>
+              </div>
+              <p className="text-xs text-amber-800 mt-0.5">
+                Update your student and payment information below. Your registration number remains permanent.
+              </p>
+            </div>
+          </div>
+          <button
+            type="button"
+            onClick={() => {
+              setEditingRegNo(null);
+              setEditingDbId(null);
+              if (onResetReRegister) onResetReRegister();
+            }}
+            className="p-2 text-amber-700 hover:text-amber-900 rounded-lg hover:bg-amber-100 transition-colors"
+            title="Cancel re-submission"
+          >
+            <X className="w-4 h-4" />
+          </button>
+        </div>
+      )}
+
+      {/* Main Registration Container (Adapts Theme to Selected Gender) */}
       <div className={`rounded-3xl p-4 sm:p-8 lg:p-10 transition-all duration-500 ease-out ${containerClasses}`}>
-        {/* Form Title & Subtitle */}
+        {/* Title Header */}
         <div className="mb-8 text-center sm:text-left">
           <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider mb-2 bg-white/20 backdrop-blur-sm">
+            <Sparkles className="w-3.5 h-3.5 text-indigo-400" />
             <span>Official Batch 27 Enrollment</span>
           </div>
           <h1 className="font-display text-2xl sm:text-3xl font-extrabold tracking-tight">
-            Registration Form
+            Rag Day 27 Student Registration
           </h1>
           <p
             className={`text-xs sm:text-sm mt-1.5 ${
               isMale ? 'text-slate-300' : isFemale ? 'text-pink-900/80' : 'text-slate-600'
             }`}
           >
-            Please provide your student details, payment details, and jersey requirements.
+            Select your wing gender first to unlock the enrollment form and personalized jersey preview.
           </p>
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-8">
           {/* ======================================================== */}
-          {/* 1. PERSONAL INFORMATION */}
+          {/* STEP 1: GENDER SELECTION (Gating Gate)                  */}
           {/* ======================================================== */}
-          <div className="space-y-4">
+          <div className="space-y-3">
             <div className={`pb-2.5 font-display text-base sm:text-lg font-bold flex items-center justify-between ${sectionHeaderClasses}`}>
               <span className="flex items-center gap-2">
                 <User className="w-4 h-4" />
-                1. Personal Information
+                Step 1: Select Your Gender
               </span>
-              <span className="text-xs font-normal opacity-75">Required fields *</span>
-            </div>
-
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              {/* Gender Selector: Strictly Choose One, Male, Female */}
-              <div className="sm:col-span-2">
-                <label className={`block text-xs font-bold uppercase tracking-wider mb-1.5 ${labelClasses}`}>
-                  Gender <span className="text-rose-500">*</span>
-                </label>
-                <select
-                  value={formData.gender}
-                  onChange={handleGenderChange}
-                  className={`w-full px-4 py-3 rounded-xl text-sm font-medium transition-colors outline-none cursor-pointer ${inputClasses}`}
-                >
-                  <option value="choose_one" className={isMale ? 'bg-slate-900 text-white' : 'bg-white text-slate-900'}>
-                    Choose One
-                  </option>
-                  <option value="male" className={isMale ? 'bg-slate-900 text-white' : 'bg-white text-slate-900'}>
-                    Male
-                  </option>
-                  <option value="female" className={isMale ? 'bg-slate-900 text-white' : 'bg-white text-slate-900'}>
-                    Female
-                  </option>
-                </select>
-                {formErrors.gender && (
-                  <p className="text-rose-400 text-xs mt-1">{formErrors.gender}</p>
+              <span className="text-xs font-semibold uppercase tracking-wider">
+                {isGenderChosen ? (
+                  <span className="text-emerald-500 flex items-center gap-1">
+                    <Check className="w-3.5 h-3.5" /> Unlocked
+                  </span>
+                ) : (
+                  <span className="text-amber-500 flex items-center gap-1">
+                    <Lock className="w-3.5 h-3.5" /> Required to Unlock
+                  </span>
                 )}
-              </div>
-
-              {/* Full Name */}
-              <div className="sm:col-span-2">
-                <label className={`block text-xs font-bold uppercase tracking-wider mb-1.5 ${labelClasses}`}>
-                  Full Name <span className="text-rose-500">*</span>
-                </label>
-                <input
-                  type="text"
-                  placeholder="e.g. John Doe"
-                  value={formData.name}
-                  onChange={e => {
-                    setFormData({ ...formData, name: e.target.value });
-                    if (formErrors.name) setFormErrors(prev => ({ ...prev, name: '' }));
-                  }}
-                  className={`w-full px-4 py-3 rounded-xl text-sm transition-colors outline-none ${inputClasses}`}
-                />
-                {formErrors.name && (
-                  <p className="text-rose-400 text-xs mt-1">{formErrors.name}</p>
-                )}
-              </div>
-
-              {/* Roll Number */}
-              <div>
-                <label className={`block text-xs font-bold uppercase tracking-wider mb-1.5 ${labelClasses}`}>
-                  Roll <span className="text-rose-500">*</span>
-                </label>
-                <input
-                  type="text"
-                  placeholder="e.g. 27"
-                  value={formData.roll}
-                  onChange={e => {
-                    setFormData({ ...formData, roll: e.target.value });
-                    if (formErrors.roll) setFormErrors(prev => ({ ...prev, roll: '' }));
-                  }}
-                  className={`w-full px-4 py-3 rounded-xl text-sm transition-colors outline-none ${inputClasses}`}
-                />
-                {formErrors.roll && (
-                  <p className="text-rose-400 text-xs mt-1">{formErrors.roll}</p>
-                )}
-              </div>
-
-              {/* Student ID */}
-              <div>
-                <label className={`block text-xs font-bold uppercase tracking-wider mb-1.5 ${labelClasses}`}>
-                  ID <span className="text-rose-500">*</span>
-                </label>
-                <input
-                  type="text"
-                  placeholder="e.g. 2023-0127"
-                  value={formData.id}
-                  onChange={e => {
-                    setFormData({ ...formData, id: e.target.value });
-                    if (formErrors.id) setFormErrors(prev => ({ ...prev, id: '' }));
-                  }}
-                  className={`w-full px-4 py-3 rounded-xl text-sm transition-colors outline-none ${inputClasses}`}
-                />
-                {formErrors.id && (
-                  <p className="text-rose-400 text-xs mt-1">{formErrors.id}</p>
-                )}
-              </div>
-
-              {/* Group Field: Must NOT be preselected. Default: Choose Group */}
-              <div>
-                <label className={`block text-xs font-bold uppercase tracking-wider mb-1.5 ${labelClasses}`}>
-                  Group <span className="text-rose-500">*</span>
-                </label>
-                <select
-                  value={selectedGroupId || formData.group}
-                  onChange={handleGroupChange}
-                  className={`w-full px-4 py-3 rounded-xl text-sm transition-colors outline-none cursor-pointer ${inputClasses}`}
-                >
-                  <option value="" className={isMale ? 'bg-slate-900 text-white' : 'bg-white text-slate-900'}>
-                    Choose Group
-                  </option>
-                  {groupsList.length > 0 ? (
-                    groupsList.map(g => (
-                      <option key={g.id} value={g.id} className={isMale ? 'bg-slate-900 text-white' : 'bg-white text-slate-900'}>
-                        {g.name}
-                      </option>
-                    ))
-                  ) : (
-                    <>
-                      <option value="b14362d8-0658-471b-850f-947915d926f0" className={isMale ? 'bg-slate-900 text-white' : 'bg-white text-slate-900'}>
-                        Science
-                      </option>
-                      <option value="a4261df4-bb1d-476a-b309-700dad5596c9" className={isMale ? 'bg-slate-900 text-white' : 'bg-white text-slate-900'}>
-                        Business Studies
-                      </option>
-                      <option value="a55ebc2f-8456-4bc0-beb2-7aaa842c0d87" className={isMale ? 'bg-slate-900 text-white' : 'bg-white text-slate-900'}>
-                        Humanities
-                      </option>
-                    </>
-                  )}
-                </select>
-                {formErrors.group && (
-                  <p className="text-rose-400 text-xs mt-1">{formErrors.group}</p>
-                )}
-              </div>
-
-              {/* Section Field: Disabled until Gender AND Group are selected */}
-              <div>
-                <label className={`block text-xs font-bold uppercase tracking-wider mb-1.5 ${labelClasses}`}>
-                  Section <span className="text-rose-500">*</span>
-                </label>
-                {(() => {
-                  const isSectionEnabled =
-                    (formData.gender === 'male' || formData.gender === 'female') &&
-                    Boolean(selectedGroupId || formData.group);
-
-                  const activeGrpId =
-                    selectedGroupId ||
-                    groupsList.find(g => g.name === formData.group)?.id;
-
-                  const dbSections = sectionsList.filter(
-                    s =>
-                      (!activeGrpId || s.group_id === activeGrpId) &&
-                      (!formData.gender || s.gender === formData.gender)
-                  );
-
-                  return (
-                    <>
-                      <select
-                        value={selectedSectionId || formData.section}
-                        disabled={!isSectionEnabled}
-                        onChange={e => {
-                          const secVal = e.target.value;
-                          setSelectedSectionId(secVal);
-                          const found = sectionsList.find(
-                            s => s.id === secVal || s.code === secVal || s.display_name === secVal
-                          );
-                          setFormData(prev => ({
-                            ...prev,
-                            section: found ? (found.display_name || found.code) : secVal,
-                          }));
-                          if (formErrors.section) {
-                            setFormErrors(prev => ({ ...prev, section: '' }));
-                          }
-                        }}
-                        className={`w-full px-4 py-3 rounded-xl text-sm transition-colors outline-none cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed ${inputClasses}`}
-                      >
-                        <option value="" className={isMale ? 'bg-slate-900 text-white' : 'bg-white text-slate-900'}>
-                          {!isSectionEnabled
-                            ? '[ Select Gender & Group First ]'
-                            : 'Select Section'}
-                        </option>
-                        {dbSections.length > 0 ? (
-                          dbSections.map(sec => (
-                            <option
-                              key={sec.id}
-                              value={sec.id}
-                              className={isMale ? 'bg-slate-900 text-white' : 'bg-white text-slate-900'}
-                            >
-                              {sec.display_name || sec.code}
-                            </option>
-                          ))
-                        ) : (
-                          getAvailableSections(formData.gender, formData.group).map(sec => (
-                            <option
-                              key={sec}
-                              value={sec}
-                              className={isMale ? 'bg-slate-900 text-white' : 'bg-white text-slate-900'}
-                            >
-                              {sec}
-                            </option>
-                          ))
-                        )}
-                      </select>
-                      {!isSectionEnabled && (
-                        <p className={`text-[11px] mt-1 ${isMale ? 'text-slate-400' : 'text-slate-500'}`}>
-                          Please choose Gender and Group first to unlock sections.
-                        </p>
-                      )}
-                      {formErrors.section && (
-                        <p className="text-rose-400 text-xs mt-1">{formErrors.section}</p>
-                      )}
-                    </>
-                  );
-                })()}
-              </div>
-
-              {/* Contact Number */}
-              <div className="sm:col-span-2">
-                <label className={`block text-xs font-bold uppercase tracking-wider mb-1.5 ${labelClasses}`}>
-                  Contact Number <span className="text-rose-500">*</span>
-                </label>
-                <input
-                  type="tel"
-                  placeholder="e.g. 01712-345678"
-                  value={formData.contactNumber}
-                  onChange={e => {
-                    setFormData({ ...formData, contactNumber: e.target.value });
-                    if (formErrors.contactNumber) setFormErrors(prev => ({ ...prev, contactNumber: '' }));
-                  }}
-                  className={`w-full px-4 py-3 rounded-xl text-sm transition-colors outline-none ${inputClasses}`}
-                />
-                {formErrors.contactNumber && (
-                  <p className="text-rose-400 text-xs mt-1">{formErrors.contactNumber}</p>
-                )}
-              </div>
-
-              {/* Photo Upload System */}
-              <div className="sm:col-span-2">
-                <PhotoUploadField
-                  photoUrl={formData.photoUrl}
-                  gender={formData.gender}
-                  onPhotoSelected={handlePhotoSelected}
-                  onPhotoRemoved={handlePhotoRemoved}
-                  labelClasses={labelClasses}
-                />
-              </div>
-            </div>
-          </div>
-
-          {/* ======================================================== */}
-          {/* 2. PAYMENT SECTION (MINIMAL & CLEAN) */}
-          {/* ======================================================== */}
-          <div className="space-y-4">
-            <div className={`pb-2.5 font-display text-base sm:text-lg font-bold flex items-center justify-between ${sectionHeaderClasses}`}>
-              <span className="flex items-center gap-2">
-                <CreditCard className="w-4 h-4" />
-                2. Payment Section
               </span>
             </div>
 
-            {/* 1. Registration Fee */}
-            <div>
-              <label className={`block text-xs font-bold uppercase tracking-wider mb-1.5 ${labelClasses}`}>
-                Registration Fee
-              </label>
-              <div className={`p-4 rounded-2xl ${subCardClasses} flex items-center justify-between`}>
-                <span className="text-xl sm:text-2xl font-display font-black tracking-tight">
-                  {activeFee} {activeCurrency}
-                </span>
-                <span className="text-[11px] font-bold px-2.5 py-1 rounded-full bg-emerald-500/10 text-emerald-600 border border-emerald-500/20">
-                  Exact Amount
-                </span>
-              </div>
-            </div>
+            <p className={`text-xs ${isMale ? 'text-slate-400' : isFemale ? 'text-pink-950/70' : 'text-slate-500'}`}>
+              Select your wing below. The registration form, payment gateway numbers, and jersey customization will unlock accordingly.
+            </p>
 
-            {/* 2. Bkash Number */}
-            {paymentSettings?.bkashEnabled !== false && (
-              <div>
-                <label className={`block text-xs font-bold uppercase tracking-wider mb-1.5 ${labelClasses}`}>
-                  Bkash Number
-                </label>
-                <div className={`p-3 sm:p-4 rounded-2xl ${subCardClasses} flex items-center justify-between gap-2 sm:gap-3`}>
-                  <div className="flex items-center gap-2.5 sm:gap-3.5 min-w-0">
-                    <div
-                      className={`w-11 h-11 sm:w-12 sm:h-12 rounded-2xl flex items-center justify-center shrink-0 backdrop-blur-2xl transition-all shadow-[0_8px_20px_rgba(226,19,110,0.18),inset_0_1px_1px_rgba(255,255,255,0.7)] ${
-                        isMale
-                          ? 'bg-gradient-to-br from-[#E2136E]/25 via-slate-900/60 to-[#E2136E]/15 border border-[#E2136E]/50'
-                          : isFemale
-                          ? 'bg-gradient-to-br from-white/90 via-[#E2136E]/15 to-white/70 border border-[#E2136E]/40'
-                          : 'bg-gradient-to-br from-white/95 via-[#E2136E]/10 to-white/80 border border-[#E2136E]/30'
-                      }`}
-                    >
-                      <BkashLogo className="w-7 h-7 sm:w-8 sm:h-8" />
-                    </div>
-                    <span className="font-mono font-bold text-xs xs:text-sm sm:text-base tracking-wide truncate">
-                      {activeBkashNumber}
-                    </span>
-                  </div>
-                  <button
-                    type="button"
-                    onClick={() => handleCopyAccount(activeBkashNumber.replace(/\D/g, '') || activeBkashNumber, 'bkash')}
-                    className={`px-2.5 sm:px-3.5 py-1.5 rounded-xl text-xs font-bold flex items-center gap-1 sm:gap-1.5 shrink-0 transition-all cursor-pointer active:scale-95 ${
-                      copiedAccount === 'bkash'
-                        ? 'bg-emerald-500 text-white shadow-sm'
-                        : isMale
-                        ? 'bg-[#38BDF8]/15 hover:bg-[#38BDF8]/25 text-[#38BDF8] border border-[#38BDF8]/30'
-                        : isFemale
-                        ? 'bg-pink-100 hover:bg-pink-200 text-pink-700 border border-pink-300'
-                        : 'bg-slate-100 hover:bg-slate-200 text-slate-700 border border-slate-200'
-                    }`}
-                  >
-                    {copiedAccount === 'bkash' ? (
-                      <>
-                        <Check className="w-3.5 h-3.5" />
-                        <span>Copied</span>
-                      </>
-                    ) : (
-                      <>
-                        <Copy className="w-3.5 h-3.5" />
-                        <span>Copy</span>
-                      </>
-                    )}
-                  </button>
-                </div>
-              </div>
-            )}
-
-            {/* 3. Nagad Number */}
-            {paymentSettings?.nagadEnabled !== false && (
-              <div>
-                <label className={`block text-xs font-bold uppercase tracking-wider mb-1.5 ${labelClasses}`}>
-                  Nagad Number
-                </label>
-                <div className={`p-3 sm:p-4 rounded-2xl ${subCardClasses} flex items-center justify-between gap-2 sm:gap-3`}>
-                  <div className="flex items-center gap-2.5 sm:gap-3.5 min-w-0">
-                    <div
-                      className={`w-11 h-11 sm:w-12 sm:h-12 rounded-2xl flex items-center justify-center shrink-0 backdrop-blur-2xl transition-all shadow-[0_8px_20px_rgba(247,147,30,0.18),inset_0_1px_1px_rgba(255,255,255,0.7)] ${
-                        isMale
-                          ? 'bg-gradient-to-br from-[#F7931E]/25 via-slate-900/60 to-[#F7931E]/15 border border-[#F7931E]/50'
-                          : isFemale
-                          ? 'bg-gradient-to-br from-white/90 via-[#F7931E]/15 to-white/70 border border-[#F7931E]/40'
-                          : 'bg-gradient-to-br from-white/95 via-[#F7931E]/10 to-white/80 border border-[#F7931E]/30'
-                      }`}
-                    >
-                      <NagadLogo className="w-7 h-7 sm:w-8 sm:h-8" />
-                    </div>
-                    <span className="font-mono font-bold text-xs xs:text-sm sm:text-base tracking-wide truncate">
-                      {activeNagadNumber}
-                    </span>
-                  </div>
-                  <button
-                    type="button"
-                    onClick={() => handleCopyAccount(activeNagadNumber.replace(/\D/g, '') || activeNagadNumber, 'nagad')}
-                    className={`px-2.5 sm:px-3.5 py-1.5 rounded-xl text-xs font-bold flex items-center gap-1 sm:gap-1.5 shrink-0 transition-all cursor-pointer active:scale-95 ${
-                      copiedAccount === 'nagad'
-                        ? 'bg-emerald-500 text-white shadow-sm'
-                        : isMale
-                        ? 'bg-[#38BDF8]/15 hover:bg-[#38BDF8]/25 text-[#38BDF8] border border-[#38BDF8]/30'
-                        : isFemale
-                        ? 'bg-pink-100 hover:bg-pink-200 text-pink-700 border border-pink-300'
-                        : 'bg-slate-100 hover:bg-slate-200 text-slate-700 border border-slate-200'
-                    }`}
-                  >
-                    {copiedAccount === 'nagad' ? (
-                      <>
-                        <Check className="w-3.5 h-3.5" />
-                        <span>Copied</span>
-                      </>
-                    ) : (
-                      <>
-                        <Copy className="w-3.5 h-3.5" />
-                        <span>Copy</span>
-                      </>
-                    )}
-                  </button>
-                </div>
-              </div>
-            )}
-
-            {/* 4. Sender Number * */}
-            <div>
-              <label className={`block text-xs font-bold uppercase tracking-wider mb-1.5 ${labelClasses}`}>
-                Sender Number <span className="text-rose-500">*</span>
-              </label>
-              <input
-                type="tel"
-                placeholder="Enter Sender Number"
-                value={formData.senderNumber}
-                onChange={e => {
-                  setFormData({ ...formData, senderNumber: e.target.value });
-                  if (formErrors.senderNumber) {
-                    setFormErrors(prev => ({ ...prev, senderNumber: '' }));
-                  }
-                }}
-                className={`w-full px-4 py-3 rounded-xl text-sm transition-colors outline-none ${inputClasses}`}
-              />
-              {formErrors.senderNumber && (
-                <p className="text-rose-400 text-xs mt-1">{formErrors.senderNumber}</p>
-              )}
-            </div>
-
-            {/* 5. Payment Time * */}
-            <div>
-              <label className={`block text-xs font-bold uppercase tracking-wider mb-1.5 ${labelClasses}`}>
-                Payment Time <span className="text-rose-500">*</span>
-              </label>
-              <div className="relative">
-                <input
-                  type="time"
-                  placeholder="Select Time"
-                  value={formData.paymentTime}
-                  onChange={e => {
-                    setFormData({ ...formData, paymentTime: e.target.value });
-                    if (formErrors.paymentTime) {
-                      setFormErrors(prev => ({ ...prev, paymentTime: '' }));
-                    }
-                  }}
-                  style={{ colorScheme: isMale ? 'dark' : 'light' }}
-                  className={`w-full px-4 py-3 rounded-xl text-sm transition-colors outline-none cursor-pointer ${inputClasses}`}
-                />
-                <Clock className="w-4 h-4 absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none opacity-50" />
-              </div>
-              {formErrors.paymentTime && (
-                <p className="text-rose-400 text-xs mt-1">{formErrors.paymentTime}</p>
-              )}
-            </div>
-
-            {/* 6. Transaction ID (Optional) */}
-            <div>
-              <label className={`block text-xs font-bold uppercase tracking-wider mb-1.5 ${labelClasses}`}>
-                Transaction ID (Optional)
-              </label>
-              <input
-                type="text"
-                placeholder="Enter Transaction ID"
-                value={formData.transactionId}
-                onChange={e => {
-                  setFormData({ ...formData, transactionId: e.target.value.toUpperCase() });
-                  if (formErrors.transactionId) {
-                    setFormErrors(prev => ({ ...prev, transactionId: '' }));
-                  }
-                }}
-                className={`w-full px-4 py-3 rounded-xl text-sm transition-colors outline-none font-mono uppercase ${inputClasses}`}
-              />
-              {formErrors.transactionId && (
-                <p className="text-rose-400 text-xs mt-1">{formErrors.transactionId}</p>
-              )}
-            </div>
-          </div>
-
-          {/* ======================================================== */}
-          {/* 3. JERSEY DETAILS SECTION */}
-          {/* ======================================================== */}
-          <div className="space-y-4">
-            <div className={`pb-2.5 font-display text-base sm:text-lg font-bold flex items-center justify-between ${sectionHeaderClasses}`}>
-              <span className="flex items-center gap-2">
-                <Shirt className="w-4 h-4" />
-                3. Jersey Details
-              </span>
-              <span
-                className={`px-3 py-1 rounded-full text-xs font-bold font-mono tracking-wide border transition-all duration-300 ${
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5 pt-1">
+              {/* Male Option Card */}
+              <button
+                type="button"
+                onClick={() => handleGenderSelect('male')}
+                className={`p-4 sm:p-5 rounded-2xl border-2 text-left transition-all duration-200 cursor-pointer flex items-center gap-4 ${
                   isMale
-                    ? 'bg-sky-950/70 border-sky-400/40 text-sky-300 shadow-[0_0_12px_rgba(56,189,248,0.25)]'
-                    : isFemale
-                    ? 'bg-pink-100 border-pink-300 text-pink-700 shadow-sm'
-                    : 'bg-indigo-50 border-indigo-200 text-indigo-700'
+                    ? 'border-[#38BDF8] bg-slate-900/90 shadow-[0_0_25px_rgba(56,189,248,0.3)] ring-2 ring-[#38BDF8]/40 text-white'
+                    : 'border-slate-300/80 bg-white/70 hover:border-[#38BDF8]/60 hover:bg-slate-50/80 text-slate-800'
                 }`}
               >
-                Size : {formData.jerseySize}
-              </span>
-            </div>
-
-            {/* Step 1: Jersey Size Selector Buttons */}
-            <div>
-              <label className={`block text-xs font-bold uppercase tracking-wider mb-2 ${labelClasses}`}>
-                Jersey Size <span className="text-rose-500">*</span>
-              </label>
-              <div className="flex flex-wrap gap-2">
-                {JERSEY_SIZES.map(size => (
-                  <button
-                    key={size}
-                    type="button"
-                    onClick={() => setFormData({ ...formData, jerseySize: size })}
-                    className={`w-11 h-11 rounded-xl font-bold text-xs transition-all duration-200 cursor-pointer ${
-                      formData.jerseySize === size
-                        ? isMale
-                          ? 'bg-[#38BDF8] text-slate-950 shadow-md shadow-sky-400/50 ring-2 ring-sky-300 scale-105'
-                          : isFemale
-                          ? 'bg-[#EC4899] text-white shadow-md shadow-pink-500/50 ring-2 ring-pink-300 scale-105'
-                          : 'bg-[#5B5FEF] text-white shadow-md shadow-[#5B5FEF]/50 ring-2 ring-[#5B5FEF]/30 scale-105'
-                        : subCardClasses
-                    }`}
-                  >
-                    {size}
-                  </button>
-                ))}
-              </div>
-            </div>
-
-            {/* Step 2 & 3: Two-Column Form for Jersey Name and Jersey Number */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              {/* Jersey Name */}
-              <div>
-                <label className={`block text-xs font-bold uppercase tracking-wider mb-1.5 ${labelClasses}`}>
-                  Jersey Name <span className="text-rose-500">*</span>
-                </label>
-                <input
-                  type="text"
-                  maxLength={14}
-                  placeholder={isFemale ? 'NOVA' : 'HUNTER'}
-                  value={formData.jerseyName}
-                  onChange={e => setFormData({ ...formData, jerseyName: e.target.value.toUpperCase() })}
-                  className={`w-full px-4 py-3 rounded-xl text-sm font-bold tracking-wider uppercase transition-colors outline-none ${inputClasses}`}
-                />
-                <span
-                  className={`text-[10px] mt-1 block ${
-                    isMale ? 'text-slate-400' : isFemale ? 'text-pink-900/65' : 'text-slate-500'
-                  }`}
-                >
-                  Maximum 14 letters printed on the back.
-                </span>
-              </div>
-
-              {/* Jersey Number */}
-              <div>
-                <label className={`block text-xs font-bold uppercase tracking-wider mb-1.5 ${labelClasses}`}>
-                  Jersey Number <span className="text-rose-500">*</span>
-                </label>
-                <input
-                  type="text"
-                  inputMode="numeric"
-                  maxLength={2}
-                  placeholder="27"
-                  value={formData.jerseyNumber}
-                  onChange={e =>
-                    setFormData({
-                      ...formData,
-                      jerseyNumber: e.target.value.replace(/\D/g, '').slice(0, 2),
-                    })
-                  }
-                  className={`w-full px-4 py-3 rounded-xl text-sm font-bold font-mono transition-colors outline-none ${inputClasses}`}
-                />
-                <span
-                  className={`text-[10px] mt-1 block ${
-                    isMale ? 'text-slate-400' : isFemale ? 'text-pink-900/65' : 'text-slate-500'
-                  }`}
-                >
-                  2-digit squad number (00 to 99).
-                </span>
-              </div>
-            </div>
-
-            {/* Step 4: JERSEY PREVIEW (SINGLE BACK VIEW ONLY) */}
-            <div className="pt-2 space-y-2">
-              <label className={`block text-xs font-bold uppercase tracking-wider ${labelClasses}`}>
-                Jersey Preview
-              </label>
-
-              {/* Glassmorphism Preview Box Theme-Aligned */}
-              <div
-                className={`relative overflow-hidden rounded-2xl p-4 sm:p-6 transition-all duration-500 border flex flex-col items-center justify-center ${
-                  isMale
-                    ? 'bg-gradient-to-b from-[#091836] via-[#061126] to-[#030917] border-[#38BDF8]/35 shadow-[0_12px_45px_-10px_rgba(15,23,42,0.9),inset_0_0_40px_rgba(56,189,248,0.1)]'
-                    : isFemale
-                    ? 'bg-gradient-to-b from-white/95 via-pink-50/90 to-pink-100/70 border-pink-200/90 shadow-[0_12px_35px_-10px_rgba(244,114,182,0.25),inset_0_0_30px_rgba(255,255,255,0.8)] backdrop-blur-xl'
-                    : 'bg-gradient-to-b from-white/90 via-slate-50/80 to-slate-100/60 border-slate-200 shadow-sm backdrop-blur-xl'
-                }`}
-              >
-                {/* Subtle Ambient Radial Lighting Behind Jersey */}
                 <div
-                  className="absolute inset-0 pointer-events-none"
-                  style={{
-                    background: isMale
-                      ? 'radial-gradient(circle at 50% 45%, rgba(14, 116, 144, 0.28) 0%, rgba(30, 58, 138, 0.2) 40%, transparent 70%)'
-                      : isFemale
-                      ? 'radial-gradient(circle at 50% 45%, rgba(244, 114, 182, 0.2) 0%, rgba(251, 207, 232, 0.15) 45%, transparent 70%)'
-                      : 'radial-gradient(circle at 50% 45%, rgba(91, 95, 239, 0.15) 0%, transparent 65%)',
-                  }}
-                />
-
-                {/* Back View Jersey Graphic */}
-                <div className="relative z-10 w-full py-2 flex items-center justify-center">
-                  <JerseyGraphic
-                    view="back"
-                    name={formData.jerseyName}
-                    number={formData.jerseyNumber}
-                    size={formData.jerseySize}
-                    gender={formData.gender}
-                    className="w-full max-w-[340px] sm:max-w-[380px]"
-                  />
+                  className={`w-12 h-12 rounded-2xl grid place-items-center font-black text-sm shrink-0 transition-transform ${
+                    isMale
+                      ? 'bg-gradient-to-tr from-[#0284C7] to-[#38BDF8] text-white shadow-md'
+                      : 'bg-slate-100 text-slate-600'
+                  }`}
+                >
+                  ♂
                 </div>
-
-                {/* Sleek Glassmorphism "Back View" Label Below Jersey */}
-                <div className="relative z-10 pt-2 pb-1">
-                  <div
-                    className={`px-8 py-1.5 rounded-full text-xs font-semibold tracking-wide border backdrop-blur-md transition-all duration-300 shadow-sm ${
-                      isMale
-                        ? 'bg-sky-950/70 border-sky-400/35 text-sky-200 shadow-[0_0_15px_rgba(56,189,248,0.25)]'
-                        : isFemale
-                        ? 'bg-white/90 border-pink-200 text-pink-700 shadow-sm'
-                        : 'bg-white/90 border-slate-200 text-slate-700 shadow-sm'
-                    }`}
-                  >
-                    Back View
+                <div className="min-w-0 flex-1">
+                  <div className="flex items-center justify-between">
+                    <h3 className="font-extrabold text-sm sm:text-base">Male (Boys Wing)</h3>
+                    {isMale && <Check className="w-4 h-4 text-[#38BDF8]" />}
                   </div>
+                  <p className={`text-xs mt-0.5 ${isMale ? 'text-slate-300' : 'text-slate-500'}`}>
+                    Cyber Blue squad kit & Boys Wing payment accounts
+                  </p>
                 </div>
-              </div>
+              </button>
+
+              {/* Female Option Card */}
+              <button
+                type="button"
+                onClick={() => handleGenderSelect('female')}
+                className={`p-4 sm:p-5 rounded-2xl border-2 text-left transition-all duration-200 cursor-pointer flex items-center gap-4 ${
+                  isFemale
+                    ? 'border-[#EC4899] bg-white/95 shadow-[0_0_25px_rgba(236,72,153,0.25)] ring-2 ring-[#EC4899]/40 text-slate-900'
+                    : 'border-slate-300/80 bg-white/70 hover:border-[#EC4899]/60 hover:bg-pink-50/50 text-slate-800'
+                }`}
+              >
+                <div
+                  className={`w-12 h-12 rounded-2xl grid place-items-center font-black text-sm shrink-0 transition-transform ${
+                    isFemale
+                      ? 'bg-gradient-to-tr from-[#DB2777] to-[#F472B6] text-white shadow-md'
+                      : 'bg-slate-100 text-slate-600'
+                  }`}
+                >
+                  ♀
+                </div>
+                <div className="min-w-0 flex-1">
+                  <div className="flex items-center justify-between">
+                    <h3 className="font-extrabold text-sm sm:text-base">Female (Girls Wing)</h3>
+                    {isFemale && <Check className="w-4 h-4 text-[#EC4899]" />}
+                  </div>
+                  <p className={`text-xs mt-0.5 ${isFemale ? 'text-pink-900/80' : 'text-slate-500'}`}>
+                    Rose Blossom squad kit & Girls Wing payment accounts
+                  </p>
+                </div>
+              </button>
             </div>
+            {formErrors.gender && (
+              <p className="text-rose-500 text-xs font-bold mt-1.5 flex items-center gap-1">
+                <AlertCircle className="w-3.5 h-3.5" />
+                <span>{formErrors.gender}</span>
+              </p>
+            )}
           </div>
 
-          {/* Error Message Banner */}
-          {submitErrorMessage && (
-            <div className="p-4 rounded-2xl bg-rose-500/10 border border-rose-500/30 text-rose-500 flex items-start gap-3 text-xs sm:text-sm animate-fadeIn">
-              <AlertCircle className="w-5 h-5 shrink-0 mt-0.5" />
-              <div className="flex-1">
-                <strong className="block font-bold">Registration Failed:</strong>
-                <p className="mt-0.5 leading-relaxed">{submitErrorMessage}</p>
+          {/* ======================================================== */}
+          {/* LOCKED STATE GATE NOTICE (Shown when Gender not chosen) */}
+          {/* ======================================================== */}
+          {!isGenderChosen && (
+            <div className="p-8 sm:p-12 rounded-3xl bg-white/80 border-2 border-dashed border-slate-300 text-center space-y-3 animate-fadeIn">
+              <div className="w-14 h-14 rounded-2xl bg-indigo-50 text-indigo-600 grid place-items-center mx-auto shadow-inner">
+                <Lock className="w-7 h-7" />
               </div>
+              <h3 className="text-lg font-black text-slate-900">Registration Form Locked</h3>
+              <p className="text-xs sm:text-sm text-slate-500 max-w-md mx-auto leading-relaxed">
+                Please select your gender (<strong>Male</strong> or <strong>Female</strong>) above. The form, academic sections, payment details, and live jersey preview will unlock immediately.
+              </p>
             </div>
           )}
 
           {/* ======================================================== */}
-          {/* 5. SUBMIT REGISTRATION BUTTON (REDUCED SIZE, PREMIUM STYLING) */}
+          {/* UNLOCKED FORM SECTIONS (Visible once Gender is Chosen) */}
           {/* ======================================================== */}
-          <div className="pt-3 pb-1 flex justify-center">
-            <button
-              type="submit"
-              disabled={isSubmitting}
-              className={`w-full sm:w-auto min-w-[220px] max-w-sm py-2.5 px-6 rounded-xl font-bold text-xs sm:text-sm tracking-wide flex items-center justify-center gap-2 transition-all duration-200 cursor-pointer shadow-md hover:-translate-y-0.5 active:translate-y-0 ${
-                isMale
-                  ? 'bg-gradient-to-r from-[#2563EB] to-[#38BDF8] hover:from-[#1d4ed8] hover:to-[#0284c7] text-slate-950 shadow-sky-500/25'
-                  : isFemale
-                  ? 'bg-gradient-to-r from-[#EC4899] to-[#F472B6] hover:from-[#db2777] hover:to-[#e11d48] text-white shadow-pink-500/25'
-                  : 'bg-gradient-to-r from-[#5B5FEF] to-[#7A6CFF] hover:from-[#4d51d4] hover:to-[#6858f2] text-white shadow-[#5B5FEF]/25'
-              }`}
-            >
-              {isSubmitting ? (
-                <span className="flex items-center gap-2">
-                  <span className="w-3.5 h-3.5 border-2 border-current border-t-transparent rounded-full animate-spin" />
-                  Submitting Registration...
-                </span>
-              ) : (
-                <>
-                  <span>Submit Registration</span>
-                  <ArrowRight className="w-3.5 h-3.5" />
-                </>
+          {isGenderChosen && (
+            <div className="space-y-8 animate-fadeIn">
+              {/* ======================================================== */}
+              {/* 2. PERSONAL INFORMATION                                  */}
+              {/* ======================================================== */}
+              <div className="space-y-4">
+                <div className={`pb-2.5 font-display text-base sm:text-lg font-bold flex items-center justify-between ${sectionHeaderClasses}`}>
+                  <span className="flex items-center gap-2">
+                    <User className="w-4 h-4" />
+                    2. Personal Information
+                  </span>
+                  <span className="text-xs font-normal opacity-75">Required fields *</span>
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  {/* Full Name */}
+                  <div className="sm:col-span-2">
+                    <label className={`block text-xs font-bold uppercase tracking-wider mb-1.5 ${labelClasses}`}>
+                      Full Name <span className="text-rose-500">*</span>
+                    </label>
+                    <input
+                      type="text"
+                      placeholder="e.g. John Doe"
+                      value={formData.name}
+                      onChange={e => {
+                        setFormData({ ...formData, name: e.target.value });
+                        if (formErrors.name) setFormErrors(prev => ({ ...prev, name: '' }));
+                      }}
+                      className={`w-full px-4 py-3 rounded-xl text-sm font-medium transition-colors outline-none ${inputClasses}`}
+                    />
+                    {formErrors.name && (
+                      <p className="text-rose-500 text-xs mt-1 font-semibold">{formErrors.name}</p>
+                    )}
+                  </div>
+
+                  {/* Student Roll */}
+                  <div>
+                    <label className={`block text-xs font-bold uppercase tracking-wider mb-1.5 ${labelClasses}`}>
+                      Class Roll <span className="text-rose-500">*</span>
+                    </label>
+                    <input
+                      type="text"
+                      placeholder="e.g. 101"
+                      value={formData.roll}
+                      onChange={e => {
+                        setFormData({ ...formData, roll: e.target.value });
+                        if (formErrors.roll) setFormErrors(prev => ({ ...prev, roll: '' }));
+                      }}
+                      className={`w-full px-4 py-3 rounded-xl text-sm font-medium transition-colors outline-none ${inputClasses}`}
+                    />
+                    {formErrors.roll && (
+                      <p className="text-rose-500 text-xs mt-1 font-semibold">{formErrors.roll}</p>
+                    )}
+                  </div>
+
+                  {/* Student ID */}
+                  <div>
+                    <label className={`block text-xs font-bold uppercase tracking-wider mb-1.5 ${labelClasses}`}>
+                      Student ID <span className="text-rose-500">*</span>
+                    </label>
+                    <input
+                      type="text"
+                      placeholder="e.g. 270101"
+                      value={formData.id}
+                      onChange={e => {
+                        setFormData({ ...formData, id: e.target.value });
+                        if (formErrors.id) setFormErrors(prev => ({ ...prev, id: '' }));
+                      }}
+                      className={`w-full px-4 py-3 rounded-xl text-sm font-medium transition-colors outline-none ${inputClasses}`}
+                    />
+                    {formErrors.id && (
+                      <p className="text-rose-500 text-xs mt-1 font-semibold">{formErrors.id}</p>
+                    )}
+                  </div>
+
+                  {/* Contact Number */}
+                  <div className="sm:col-span-2">
+                    <label className={`block text-xs font-bold uppercase tracking-wider mb-1.5 ${labelClasses}`}>
+                      Contact Mobile Number <span className="text-rose-500">*</span>
+                    </label>
+                    <input
+                      type="tel"
+                      placeholder="e.g. 01712-345678"
+                      value={formData.contactNumber}
+                      onChange={e => {
+                        setFormData({ ...formData, contactNumber: e.target.value });
+                        if (formErrors.contactNumber) setFormErrors(prev => ({ ...prev, contactNumber: '' }));
+                      }}
+                      className={`w-full px-4 py-3 rounded-xl text-sm font-medium transition-colors outline-none ${inputClasses}`}
+                    />
+                    {formErrors.contactNumber && (
+                      <p className="text-rose-500 text-xs mt-1 font-semibold">{formErrors.contactNumber}</p>
+                    )}
+                  </div>
+
+                  {/* Group Selector */}
+                  <div>
+                    <label className={`block text-xs font-bold uppercase tracking-wider mb-1.5 ${labelClasses}`}>
+                      Academic Group <span className="text-rose-500">*</span>
+                    </label>
+                    <select
+                      value={formData.group}
+                      onChange={handleGroupSelect}
+                      className={`w-full px-4 py-3 rounded-xl text-sm font-medium transition-colors outline-none cursor-pointer ${inputClasses}`}
+                    >
+                      <option value="" className={isMale ? 'bg-slate-900 text-white' : 'bg-white text-slate-900'}>
+                        Select Academic Group...
+                      </option>
+                      <option value="Science" className={isMale ? 'bg-slate-900 text-white' : 'bg-white text-slate-900'}>
+                        Science
+                      </option>
+                      <option value="Business Studies" className={isMale ? 'bg-slate-900 text-white' : 'bg-white text-slate-900'}>
+                        Business Studies
+                      </option>
+                      <option value="Humanities" className={isMale ? 'bg-slate-900 text-white' : 'bg-white text-slate-900'}>
+                        Humanities
+                      </option>
+                    </select>
+                    {formErrors.group && (
+                      <p className="text-rose-500 text-xs mt-1 font-semibold">{formErrors.group}</p>
+                    )}
+                  </div>
+
+                  {/* Section Selector (Unlocked only when Group is chosen) */}
+                  <div>
+                    <label className={`block text-xs font-bold uppercase tracking-wider mb-1.5 ${labelClasses}`}>
+                      Academic Section <span className="text-rose-500">*</span>
+                    </label>
+                    <select
+                      disabled={!formData.group}
+                      value={formData.section}
+                      onChange={e => {
+                        setFormData({ ...formData, section: e.target.value });
+                        if (formErrors.section) setFormErrors(prev => ({ ...prev, section: '' }));
+                      }}
+                      className={`w-full px-4 py-3 rounded-xl text-sm font-medium transition-colors outline-none cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed ${inputClasses}`}
+                    >
+                      <option value="" className={isMale ? 'bg-slate-900 text-white' : 'bg-white text-slate-900'}>
+                        {formData.group ? 'Choose Section...' : 'Select Group First'}
+                      </option>
+                      {availableSections.map(sec => (
+                        <option
+                          key={sec}
+                          value={sec}
+                          className={isMale ? 'bg-slate-900 text-white' : 'bg-white text-slate-900'}
+                        >
+                          Section {sec}
+                        </option>
+                      ))}
+                    </select>
+                    {formErrors.section && (
+                      <p className="text-rose-500 text-xs mt-1 font-semibold">{formErrors.section}</p>
+                    )}
+                  </div>
+
+                  {/* Student Photo Upload (Optional, Max 3MB) */}
+                  <div className="sm:col-span-2 pt-1">
+                    <PhotoUploadField
+                      photoUrl={formData.photoUrl}
+                      gender={formData.gender}
+                      labelClasses={labelClasses}
+                      onPhotoSelected={({ photoUrl, photoFile, photoBlob }) => {
+                        setFormData(prev => ({ ...prev, photoUrl, photoFile, photoBlob }));
+                      }}
+                      onPhotoRemoved={() => {
+                        setFormData(prev => ({ ...prev, photoUrl: null, photoFile: null, photoBlob: null }));
+                      }}
+                    />
+                  </div>
+                </div>
+              </div>
+
+              {/* ======================================================== */}
+              {/* 3. PAYMENT INFORMATION SECTION                           */}
+              {/* ======================================================== */}
+              <div className="space-y-4 pt-2">
+                <div className={`pb-2.5 font-display text-base sm:text-lg font-bold flex items-center justify-between ${sectionHeaderClasses}`}>
+                  <span className="flex items-center gap-2">
+                    <CreditCard className="w-4 h-4" />
+                    3. Payment Information
+                  </span>
+                  <span className="text-xs font-semibold px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-400">
+                    Fee: {paymentSettings.registrationFee} BDT
+                  </span>
+                </div>
+
+                <div className={`p-4 sm:p-5 rounded-2xl ${subCardClasses} space-y-4`}>
+                  <div className="flex flex-wrap items-center justify-between gap-2 border-b border-slate-200/40 pb-3">
+                    <div>
+                      <span className="text-xs font-bold uppercase tracking-wider text-slate-400 block">
+                        Official Payment Accounts ({isFemale ? 'Girls Wing' : 'Boys Wing'})
+                      </span>
+                      <p className="text-xs mt-0.5 opacity-80">
+                        {paymentSettings.instructions || 'Send Personal payment (Send Money) and retain sender phone number.'}
+                      </p>
+                    </div>
+                  </div>
+
+                  {/* Payment Numbers */}
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    {/* bKash Number */}
+                    <div className="p-3 sm:p-4 rounded-xl bg-white/70 border border-slate-200/80 flex items-center justify-between gap-2">
+                      <div className="flex items-center gap-3">
+                        <div className="w-9 h-9 rounded-xl bg-pink-50 flex items-center justify-center p-1">
+                          <BkashLogo className="w-6 h-6" />
+                        </div>
+                        <div>
+                          <div className="text-[10px] font-bold uppercase text-slate-400">bKash Personal</div>
+                          <div className="font-mono font-extrabold text-sm text-slate-900">{activeBkashNumber}</div>
+                        </div>
+                      </div>
+                      <button
+                        type="button"
+                        onClick={() => handleCopyAccount(activeBkashNumber.replace(/\D/g, '') || activeBkashNumber, 'bkash')}
+                        className="px-2.5 py-1.5 rounded-lg text-xs font-bold bg-slate-100 hover:bg-slate-200 text-slate-700 transition-colors flex items-center gap-1 cursor-pointer"
+                      >
+                        {copiedAccount === 'bkash' ? <Check className="w-3.5 h-3.5 text-emerald-600" /> : <Copy className="w-3.5 h-3.5" />}
+                        <span>{copiedAccount === 'bkash' ? 'Copied' : 'Copy'}</span>
+                      </button>
+                    </div>
+
+                    {/* Nagad Number */}
+                    <div className="p-3 sm:p-4 rounded-xl bg-white/70 border border-slate-200/80 flex items-center justify-between gap-2">
+                      <div className="flex items-center gap-3">
+                        <div className="w-9 h-9 rounded-xl bg-orange-50 flex items-center justify-center p-1">
+                          <NagadLogo className="w-6 h-6" />
+                        </div>
+                        <div>
+                          <div className="text-[10px] font-bold uppercase text-slate-400">Nagad Personal</div>
+                          <div className="font-mono font-extrabold text-sm text-slate-900">{activeNagadNumber}</div>
+                        </div>
+                      </div>
+                      <button
+                        type="button"
+                        onClick={() => handleCopyAccount(activeNagadNumber.replace(/\D/g, '') || activeNagadNumber, 'nagad')}
+                        className="px-2.5 py-1.5 rounded-lg text-xs font-bold bg-slate-100 hover:bg-slate-200 text-slate-700 transition-colors flex items-center gap-1 cursor-pointer"
+                      >
+                        {copiedAccount === 'nagad' ? <Check className="w-3.5 h-3.5 text-emerald-600" /> : <Copy className="w-3.5 h-3.5" />}
+                        <span>{copiedAccount === 'nagad' ? 'Copied' : 'Copy'}</span>
+                      </button>
+                    </div>
+                  </div>
+
+                  {/* Payment Inputs */}
+                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 pt-2">
+                    {/* Sender Number (Required) */}
+                    <div>
+                      <label className={`block text-xs font-bold uppercase tracking-wider mb-1.5 ${labelClasses}`}>
+                        Sender Mobile No <span className="text-rose-500">*</span>
+                      </label>
+                      <input
+                        type="tel"
+                        placeholder="e.g. 01XXXXXXXXX"
+                        value={formData.senderNumber}
+                        onChange={e => {
+                          setFormData({ ...formData, senderNumber: e.target.value });
+                          if (formErrors.senderNumber) setFormErrors(prev => ({ ...prev, senderNumber: '' }));
+                        }}
+                        className={`w-full px-4 py-3 rounded-xl text-sm font-medium transition-colors outline-none ${inputClasses}`}
+                      />
+                      {formErrors.senderNumber && (
+                        <p className="text-rose-500 text-xs mt-1 font-semibold">{formErrors.senderNumber}</p>
+                      )}
+                    </div>
+
+                    {/* Payment Time (Required) */}
+                    <div>
+                      <label className={`block text-xs font-bold uppercase tracking-wider mb-1.5 ${labelClasses}`}>
+                        Payment Time <span className="text-rose-500">*</span>
+                      </label>
+                      <input
+                        type="text"
+                        placeholder="e.g. 02:30 PM"
+                        value={formData.paymentTime}
+                        onChange={e => {
+                          setFormData({ ...formData, paymentTime: e.target.value });
+                          if (formErrors.paymentTime) setFormErrors(prev => ({ ...prev, paymentTime: '' }));
+                        }}
+                        className={`w-full px-4 py-3 rounded-xl text-sm font-medium transition-colors outline-none ${inputClasses}`}
+                      />
+                      {formErrors.paymentTime && (
+                        <p className="text-rose-500 text-xs mt-1 font-semibold">{formErrors.paymentTime}</p>
+                      )}
+                    </div>
+
+                    {/* Transaction ID (Optional) */}
+                    <div>
+                      <label className={`block text-xs font-bold uppercase tracking-wider mb-1.5 ${labelClasses}`}>
+                        Transaction ID <span className="text-slate-400 font-normal">(Optional)</span>
+                      </label>
+                      <input
+                        type="text"
+                        placeholder="e.g. 9J28DA10K"
+                        value={formData.transactionId}
+                        onChange={e => setFormData({ ...formData, transactionId: e.target.value })}
+                        className={`w-full px-4 py-3 rounded-xl text-sm font-medium transition-colors outline-none ${inputClasses}`}
+                      />
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* ======================================================== */}
+              {/* 4. JERSEY CUSTOMIZATION & LIVE PREVIEW                   */}
+              {/* ======================================================== */}
+              <div className="space-y-4 pt-2">
+                <div className={`pb-2.5 font-display text-base sm:text-lg font-bold flex items-center justify-between ${sectionHeaderClasses}`}>
+                  <span className="flex items-center gap-2">
+                    <Shirt className="w-4 h-4" />
+                    4. Squad Kit Jersey Customization
+                  </span>
+                  <span className="text-xs font-normal opacity-75">Live Preview Updates Below</span>
+                </div>
+
+                <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-center">
+                  {/* Left: Live Interactive Jersey Graphic */}
+                  <div className="lg:col-span-5 flex flex-col items-center justify-center p-4 rounded-3xl bg-slate-950/20 border border-white/20">
+                    <JerseyGraphic
+                      name={formData.jerseyName}
+                      number={formData.jerseyNumber}
+                      gender={formData.gender}
+                      className="w-full max-w-[280px] h-[300px]"
+                    />
+                    <div className="mt-2 text-center text-xs opacity-75 font-mono">
+                      {formData.jerseyName || 'YOUR NAME'} · #{formData.jerseyNumber || '27'} · Size: {formData.jerseySize}
+                    </div>
+                  </div>
+
+                  {/* Right: Jersey Inputs */}
+                  <div className="lg:col-span-7 space-y-4">
+                    {/* Jersey Name */}
+                    <div>
+                      <div className="flex items-center justify-between mb-1.5">
+                        <label className={`block text-xs font-bold uppercase tracking-wider ${labelClasses}`}>
+                          Jersey Back Name <span className="text-rose-500">*</span>
+                        </label>
+                        <span className="text-[10px] font-mono opacity-70">
+                          {formData.jerseyName.length}/14 max
+                        </span>
+                      </div>
+                      <input
+                        type="text"
+                        maxLength={14}
+                        placeholder="e.g. STRIKER"
+                        value={formData.jerseyName}
+                        onChange={e => {
+                          const val = e.target.value.toUpperCase();
+                          setFormData({ ...formData, jerseyName: val });
+                          if (formErrors.jerseyName) setFormErrors(prev => ({ ...prev, jerseyName: '' }));
+                        }}
+                        className={`w-full px-4 py-3 rounded-xl text-sm font-mono font-bold uppercase transition-colors outline-none ${inputClasses}`}
+                      />
+                      {formErrors.jerseyName && (
+                        <p className="text-rose-500 text-xs mt-1 font-semibold">{formErrors.jerseyName}</p>
+                      )}
+                    </div>
+
+                    {/* Jersey Number & Size */}
+                    <div className="grid grid-cols-2 gap-4">
+                      {/* Jersey Number */}
+                      <div>
+                        <div className="flex items-center justify-between mb-1.5">
+                          <label className={`block text-xs font-bold uppercase tracking-wider ${labelClasses}`}>
+                            Jersey Number <span className="text-rose-500">*</span>
+                          </label>
+                          <span className="text-[10px] font-mono opacity-70">00–99</span>
+                        </div>
+                        <input
+                          type="text"
+                          maxLength={2}
+                          placeholder="27"
+                          value={formData.jerseyNumber}
+                          onChange={e => {
+                            const val = e.target.value.replace(/\D/g, '');
+                            setFormData({ ...formData, jerseyNumber: val });
+                            if (formErrors.jerseyNumber) setFormErrors(prev => ({ ...prev, jerseyNumber: '' }));
+                          }}
+                          className={`w-full px-4 py-3 rounded-xl text-sm font-mono font-black transition-colors outline-none text-center ${inputClasses}`}
+                        />
+                        {formErrors.jerseyNumber && (
+                          <p className="text-rose-500 text-xs mt-1 font-semibold">{formErrors.jerseyNumber}</p>
+                        )}
+                      </div>
+
+                      {/* Jersey Size */}
+                      <div>
+                        <label className={`block text-xs font-bold uppercase tracking-wider mb-1.5 ${labelClasses}`}>
+                          Jersey Size <span className="text-rose-500">*</span>
+                        </label>
+                        <select
+                          value={formData.jerseySize}
+                          onChange={e => setFormData({ ...formData, jerseySize: e.target.value as JerseySize })}
+                          className={`w-full px-4 py-3 rounded-xl text-sm font-semibold transition-colors outline-none cursor-pointer ${inputClasses}`}
+                        >
+                          {JERSEY_SIZES.map(sz => (
+                            <option
+                              key={sz}
+                              value={sz}
+                              className={isMale ? 'bg-slate-900 text-white' : 'bg-white text-slate-900'}
+                            >
+                              Size {sz}
+                            </option>
+                          ))}
+                        </select>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* ======================================================== */}
+              {/* 5. DECLARATION (Single elegant line as requested)       */}
+              {/* ======================================================== */}
+              <div className="pt-2 border-t border-slate-200/40">
+                <label className="flex items-center gap-3 cursor-pointer select-none text-xs sm:text-sm font-medium py-2">
+                  <input
+                    type="checkbox"
+                    checked={declarationChecked}
+                    onChange={e => {
+                      setDeclarationChecked(e.target.checked);
+                      if (formErrors.declaration) setFormErrors(prev => ({ ...prev, declaration: '' }));
+                    }}
+                    className="w-4 h-4 rounded border-slate-300 text-indigo-600 focus:ring-indigo-500 cursor-pointer shrink-0"
+                  />
+                  <span className="leading-tight">
+                    I confirm that all provided information is correct. I understand that incorrect information may cause rejection.
+                  </span>
+                </label>
+                {formErrors.declaration && (
+                  <p className="text-rose-500 text-xs mt-1 font-semibold flex items-center gap-1">
+                    <AlertCircle className="w-3.5 h-3.5" />
+                    <span>{formErrors.declaration}</span>
+                  </p>
+                )}
+              </div>
+
+              {/* Global Error Banner */}
+              {submitErrorMessage && (
+                <div className="p-4 rounded-2xl bg-rose-50 border border-rose-200 text-rose-800 text-xs font-semibold flex items-center gap-2">
+                  <AlertCircle className="w-4 h-4 shrink-0 text-rose-600" />
+                  <span>{submitErrorMessage}</span>
+                </div>
               )}
-            </button>
-          </div>
+
+              {/* Submit Button */}
+              <div className="pt-4">
+                <button
+                  type="submit"
+                  disabled={isSubmitting}
+                  className={`w-full py-4 px-6 rounded-2xl font-extrabold text-base text-white shadow-xl transition-all duration-200 flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed ${
+                    isMale
+                      ? 'bg-gradient-to-r from-[#0284C7] via-[#0EA5E9] to-[#38BDF8] hover:shadow-cyan-500/25 shadow-cyan-900/30'
+                      : isFemale
+                      ? 'bg-gradient-to-r from-[#DB2777] via-[#EC4899] to-[#F472B6] hover:shadow-pink-500/25 shadow-pink-900/20'
+                      : 'bg-indigo-600 hover:bg-indigo-700'
+                  }`}
+                >
+                  {isSubmitting ? (
+                    <span>Submitting Registration...</span>
+                  ) : (
+                    <>
+                      <span>{editingRegNo ? 'Re-Submit Registration' : 'Complete Registration'}</span>
+                      <ArrowRight className="w-5 h-5" />
+                    </>
+                  )}
+                </button>
+              </div>
+            </div>
+          )}
         </form>
       </div>
 
       {/* ======================================================== */}
-      {/* REGISTRATION SUCCESS POPUP (GLASSMORPHISM MODAL) */}
+      {/* DUPLICATE DETECTION MODAL                                */}
       {/* ======================================================== */}
-      {successModalData && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-md animate-fadeIn">
-          <div
-            className={`w-full max-w-md rounded-3xl p-6 sm:p-7 transition-all shadow-2xl relative text-left ${
-              successModalData.gender === 'male'
-                ? 'bg-gradient-to-br from-[#0F172A] via-[#1E3A8A] to-[#0F172A] text-white border border-[#38BDF8]/40 shadow-[0_20px_60px_-10px_rgba(15,23,42,0.9)]'
-                : successModalData.gender === 'female'
-                ? 'bg-gradient-to-br from-[#FFF1F5] via-[#FBCFE8] to-[#FFFFFF] text-slate-900 border border-[#F472B6]/50 shadow-[0_20px_60px_-10px_rgba(236,72,153,0.3)]'
-                : 'bg-white text-slate-900 border border-white/90 shadow-[0_20px_60px_-10px_rgba(91,95,239,0.2)]'
-            }`}
-          >
-            {/* Header Icon */}
-            <div className="flex items-center justify-center mb-4">
-              <div
-                className={`w-14 h-14 rounded-2xl flex items-center justify-center shadow-md ${
-                  successModalData.gender === 'male'
-                    ? 'bg-[#38BDF8] text-slate-950 shadow-[#38BDF8]/30'
-                    : successModalData.gender === 'female'
-                    ? 'bg-[#EC4899] text-white shadow-[#EC4899]/30'
-                    : 'bg-[#5B5FEF] text-white shadow-[#5B5FEF]/30'
-                }`}
-              >
-                <Check className="w-7 h-7 stroke-[3]" />
-              </div>
-            </div>
-
-            {/* Title */}
-            <div className="text-center mb-5">
-              <h3 className="font-display text-xl sm:text-2xl font-extrabold">
-                Registration Complete
-              </h3>
-            </div>
-
-            {/* Details Box */}
-            <div
-              className={`p-5 rounded-2xl mb-4 space-y-3 text-xs ${
-                successModalData.gender === 'male'
-                  ? 'bg-slate-900/90 border border-slate-800 text-white'
-                  : successModalData.gender === 'female'
-                  ? 'bg-white border border-pink-200 text-slate-900'
-                  : 'bg-slate-50 border border-slate-200 text-slate-900'
-              }`}
-            >
-              <div className="flex items-center justify-between pb-2.5 border-b border-current/10">
-                <span className="opacity-75 uppercase font-bold tracking-wider">Student Name:</span>
-                <span className="text-sm font-extrabold">{successModalData.name}</span>
-              </div>
-              <div className="flex items-center justify-between pt-0.5">
-                <span className="opacity-75 uppercase font-bold tracking-wider">Registration Number:</span>
-                <span className="text-lg font-black font-mono tracking-wider text-emerald-500">
-                  {successModalData.regNo}
-                </span>
-              </div>
-            </div>
-
-            {/* Notice Section: RED & BOLD */}
-            <div className="p-4 rounded-2xl mb-5 bg-red-50 border-2 border-red-500 text-red-600 shadow-sm text-left">
-              <div className="flex items-start gap-2.5">
-                <AlertTriangle className="w-5 h-5 shrink-0 text-red-600 mt-0.5" />
-                <div className="space-y-1">
-                  <div className="text-xs font-black uppercase tracking-wider text-red-600">
-                    IMPORTANT NOTICE:
+      {duplicateModal && (
+        <div className="fixed inset-0 z-[250] flex items-center justify-center p-4 bg-slate-950/70 backdrop-blur-sm animate-fadeIn">
+          <div className="w-full max-w-md bg-white rounded-3xl p-6 sm:p-7 shadow-2xl border border-slate-100 text-slate-900 space-y-4">
+            {/* Modal Header */}
+            <div className="flex items-start justify-between">
+              <div className="flex items-center gap-3">
+                {duplicateModal.type === 'approved' && (
+                  <div className="w-12 h-12 rounded-2xl bg-emerald-50 text-emerald-600 grid place-items-center">
+                    <ShieldCheck className="w-6 h-6" />
                   </div>
-                  <div className="text-xs font-bold text-red-600 leading-snug">
-                    Keep your Registration Number safe.
+                )}
+                {duplicateModal.type === 'pending' && (
+                  <div className="w-12 h-12 rounded-2xl bg-amber-50 text-amber-600 grid place-items-center">
+                    <Clock className="w-6 h-6" />
                   </div>
-                  <div className="text-xs font-bold text-red-600 leading-snug">
-                    You will need it to download your invitation card.
+                )}
+                {duplicateModal.type === 'rejected' && (
+                  <div className="w-12 h-12 rounded-2xl bg-rose-50 text-rose-600 grid place-items-center">
+                    <AlertTriangle className="w-6 h-6" />
                   </div>
+                )}
+                <div>
+                  <h3 className="text-base sm:text-lg font-black">
+                    {duplicateModal.type === 'approved' && 'Approved Registration'}
+                    {duplicateModal.type === 'pending' && 'Registration Pending'}
+                    {duplicateModal.type === 'rejected' && 'Previous registration found.'}
+                  </h3>
+                  <span className="font-mono text-xs font-bold text-indigo-600">
+                    {duplicateModal.record.registrationNo}
+                  </span>
                 </div>
               </div>
-            </div>
-
-            {/* Action Button: OK */}
-            <div className="flex gap-2">
               <button
                 type="button"
-                onClick={() => setSuccessModalData(null)}
-                className={`w-full py-2.5 px-4 rounded-xl font-bold text-xs transition-all text-center cursor-pointer ${
-                  successModalData.gender === 'male'
-                    ? 'bg-slate-800 text-white hover:bg-slate-700'
-                    : successModalData.gender === 'female'
-                    ? 'bg-white text-pink-800 border border-pink-200 hover:bg-pink-50'
-                    : 'bg-slate-100 text-slate-800 hover:bg-slate-200'
-                }`}
+                onClick={() => setDuplicateModal(null)}
+                className="p-1 text-slate-400 hover:text-slate-600 rounded-lg hover:bg-slate-100"
               >
-                OK
+                <X className="w-5 h-5" />
               </button>
+            </div>
 
+            {/* Modal Body */}
+            {duplicateModal.type === 'approved' && (
+              <div className="space-y-3 text-xs sm:text-sm text-slate-600">
+                <div className="p-3.5 rounded-xl bg-emerald-50 border border-emerald-200 text-emerald-900 font-bold">
+                  You already have an approved registration.
+                </div>
+                <div className="space-y-1 text-xs">
+                  <div><strong>Student:</strong> {duplicateModal.record.name} (Roll: {duplicateModal.record.roll})</div>
+                  <div><strong>Student ID:</strong> {duplicateModal.record.id}</div>
+                  <div><strong>Registration Number:</strong> <span className="font-mono font-bold text-indigo-700">{duplicateModal.record.registrationNo}</span></div>
+                </div>
+                <div className="pt-2 flex justify-end gap-2">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      const regNo = duplicateModal.record.registrationNo;
+                      setDuplicateModal(null);
+                      onGoToInvitation(regNo);
+                    }}
+                    className="w-full py-3 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs shadow-md"
+                  >
+                    View Invitation Card
+                  </button>
+                </div>
+              </div>
+            )}
+
+            {duplicateModal.type === 'pending' && (
+              <div className="space-y-3 text-xs sm:text-sm text-slate-600">
+                <div className="p-3.5 rounded-xl bg-amber-50 border border-amber-200 text-amber-900 font-bold">
+                  Your registration is currently pending review.
+                </div>
+                <div className="space-y-1 text-xs">
+                  <div><strong>Student:</strong> {duplicateModal.record.name} (Roll: {duplicateModal.record.roll})</div>
+                  <div><strong>Student ID:</strong> {duplicateModal.record.id}</div>
+                  <div><strong>Registration Number:</strong> <span className="font-mono font-bold text-indigo-700">{duplicateModal.record.registrationNo}</span></div>
+                </div>
+                <div className="pt-2 flex justify-end gap-2">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      const regNo = duplicateModal.record.registrationNo;
+                      setDuplicateModal(null);
+                      onGoToInvitation(regNo);
+                    }}
+                    className="w-full py-3 rounded-xl bg-amber-600 hover:bg-amber-700 text-white font-bold text-xs shadow-md"
+                  >
+                    Check Status
+                  </button>
+                </div>
+              </div>
+            )}
+
+            {duplicateModal.type === 'rejected' && (
+              <div className="space-y-3 text-xs sm:text-sm text-slate-600">
+                <div className="space-y-2 p-3.5 rounded-2xl bg-rose-50 border border-rose-200 text-xs">
+                  <div>
+                    <span className="font-bold text-rose-800 uppercase block text-[10px]">Registration Number:</span>
+                    <span className="font-mono font-black text-rose-900 text-sm">{duplicateModal.record.registrationNo}</span>
+                  </div>
+                  <div>
+                    <span className="font-bold text-rose-800 uppercase block text-[10px]">Current Status:</span>
+                    <span className="font-bold text-rose-700 uppercase">Rejected</span>
+                  </div>
+                  <div>
+                    <span className="font-bold text-rose-800 uppercase block text-[10px]">Reject Reason:</span>
+                    <span className="font-medium text-rose-900">{duplicateModal.record.rejectionReason || 'No specific reason provided.'}</span>
+                  </div>
+                </div>
+                <p className="text-xs text-slate-500">
+                  You can continue with your existing registration number, update your information, and re-submit for approval.
+                </p>
+                <div className="pt-2 flex items-center justify-end gap-2">
+                  <button
+                    type="button"
+                    onClick={() => setDuplicateModal(null)}
+                    className="px-4 py-2.5 rounded-xl border border-slate-200 text-xs font-bold text-slate-600 hover:bg-slate-50 cursor-pointer"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => handleContinueRejectedRegistration(duplicateModal.record)}
+                    className="px-5 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs shadow-md shadow-indigo-200 cursor-pointer"
+                  >
+                    Continue Registration
+                  </button>
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+
+      {/* ======================================================== */}
+      {/* REGISTRATION CLOSED MODAL                                */}
+      {/* ======================================================== */}
+      {showClosedModal && (
+        <div className="fixed inset-0 z-[250] flex items-center justify-center p-4 bg-slate-950/70 backdrop-blur-sm animate-fadeIn">
+          <div className="w-full max-w-md bg-white rounded-3xl p-6 sm:p-7 shadow-2xl border border-slate-100 text-slate-900 space-y-4 text-center">
+            <div className="w-14 h-14 rounded-2xl bg-amber-50 text-amber-600 grid place-items-center mx-auto">
+              <ShieldAlert className="w-7 h-7" />
+            </div>
+            <h3 className="text-xl font-black text-slate-900">Registration Closed</h3>
+            <p className="text-xs sm:text-sm text-slate-600 leading-relaxed">
+              Registration is currently closed. Please contact the organizers manually.
+            </p>
+            <div className="pt-2">
+              <button
+                type="button"
+                onClick={() => setShowClosedModal(false)}
+                className="w-full py-3 rounded-xl bg-slate-900 hover:bg-slate-800 text-white font-bold text-xs shadow-md cursor-pointer"
+              >
+                Close
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ======================================================== */}
+      {/* SUCCESS SUBMISSION MODAL                                 */}
+      {/* ======================================================== */}
+      {successModalData && (
+        <div className="fixed inset-0 z-[250] flex items-center justify-center p-4 bg-slate-950/75 backdrop-blur-md animate-fadeIn">
+          <div className="w-full max-w-md bg-white rounded-3xl p-6 sm:p-8 shadow-2xl border border-slate-100 text-slate-900 text-center space-y-5">
+            <div className="w-16 h-16 rounded-2xl bg-emerald-50 text-emerald-600 grid place-items-center mx-auto shadow-inner">
+              <Check className="w-8 h-8 stroke-[3]" />
+            </div>
+
+            <div>
+              <span className="text-[11px] font-extrabold uppercase tracking-widest text-emerald-600 bg-emerald-50 px-3 py-1 rounded-full border border-emerald-200">
+                Enrollment Submitted
+              </span>
+              <h2 className="text-2xl font-black text-slate-900 mt-3">
+                Registration Successful!
+              </h2>
+              <p className="text-xs text-slate-500 mt-1">
+                Congratulations <strong className="text-slate-800">{successModalData.name}</strong>, your registration has been recorded.
+              </p>
+            </div>
+
+            <div className="p-4 rounded-2xl bg-slate-50 border border-slate-200 space-y-2">
+              <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400 block">
+                Permanent Registration Number
+              </span>
+              <div className="font-mono text-2xl font-black text-indigo-600 tracking-wider">
+                {successModalData.regNo}
+              </div>
+              <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-amber-50 border border-amber-200 text-amber-700 text-xs font-bold">
+                <Clock className="w-3.5 h-3.5" />
+                <span>Status: Pending Review</span>
+              </div>
+            </div>
+
+            <p className="text-xs text-slate-500 leading-relaxed">
+              Please save your <strong>Registration Number</strong>. The committee will verify your payment and grant your official invitation card pass.
+            </p>
+
+            <div className="grid grid-cols-2 gap-3 pt-2">
               <button
                 type="button"
                 onClick={() => {
-                  const reg = successModalData.regNo;
-                  setSuccessModalData(null);
-                  onGoToInvitation(reg);
+                  navigator.clipboard.writeText(successModalData.regNo);
+                  alert(`Copied ${successModalData.regNo} to clipboard!`);
                 }}
-                className={`w-full py-2.5 px-4 rounded-xl font-bold text-xs transition-all text-center flex items-center justify-center gap-1.5 cursor-pointer ${
-                  successModalData.gender === 'male'
-                    ? 'bg-[#38BDF8] text-slate-950 hover:bg-[#7dd3fc]'
-                    : successModalData.gender === 'female'
-                    ? 'bg-[#EC4899] text-white hover:bg-pink-600'
-                    : 'bg-[#5B5FEF] text-white hover:bg-[#4a4ed4]'
-                }`}
+                className="py-3 px-4 rounded-xl border border-slate-200 hover:bg-slate-50 text-slate-700 font-bold text-xs transition-colors flex items-center justify-center gap-1.5 cursor-pointer"
               >
-                <span>Check Card</span>
+                <Copy className="w-3.5 h-3.5 text-indigo-600" />
+                <span>Copy Reg No</span>
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  const regNo = successModalData.regNo;
+                  setSuccessModalData(null);
+                  onGoToInvitation(regNo);
+                }}
+                className="py-3 px-4 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs shadow-md shadow-indigo-200 transition-all flex items-center justify-center gap-1.5 cursor-pointer"
+              >
+                <span>Check Status</span>
                 <ArrowRight className="w-3.5 h-3.5" />
               </button>
             </div>

@@ -22,7 +22,7 @@ import badgeImage from '../assets/images/rd27_invitation_badge_1790159004807.jpg
 interface InvitationCardPageProps {
   invitations: InvitationRecord[];
   initialSearchRegNo?: string;
-  onNavigateToRegister: () => void;
+  onNavigateToRegister: (record?: InvitationRecord) => void;
   pdfSettings: PdfSettings;
   websiteSettings: WebsiteSettings;
 }
@@ -214,7 +214,7 @@ export const InvitationCardPage: React.FC<InvitationCardPageProps> = ({
                 We could not find any registration matching "{searchRegNo || searchName}". Please verify your registration number or submit a fresh registration form.
               </p>
               <button
-                onClick={onNavigateToRegister}
+                onClick={() => onNavigateToRegister()}
                 className="px-5 py-2.5 rounded-xl bg-[#5B5FEF] text-white text-xs font-bold shadow hover:bg-[#4d51d4] transition-colors inline-flex items-center gap-2 cursor-pointer"
               >
                 <span>Go to Registration</span>
@@ -317,7 +317,7 @@ export const InvitationCardPage: React.FC<InvitationCardPageProps> = ({
                   Questions? Inquire directly with the Committee Admin.
                 </span>
                 <button
-                  onClick={onNavigateToRegister}
+                  onClick={() => onNavigateToRegister(matchedRecord)}
                   className="px-5 py-2.5 rounded-xl bg-rose-600 text-white text-xs font-bold shadow-md hover:bg-rose-700 transition-all flex items-center gap-2 cursor-pointer"
                 >
                   <span>Register Again</span>
