@@ -1,11 +1,5 @@
 Title: Registration Start
-Description: Registration starts from October 10. Complete your enrollment early to guarantee your kit.
+Description: Registration starts from October 10. Complete your enrollment before time.
 
-Title: Jersey Distribution
-Description: Custom printed squad jerseys will be distributed before the event day.
-
-Title: Grand Gala Feast
-Description: Exclusive cultural festival, feast, live performances, and lifetime memories for Batch 27.
-
-Title: VIP Invitation Pass
-Description: Digital high-resolution entry card with secure barcode verification once approved.
+Title: Registration FEE
+Description: Only 200000$ in needed for your enrollment.
