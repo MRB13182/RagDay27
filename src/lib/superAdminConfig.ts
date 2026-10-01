@@ -73,26 +73,26 @@ const eventCardImagesGlob = import.meta.glob(
   { eager: true }
 );
 
-const maleJerseyGlob = import.meta.glob(
+const maleJerseyGlob = import.meta.glob([
+  '../super-admin/03. registration-settings/images/male-jersey/*',
   '../super-admin/03. registration-settings/images/male-jersey-design/*',
-  { eager: true }
-);
+], { eager: true });
 
-const femaleJerseyGlob = import.meta.glob(
+const femaleJerseyGlob = import.meta.glob([
+  '../super-admin/03. registration-settings/images/female-jersey/*',
   '../super-admin/03. registration-settings/images/female-jersey-design/*',
-  { eager: true }
-);
+], { eager: true });
 
-const jerseyBgGlob = import.meta.glob(
+const jerseyBgGlob = import.meta.glob([
+  '../super-admin/03. registration-settings/images/jersey-preview/*',
   '../super-admin/03. registration-settings/images/jersey-preview-background/*',
-  { eager: true }
-);
+], { eager: true });
 
 /**
  * Extracts first image URL from a Vite import.meta.glob record if present
  */
 function getFirstImageFromGlob(glob: Record<string, any>): string {
-  const keys = Object.keys(glob);
+  const keys = Object.keys(glob).sort();
   if (keys.length === 0) return '';
   const item = glob[keys[0]];
   if (typeof item === 'string') return item;
@@ -100,10 +100,12 @@ function getFirstImageFromGlob(glob: Record<string, any>): string {
 }
 
 /**
- * Extracts all image URLs from a Vite import.meta.glob record
+ * Extracts all image URLs from a Vite import.meta.glob record in sorted order
  */
 function getAllImagesFromGlob(glob: Record<string, any>): string[] {
-  return Object.values(glob).map(item => {
+  const sortedKeys = Object.keys(glob).sort();
+  return sortedKeys.map(key => {
+    const item = glob[key];
     if (typeof item === 'string') return item;
     return item?.default || '';
   }).filter(Boolean);

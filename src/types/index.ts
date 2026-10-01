@@ -65,6 +65,7 @@ export interface EventCard {
   customColor: string; // 'indigo' | 'cyan' | 'emerald' | 'amber' | 'rose' | 'purple' | 'blue'
   order: number;
   visible: boolean;
+  image?: string;
 }
 
 export interface WebsiteSettings {
