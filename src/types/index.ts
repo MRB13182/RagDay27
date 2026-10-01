@@ -140,10 +140,19 @@ export interface JerseyItem {
   badge2: string; // e.g. "100% Cotton & Mesh"
 }
 
+export interface JerseyDesignCard {
+  id: string;
+  title: string;
+  description: string;
+  image: string;
+  imageFilename?: string;
+}
+
 export interface JerseyShowcaseSettings {
   enabled: boolean;
   sectionOrder: SectionOrder; // 'showcase_first': Hero -> Jersey Showcase -> Event Cards -> Register; 'cards_first': Hero -> Event Cards -> Jersey Showcase -> Register
   jerseys: JerseyItem[];
+  designCards?: JerseyDesignCard[];
 }
 
 export type AdminFileCategory =

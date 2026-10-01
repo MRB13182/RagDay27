@@ -8,29 +8,42 @@ interface FooterProps {
   brandingSettings: BrandingSettings;
 }
 
+function sanitizeFooterHtml(raw: string): string {
+  if (!raw) return '';
+  return raw
+    .replace(/<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi, '')
+    .replace(/<iframe\b[^<]*(?:(?!<\/iframe>)<[^<]*)*<\/iframe>/gi, '')
+    .replace(/\son\w+="[^"]*"/gi, '')
+    .replace(/\son\w+='[^']*'/gi, '')
+    .replace(/javascript:/gi, '');
+}
+
 export const Footer: React.FC<FooterProps> = ({
   onOpenAdmin,
+  websiteSettings,
   brandingSettings,
 }) => {
+  const footerContent = websiteSettings?.footerText || '© 2027 Rag Day 27 Committee. All Rights Reserved.';
+
   return (
     <footer className="w-full mt-auto py-5 px-4 sm:px-6 lg:px-8 border-t border-slate-200/80 bg-white/80 backdrop-blur-md">
       <div className="max-w-7xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-3 sm:gap-4 text-xs font-medium text-slate-500">
-        {/* Left: © 2027 RD27 */}
-        <div className="flex items-center gap-2 font-semibold text-slate-700">
-          {brandingSettings.footerLogo && (
+        {/* Left: Branding Logo (if available) */}
+        <div className="flex items-center gap-2">
+          {brandingSettings?.footerLogo && (
             <img
               src={brandingSettings.footerLogo}
               alt="Footer Logo"
               className="w-5 h-5 rounded object-contain"
             />
           )}
-          <span>© 2027 RD27</span>
         </div>
 
-        {/* Center: All Rights Reserved. */}
-        <div className="text-center font-medium text-slate-500">
-          <span>All Rights Reserved.</span>
-        </div>
+        {/* Center: Dynamic Single Source of Truth Footer Text from footer-text.txt */}
+        <div
+          className="flex-1 text-center font-medium text-slate-600 leading-relaxed [&_a]:text-[#5B5FEF] [&_a]:font-semibold [&_a:hover]:underline [&_.footer-divider]:mx-1.5 [&_.footer-divider]:text-slate-400"
+          dangerouslySetInnerHTML={{ __html: sanitizeFooterHtml(footerContent) }}
+        />
 
         {/* Right: Glassmorphism Admin Icon */}
         <div className="flex items-center">

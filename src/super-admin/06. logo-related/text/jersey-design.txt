@@ -1,0 +1,4 @@
+Card:
+Title: Official Rag Day Jersey
+Description: Premium white jersey with custom Batch 27 print.
+Image: jersey-one.png

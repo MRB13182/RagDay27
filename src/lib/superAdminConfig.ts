@@ -14,7 +14,7 @@
  * No database content management. No image URLs in text files.
  */
 
-import type { EventCard } from '../types';
+import type { EventCard, JerseyDesignCard } from '../types';
 
 // ============================================================================
 // 1. RAW TEXT IMPORTS (Vite ?raw)
@@ -54,6 +54,9 @@ import popupMessageRaw from '../super-admin/05. important-notice/text/popup-mess
 import noticeContentRaw from '../super-admin/05. important-notice/text/notice-content.txt?raw';
 import closeButtonTextRaw from '../super-admin/05. important-notice/text/close-button-text.txt?raw';
 
+// 06. Logo Related & Jersey Design
+import jerseyDesignRaw from '../super-admin/06. logo-related/text/jersey-design.txt?raw';
+
 // ============================================================================
 // 2. IMAGE FOLDERS IMPORTS (Vite import.meta.glob)
 // ============================================================================
@@ -88,6 +91,37 @@ const jerseyBgGlob = import.meta.glob([
   '../super-admin/03. registration-settings/images/jersey-preview-background/*',
 ], { eager: true });
 
+// 06. Logo-Related Image Globs
+const logoRelatedWebsiteLogoGlob = import.meta.glob(
+  '../super-admin/06. logo-related/images/website-logo/*',
+  { eager: true }
+);
+
+const logoRelatedFaviconGlob = import.meta.glob(
+  '../super-admin/06. logo-related/images/favicon/*',
+  { eager: true }
+);
+
+const logoRelatedJerseyBackPreviewGlob = import.meta.glob(
+  '../super-admin/06. logo-related/images/jersey-back-preview/*',
+  { eager: true }
+);
+
+const logoRelatedMaleJerseyGlob = import.meta.glob(
+  '../super-admin/06. logo-related/images/male-jersey/*',
+  { eager: true }
+);
+
+const logoRelatedFemaleJerseyGlob = import.meta.glob(
+  '../super-admin/06. logo-related/images/female-jersey/*',
+  { eager: true }
+);
+
+const logoRelatedJerseyDesignGlob = import.meta.glob(
+  '../super-admin/06. logo-related/images/jersey-design/*',
+  { eager: true }
+);
+
 /**
  * Extracts first image URL from a Vite import.meta.glob record if present
  */
@@ -109,6 +143,23 @@ function getAllImagesFromGlob(glob: Record<string, any>): string[] {
     if (typeof item === 'string') return item;
     return item?.default || '';
   }).filter(Boolean);
+}
+
+/**
+ * Finds an image asset by matching its filename (case-insensitive basename)
+ * e.g. "jersey-one.png" -> matching imported module URL
+ */
+export function getAssetByFilename(glob: Record<string, any>, filename: string): string {
+  if (!filename || !filename.trim()) return '';
+  const target = filename.trim().toLowerCase();
+  for (const [path, mod] of Object.entries(glob)) {
+    const base = path.split('/').pop()?.toLowerCase();
+    if (base === target) {
+      if (typeof mod === 'string') return mod;
+      return (mod as any)?.default || '';
+    }
+  }
+  return '';
 }
 
 // ============================================================================
@@ -210,17 +261,101 @@ export function parseEventCardsContent(rawText: string): EventCard[] {
   return cards;
 }
 
+/**
+ * Parses jersey-design.txt into dynamic JerseyDesignCard items.
+ * Supports unlimited card creation in format:
+ * Card:
+ * Title: <Title>
+ * Description: <Description>
+ * Image: <filename.png>
+ */
+export function parseJerseyDesignContent(
+  rawText: string,
+  imageGlob: Record<string, any>
+): JerseyDesignCard[] {
+  if (!rawText || !rawText.trim()) return [];
+
+  const lines = rawText.split(/\r?\n/);
+  const cards: JerseyDesignCard[] = [];
+
+  let currentTitle = '';
+  let currentDescLines: string[] = [];
+  let currentImageFilename = '';
+  let cardCount = 0;
+  let inCardBlock = false;
+
+  const pushCurrentCard = () => {
+    if (inCardBlock && (currentTitle || currentDescLines.length > 0 || currentImageFilename)) {
+      cardCount++;
+      const resolvedImg = getAssetByFilename(imageGlob, currentImageFilename);
+      cards.push({
+        id: `jersey-design-card-${cardCount}`,
+        title: currentTitle || 'Official Rag Day Jersey',
+        description: currentDescLines.join(' ').trim(),
+        image: resolvedImg,
+        imageFilename: currentImageFilename,
+      });
+      currentTitle = '';
+      currentDescLines = [];
+      currentImageFilename = '';
+      inCardBlock = false;
+    }
+  };
+
+  for (const rawLine of lines) {
+    const line = rawLine.trim();
+    if (!line) continue;
+
+    // Check for "Card:" block marker
+    if (/^card[:]?$/i.test(line)) {
+      pushCurrentCard();
+      inCardBlock = true;
+      continue;
+    }
+
+    const titleMatch = line.match(/^title[:]\s*(.+)$/i);
+    const descMatch = line.match(/^description[:]\s*(.+)$/i);
+    const imageMatch = line.match(/^image[:]\s*(.+)$/i);
+
+    if (titleMatch) {
+      if (!inCardBlock) inCardBlock = true;
+      currentTitle = titleMatch[1].trim();
+    } else if (descMatch) {
+      if (!inCardBlock) inCardBlock = true;
+      currentDescLines.push(descMatch[1].trim());
+    } else if (imageMatch) {
+      if (!inCardBlock) inCardBlock = true;
+      currentImageFilename = imageMatch[1].trim();
+    } else if (inCardBlock && currentTitle) {
+      currentDescLines.push(line);
+    }
+  }
+
+  pushCurrentCard();
+  return cards;
+}
+
 // ============================================================================
 // 4. DERIVED CONFIGURATION OBJECTS
 // ============================================================================
+
+// 06. Logo Related & Jersey Design
+export const logoRelatedConfig = {
+  websiteLogo: getFirstImageFromGlob(logoRelatedWebsiteLogoGlob),
+  favicon: getFirstImageFromGlob(logoRelatedFaviconGlob),
+  registrationJerseyBackPreview: getFirstImageFromGlob(logoRelatedJerseyBackPreviewGlob),
+  maleJersey: getFirstImageFromGlob(logoRelatedMaleJerseyGlob),
+  femaleJersey: getFirstImageFromGlob(logoRelatedFemaleJerseyGlob),
+  jerseyDesignCards: parseJerseyDesignContent(jerseyDesignRaw, logoRelatedJerseyDesignGlob),
+};
 
 // 01. Website Identity
 export const websiteIdentityConfig = {
   websiteName: websiteNameRaw.trim() || 'Rag Day 27 (RD27)',
   websiteSubtitle: websiteSubtitleRaw.trim() || 'Annual Grand Farewell & Batch 27 Celebration',
   footerText: footerTextRaw.trim() || '© 2027 Rag Day 27 (RD27) Committee. All Rights Reserved. Crafted for Batch 27.',
-  websiteLogo: getFirstImageFromGlob(logoImagesGlob),
-  favicon: getFirstImageFromGlob(faviconImagesGlob),
+  websiteLogo: logoRelatedConfig.websiteLogo || getFirstImageFromGlob(logoImagesGlob),
+  favicon: logoRelatedConfig.favicon || getFirstImageFromGlob(faviconImagesGlob),
 };
 
 // 02. Event Settings
