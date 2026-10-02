@@ -97,7 +97,13 @@ export async function createRegistration(form: RegistrationFormData, existingReg
     };
 
     const result = existingRegNo || existingDbId
-      ? await supabase.rpc('resubmit_rejected_registration', { p_registration_id: existingDbId || '', ...payload })
+      ? await supabase.rpc('resubmit_rejected_registration', {
+          p_registration_id: existingDbId || '',
+          p_original_student_id: form.student_id.trim(),
+          p_original_full_name: form.full_name.trim(),
+          p_original_class_roll: form.class_roll.trim(),
+          ...payload,
+        })
       : await supabase.rpc('create_registration', payload);
 
     if (result.error) return { success:false, error:result.error, errorMessage:translateBackendError(result.error) };
