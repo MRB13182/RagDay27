@@ -49,94 +49,38 @@ export const InvitationCardPage: React.FC<InvitationCardPageProps> = ({
     }
   }, [initialSearchRegNo]);
 
-  const handleSearchWith = async (regNoVal: string, nameVal: string) => {
+  const handleSearchWith = async (regNoVal: string, _nameVal: string) => {
     const cleanedReg = regNoVal.trim().toUpperCase();
-    const cleanedName = nameVal.trim();
-
     setSearched(true);
     setSearchError(null);
 
-    if (!cleanedReg && !cleanedName) {
+    if (!cleanedReg) {
       setMatchedRecord(null);
       return;
     }
 
     setIsSearching(true);
     try {
-      // 1. If registration number is provided, query getPublicInvitation first (Approved only)
-      if (cleanedReg) {
-        const invRes = await getPublicInvitation(cleanedReg);
-        if (invRes.success && invRes.data) {
-          setMatchedRecord(invRes.data);
-          setIsSearching(false);
-          return;
-        }
+      const result = await getPublicInvitation(cleanedReg);
+      if (result.success && result.data) {
+        setMatchedRecord(result.data);
+      } else {
+        setMatchedRecord(null);
+        setSearchError(result.errorMessage || 'No registration found.');
       }
-
-      // 2. Query searchPublicStudent from backend (Returns status & rejection reason)
-      const searchRes = await searchPublicStudent(cleanedReg || cleanedName);
-      if (searchRes.success && searchRes.data && searchRes.data.length > 0) {
-        const first = searchRes.data[0];
-        let regNoStr = String(first.registration_no);
-        if (/^\d+$/.test(regNoStr)) {
-          regNoStr = `RD27-${regNoStr.padStart(3, '0')}`;
-        }
-        setMatchedRecord({
-          dbId: first.id,
-          registrationNo: regNoStr,
-          name: first.student_name || first.name || '',
-          roll: first.roll || '',
-          id: first.student_id || '',
-          group: first.group_name || '',
-          section: first.section_name || '',
-          status: first.status,
-          gender: (first.gender as any) || 'male',
-          photoUrl: first.student_photo || '',
-          jerseyName: first.jersey_name || '',
-          jerseyNumber: first.jersey_number || '27',
-          jerseySize: first.jersey_size || 'L',
-          rejectionReason: first.rejection_reason,
-        });
-        setIsSearching(false);
-        return;
-      }
-
-      // 3. Fallback to loaded invitations state
-      const found = invitations.find(item => {
-        const matchReg = cleanedReg ? item.registrationNo.toUpperCase() === cleanedReg : true;
-        const matchName = cleanedName
-          ? item.name.toLowerCase().includes(cleanedName.toLowerCase())
-          : true;
-        return matchReg && matchName;
-      });
-
-      setMatchedRecord(found || null);
-    } catch (err: any) {
-      console.warn('Search query error:', err);
-      const found = invitations.find(item => {
-        const matchReg = cleanedReg ? item.registrationNo.toUpperCase() === cleanedReg : true;
-        const matchName = cleanedName
-          ? item.name.toLowerCase().includes(cleanedName.toLowerCase())
-          : true;
-        return matchReg && matchName;
-      });
-      setMatchedRecord(found || null);
+    } catch (error: any) {
+      setMatchedRecord(null);
+      setSearchError(error?.message || 'Unable to verify registration.');
     } finally {
       setIsSearching(false);
     }
   };
 
-  const handleSearch = (e: React.FormEvent) => {
-    e.preventDefault();
-    handleSearchWith(searchRegNo, searchName);
-  };
-
   const handleDownloadPDF = () => {
     if (!matchedRecord || matchedRecord.status !== 'approved') return;
+    generateInvitationCardPDF(matchedRecord, pdfSettings, websiteSettings);
     setDownloadToast(true);
     setTimeout(() => setDownloadToast(false), 3500);
-
-    generateInvitationCardPDF(matchedRecord, pdfSettings, websiteSettings);
   };
 
   return (
@@ -242,25 +186,25 @@ export const InvitationCardPage: React.FC<InvitationCardPageProps> = ({
                 </div>
 
                 <div className="px-4 py-2 rounded-xl bg-amber-200/80 text-amber-900 text-xs font-bold tracking-wider font-mono">
-                  {matchedRecord.registrationNo}
+                  {matchedRecord.registration_no}
                 </div>
               </div>
 
               <div className="py-5 grid grid-cols-1 sm:grid-cols-3 gap-4 text-xs">
                 <div className="p-3.5 rounded-xl bg-white/80 border border-amber-200">
                   <span className="text-slate-500 font-semibold uppercase block">Applicant</span>
-                  <span className="text-sm font-bold text-slate-900 mt-0.5 block">{matchedRecord.name}</span>
+                  <span className="text-sm font-bold text-slate-900 mt-0.5 block">{matchedRecord.full_name}</span>
                 </div>
                 <div className="p-3.5 rounded-xl bg-white/80 border border-amber-200">
                   <span className="text-slate-500 font-semibold uppercase block">Roll & Student ID</span>
                   <span className="text-sm font-bold text-slate-900 mt-0.5 block">
-                    Roll {matchedRecord.roll} · {matchedRecord.id}
+                    Roll {matchedRecord.class_roll} · {matchedRecord.id}
                   </span>
                 </div>
                 <div className="p-3.5 rounded-xl bg-white/80 border border-amber-200">
                   <span className="text-slate-500 font-semibold uppercase block">Custom Jersey Order</span>
                   <span className="text-sm font-bold text-slate-900 mt-0.5 block">
-                    {matchedRecord.jerseyName} #{matchedRecord.jerseyNumber} ({matchedRecord.jerseySize})
+                    {matchedRecord.jersey_back_name} #{matchedRecord.jersey_number} ({matchedRecord.jersey_size})
                   </span>
                 </div>
               </div>
@@ -293,7 +237,7 @@ export const InvitationCardPage: React.FC<InvitationCardPageProps> = ({
                 </div>
 
                 <div className="px-4 py-2 rounded-xl bg-rose-200/80 text-rose-900 text-xs font-bold tracking-wider font-mono">
-                  {matchedRecord.registrationNo}
+                  {matchedRecord.registration_no}
                 </div>
               </div>
 
@@ -304,7 +248,7 @@ export const InvitationCardPage: React.FC<InvitationCardPageProps> = ({
                     Reason:
                   </div>
                   <div className="text-sm font-extrabold text-slate-900">
-                    {matchedRecord.rejectionReason || 'Invalid Transaction ID or Payment Not Received.'}
+                    {matchedRecord.reject_reason || 'Invalid Transaction ID or Payment Not Received.'}
                   </div>
                   <p className="text-xs text-slate-600 mt-1 leading-relaxed">
                     The transaction reference could not be validated with the accounts desk. Please review your mobile banking SMS and register again with the genuine transaction ID.
@@ -397,30 +341,30 @@ export const InvitationCardPage: React.FC<InvitationCardPageProps> = ({
 
                     {/* Student Identity */}
                     <div className="flex items-center gap-4 p-4 rounded-2xl bg-white/5 border border-white/10 backdrop-blur-md">
-                      {matchedRecord.photoUrl ? (
+                      {matchedRecord.student_photo ? (
                         <img
-                          src={matchedRecord.photoUrl}
-                          alt={matchedRecord.name}
+                          src={matchedRecord.student_photo}
+                          alt={matchedRecord.full_name}
                           className="w-16 h-16 rounded-xl object-cover border-2 border-white/20 shadow-md"
                         />
                       ) : (
                         <div className="w-16 h-16 rounded-xl bg-gradient-to-br from-[#5B5FEF] to-[#7A6CFF] flex items-center justify-center text-xl font-bold font-display shadow-md">
-                          {matchedRecord.name.charAt(0)}
+                          {matchedRecord.full_name.charAt(0)}
                         </div>
                       )}
                       <div>
                         <div className="text-xl font-extrabold text-white tracking-wide">
-                          {matchedRecord.name}
+                          {matchedRecord.full_name}
                         </div>
                         <div className="text-xs text-slate-300 mt-0.5 flex flex-wrap items-center gap-2">
                           <span className="font-mono bg-white/10 px-2 py-0.5 rounded text-[11px]">
-                            Roll: {matchedRecord.roll}
+                            Roll: {matchedRecord.class_roll}
                           </span>
                           <span className="font-mono bg-white/10 px-2 py-0.5 rounded text-[11px]">
                             ID: {matchedRecord.id}
                           </span>
                           <span className="text-[#00D4FF] font-medium">
-                            {matchedRecord.group} (Sec {matchedRecord.section})
+                            {matchedRecord.academic_group} (Sec {matchedRecord.academic_section})
                           </span>
                         </div>
                       </div>
@@ -433,7 +377,7 @@ export const InvitationCardPage: React.FC<InvitationCardPageProps> = ({
                           Jersey Back
                         </span>
                         <span className="font-display font-bold text-white tracking-wide">
-                          {matchedRecord.jerseyName}
+                          {matchedRecord.jersey_back_name}
                         </span>
                       </div>
 
@@ -442,7 +386,7 @@ export const InvitationCardPage: React.FC<InvitationCardPageProps> = ({
                           Squad # & Size
                         </span>
                         <span className="font-mono font-bold text-[#00D4FF]">
-                          #{matchedRecord.jerseyNumber} · {matchedRecord.jerseySize}
+                          #{matchedRecord.jersey_number} · {matchedRecord.jersey_size}
                         </span>
                       </div>
 
@@ -491,7 +435,7 @@ export const InvitationCardPage: React.FC<InvitationCardPageProps> = ({
                     </div>
 
                     <div className="font-mono text-xs font-bold text-[#00D4FF] tracking-wider mb-1">
-                      {matchedRecord.registrationNo}
+                      {matchedRecord.registration_no}
                     </div>
 
                     <div className="text-[10px] text-slate-400 leading-tight">
