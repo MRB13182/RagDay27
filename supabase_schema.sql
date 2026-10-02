@@ -6,3 +6,6 @@
 -- No site_content table is required by the normal workflow.
 --
 -- See admins.sql and registrations.sql for the canonical table contracts.
+--
+-- Passcode-only admin authorization is implemented in Supabase project-level
+-- database functions/private storage; raw passcodes are never committed here.
