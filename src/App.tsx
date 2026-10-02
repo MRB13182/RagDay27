@@ -26,7 +26,6 @@ import type {
   JerseyShowcaseSettings,
 } from './types';
 
-import { supabase } from './lib/supabase';
 import { ArrowRight, Bell, CheckCircle2, AlertCircle, Info, X, ShieldAlert, Ticket } from 'lucide-react';
 
 export default function App() {
