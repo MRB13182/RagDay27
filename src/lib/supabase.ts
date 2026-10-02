@@ -344,14 +344,11 @@ export type AdminRole = 'male_admin' | 'female_admin';
 
 const ADMIN_ROLE_STORAGE_KEY = 'admin_role';
 
-const ENV_MALE_ADMIN_PASSCODE =
-  typeof import.meta !== 'undefined'
-    ? String(import.meta.env?.VITE_MALE_ADMIN_PASSCODE || '').trim()
-    : '';
-const ENV_FEMALE_ADMIN_PASSCODE =
-  typeof import.meta !== 'undefined'
-    ? String(import.meta.env?.VITE_FEMALE_ADMIN_PASSCODE || '').trim()
-    : '';
+const ADMIN_PASSCODE_RPC = 'verify_admin_passcode';
+
+export type AdminRole = 'male_admin' | 'female_admin';
+const ADMIN_ROLE_STORAGE_KEY = 'admin_role';
+const ADMIN_PASSCODE_STORAGE_KEY = 'admin_passcode_session';
 
 function adminProfileForRole(role: AdminRole): AdminProfile {
   const now = new Date().toISOString();
@@ -375,24 +372,38 @@ export function getStoredAdminRole(): AdminRole | null {
   }
 }
 
+export function getStoredAdminPasscode(): string | null {
+  try {
+    return localStorage.getItem(ADMIN_PASSCODE_STORAGE_KEY);
+  } catch {
+    return null;
+  }
+}
+
 export async function signInAdmin(passcode: string): Promise<AdminProfile> {
   const cleanPasscode = passcode.trim();
   if (!cleanPasscode) throw new Error('Admin Passcode is required.');
 
-  if (cleanPasscode === ENV_MALE_ADMIN_PASSCODE && ENV_MALE_ADMIN_PASSCODE) {
-    localStorage.setItem(ADMIN_ROLE_STORAGE_KEY, 'male_admin');
-    return adminProfileForRole('male_admin');
+  const { data, error } = await supabase.rpc(ADMIN_PASSCODE_RPC, {
+    p_passcode: cleanPasscode,
+  });
+  if (error) throw new Error('Invalid Admin Passcode');
+  const role = (data as any)?.role;
+  if (role !== 'male_admin' && role !== 'female_admin') {
+    throw new Error('Invalid Admin Passcode');
   }
 
-  if (cleanPasscode === ENV_FEMALE_ADMIN_PASSCODE && ENV_FEMALE_ADMIN_PASSCODE) {
-    localStorage.setItem(ADMIN_ROLE_STORAGE_KEY, 'female_admin');
-    return adminProfileForRole('female_admin');
+  try {
+    localStorage.setItem(ADMIN_ROLE_STORAGE_KEY, role);
+    localStorage.setItem(ADMIN_PASSCODE_STORAGE_KEY, cleanPasscode);
+  } catch {
+    throw new Error('Unable to establish admin session on this browser.');
   }
-
-  throw new Error('Invalid Admin Passcode');
+  return adminProfileForRole(role);
 }
 
 export async function signOutAdmin(): Promise<void> {
   localStorage.removeItem(ADMIN_ROLE_STORAGE_KEY);
+  localStorage.removeItem(ADMIN_PASSCODE_STORAGE_KEY);
 }
 
