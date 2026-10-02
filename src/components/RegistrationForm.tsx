@@ -78,21 +78,20 @@ export const RegistrationForm: React.FC<RegistrationFormProps> = ({
 
   const [formData, setFormData] = useState<RegistrationFormData>({
     gender: 'choose_one',
-    name: '',
-    roll: '',
-    id: '',
-    group: '',
-    section: '',
-    contactNumber: '',
-    photoUrl: null,
-    amount: activeFee,
-    paymentMethod: paymentSettings?.bkashEnabled ? 'bkash' : 'nagad',
-    senderNumber: '',
-    paymentTime: '',
-    transactionId: '',
-    jerseyName: 'STRIKER',
-    jerseyNumber: '27',
-    jerseySize: 'L',
+    full_name: '',
+    class_roll: '',
+    student_id: '',
+    contact_mobile_number: '',
+    academic_group: '',
+    academic_section: '',
+    student_photo: null,
+    send_method: paymentSettings?.bkashEnabled ? 'bkash' : 'nagad',
+    sender_mobile_no: '',
+    payment_time: '',
+    transaction_id: '',
+    jersey_back_name: 'STRIKER',
+    jersey_number: '27',
+    jersey_size: 'L',
   });
 
   // Re-submission / editing state for rejected registrations
@@ -135,26 +134,25 @@ export const RegistrationForm: React.FC<RegistrationFormProps> = ({
     if (initialRecord) {
       setFormData({
         gender: initialRecord.gender || 'male',
-        name: initialRecord.name || '',
-        roll: initialRecord.roll || '',
-        id: initialRecord.id || '',
-        group: initialRecord.group || '',
-        section: initialRecord.section || '',
-        contactNumber: initialRecord.contactNumber || initialRecord.senderNumber || '',
-        photoUrl: initialRecord.photoUrl || null,
-        amount: initialRecord.amount ?? activeFee,
-        paymentMethod: initialRecord.paymentMethod || 'bkash',
-        senderNumber: initialRecord.senderNumber || initialRecord.contactNumber || '',
-        paymentTime: initialRecord.paymentTime || '',
-        transactionId: initialRecord.transactionId || '',
-        jerseyName: initialRecord.jerseyName || 'STRIKER',
-        jerseyNumber: initialRecord.jerseyNumber || '27',
-        jerseySize: (initialRecord.jerseySize as JerseySize) || 'L',
+        full_name: initialRecord.full_name || '',
+        class_roll: initialRecord.class_roll || '',
+        student_id: initialRecord.student_id || '',
+        contact_mobile_number: initialRecord.contact_mobile_number || initialRecord.sender_mobile_no || '',
+        academic_group: initialRecord.academic_group || '',
+        academic_section: initialRecord.academic_section || '',
+        student_photo: initialRecord.student_photo || null,
+        send_method: initialRecord.send_method || 'bkash',
+        sender_mobile_no: initialRecord.sender_mobile_no || initialRecord.contact_mobile_number || '',
+        payment_time: initialRecord.payment_time || '',
+        transaction_id: initialRecord.transaction_id || '',
+        jersey_back_name: initialRecord.jersey_back_name || 'STRIKER',
+        jersey_number: initialRecord.jersey_number || '27',
+        jersey_size: (initialRecord.jersey_size as JerseySize) || 'L',
       });
-      setEditingRegNo(initialRecord.registrationNo);
-      setEditingDbId(initialRecord.dbId || null);
+      setEditingRegNo(initialRecord.registration_no);
+      setEditingDbId(initialRecord.dbId || initialRecord.id || null);
     }
-  }, [initialRecord, activeFee]);
+  }, [initialRecord]);
 
   // Keep fee in sync
   useEffect(() => {
@@ -217,13 +215,13 @@ export const RegistrationForm: React.FC<RegistrationFormProps> = ({
     setFormData(prev => ({
       ...prev,
       gender: selectedGender,
-      section: '', // Reset section when gender changes
-      jerseyName:
-        prev.jerseyName === 'STRIKER' || prev.jerseyName === 'HUNTER' || prev.jerseyName === 'NOVA'
+      academic_section: '', // Reset section when gender changes
+      jersey_back_name:
+        prev.jersey_back_name === 'STRIKER' || prev.jersey_back_name === 'HUNTER' || prev.jersey_back_name === 'NOVA'
           ? selectedGender === 'male'
             ? 'HUNTER'
             : 'NOVA'
-          : prev.jerseyName,
+          : prev.jersey_back_name,
     }));
     if (formErrors.gender) {
       setFormErrors(prev => ({ ...prev, gender: '' }));
@@ -234,29 +232,29 @@ export const RegistrationForm: React.FC<RegistrationFormProps> = ({
     const val = e.target.value;
     setFormData(prev => ({
       ...prev,
-      group: val,
-      section: '', // Reset section when group changes
+      academic_group: val,
+      academic_section: '', // Reset section when group changes
     }));
-    if (formErrors.group) {
-      setFormErrors(prev => ({ ...prev, group: '' }));
+    if (formErrors.academic_group) {
+      setFormErrors(prev => ({ ...prev, academic_group: '' }));
     }
   };
 
-  const availableSections = getAvailableSections(formData.gender, formData.group);
+  const availableSections = getAvailableSections(formData.gender, formData.academic_group);
 
   // Perform Duplicate Detection Check
   const runDuplicateCheck = async (): Promise<boolean> => {
     // If user is currently editing their own rejected registration, bypass duplicate check for their own regNo
     const match = await checkDuplicateRegistration(
-      formData.id,
-      formData.name,
-      formData.roll,
+      formData.student_id,
+      formData.full_name,
+      formData.class_roll,
       existingRegistrations
     );
 
     if (match) {
       // If the match is the exact record being edited, allow continue
-      if (editingRegNo && match.registrationNo === editingRegNo) {
+      if (editingRegNo && match.registration_no === editingRegNo) {
         return false;
       }
 
@@ -281,28 +279,28 @@ export const RegistrationForm: React.FC<RegistrationFormProps> = ({
     const errors: { [key: string]: string } = {};
 
     if (!isGenderChosen) errors.gender = 'Please select your gender (Male / Female).';
-    if (!formData.name.trim()) errors.name = 'Full name is required.';
-    if (!formData.roll.trim()) errors.roll = 'Roll number is required.';
-    if (!formData.id.trim()) errors.id = 'Student ID is required.';
-    if (!formData.contactNumber.trim()) errors.contactNumber = 'Contact number is required.';
-    if (!formData.group.trim()) errors.group = 'Please select your academic group.';
-    if (!formData.section.trim()) errors.section = 'Please select your section.';
+    if (!formData.full_name.trim()) errors.full_name = 'Full name is required.';
+    if (!formData.class_roll.trim()) errors.class_roll = 'Roll number is required.';
+    if (!formData.student_id.trim()) errors.student_id = 'Student ID is required.';
+    if (!formData.contact_mobile_number.trim()) errors.contact_mobile_number = 'Contact number is required.';
+    if (!formData.academic_group.trim()) errors.academic_group = 'Please select your academic group.';
+    if (!formData.academic_section.trim()) errors.academic_section = 'Please select your section.';
+
+    // Send Method & Payment Validation
+    if (!formData.sender_mobile_no.trim()) errors.sender_mobile_no = 'Sender payment number is required.';
+    if (!formData.payment_time.trim()) errors.payment_time = 'Payment time is required.';
 
     // Jersey Validation
-    if (!formData.jerseyName.trim()) errors.jerseyName = 'Jersey name is required.';
-    if (formData.jerseyName.trim().length > 14) {
-      errors.jerseyName = 'Jersey name must be 14 characters or less.';
+    if (!formData.jersey_back_name.trim()) errors.jersey_back_name = 'Jersey name is required.';
+    if (formData.jersey_back_name.trim().length > 14) {
+      errors.jersey_back_name = 'Jersey name must be 14 characters or less.';
     }
-    const jerseyNumStr = formData.jerseyNumber.trim();
+    const jerseyNumStr = formData.jersey_number.trim();
     if (!jerseyNumStr) {
-      errors.jerseyNumber = 'Jersey number is required.';
+      errors.jersey_number = 'Jersey number is required.';
     } else if (!/^\d{1,2}$/.test(jerseyNumStr)) {
-      errors.jerseyNumber = 'Jersey number must be 00–99.';
+      errors.jersey_number = 'Jersey number must be 00–99.';
     }
-
-    // Payment Validation (Required: Sender Number & Payment Time; Transaction ID is optional)
-    if (!formData.senderNumber.trim()) errors.senderNumber = 'Sender payment number is required.';
-    if (!formData.paymentTime.trim()) errors.paymentTime = 'Payment time is required.';
 
     // Declaration Checkbox Validation
     if (!declarationChecked) {
@@ -341,9 +339,9 @@ export const RegistrationForm: React.FC<RegistrationFormProps> = ({
 
       // 4. Photo upload if file exists
       let photoStoragePath: string | null = null;
-      let displayPhotoUrl = formData.photoUrl || '';
+      let displayPhotoUrl = formData.student_photo || '';
       if (formData.photoFile) {
-        const uploadRes = await uploadStudentPhoto(formData.photoFile, formData.roll.trim());
+        const uploadRes = await uploadStudentPhoto(formData.photoFile, formData.class_roll.trim());
         if (uploadRes.success) {
           photoStoragePath = uploadRes.storagePath;
           displayPhotoUrl = uploadRes.publicUrl;
@@ -354,7 +352,7 @@ export const RegistrationForm: React.FC<RegistrationFormProps> = ({
       const result = await createRegistration(
         {
           ...formData,
-          photoUrl: photoStoragePath || displayPhotoUrl || null,
+          student_photo: photoStoragePath || displayPhotoUrl || null,
         },
         editingRegNo || undefined,
         editingDbId || undefined
@@ -373,8 +371,8 @@ export const RegistrationForm: React.FC<RegistrationFormProps> = ({
 
       // Open Success Modal
       setSuccessModalData({
-        name: confirmedRecord.name,
-        regNo: confirmedRecord.registrationNo,
+        name: confirmedRecord.full_name,
+        regNo: confirmedRecord.registration_no,
         gender: confirmedRecord.gender,
       });
 
@@ -393,24 +391,23 @@ export const RegistrationForm: React.FC<RegistrationFormProps> = ({
   const handleContinueRejectedRegistration = (record: InvitationRecord) => {
     setFormData({
       gender: record.gender || 'male',
-      name: record.name || '',
-      roll: record.roll || '',
-      id: record.id || '',
-      group: record.group || '',
-      section: record.section || '',
-      contactNumber: record.contactNumber || record.senderNumber || '',
-      photoUrl: record.photoUrl || null,
-      amount: record.amount ?? activeFee,
-      paymentMethod: record.paymentMethod || 'bkash',
-      senderNumber: record.senderNumber || record.contactNumber || '',
-      paymentTime: record.paymentTime || '',
-      transactionId: record.transactionId || '',
-      jerseyName: record.jerseyName || 'STRIKER',
-      jerseyNumber: record.jerseyNumber || '27',
-      jerseySize: (record.jerseySize as JerseySize) || 'L',
+      full_name: record.full_name || '',
+      class_roll: record.class_roll || '',
+      student_id: record.student_id || '',
+      contact_mobile_number: record.contact_mobile_number || record.sender_mobile_no || '',
+      academic_group: record.academic_group || '',
+      academic_section: record.academic_section || '',
+      student_photo: record.student_photo || null,
+      send_method: record.send_method || 'bkash',
+      sender_mobile_no: record.sender_mobile_no || record.contact_mobile_number || '',
+      payment_time: record.payment_time || '',
+      transaction_id: record.transaction_id || '',
+      jersey_back_name: record.jersey_back_name || 'STRIKER',
+      jersey_number: record.jersey_number || '27',
+      jersey_size: (record.jersey_size as JerseySize) || 'L',
     });
-    setEditingRegNo(record.registrationNo);
-    setEditingDbId(record.dbId || null);
+    setEditingRegNo(record.registration_no);
+    setEditingDbId(record.dbId || record.id || null);
     setDuplicateModal(null);
   };
 
@@ -599,7 +596,7 @@ export const RegistrationForm: React.FC<RegistrationFormProps> = ({
                 </div>
 
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                  {/* Full Name */}
+                  {/* 1. Full Name */}
                   <div className="sm:col-span-2">
                     <label className={`block text-xs font-bold uppercase tracking-wider mb-1.5 ${labelClasses}`}>
                       Full Name <span className="text-rose-500">*</span>
@@ -607,19 +604,19 @@ export const RegistrationForm: React.FC<RegistrationFormProps> = ({
                     <input
                       type="text"
                       placeholder="e.g. John Doe"
-                      value={formData.name}
+                      value={formData.full_name}
                       onChange={e => {
-                        setFormData({ ...formData, name: e.target.value });
-                        if (formErrors.name) setFormErrors(prev => ({ ...prev, name: '' }));
+                        setFormData({ ...formData, full_name: e.target.value });
+                        if (formErrors.full_name) setFormErrors(prev => ({ ...prev, full_name: '' }));
                       }}
                       className={`w-full px-4 py-3 rounded-xl text-sm font-medium transition-colors outline-none ${inputClasses}`}
                     />
-                    {formErrors.name && (
-                      <p className="text-rose-500 text-xs mt-1 font-semibold">{formErrors.name}</p>
+                    {formErrors.full_name && (
+                      <p className="text-rose-500 text-xs mt-1 font-semibold">{formErrors.full_name}</p>
                     )}
                   </div>
 
-                  {/* Student Roll */}
+                  {/* 2. Class Roll */}
                   <div>
                     <label className={`block text-xs font-bold uppercase tracking-wider mb-1.5 ${labelClasses}`}>
                       Class Roll <span className="text-rose-500">*</span>
@@ -627,19 +624,19 @@ export const RegistrationForm: React.FC<RegistrationFormProps> = ({
                     <input
                       type="text"
                       placeholder="e.g. 101"
-                      value={formData.roll}
+                      value={formData.class_roll}
                       onChange={e => {
-                        setFormData({ ...formData, roll: e.target.value });
-                        if (formErrors.roll) setFormErrors(prev => ({ ...prev, roll: '' }));
+                        setFormData({ ...formData, class_roll: e.target.value });
+                        if (formErrors.class_roll) setFormErrors(prev => ({ ...prev, class_roll: '' }));
                       }}
                       className={`w-full px-4 py-3 rounded-xl text-sm font-medium transition-colors outline-none ${inputClasses}`}
                     />
-                    {formErrors.roll && (
-                      <p className="text-rose-500 text-xs mt-1 font-semibold">{formErrors.roll}</p>
+                    {formErrors.class_roll && (
+                      <p className="text-rose-500 text-xs mt-1 font-semibold">{formErrors.class_roll}</p>
                     )}
                   </div>
 
-                  {/* Student ID */}
+                  {/* 3. Student ID */}
                   <div>
                     <label className={`block text-xs font-bold uppercase tracking-wider mb-1.5 ${labelClasses}`}>
                       Student ID <span className="text-rose-500">*</span>
@@ -647,19 +644,19 @@ export const RegistrationForm: React.FC<RegistrationFormProps> = ({
                     <input
                       type="text"
                       placeholder="e.g. 270101"
-                      value={formData.id}
+                      value={formData.student_id}
                       onChange={e => {
-                        setFormData({ ...formData, id: e.target.value });
-                        if (formErrors.id) setFormErrors(prev => ({ ...prev, id: '' }));
+                        setFormData({ ...formData, student_id: e.target.value });
+                        if (formErrors.student_id) setFormErrors(prev => ({ ...prev, student_id: '' }));
                       }}
                       className={`w-full px-4 py-3 rounded-xl text-sm font-medium transition-colors outline-none ${inputClasses}`}
                     />
-                    {formErrors.id && (
-                      <p className="text-rose-500 text-xs mt-1 font-semibold">{formErrors.id}</p>
+                    {formErrors.student_id && (
+                      <p className="text-rose-500 text-xs mt-1 font-semibold">{formErrors.student_id}</p>
                     )}
                   </div>
 
-                  {/* Contact Number */}
+                  {/* 4. Contact Mobile Number */}
                   <div className="sm:col-span-2">
                     <label className={`block text-xs font-bold uppercase tracking-wider mb-1.5 ${labelClasses}`}>
                       Contact Mobile Number <span className="text-rose-500">*</span>
@@ -667,25 +664,25 @@ export const RegistrationForm: React.FC<RegistrationFormProps> = ({
                     <input
                       type="tel"
                       placeholder="e.g. 01712-345678"
-                      value={formData.contactNumber}
+                      value={formData.contact_mobile_number}
                       onChange={e => {
-                        setFormData({ ...formData, contactNumber: e.target.value });
-                        if (formErrors.contactNumber) setFormErrors(prev => ({ ...prev, contactNumber: '' }));
+                        setFormData({ ...formData, contact_mobile_number: e.target.value });
+                        if (formErrors.contact_mobile_number) setFormErrors(prev => ({ ...prev, contact_mobile_number: '' }));
                       }}
                       className={`w-full px-4 py-3 rounded-xl text-sm font-medium transition-colors outline-none ${inputClasses}`}
                     />
-                    {formErrors.contactNumber && (
-                      <p className="text-rose-500 text-xs mt-1 font-semibold">{formErrors.contactNumber}</p>
+                    {formErrors.contact_mobile_number && (
+                      <p className="text-rose-500 text-xs mt-1 font-semibold">{formErrors.contact_mobile_number}</p>
                     )}
                   </div>
 
-                  {/* Group Selector */}
+                  {/* 5. Academic Group */}
                   <div>
                     <label className={`block text-xs font-bold uppercase tracking-wider mb-1.5 ${labelClasses}`}>
                       Academic Group <span className="text-rose-500">*</span>
                     </label>
                     <select
-                      value={formData.group}
+                      value={formData.academic_group}
                       onChange={handleGroupSelect}
                       className={`w-full px-4 py-3 rounded-xl text-sm font-medium transition-colors outline-none cursor-pointer ${inputClasses}`}
                     >
@@ -702,27 +699,27 @@ export const RegistrationForm: React.FC<RegistrationFormProps> = ({
                         Humanities
                       </option>
                     </select>
-                    {formErrors.group && (
-                      <p className="text-rose-500 text-xs mt-1 font-semibold">{formErrors.group}</p>
+                    {formErrors.academic_group && (
+                      <p className="text-rose-500 text-xs mt-1 font-semibold">{formErrors.academic_group}</p>
                     )}
                   </div>
 
-                  {/* Section Selector (Unlocked only when Group is chosen) */}
+                  {/* 6. Academic Section */}
                   <div>
                     <label className={`block text-xs font-bold uppercase tracking-wider mb-1.5 ${labelClasses}`}>
                       Academic Section <span className="text-rose-500">*</span>
                     </label>
                     <select
-                      disabled={!formData.group}
-                      value={formData.section}
+                      disabled={!formData.academic_group}
+                      value={formData.academic_section}
                       onChange={e => {
-                        setFormData({ ...formData, section: e.target.value });
-                        if (formErrors.section) setFormErrors(prev => ({ ...prev, section: '' }));
+                        setFormData({ ...formData, academic_section: e.target.value });
+                        if (formErrors.academic_section) setFormErrors(prev => ({ ...prev, academic_section: '' }));
                       }}
                       className={`w-full px-4 py-3 rounded-xl text-sm font-medium transition-colors outline-none cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed ${inputClasses}`}
                     >
                       <option value="" className={isMale ? 'bg-slate-900 text-white' : 'bg-white text-slate-900'}>
-                        {formData.group ? 'Choose Section...' : 'Select Group First'}
+                        {formData.academic_group ? 'Choose Section...' : 'Select Group First'}
                       </option>
                       {availableSections.map(sec => (
                         <option
@@ -734,22 +731,23 @@ export const RegistrationForm: React.FC<RegistrationFormProps> = ({
                         </option>
                       ))}
                     </select>
-                    {formErrors.section && (
-                      <p className="text-rose-500 text-xs mt-1 font-semibold">{formErrors.section}</p>
+                    {formErrors.academic_section && (
+                      <p className="text-rose-500 text-xs mt-1 font-semibold">{formErrors.academic_section}</p>
                     )}
                   </div>
 
-                  {/* Student Photo Upload (Optional, Max 3MB) */}
+                  {/* 7. Student Photo Upload (Optional, Max 3MB) */}
                   <div className="sm:col-span-2 pt-1">
                     <PhotoUploadField
-                      photoUrl={formData.photoUrl}
+                      student_photo={formData.student_photo}
+                      photoUrl={formData.student_photo}
                       gender={formData.gender}
                       labelClasses={labelClasses}
-                      onPhotoSelected={({ photoUrl, photoFile, photoBlob }) => {
-                        setFormData(prev => ({ ...prev, photoUrl, photoFile, photoBlob }));
+                      onPhotoSelected={({ student_photo, photoFile, photoBlob }) => {
+                        setFormData(prev => ({ ...prev, student_photo, photoFile, photoBlob }));
                       }}
                       onPhotoRemoved={() => {
-                        setFormData(prev => ({ ...prev, photoUrl: null, photoFile: null, photoBlob: null }));
+                        setFormData(prev => ({ ...prev, student_photo: null, photoFile: null, photoBlob: null }));
                       }}
                     />
                   </div>
@@ -797,7 +795,10 @@ export const RegistrationForm: React.FC<RegistrationFormProps> = ({
                       </div>
                       <button
                         type="button"
-                        onClick={() => handleCopyAccount(activeBkashNumber.replace(/\D/g, '') || activeBkashNumber, 'bkash')}
+                        onClick={() => {
+                          handleCopyAccount(activeBkashNumber.replace(/\D/g, '') || activeBkashNumber, 'bkash');
+                          setFormData(prev => ({ ...prev, send_method: 'bkash' }));
+                        }}
                         className="px-2.5 py-1.5 rounded-lg text-xs font-bold bg-slate-100 hover:bg-slate-200 text-slate-700 transition-colors flex items-center gap-1 cursor-pointer"
                       >
                         {copiedAccount === 'bkash' ? <Check className="w-3.5 h-3.5 text-emerald-600" /> : <Copy className="w-3.5 h-3.5" />}
@@ -818,7 +819,10 @@ export const RegistrationForm: React.FC<RegistrationFormProps> = ({
                       </div>
                       <button
                         type="button"
-                        onClick={() => handleCopyAccount(activeNagadNumber.replace(/\D/g, '') || activeNagadNumber, 'nagad')}
+                        onClick={() => {
+                          handleCopyAccount(activeNagadNumber.replace(/\D/g, '') || activeNagadNumber, 'nagad');
+                          setFormData(prev => ({ ...prev, send_method: 'nagad' }));
+                        }}
                         className="px-2.5 py-1.5 rounded-lg text-xs font-bold bg-slate-100 hover:bg-slate-200 text-slate-700 transition-colors flex items-center gap-1 cursor-pointer"
                       >
                         {copiedAccount === 'nagad' ? <Check className="w-3.5 h-3.5 text-emerald-600" /> : <Copy className="w-3.5 h-3.5" />}
@@ -827,9 +831,28 @@ export const RegistrationForm: React.FC<RegistrationFormProps> = ({
                     </div>
                   </div>
 
-                  {/* Payment Inputs */}
-                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 pt-2">
-                    {/* Sender Number (Required) */}
+                  {/* Payment Inputs: 8. Send Method, 9. Sender Mobile No, 10. Payment Time, 11. Transaction ID */}
+                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 pt-2">
+                    {/* 8. Send Method */}
+                    <div>
+                      <label className={`block text-xs font-bold uppercase tracking-wider mb-1.5 ${labelClasses}`}>
+                        Send Method <span className="text-rose-500">*</span>
+                      </label>
+                      <select
+                        value={formData.send_method}
+                        onChange={e => setFormData({ ...formData, send_method: e.target.value as 'bkash' | 'nagad' })}
+                        className={`w-full px-4 py-3 rounded-xl text-sm font-semibold transition-colors outline-none cursor-pointer ${inputClasses}`}
+                      >
+                        <option value="bkash" className={isMale ? 'bg-slate-900 text-white' : 'bg-white text-slate-900'}>
+                          bKash
+                        </option>
+                        <option value="nagad" className={isMale ? 'bg-slate-900 text-white' : 'bg-white text-slate-900'}>
+                          Nagad
+                        </option>
+                      </select>
+                    </div>
+
+                    {/* 9. Sender Mobile No (Required) */}
                     <div>
                       <label className={`block text-xs font-bold uppercase tracking-wider mb-1.5 ${labelClasses}`}>
                         Sender Mobile No <span className="text-rose-500">*</span>
@@ -837,19 +860,19 @@ export const RegistrationForm: React.FC<RegistrationFormProps> = ({
                       <input
                         type="tel"
                         placeholder="e.g. 01XXXXXXXXX"
-                        value={formData.senderNumber}
+                        value={formData.sender_mobile_no}
                         onChange={e => {
-                          setFormData({ ...formData, senderNumber: e.target.value });
-                          if (formErrors.senderNumber) setFormErrors(prev => ({ ...prev, senderNumber: '' }));
+                          setFormData({ ...formData, sender_mobile_no: e.target.value });
+                          if (formErrors.sender_mobile_no) setFormErrors(prev => ({ ...prev, sender_mobile_no: '' }));
                         }}
                         className={`w-full px-4 py-3 rounded-xl text-sm font-medium transition-colors outline-none ${inputClasses}`}
                       />
-                      {formErrors.senderNumber && (
-                        <p className="text-rose-500 text-xs mt-1 font-semibold">{formErrors.senderNumber}</p>
+                      {formErrors.sender_mobile_no && (
+                        <p className="text-rose-500 text-xs mt-1 font-semibold">{formErrors.sender_mobile_no}</p>
                       )}
                     </div>
 
-                    {/* Payment Time (Required) */}
+                    {/* 10. Payment Time (Required) */}
                     <div>
                       <label className={`block text-xs font-bold uppercase tracking-wider mb-1.5 ${labelClasses}`}>
                         Payment Time <span className="text-rose-500">*</span>
@@ -857,19 +880,19 @@ export const RegistrationForm: React.FC<RegistrationFormProps> = ({
                       <input
                         type="text"
                         placeholder="e.g. 02:30 PM"
-                        value={formData.paymentTime}
+                        value={formData.payment_time}
                         onChange={e => {
-                          setFormData({ ...formData, paymentTime: e.target.value });
-                          if (formErrors.paymentTime) setFormErrors(prev => ({ ...prev, paymentTime: '' }));
+                          setFormData({ ...formData, payment_time: e.target.value });
+                          if (formErrors.payment_time) setFormErrors(prev => ({ ...prev, payment_time: '' }));
                         }}
                         className={`w-full px-4 py-3 rounded-xl text-sm font-medium transition-colors outline-none ${inputClasses}`}
                       />
-                      {formErrors.paymentTime && (
-                        <p className="text-rose-500 text-xs mt-1 font-semibold">{formErrors.paymentTime}</p>
+                      {formErrors.payment_time && (
+                        <p className="text-rose-500 text-xs mt-1 font-semibold">{formErrors.payment_time}</p>
                       )}
                     </div>
 
-                    {/* Transaction ID (Optional) */}
+                    {/* 11. Transaction ID (Optional) */}
                     <div>
                       <label className={`block text-xs font-bold uppercase tracking-wider mb-1.5 ${labelClasses}`}>
                         Transaction ID <span className="text-slate-400 font-normal">(Optional)</span>
@@ -877,8 +900,8 @@ export const RegistrationForm: React.FC<RegistrationFormProps> = ({
                       <input
                         type="text"
                         placeholder="e.g. 9J28DA10K"
-                        value={formData.transactionId}
-                        onChange={e => setFormData({ ...formData, transactionId: e.target.value })}
+                        value={formData.transaction_id}
+                        onChange={e => setFormData({ ...formData, transaction_id: e.target.value })}
                         className={`w-full px-4 py-3 rounded-xl text-sm font-medium transition-colors outline-none ${inputClasses}`}
                       />
                     </div>
@@ -902,48 +925,48 @@ export const RegistrationForm: React.FC<RegistrationFormProps> = ({
                   {/* Left: Live Interactive Jersey Graphic */}
                   <div className="lg:col-span-5 flex flex-col items-center justify-center p-4 rounded-3xl bg-slate-950/20 border border-white/20">
                     <JerseyGraphic
-                      name={formData.jerseyName}
-                      number={formData.jerseyNumber}
+                      name={formData.jersey_back_name}
+                      number={formData.jersey_number}
                       gender={formData.gender}
                       className="w-full max-w-[280px] h-[300px]"
                     />
                     <div className="mt-2 text-center text-xs opacity-75 font-mono">
-                      {formData.jerseyName || 'YOUR NAME'} · #{formData.jerseyNumber || '27'} · Size: {formData.jerseySize}
+                      {formData.jersey_back_name || 'YOUR NAME'} · #{formData.jersey_number || '27'} · Size: {formData.jersey_size}
                     </div>
                   </div>
 
                   {/* Right: Jersey Inputs */}
                   <div className="lg:col-span-7 space-y-4">
-                    {/* Jersey Name */}
+                    {/* 12. Jersey Back Name */}
                     <div>
                       <div className="flex items-center justify-between mb-1.5">
                         <label className={`block text-xs font-bold uppercase tracking-wider ${labelClasses}`}>
                           Jersey Back Name <span className="text-rose-500">*</span>
                         </label>
                         <span className="text-[10px] font-mono opacity-70">
-                          {formData.jerseyName.length}/14 max
+                          {formData.jersey_back_name.length}/14 max
                         </span>
                       </div>
                       <input
                         type="text"
                         maxLength={14}
                         placeholder="e.g. STRIKER"
-                        value={formData.jerseyName}
+                        value={formData.jersey_back_name}
                         onChange={e => {
                           const val = e.target.value.toUpperCase();
-                          setFormData({ ...formData, jerseyName: val });
-                          if (formErrors.jerseyName) setFormErrors(prev => ({ ...prev, jerseyName: '' }));
+                          setFormData({ ...formData, jersey_back_name: val });
+                          if (formErrors.jersey_back_name) setFormErrors(prev => ({ ...prev, jersey_back_name: '' }));
                         }}
                         className={`w-full px-4 py-3 rounded-xl text-sm font-mono font-bold uppercase transition-colors outline-none ${inputClasses}`}
                       />
-                      {formErrors.jerseyName && (
-                        <p className="text-rose-500 text-xs mt-1 font-semibold">{formErrors.jerseyName}</p>
+                      {formErrors.jersey_back_name && (
+                        <p className="text-rose-500 text-xs mt-1 font-semibold">{formErrors.jersey_back_name}</p>
                       )}
                     </div>
 
-                    {/* Jersey Number & Size */}
+                    {/* 13. Jersey Number & 14. Jersey Size */}
                     <div className="grid grid-cols-2 gap-4">
-                      {/* Jersey Number */}
+                      {/* 13. Jersey Number */}
                       <div>
                         <div className="flex items-center justify-between mb-1.5">
                           <label className={`block text-xs font-bold uppercase tracking-wider ${labelClasses}`}>
@@ -955,27 +978,27 @@ export const RegistrationForm: React.FC<RegistrationFormProps> = ({
                           type="text"
                           maxLength={2}
                           placeholder="27"
-                          value={formData.jerseyNumber}
+                          value={formData.jersey_number}
                           onChange={e => {
                             const val = e.target.value.replace(/\D/g, '');
-                            setFormData({ ...formData, jerseyNumber: val });
-                            if (formErrors.jerseyNumber) setFormErrors(prev => ({ ...prev, jerseyNumber: '' }));
+                            setFormData({ ...formData, jersey_number: val });
+                            if (formErrors.jersey_number) setFormErrors(prev => ({ ...prev, jersey_number: '' }));
                           }}
                           className={`w-full px-4 py-3 rounded-xl text-sm font-mono font-black transition-colors outline-none text-center ${inputClasses}`}
                         />
-                        {formErrors.jerseyNumber && (
-                          <p className="text-rose-500 text-xs mt-1 font-semibold">{formErrors.jerseyNumber}</p>
+                        {formErrors.jersey_number && (
+                          <p className="text-rose-500 text-xs mt-1 font-semibold">{formErrors.jersey_number}</p>
                         )}
                       </div>
 
-                      {/* Jersey Size */}
+                      {/* 14. Jersey Size */}
                       <div>
                         <label className={`block text-xs font-bold uppercase tracking-wider mb-1.5 ${labelClasses}`}>
                           Jersey Size <span className="text-rose-500">*</span>
                         </label>
                         <select
-                          value={formData.jerseySize}
-                          onChange={e => setFormData({ ...formData, jerseySize: e.target.value as JerseySize })}
+                          value={formData.jersey_size}
+                          onChange={e => setFormData({ ...formData, jersey_size: e.target.value as JerseySize })}
                           className={`w-full px-4 py-3 rounded-xl text-sm font-semibold transition-colors outline-none cursor-pointer ${inputClasses}`}
                         >
                           {JERSEY_SIZES.map(sz => (
@@ -1087,7 +1110,7 @@ export const RegistrationForm: React.FC<RegistrationFormProps> = ({
                     {duplicateModal.type === 'rejected' && 'Previous registration found.'}
                   </h3>
                   <span className="font-mono text-xs font-bold text-indigo-600">
-                    {duplicateModal.record.registrationNo}
+                    {duplicateModal.record.registration_no}
                   </span>
                 </div>
               </div>
@@ -1107,15 +1130,15 @@ export const RegistrationForm: React.FC<RegistrationFormProps> = ({
                   You already have an approved registration.
                 </div>
                 <div className="space-y-1 text-xs">
-                  <div><strong>Student:</strong> {duplicateModal.record.name} (Roll: {duplicateModal.record.roll})</div>
-                  <div><strong>Student ID:</strong> {duplicateModal.record.id}</div>
-                  <div><strong>Registration Number:</strong> <span className="font-mono font-bold text-indigo-700">{duplicateModal.record.registrationNo}</span></div>
+                  <div><strong>Student:</strong> {duplicateModal.record.full_name} (Roll: {duplicateModal.record.class_roll})</div>
+                  <div><strong>Student ID:</strong> {duplicateModal.record.student_id}</div>
+                  <div><strong>Registration Number:</strong> <span className="font-mono font-bold text-indigo-700">{duplicateModal.record.registration_no}</span></div>
                 </div>
                 <div className="pt-2 flex justify-end gap-2">
                   <button
                     type="button"
                     onClick={() => {
-                      const regNo = duplicateModal.record.registrationNo;
+                      const regNo = duplicateModal.record.registration_no;
                       setDuplicateModal(null);
                       onGoToInvitation(regNo);
                     }}
@@ -1133,15 +1156,15 @@ export const RegistrationForm: React.FC<RegistrationFormProps> = ({
                   Your registration is currently pending review.
                 </div>
                 <div className="space-y-1 text-xs">
-                  <div><strong>Student:</strong> {duplicateModal.record.name} (Roll: {duplicateModal.record.roll})</div>
-                  <div><strong>Student ID:</strong> {duplicateModal.record.id}</div>
-                  <div><strong>Registration Number:</strong> <span className="font-mono font-bold text-indigo-700">{duplicateModal.record.registrationNo}</span></div>
+                  <div><strong>Student:</strong> {duplicateModal.record.full_name} (Roll: {duplicateModal.record.class_roll})</div>
+                  <div><strong>Student ID:</strong> {duplicateModal.record.student_id}</div>
+                  <div><strong>Registration Number:</strong> <span className="font-mono font-bold text-indigo-700">{duplicateModal.record.registration_no}</span></div>
                 </div>
                 <div className="pt-2 flex justify-end gap-2">
                   <button
                     type="button"
                     onClick={() => {
-                      const regNo = duplicateModal.record.registrationNo;
+                      const regNo = duplicateModal.record.registration_no;
                       setDuplicateModal(null);
                       onGoToInvitation(regNo);
                     }}
@@ -1158,7 +1181,7 @@ export const RegistrationForm: React.FC<RegistrationFormProps> = ({
                 <div className="space-y-2 p-3.5 rounded-2xl bg-rose-50 border border-rose-200 text-xs">
                   <div>
                     <span className="font-bold text-rose-800 uppercase block text-[10px]">Registration Number:</span>
-                    <span className="font-mono font-black text-rose-900 text-sm">{duplicateModal.record.registrationNo}</span>
+                    <span className="font-mono font-black text-rose-900 text-sm">{duplicateModal.record.registration_no}</span>
                   </div>
                   <div>
                     <span className="font-bold text-rose-800 uppercase block text-[10px]">Current Status:</span>
@@ -1166,7 +1189,7 @@ export const RegistrationForm: React.FC<RegistrationFormProps> = ({
                   </div>
                   <div>
                     <span className="font-bold text-rose-800 uppercase block text-[10px]">Reject Reason:</span>
-                    <span className="font-medium text-rose-900">{duplicateModal.record.rejectionReason || 'No specific reason provided.'}</span>
+                    <span className="font-medium text-rose-900">{duplicateModal.record.reject_reason || 'No specific reason provided.'}</span>
                   </div>
                 </div>
                 <p className="text-xs text-slate-500">

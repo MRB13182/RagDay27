@@ -2,59 +2,90 @@ export type GenderType = 'choose_one' | 'male' | 'female';
 
 export type JerseySize = 'S' | 'M' | 'L' | 'XL' | '2XL' | '3XL' | '4XL';
 
-export type PaymentMethod = 'bkash' | 'nagad';
+export type SendMethod = 'bkash' | 'nagad';
+export type PaymentMethod = SendMethod;
 
 export type InvitationStatus = 'pending' | 'approved' | 'rejected';
 
+/**
+ * Frontend Form Fields matching exact registration order:
+ * 1. Full Name
+ * 2. Class Roll
+ * 3. Student ID
+ * 4. Contact Mobile Number
+ * 5. Academic Group
+ * 6. Academic Section
+ * 7. Student Photo
+ * 8. Send Method
+ * 9. Sender Mobile No
+ * 10. Payment Time
+ * 11. Transaction ID
+ * 12. Jersey Back Name
+ * 13. Jersey Number
+ * 14. Jersey Size
+ */
 export interface RegistrationFormData {
   gender: GenderType;
-  name: string;
-  roll: string;
-  id: string;
-  group: string;
-  section: string;
-  contactNumber: string;
-  photoUrl: string | null;
+  full_name: string;
+  class_roll: string;
+  student_id: string;
+  contact_mobile_number: string;
+  academic_group: string;
+  academic_section: string;
+  student_photo: string | null;
   photoFile?: File | null;
   photoBlob?: Blob | null;
-  amount: number;
-  paymentMethod: PaymentMethod;
-  senderNumber: string;
-  paymentTime: string;
-  transactionId: string;
-  jerseyName: string;
-  jerseyNumber: string;
-  jerseySize: JerseySize;
+  send_method: SendMethod;
+  sender_mobile_no: string;
+  payment_time: string;
+  transaction_id: string;
+  jersey_back_name: string;
+  jersey_number: string;
+  jersey_size: JerseySize;
 }
 
-export interface InvitationRecord {
+/**
+ * Database Registration Record with exact column names:
+ * sl_no, registration_no, full_name, class_roll, student_id,
+ * contact_mobile_number, academic_group, academic_section, student_photo,
+ * send_method, sender_mobile_no, payment_time, transaction_id,
+ * jersey_back_name, jersey_number, jersey_size, gender, status,
+ * reject_reason, approved_by, rejected_by, approved_at, rejected_at,
+ * created_at, updated_at
+ */
+export interface RegistrationRecord {
+  id?: string;
   dbId?: string;
-  serialNo?: number;
-  registrationNo: string;
-  name: string;
-  roll: string;
-  id: string; // Student ID
-  group: string;
-  section: string;
-  status: InvitationStatus;
+  sl_no?: number;
+  registration_no: string;
+  full_name: string;
+  class_roll: string;
+  student_id: string;
+  contact_mobile_number: string;
+  academic_group: string;
+  academic_section: string;
+  student_photo?: string | null;
+  send_method: SendMethod;
+  sender_mobile_no: string;
+  payment_time: string;
+  transaction_id?: string;
+  jersey_back_name: string;
+  jersey_number: string;
+  jersey_size: string;
   gender: 'male' | 'female';
-  photoUrl: string;
-  contactNumber?: string;
-  jerseyName: string;
-  jerseyNumber: string;
-  jerseySize: string;
-  paymentMethod?: PaymentMethod;
-  amount?: number;
+  status: InvitationStatus;
+  reject_reason?: string;
+  approved_by?: string | null;
+  rejected_by?: string | null;
+  approved_at?: string | null;
+  rejected_at?: string | null;
+  created_at?: string;
+  updated_at?: string;
   seatZone?: string;
   gate?: string;
-  issuedAt?: string;
-  rejectionReason?: string;
-  senderNumber?: string;
-  paymentTime?: string;
-  transactionId?: string;
-  createdAt?: string;
-  updatedAt?: string;
 }
+
+export type InvitationRecord = RegistrationRecord;
 
 export interface EventCard {
   id: string;
@@ -203,21 +234,23 @@ export interface SiteSectionItem {
 }
 
 export interface BackendRegistrationInput {
-  p_student_name: string;
-  p_gender: 'male' | 'female';
-  p_roll: string;
-  p_student_id: string;
-  p_group_id: string;
-  p_section_id: string;
-  p_jersey_name: string;
-  p_jersey_number: string;
-  p_jersey_size: string;
-  p_sender_number: string;
-  p_payment_method: string;
-  p_payment_time: string;
-  p_transaction_id?: string | null;
-  p_student_photo_path?: string | null;
-  p_contact_number: string;
+  full_name: string;
+  class_roll: string;
+  student_id: string;
+  contact_mobile_number: string;
+  academic_group: string;
+  academic_section: string;
+  student_photo?: string | null;
+  send_method: SendMethod;
+  sender_mobile_no: string;
+  payment_time: string;
+  transaction_id?: string | null;
+  jersey_back_name: string;
+  jersey_number: string;
+  jersey_size: string;
+  gender: 'male' | 'female';
+  registration_no?: string;
+  status?: InvitationStatus;
 }
 
 export interface SiteContentRow {
@@ -294,13 +327,18 @@ export interface AdminProfile {
 }
 
 export interface PublicStudentResult {
-  registration_no: string | number;
-  name?: string;
-  student_name?: string;
-  status: InvitationStatus;
-  rejection_reason?: string;
-  gender?: string;
-  roll?: string;
+  registration_no: string;
+  full_name?: string;
+  class_roll?: string;
   student_id?: string;
+  gender?: string;
+  academic_group?: string;
+  academic_section?: string;
+  student_photo?: string | null;
+  jersey_back_name?: string;
+  jersey_number?: string;
+  jersey_size?: string;
+  status: InvitationStatus;
+  reject_reason?: string;
 }
 

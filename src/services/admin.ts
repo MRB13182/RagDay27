@@ -21,28 +21,33 @@ export function mapRowToInvitation(row: any): InvitationRecord {
   }
 
   return {
+    id: row.id,
     dbId: row.id,
-    registrationNo: regNoFormatted,
-    name: row.student_name || 'Student',
-    roll: row.roll || '',
-    id: row.student_id || '',
-    group: row.group_name || '',
-    section: row.section_name || '',
-    status: (row.status as InvitationStatus) || 'pending',
+    sl_no: row.sl_no !== undefined && row.sl_no !== null ? Number(row.sl_no) : undefined,
+    registration_no: regNoFormatted,
+    full_name: row.full_name || '',
+    class_roll: row.class_roll || '',
+    student_id: row.student_id || '',
+    contact_mobile_number: row.contact_mobile_number || '',
+    academic_group: row.academic_group || '',
+    academic_section: row.academic_section || '',
+    student_photo: row.student_photo || null,
+    send_method: (row.send_method || 'bkash') as 'bkash' | 'nagad',
+    sender_mobile_no: row.sender_mobile_no || '',
+    payment_time: row.payment_time || '12:00:00',
+    transaction_id: row.transaction_id || undefined,
+    jersey_back_name: row.jersey_back_name || '',
+    jersey_number: row.jersey_number || '',
+    jersey_size: row.jersey_size || 'L',
     gender: (row.gender as any) || 'male',
-    photoUrl: row.student_photo || '',
-    contactNumber: row.sender_number || '',
-    jerseyName: row.jersey_name || '',
-    jerseyNumber: row.jersey_number || '',
-    jerseySize: row.jersey_size || 'L',
-    paymentMethod: row.payment_method,
-    amount: row.registration_fee ?? 500,
-    rejectionReason: row.rejection_reason || undefined,
-    senderNumber: row.sender_number || undefined,
-    paymentTime: row.payment_time || undefined,
-    transactionId: row.transaction_id || undefined,
-    createdAt: row.created_at || new Date().toISOString(),
-    updatedAt: row.updated_at || new Date().toISOString(),
+    status: (row.status as InvitationStatus) || 'pending',
+    reject_reason: row.reject_reason || undefined,
+    approved_by: row.approved_by || null,
+    rejected_by: row.rejected_by || null,
+    approved_at: row.approved_at || null,
+    rejected_at: row.rejected_at || null,
+    created_at: row.created_at || new Date().toISOString(),
+    updated_at: row.updated_at || new Date().toISOString(),
   };
 }
 
@@ -110,7 +115,7 @@ export async function approveRegistration(
       .from('registrations')
       .update({
         status: 'approved',
-        rejection_reason: null,
+        reject_reason: null,
         approved_at: new Date().toISOString(),
         updated_at: new Date().toISOString(),
       });
@@ -118,12 +123,7 @@ export async function approveRegistration(
     if (regIdOrNo.includes('-') && regIdOrNo.length > 20) {
       query = query.eq('id', regIdOrNo);
     } else {
-      const numeric = parseInt(regIdOrNo.replace(/\D/g, ''), 10);
-      if (!isNaN(numeric)) {
-        query = query.eq('registration_no', numeric);
-      } else {
-        query = query.eq('id', regIdOrNo);
-      }
+      query = query.eq('registration_no', regIdOrNo);
     }
 
     const { error } = await query;
@@ -136,15 +136,16 @@ export async function approveRegistration(
   const list = getStoredRegistrations();
   const updated = list.map(item => {
     if (
+      item.id === regIdOrNo ||
       item.dbId === regIdOrNo ||
-      item.registrationNo === regIdOrNo ||
-      item.registrationNo.replace(/\D/g, '') === regIdOrNo.replace(/\D/g, '')
+      item.registration_no === regIdOrNo
     ) {
       return {
         ...item,
         status: 'approved' as InvitationStatus,
-        rejectionReason: undefined,
-        updatedAt: new Date().toISOString(),
+        reject_reason: undefined,
+        approved_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
       };
     }
     return item;
@@ -174,7 +175,7 @@ export async function rejectRegistration(
       .from('registrations')
       .update({
         status: 'rejected',
-        rejection_reason: cleanReason,
+        reject_reason: cleanReason,
         rejected_at: new Date().toISOString(),
         updated_at: new Date().toISOString(),
       });
@@ -182,12 +183,7 @@ export async function rejectRegistration(
     if (regIdOrNo.includes('-') && regIdOrNo.length > 20) {
       query = query.eq('id', regIdOrNo);
     } else {
-      const numeric = parseInt(regIdOrNo.replace(/\D/g, ''), 10);
-      if (!isNaN(numeric)) {
-        query = query.eq('registration_no', numeric);
-      } else {
-        query = query.eq('id', regIdOrNo);
-      }
+      query = query.eq('registration_no', regIdOrNo);
     }
 
     const { error } = await query;
@@ -200,15 +196,16 @@ export async function rejectRegistration(
   const list = getStoredRegistrations();
   const updated = list.map(item => {
     if (
+      item.id === regIdOrNo ||
       item.dbId === regIdOrNo ||
-      item.registrationNo === regIdOrNo ||
-      item.registrationNo.replace(/\D/g, '') === regIdOrNo.replace(/\D/g, '')
+      item.registration_no === regIdOrNo
     ) {
       return {
         ...item,
         status: 'rejected' as InvitationStatus,
-        rejectionReason: cleanReason,
-        updatedAt: new Date().toISOString(),
+        reject_reason: cleanReason,
+        rejected_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
       };
     }
     return item;
@@ -230,12 +227,7 @@ export async function deleteRegistration(
     if (regIdOrNo.includes('-') && regIdOrNo.length > 20) {
       query = query.eq('id', regIdOrNo);
     } else {
-      const numeric = parseInt(regIdOrNo.replace(/\D/g, ''), 10);
-      if (!isNaN(numeric)) {
-        query = query.eq('registration_no', numeric);
-      } else {
-        query = query.eq('id', regIdOrNo);
-      }
+      query = query.eq('registration_no', regIdOrNo);
     }
 
     const { error } = await query;
@@ -248,9 +240,9 @@ export async function deleteRegistration(
   const list = getStoredRegistrations();
   const updated = list.filter(
     item =>
+      item.id !== regIdOrNo &&
       item.dbId !== regIdOrNo &&
-      item.registrationNo !== regIdOrNo &&
-      item.registrationNo.replace(/\D/g, '') !== regIdOrNo.replace(/\D/g, '')
+      item.registration_no !== regIdOrNo
   );
   saveStoredRegistrations(updated);
 
@@ -276,34 +268,30 @@ export async function syncLocalRegistrationsToSupabase(): Promise<{
 
   for (const item of localList) {
     try {
-      const numericMatch = item.registrationNo.match(/\d+/);
-      const regNo = numericMatch ? parseInt(numericMatch[0], 10) : undefined;
-
       const payload: any = {
-        student_name: item.name,
+        registration_no: item.registration_no,
+        full_name: item.full_name,
+        class_roll: item.class_roll,
+        student_id: item.student_id,
+        contact_mobile_number: item.contact_mobile_number,
+        academic_group: item.academic_group,
+        academic_section: item.academic_section,
+        student_photo: item.student_photo || null,
+        send_method: item.send_method,
+        sender_mobile_no: item.sender_mobile_no,
+        payment_time: item.payment_time,
+        transaction_id: item.transaction_id || null,
+        jersey_back_name: item.jersey_back_name,
+        jersey_number: item.jersey_number,
+        jersey_size: item.jersey_size,
         gender: item.gender,
-        roll: item.roll,
-        student_id: item.id,
-        group_name: item.group,
-        section_name: item.section,
-        jersey_name: item.jerseyName,
-        jersey_number: item.jerseyNumber,
-        jersey_size: item.jerseySize,
-        sender_number: item.senderNumber || item.contactNumber || '01700000000',
-        payment_method: item.paymentMethod || 'bkash',
-        payment_time: item.paymentTime || '12:00:00',
-        transaction_id: item.transactionId || null,
-        registration_fee: item.amount ?? 500,
-        student_photo: item.photoUrl || null,
         status: item.status || 'pending',
-        rejection_reason: item.rejectionReason || null,
+        reject_reason: item.reject_reason || null,
       };
-
-      if (regNo) payload.registration_no = regNo;
 
       const { error } = await supabase
         .from('registrations')
-        .upsert(payload, { onConflict: 'roll' });
+        .upsert(payload, { onConflict: 'registration_no' });
 
       if (!error) synced++;
       else errors++;
@@ -331,29 +319,30 @@ export async function updateRegistrationDetails(
     const dbPayload: any = {
       updated_at: new Date().toISOString(),
     };
-    if (updates.name !== undefined) dbPayload.student_name = updates.name;
-    if (updates.roll !== undefined) dbPayload.roll = updates.roll;
-    if (updates.id !== undefined) dbPayload.student_id = updates.id;
+    if (updates.full_name !== undefined) dbPayload.full_name = updates.full_name;
+    if (updates.class_roll !== undefined) dbPayload.class_roll = updates.class_roll;
+    if (updates.student_id !== undefined) dbPayload.student_id = updates.student_id;
+    if (updates.contact_mobile_number !== undefined) dbPayload.contact_mobile_number = updates.contact_mobile_number;
+    if (updates.academic_group !== undefined) dbPayload.academic_group = updates.academic_group;
+    if (updates.academic_section !== undefined) dbPayload.academic_section = updates.academic_section;
+    if (updates.student_photo !== undefined) dbPayload.student_photo = updates.student_photo;
+    if (updates.send_method !== undefined) dbPayload.send_method = updates.send_method;
+    if (updates.sender_mobile_no !== undefined) dbPayload.sender_mobile_no = updates.sender_mobile_no;
+    if (updates.payment_time !== undefined) dbPayload.payment_time = updates.payment_time;
+    if (updates.transaction_id !== undefined) dbPayload.transaction_id = updates.transaction_id;
+    if (updates.jersey_back_name !== undefined) dbPayload.jersey_back_name = updates.jersey_back_name;
+    if (updates.jersey_number !== undefined) dbPayload.jersey_number = updates.jersey_number;
+    if (updates.jersey_size !== undefined) dbPayload.jersey_size = updates.jersey_size;
     if (updates.gender !== undefined) dbPayload.gender = updates.gender;
-    if (updates.group !== undefined) dbPayload.group_name = updates.group;
-    if (updates.section !== undefined) dbPayload.section_name = updates.section;
-    if (updates.jerseyName !== undefined) dbPayload.jersey_name = updates.jerseyName;
-    if (updates.jerseyNumber !== undefined) dbPayload.jersey_number = updates.jerseyNumber;
-    if (updates.jerseySize !== undefined) dbPayload.jersey_size = updates.jerseySize;
     if (updates.status !== undefined) dbPayload.status = updates.status;
-    if (updates.rejectionReason !== undefined) dbPayload.rejection_reason = updates.rejectionReason;
+    if (updates.reject_reason !== undefined) dbPayload.reject_reason = updates.reject_reason;
 
     let query = supabase.from('registrations').update(dbPayload);
 
     if (regIdOrNo.includes('-') && regIdOrNo.length > 20) {
       query = query.eq('id', regIdOrNo);
     } else {
-      const numeric = parseInt(regIdOrNo.replace(/\D/g, ''), 10);
-      if (!isNaN(numeric)) {
-        query = query.eq('registration_no', numeric);
-      } else {
-        query = query.eq('id', regIdOrNo);
-      }
+      query = query.eq('registration_no', regIdOrNo);
     }
 
     await query;
@@ -363,14 +352,14 @@ export async function updateRegistrationDetails(
   const list = getStoredRegistrations();
   const updated = list.map(item => {
     if (
+      item.id === regIdOrNo ||
       item.dbId === regIdOrNo ||
-      item.registrationNo === regIdOrNo ||
-      item.registrationNo.replace(/\D/g, '') === regIdOrNo.replace(/\D/g, '')
+      item.registration_no === regIdOrNo
     ) {
       return {
         ...item,
         ...updates,
-        updatedAt: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
       };
     }
     return item;

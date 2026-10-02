@@ -1,22 +1,19 @@
 import { supabase } from '../lib/supabase';
-import type { InvitationRecord, InvitationStatus } from '../types';
-import { translateBackendError } from './registrations';
+import type { InvitationRecord } from '../types';
 import { mapRowToInvitation, getStoredRegistrations } from './admin';
 
 /**
  * Look up an approved invitation card from public.registrations
  */
 export async function getPublicInvitation(
-  registrationNo: string | number
+  registration_no: string | number
 ): Promise<{
   success: boolean;
   data: InvitationRecord | null;
   error?: any;
   errorMessage?: string;
 }> {
-  const rawStr = String(registrationNo).trim();
-  const numericMatch = rawStr.match(/\d+/);
-  const numericRegNo = numericMatch ? parseInt(numericMatch[0], 10) : null;
+  const rawStr = String(registration_no).trim();
 
   try {
     let query = supabase
@@ -24,10 +21,10 @@ export async function getPublicInvitation(
       .select('*')
       .eq('status', 'approved');
 
-    if (numericRegNo !== null && !isNaN(numericRegNo)) {
-      query = query.eq('registration_no', numericRegNo);
+    if (rawStr.toUpperCase().startsWith('RDB27') || rawStr.toUpperCase().startsWith('RDG27') || rawStr.toUpperCase().startsWith('RD27')) {
+      query = query.eq('registration_no', rawStr);
     } else {
-      query = query.or(`student_id.eq.${rawStr},roll.eq.${rawStr}`);
+      query = query.or(`registration_no.eq.${rawStr},student_id.eq.${rawStr},class_roll.eq.${rawStr}`);
     }
 
     const { data, error } = await query.maybeSingle();
@@ -46,10 +43,9 @@ export async function getPublicInvitation(
   const match = stored.find(
     r =>
       r.status === 'approved' &&
-      (r.registrationNo.toUpperCase() === rawStr.toUpperCase() ||
-        (numericRegNo !== null && r.registrationNo.includes(String(numericRegNo))) ||
-        r.roll === rawStr ||
-        r.id === rawStr)
+      (r.registration_no.toUpperCase() === rawStr.toUpperCase() ||
+        r.class_roll === rawStr ||
+        r.student_id === rawStr)
   );
 
   if (match) {
@@ -64,7 +60,8 @@ export async function getPublicInvitation(
 }
 
 /**
- * Searches registrations in public.registrations by roll, student ID, or registration number.
+ * Searches registrations in public.registrations by:
+ * registration_no, full_name, student_id, class_roll (Requirement 13)
  */
 export async function searchPublicStudent(
   searchTerm: string
@@ -79,33 +76,19 @@ export async function searchPublicStudent(
     return { success: true, data: [] };
   }
 
-  const numericMatch = clean.match(/\d+/);
-  const numericRegNo = numericMatch ? parseInt(numericMatch[0], 10) : null;
-
   try {
     let query = supabase
       .from('registrations')
-      .select('id, registration_no, student_name, roll, student_id, gender, group_name, section_name, jersey_name, jersey_number, jersey_size, student_photo, status, rejection_reason');
+      .select('id, sl_no, registration_no, full_name, class_roll, student_id, contact_mobile_number, academic_group, academic_section, student_photo, send_method, sender_mobile_no, payment_time, transaction_id, jersey_back_name, jersey_number, jersey_size, gender, status, reject_reason');
 
-    const isRegPrefix =
-      clean.toUpperCase().startsWith('RDB27') ||
-      clean.toUpperCase().startsWith('RDG27') ||
-      clean.toUpperCase().startsWith('RD27');
-
-    if (isRegPrefix && numericRegNo !== null) {
-      query = query.or(
-        `registration_no.eq.${numericRegNo},student_id.eq.${clean},roll.eq.${clean},student_name.ilike.%${clean}%`
-      );
-    } else {
-      query = query.or(`roll.eq.${clean},student_id.eq.${clean},student_name.ilike.%${clean}%`);
-    }
+    query = query.or(`registration_no.ilike.%${clean}%,student_id.ilike.%${clean}%,class_roll.ilike.%${clean}%,full_name.ilike.%${clean}%`);
 
     const { data, error } = await query.limit(10);
 
     if (!error && data && data.length > 0) {
       return {
         success: true,
-        data,
+        data: data.map(mapRowToInvitation),
       };
     }
   } catch {}
@@ -116,22 +99,11 @@ export async function searchPublicStudent(
   const matched = stored
     .filter(
       r =>
-        r.registrationNo.toLowerCase().includes(lower) ||
-        r.name.toLowerCase().includes(lower) ||
-        r.roll.toLowerCase().includes(lower) ||
-        r.id.toLowerCase().includes(lower)
-    )
-    .map(r => ({
-      registration_no: r.registrationNo,
-      student_name: r.name,
-      roll: r.roll,
-      student_id: r.id,
-      gender: r.gender,
-      group_name: r.group,
-      section_name: r.section,
-      status: r.status,
-      rejection_reason: r.rejectionReason,
-    }));
+        (r.registration_no || '').toLowerCase().includes(lower) ||
+        (r.full_name || '').toLowerCase().includes(lower) ||
+        (r.class_roll || '').toLowerCase().includes(lower) ||
+        (r.student_id || '').toLowerCase().includes(lower)
+    );
 
   return {
     success: true,

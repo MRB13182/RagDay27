@@ -103,15 +103,15 @@ export const generateRegistrationListPDF = (
     headCols = ['#', 'Reg No', 'Student Name', 'Gender', 'Roll & ID', 'Group', 'Section', 'Jersey Name', 'Jersey Number', 'Jersey Size'];
     tableData = records.map((record, index) => [
       index + 1,
-      record.registrationNo,
-      record.name,
+      record.registration_no,
+      record.full_name,
       record.gender.toUpperCase(),
-      `Roll: ${record.roll}\nID: ${record.id}`,
-      record.group,
-      record.section,
-      record.jerseyName,
-      '#' + record.jerseyNumber,
-      record.jerseySize,
+      `Roll: ${record.class_roll}\nID: ${record.student_id}`,
+      record.academic_group,
+      record.academic_section,
+      record.jersey_back_name,
+      '#' + record.jersey_number,
+      record.jersey_size,
     ]);
     columnStyles = {
       0: { cellWidth: 10, halign: 'center' },
@@ -142,15 +142,15 @@ export const generateRegistrationListPDF = (
     ];
     tableData = records.map((record, index) => [
       index + 1,
-      record.registrationNo,
-      record.name,
+      record.registration_no,
+      record.full_name,
       record.gender.toUpperCase(),
-      `Roll: ${record.roll}\nID: ${record.id}`,
-      record.group,
-      record.section,
-      record.jerseyName,
-      `#${record.jerseyNumber}`,
-      record.jerseySize,
+      `Roll: ${record.class_roll}\nID: ${record.student_id}`,
+      record.academic_group,
+      record.academic_section,
+      record.jersey_back_name,
+      `#${record.jersey_number}`,
+      record.jersey_size,
     ]);
     columnStyles = {
       0: { cellWidth: 12, halign: 'center' },
@@ -339,7 +339,7 @@ export const generateInvitationCardPDF = (
   doc.setFontSize(15);
   doc.setFont('helvetica', 'bold');
   doc.setTextColor(91, 95, 239);
-  doc.text(record.registrationNo, 18, 59);
+  doc.text(record.registration_no, 18, 59);
 
   // Status Badge
   doc.setFillColor(220, 252, 231);
@@ -366,21 +366,21 @@ export const generateInvitationCardPDF = (
   doc.text('Full Name:', 18, 84);
   doc.setFont('helvetica', 'bold');
   doc.setTextColor(15, 23, 42);
-  doc.text(record.name, 42, 84);
+  doc.text(record.full_name, 42, 84);
 
   doc.setFont('helvetica', 'normal');
   doc.setTextColor(100, 116, 139);
   doc.text('Roll & ID:', 18, 92);
   doc.setFont('helvetica', 'bold');
   doc.setTextColor(15, 23, 42);
-  doc.text(`Roll ${record.roll}  |  ${record.id}`, 42, 92);
+  doc.text(`Roll ${record.class_roll}  |  ${record.student_id}`, 42, 92);
 
   doc.setFont('helvetica', 'normal');
   doc.setTextColor(100, 116, 139);
   doc.text('Academic Group:', 18, 100);
   doc.setFont('helvetica', 'bold');
   doc.setTextColor(15, 23, 42);
-  doc.text(`${record.group} (Section ${record.section})`, 42, 100);
+  doc.text(`${record.academic_group} (Section ${record.academic_section})`, 42, 100);
 
   doc.setFont('helvetica', 'normal');
   doc.setTextColor(100, 116, 139);
@@ -401,9 +401,9 @@ export const generateInvitationCardPDF = (
   doc.setFontSize(8);
   doc.setFont('helvetica', 'normal');
   doc.setTextColor(71, 85, 105);
-  doc.text(`Jersey Back Name: ${record.jerseyName}`, 18, 135);
+  doc.text(`Jersey Back Name: ${record.jersey_back_name}`, 18, 135);
   doc.text(
-    `Squad Number: #${record.jerseyNumber}   |   Size: ${record.jerseySize}`,
+    `Squad Number: #${record.jersey_number}   |   Size: ${record.jersey_size}`,
     18,
     141
   );
@@ -451,5 +451,5 @@ export const generateInvitationCardPDF = (
     { align: 'center' }
   );
 
-  doc.save(`RD27_Pass_${record.registrationNo}.pdf`);
+  doc.save(`RD27_Pass_${record.registration_no}.pdf`);
 };

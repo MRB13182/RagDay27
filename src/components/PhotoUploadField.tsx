@@ -4,9 +4,11 @@ import { GenderType } from '../types';
 import { optimizePhoto, MAX_PHOTO_SIZE_BYTES } from '../utils/imageOptimizer';
 
 interface PhotoUploadFieldProps {
-  photoUrl: string | null;
+  student_photo?: string | null;
+  photoUrl?: string | null;
   gender: GenderType;
   onPhotoSelected: (result: {
+    student_photo: string;
     photoUrl: string;
     photoFile: File;
     photoBlob: Blob;
@@ -17,6 +19,7 @@ interface PhotoUploadFieldProps {
 }
 
 export const PhotoUploadField: React.FC<PhotoUploadFieldProps> = ({
+  student_photo,
   photoUrl,
   gender,
   onPhotoSelected,
@@ -24,6 +27,7 @@ export const PhotoUploadField: React.FC<PhotoUploadFieldProps> = ({
   labelClasses = 'text-slate-700',
   className = '',
 }) => {
+  const effectivePhoto = student_photo !== undefined ? student_photo : (photoUrl ?? null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [isDragging, setIsDragging] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
@@ -51,6 +55,7 @@ export const PhotoUploadField: React.FC<PhotoUploadFieldProps> = ({
 
       // Successfully processed silently
       onPhotoSelected({
+        student_photo: result.dataUrl,
         photoUrl: result.dataUrl,
         photoFile: result.file,
         photoBlob: result.blob,
@@ -151,10 +156,10 @@ export const PhotoUploadField: React.FC<PhotoUploadFieldProps> = ({
         <div className="flex items-center justify-between gap-3">
           {/* Left: Avatar Preview or Placeholder Icon */}
           <div className="flex items-center gap-3 min-w-0">
-            {photoUrl ? (
+            {effectivePhoto ? (
               <div className="relative group/preview flex-shrink-0">
                 <img
-                  src={photoUrl}
+                  src={effectivePhoto}
                   alt="Student Portrait Preview"
                   className="w-12 h-12 sm:w-14 sm:h-14 rounded-xl object-cover border border-white/40 shadow-md transition-transform duration-200 group-hover/preview:scale-105 bg-slate-100"
                 />
@@ -187,7 +192,7 @@ export const PhotoUploadField: React.FC<PhotoUploadFieldProps> = ({
               <div className="text-xs sm:text-sm font-bold tracking-tight truncate">
                 {isProcessing
                   ? 'Processing photo...'
-                  : photoUrl
+                  : effectivePhoto
                   ? 'Photo Uploaded'
                   : 'Click or Drag & Drop Photo'}
               </div>
@@ -196,7 +201,7 @@ export const PhotoUploadField: React.FC<PhotoUploadFieldProps> = ({
                   isMale ? 'text-slate-400' : isFemale ? 'text-pink-900/60' : 'text-slate-500'
                 }`}
               >
-                {photoUrl
+                {effectivePhoto
                   ? 'Click to change or select another photo'
                   : 'JPG, PNG, or WEBP (Max 5 MB)'}
               </p>
@@ -205,7 +210,7 @@ export const PhotoUploadField: React.FC<PhotoUploadFieldProps> = ({
 
           {/* Right: Actions Button (Browse / Change / Remove) */}
           <div className="flex items-center gap-2 flex-shrink-0">
-            {photoUrl ? (
+            {effectivePhoto ? (
               <div className="flex items-center gap-1.5">
                 <button
                   type="button"
