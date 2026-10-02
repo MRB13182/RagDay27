@@ -248,8 +248,7 @@ export const RegistrationForm: React.FC<RegistrationFormProps> = ({
     const match = await checkDuplicateRegistration(
       formData.student_id,
       formData.full_name,
-      formData.class_roll,
-      existingRegistrations
+      formData.class_roll
     );
 
     if (match) {
@@ -342,10 +341,11 @@ export const RegistrationForm: React.FC<RegistrationFormProps> = ({
       let displayPhotoUrl = formData.student_photo || '';
       if (formData.photoFile) {
         const uploadRes = await uploadStudentPhoto(formData.photoFile, formData.class_roll.trim());
-        if (uploadRes.success) {
-          photoStoragePath = uploadRes.storagePath;
-          displayPhotoUrl = uploadRes.publicUrl;
+        if (!uploadRes.success) {
+          throw new Error(uploadRes.errorMessage || 'Student photo upload failed.');
         }
+        photoStoragePath = uploadRes.storagePath;
+        displayPhotoUrl = uploadRes.publicUrl;
       }
 
       // 5. Submit or Re-submit registration
