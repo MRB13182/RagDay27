@@ -62,36 +62,7 @@ export default function App() {
     }, 4500);
   };
 
-  // Helper to load registrations from Supabase
-  const loadRegistrations = async () => {
-    try {
-      const regResult = await getRegistrationList();
-      if (regResult.success) {
-        setInvitations(regResult.data);
-      }
-    } catch (err) {
-      console.warn('Initial registrations fetch notice:', err);
-    }
-  };
-
-  // ============================================================================
-  // 1. INITIAL LOAD & REAL-TIME REGISTRATIONS SUBSCRIPTION
-  // ============================================================================
-  useEffect(() => {
-    loadRegistrations();
-
-    const channel = supabase
-      .channel('public:realtime_registrations')
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'registrations' }, async () => {
-        const res = await getRegistrationList();
-        if (res.success) setInvitations(res.data);
-      })
-      .subscribe();
-
-    return () => {
-      supabase.removeChannel(channel);
-    };
-  }, []);
+  // Public App does not own admin registration state.
 
   // Sync document title with Super Admin Website Identity
   useEffect(() => {
