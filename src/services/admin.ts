@@ -46,12 +46,13 @@ export function mapRowToInvitation(row: any): InvitationRecord {
 
   let regNoFormatted = 'Pending';
   if (regNoNum) {
-    const str = String(regNoNum);
-    if (str.startsWith('RDB27-') || str.startsWith('RDG27-') || str.startsWith('RD27-')) {
+    const str = String(regNoNum).trim();
+    if (str.startsWith('RDB27-') || str.startsWith('RDG27-')) {
       regNoFormatted = str;
     } else {
-      regNoFormatted = `${prefix}-${str.padStart(4, '0')}`;
+      regNoFormatted = `${prefix}-${str}`;
     }
+  }
   }
 
   return {
