@@ -26,11 +26,10 @@ import type {
   JerseyShowcaseSettings,
 } from './types';
 import {
-  getRegistrationList,
   approveRegistration,
   rejectRegistration,
   deleteRegistration,
-} from './services';
+} from './services/admin';
 import { supabase } from './lib/supabase';
 import { ArrowRight, Bell, CheckCircle2, AlertCircle, Info, X, ShieldAlert, Ticket } from 'lucide-react';
 
