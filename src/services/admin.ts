@@ -36,6 +36,8 @@ export function getAdminPasscodeSession(): string {
   try { return storage.getItem(ADMIN_SESSION_KEY) || ''; } catch { return ''; }
 }
 
+export const getAdminPasscode = getAdminPasscodeSession;
+
 /**
  * Maps a public.registrations database row to InvitationRecord.
  */
