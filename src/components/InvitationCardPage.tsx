@@ -105,6 +105,7 @@ export const InvitationCardPage: React.FC<InvitationCardPageProps> = ({
         <form onSubmit={e => { e.preventDefault(); void handleSearchWith(searchRegNo); }} className="grid grid-cols-1 sm:grid-cols-12 gap-4">
           <div className="sm:col-span-5">
             <div className="sm:col-span-5 text-xs text-slate-500">Lookup requires the exact registration number.</div>
+          </div>
 
           <div className="sm:col-span-5">
             <label className="block text-xs font-bold uppercase tracking-wider text-slate-700 mb-1.5">
