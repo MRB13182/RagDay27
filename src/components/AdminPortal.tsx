@@ -25,7 +25,7 @@ interface AdminPortalProps {
   onEditRegistration?: (registrationNo: string, updates: Partial<InvitationRecord>) => Promise<void>;
 }
 
-type Tab = 'registrations' | 'config_info';
+type Tab = 'registrations';
 
 export const AdminPortal: React.FC<AdminPortalProps> = ({
   isOpen,
@@ -35,14 +35,13 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
   onDeleteRegistration,
 }) => {
   const [admin, setAdmin] = useState<AdminProfile | null>(null);
-  const [passcode, setPasscode] = useState('');
-  const [showPasscode, setShowPasscode] = useState(false);
-  const [loginError, setLoginError] = useState('');
-  const [tab, setTab] = useState<Tab>('registrations');
+  const [username, setUsername] = useState('');
+  const [password, setPassword] = useState('');
+    const [loginError, setLoginError] = useState('');
+  const [tab, setTab] = useState<'registrations'>('registrations');
   const [query, setQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState<'all' | InvitationStatus>('all');
-  const [genderFilter, setGenderFilter] = useState<'all' | 'male' | 'female'>('all');
-  const [rejecting, setRejecting] = useState<string | null>(null);
+    const [rejecting, setRejecting] = useState<string | null>(null);
   const [rejectReason, setRejectReason] = useState('');
   const [deletingRegNo, setDeletingRegNo] = useState<string | null>(null);
   const [toastMessage, setToastMessage] = useState<string | null>(null);
@@ -61,24 +60,21 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
     let rows = invitations;
     if (admin?.role === 'male_admin') rows = rows.filter(r => r.gender === 'male');
     if (admin?.role === 'female_admin') rows = rows.filter(r => r.gender === 'female');
-    if (admin?.role === 'super_admin' && genderFilter !== 'all') {
-      rows = rows.filter(r => r.gender === genderFilter);
-    }
     if (statusFilter !== 'all') rows = rows.filter(r => r.status === statusFilter);
     if (query.trim()) {
       const q = query.trim().toLowerCase();
       rows = rows.filter(r =>
         [
-          r.registrationNo,
-          r.name,
-          r.roll,
+          r.registration_no,
+          r.full_name,
+          r.class_roll,
           r.id,
-          r.group,
-          r.section,
-          r.jerseyName,
-          r.jerseyNumber,
-          r.senderNumber,
-          r.transactionId,
+          r.academic_group,
+          r.academic_section,
+          r.jersey_back_name,
+          r.jersey_number,
+          r.sender_mobile_no,
+          r.transaction_id,
         ].some(v => String(v || '').toLowerCase().includes(q))
       );
     }
@@ -89,11 +85,12 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
     e.preventDefault();
     setLoginError('');
     try {
-      const profile = await signInAdmin(passcode);
+      const profile = await signInAdmin(username, password);
       setAdmin(profile);
-      setPasscode('');
+      setUsername('');
+      setPassword('');
     } catch (e: any) {
-      setLoginError(e?.message || 'Invalid admin passcode.');
+      setLoginError(e?.message || 'Invalid administrator credentials.');
     }
   };
 
@@ -174,18 +171,13 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
       derivedWebsiteSettings,
       admin?.role === 'male_admin'
         ? 'male_admin'
-        : admin?.role === 'female_admin'
-        ? 'female_admin'
-        : 'super_admin'
+        : admin?.role === 'female_admin' ? 'female_admin' : 'male_admin'
     );
   };
 
-  const roleTitle =
-    admin?.role === 'super_admin'
-      ? 'Super Admin'
-      : admin?.role === 'male_admin'
-      ? 'Male Admin (Boys Wing)'
-      : 'Female Admin (Girls Wing)';
+  const roleTitle = admin?.role === 'male_admin'
+    ? 'Male Admin (Boys Wing)'
+    : 'Female Admin (Girls Wing)';
 
   if (!isOpen) return null;
 
@@ -221,31 +213,31 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
               </div>
               <h2 className="mt-4 text-2xl font-black text-slate-900 tracking-tight">Admin Sign In</h2>
               <p className="mt-1 text-xs text-slate-500">
-                Enter your designated administrator passcode to access the portal.
+                Sign in with your Supabase Auth administrator credentials.
               </p>
             </div>
 
             <div className="space-y-1.5 pt-2">
               <label className="text-xs font-bold uppercase tracking-wider text-slate-700">
-                Admin Passcode
+                Username
               </label>
               <div className="relative">
                 <input
-                  value={passcode}
-                  onChange={e => setPasscode(e.target.value)}
-                  type={showPasscode ? 'text' : 'password'}
-                  placeholder="Enter administrator passcode..."
+                  value={username}
+                  onChange={e => setUsername(e.target.value)}
+                  type="text"
+                  placeholder="nicboy.27 or nic27.girl"
                   required
                   autoFocus
                   className="w-full rounded-xl border border-slate-300 pl-4 pr-11 py-3 text-sm font-mono focus:border-indigo-600 focus:outline-none focus:ring-2 focus:ring-indigo-100 transition-all placeholder:text-slate-400"
                 />
                 <button
                   type="button"
-                  onClick={() => setShowPasscode(!showPasscode)}
+                  onClick={() => undefined}
                   className="absolute right-3 top-3 text-slate-400 hover:text-slate-600 p-0.5 rounded cursor-pointer"
-                  title={showPasscode ? 'Hide password' : 'Show password'}
+                  title="Username"
                 >
-                  {showPasscode ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
+                  <span />
                 </button>
               </div>
             </div>
@@ -324,20 +316,7 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
               </span>
             </button>
 
-            {admin.role === 'super_admin' && (
-              <button
-                onClick={() => setTab('config_info')}
-                className={
-                  'px-4 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer ' +
-                  (tab === 'config_info'
-                    ? 'bg-indigo-600 text-white shadow-sm'
-                    : 'text-slate-600 hover:bg-slate-100')
-                }
-              >
-                <FolderTree className="w-3.5 h-3.5" />
-                <span>Super Admin Settings (Code-Based)</span>
-              </button>
-            )}
+            
           </nav>
 
           {/* Tab Content Container */}
@@ -362,7 +341,7 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
 
                   <div className="flex flex-wrap items-center gap-2">
                     {/* Super Admin Gender Filter */}
-                    {admin.role === 'super_admin' && (
+                    {false && (
                       <select
                         value={genderFilter}
                         onChange={e => setGenderFilter(e.target.value as any)}
@@ -586,7 +565,7 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
             {/* ============================================================== */}
             {/* 2. SUPER ADMIN CODE CONFIGURATION OVERVIEW (Super Admin Only)  */}
             {/* ============================================================== */}
-            {tab === 'config_info' && admin.role === 'super_admin' && (
+            {tab === 'config_info' && false && (
               <section className="space-y-6 animate-fadeIn pb-12">
                 <div className="p-6 rounded-3xl bg-white border border-slate-200 shadow-sm space-y-4">
                   <div className="flex items-center gap-2.5">
