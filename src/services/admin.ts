@@ -53,7 +53,6 @@ export function mapRowToInvitation(row: any): InvitationRecord {
       regNoFormatted = `${prefix}-${str}`;
     }
   }
-  }
 
   return {
     id: row.id,
