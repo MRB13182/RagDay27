@@ -21,8 +21,7 @@ interface AdminPortalProps {
   onClose: () => void;
   invitations: InvitationRecord[];
   onUpdateStatus: (registration_no: string, newStatus: InvitationStatus, reason?: string) => Promise<void>;
-  onDeleteRegistration?: (registrationNo: string) => Promise<void>;
-  onEditRegistration?: (registration_no: string, updates: Partial<InvitationRecord>) => Promise<void>;
+  onDeleteRegistration?: (registration_no: string) => Promise<void>;
 }
 
 type Tab = 'registrations';
