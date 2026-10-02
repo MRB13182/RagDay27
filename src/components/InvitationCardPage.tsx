@@ -145,7 +145,7 @@ export const InvitationCardPage: React.FC<InvitationCardPageProps> = ({
                 No Record Found
               </h3>
               <p className="text-xs text-slate-500 max-w-md mx-auto mt-1 mb-4">
-                We could not find any registration matching "{searchRegNo || searchName}". Please verify your registration number or submit a fresh registration form.
+                We could not find any registration matching "{searchRegNo}". Please verify your registration number or submit a fresh registration form.
               </p>
               <button
                 onClick={() => onNavigateToRegister()}
