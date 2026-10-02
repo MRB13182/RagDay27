@@ -97,6 +97,7 @@ export const RegistrationForm: React.FC<RegistrationFormProps> = ({
   // Re-submission / editing state for rejected registrations
   const [editingRegNo, setEditingRegNo] = useState<string | null>(null);
   const [editingDbId, setEditingDbId] = useState<string | null>(null);
+  const [recoveryProof, setRecoveryProof] = useState<{ studentId: string; fullName: string; classRoll: string } | null>(null);
 
   // Declaration checkbox state (Required: must be checked to submit)
   const [declarationChecked, setDeclarationChecked] = useState(false);
@@ -151,6 +152,11 @@ export const RegistrationForm: React.FC<RegistrationFormProps> = ({
       });
       setEditingRegNo(initialRecord.registration_no);
       setEditingDbId(initialRecord.dbId || initialRecord.id || null);
+      setRecoveryProof({
+        studentId: initialRecord.student_id || '',
+        fullName: initialRecord.full_name || '',
+        classRoll: initialRecord.class_roll || '',
+      });
     }
   }, [initialRecord]);
 
@@ -355,7 +361,8 @@ export const RegistrationForm: React.FC<RegistrationFormProps> = ({
           student_photo: photoStoragePath || displayPhotoUrl || null,
         },
         editingRegNo || undefined,
-        editingDbId || undefined
+        editingDbId || undefined,
+        recoveryProof || undefined
       );
 
       if (!result.success || !result.data) {
@@ -379,6 +386,7 @@ export const RegistrationForm: React.FC<RegistrationFormProps> = ({
       // Clear edit state if any
       setEditingRegNo(null);
       setEditingDbId(null);
+      setRecoveryProof(null);
       if (onResetReRegister) onResetReRegister();
     } catch (err: any) {
       console.error('Registration submission error:', err);
@@ -408,6 +416,11 @@ export const RegistrationForm: React.FC<RegistrationFormProps> = ({
     });
     setEditingRegNo(record.registration_no);
     setEditingDbId(record.dbId || record.id || null);
+    setRecoveryProof({
+      studentId: record.student_id || '',
+      fullName: record.full_name || '',
+      classRoll: record.class_roll || '',
+    });
     setDuplicateModal(null);
   };
 
