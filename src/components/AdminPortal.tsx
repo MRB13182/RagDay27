@@ -338,19 +338,6 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
                   </div>
 
                   <div className="flex flex-wrap items-center gap-2">
-                    {/* Super Admin Gender Filter */}
-                    {false && (
-                      <select
-                        value={statusFilter}
-                        onChange={e => setGenderFilter(e.target.value as any)}
-                        className="px-3 py-2 text-xs rounded-xl border border-slate-200 bg-white font-semibold text-slate-700 outline-none cursor-pointer"
-                      >
-                        <option value="all">All Genders</option>
-                        <option value="male">Male (Boys)</option>
-                        <option value="female">Female (Girls)</option>
-                      </select>
-                    )}
-
                     {/* Status Filter */}
                     <div className="flex rounded-xl bg-slate-100 p-0.5 text-xs font-semibold text-slate-600">
                       {(['all', 'pending', 'approved', 'rejected'] as const).map(s => (
@@ -399,7 +386,7 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
                           <div className="flex flex-wrap items-start justify-between gap-3 border-b border-slate-100 pb-3">
                             <div>
                               <div className="flex items-center gap-2">
-                                <h3 className="text-base font-extrabold text-slate-900">{card.name}</h3>
+                                <h3 className="text-base font-extrabold text-slate-900">{card.full_name}</h3>
                                 <span
                                   className={`px-2 py-0.5 rounded-full text-[10px] font-bold uppercase ${
                                     card.gender === 'male'
@@ -442,53 +429,53 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
                           <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3 text-xs">
                             <div className="space-y-0.5">
                               <span className="text-[10px] font-bold uppercase text-slate-400">Roll:</span>
-                              <div className="font-semibold text-slate-800">{card.roll || '–'}</div>
+                              <div className="font-semibold text-slate-800">{card.class_roll || '–'}</div>
                             </div>
                             <div className="space-y-0.5">
                               <span className="text-[10px] font-bold uppercase text-slate-400">Student ID:</span>
-                              <div className="font-semibold text-slate-800">{card.id || '–'}</div>
+                              <div className="font-semibold text-slate-800">{card.student_id || '–'}</div>
                             </div>
                             <div className="space-y-0.5">
                               <span className="text-[10px] font-bold uppercase text-slate-400">Group:</span>
-                              <div className="font-semibold text-slate-800">{card.group || '–'}</div>
+                              <div className="font-semibold text-slate-800">{card.academic_group || '–'}</div>
                             </div>
                             <div className="space-y-0.5">
                               <span className="text-[10px] font-bold uppercase text-slate-400">Section:</span>
-                              <div className="font-semibold text-slate-800">{card.section || '–'}</div>
+                              <div className="font-semibold text-slate-800">{card.academic_section || '–'}</div>
                             </div>
                             <div className="space-y-0.5">
                               <span className="text-[10px] font-bold uppercase text-slate-400">Jersey Name:</span>
-                              <div className="font-bold text-slate-900 uppercase font-mono">{card.jerseyName || '–'}</div>
+                              <div className="font-bold text-slate-900 uppercase font-mono">{card.jersey_back_name || '–'}</div>
                             </div>
                             <div className="space-y-0.5">
                               <span className="text-[10px] font-bold uppercase text-slate-400">Jersey Number:</span>
-                              <div className="font-extrabold text-indigo-600 font-mono">{card.jerseyNumber || '–'}</div>
+                              <div className="font-extrabold text-indigo-600 font-mono">{card.jersey_number || '–'}</div>
                             </div>
                             <div className="space-y-0.5">
                               <span className="text-[10px] font-bold uppercase text-slate-400">Jersey Size:</span>
-                              <div className="font-semibold text-slate-800">{card.jerseySize || '–'}</div>
+                              <div className="font-semibold text-slate-800">{card.jersey_size || '–'}</div>
                             </div>
                             <div className="space-y-0.5">
                               <span className="text-[10px] font-bold uppercase text-slate-400">Sender Number:</span>
-                              <div className="font-mono text-slate-800">{card.senderNumber || card.contactNumber || '–'}</div>
+                              <div className="font-mono text-slate-800">{card.sender_mobile_no || '–'}</div>
                             </div>
                             <div className="space-y-0.5">
                               <span className="text-[10px] font-bold uppercase text-slate-400">Payment Time:</span>
-                              <div className="text-slate-800">{card.paymentTime || '–'}</div>
+                              <div className="text-slate-800">{card.payment_time || '–'}</div>
                             </div>
                             <div className="space-y-0.5">
                               <span className="text-[10px] font-bold uppercase text-slate-400">Transaction ID:</span>
-                              <div className="font-mono text-slate-800 font-bold">{card.transactionId || '–'}</div>
+                              <div className="font-mono text-slate-800 font-bold">{card.transaction_id || '–'}</div>
                             </div>
                             <div className="space-y-0.5">
                               <span className="text-[10px] font-bold uppercase text-slate-400">Registration Date:</span>
                               <div className="text-slate-600">
-                                {card.createdAt ? new Date(card.createdAt).toLocaleDateString() : '–'}
+                                {card.created_at ? new Date(card.created_at).toLocaleDateString() : '–'}
                               </div>
                             </div>
                             <div className="space-y-0.5">
                               <span className="text-[10px] font-bold uppercase text-slate-400">Fee Amount:</span>
-                              <div className="font-bold text-slate-800">{card.amount ?? 500} BDT</div>
+                              <div className="font-bold text-slate-800">{500} BDT</div>
                             </div>
                           </div>
 
@@ -500,7 +487,7 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
                                 <span>Rejected by Admin</span>
                               </div>
                               <p className="text-rose-600 font-medium pl-5">
-                                Reason: {card.rejectionReason || 'No specific reason provided.'}
+                                Reason: {card.reject_reason || 'No specific reason provided.'}
                               </p>
                             </div>
                           )}
@@ -512,7 +499,7 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
                                 type="button"
                                 onClick={() => {
                                   generateInvitationCardPDF(card, derivedPdfSettings, derivedWebsiteSettings);
-                                  showToast(`Downloading pass for ${card.name}...`);
+                                  showToast(`Downloading pass for ${card.full_name}...`);
                                 }}
                                 className="px-3.5 py-1.5 rounded-xl border border-slate-200 hover:bg-slate-50 text-slate-700 text-xs font-bold flex items-center gap-1.5 transition-colors cursor-pointer"
                               >
