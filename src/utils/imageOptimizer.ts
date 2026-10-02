@@ -3,7 +3,7 @@
  *
  * Silently optimizes user photos in the browser:
  * - Validates file types (JPG, JPEG, PNG, WEBP)
- * - Enforces 5 MB maximum file size
+ * - Enforces 3 MB maximum file size
  * - Automatically resizes images within 500px × 500px preserving aspect ratio
  * - Converts to optimized WEBP format with high facial clarity
  * - Produces DataURL for immediate UI/PDF rendering and File/Blob for future Supabase storage
@@ -58,9 +58,9 @@ export async function optimizePhoto(
   const quality = options.quality ?? 0.90;
   const maxSizeBytes = options.maxInputSizeBytes || MAX_PHOTO_SIZE_BYTES;
 
-  // 1. File Size Validation (strictly <= 5 MB)
+  // 1. File Size Validation (strictly <= 3 MB)
   if (file.size > maxSizeBytes) {
-    throw new Error('Photo size must be 5 MB or less.');
+    throw new Error('Photo size must be 3 MB or less.');
   }
 
   // 2. File Format Validation
