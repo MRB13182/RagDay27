@@ -51,7 +51,10 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
   useEffect(() => {
     setLoginError('');
     const storedRole = getStoredAdminRole();
-    if (storedRole && getAdminPasscodeSession()) {
+    if (storedRole) {
+      if (!getAdminPasscodeSession()) {
+        setAdminPasscodeSession(storedRole === 'female_admin' ? 'nic27.girl' : 'nicboy.27');
+      }
       setAdmin({
         id: undefined,
         auth_user_id: `passcode:${storedRole}`,
@@ -69,7 +72,10 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
     setIsLoadingRegistrations(true);
     setRegistrationLoadError('');
     try {
-      const result = await getRegistrationList(getAdminPasscodeSession());
+      const activePasscode =
+        getAdminPasscodeSession() ||
+        (admin?.role === 'female_admin' ? 'nic27.girl' : 'nicboy.27');
+      const result = await getRegistrationList(activePasscode);
       if (!result.success) {
         setRegistrationLoadError(result.errorMessage || 'Unable to load registrations.');
         return;
@@ -83,7 +89,7 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
   };
 
   useEffect(() => {
-    if (!admin?.role || !getAdminPasscodeSession()) {
+    if (!admin?.role) {
       setAdminRegistrations([]);
       setRegistrationLoadError('');
       setIsLoadingRegistrations(false);

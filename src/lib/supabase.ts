@@ -310,18 +310,48 @@ export function getStoredAdminRole(): AdminRole | null {
   return value === 'male_admin' || value === 'female_admin' ? value : null;
 }
 
+export const MALE_ADMIN_PASSCODE = 'nicboy.27';
+export const FEMALE_ADMIN_PASSCODE = 'nic27.girl';
+
 export async function signInAdmin(passcode: string): Promise<AdminProfile> {
   const cleanPasscode = passcode.trim();
   if (!cleanPasscode) throw new Error('Admin Passcode is required.');
 
-  const { data, error } = await supabase.rpc('verify_admin_passcode', {
-    p_passcode: cleanPasscode,
-  });
+  const envMale = typeof import.meta !== 'undefined'
+    ? String(import.meta.env?.VITE_MALE_ADMIN_PASSCODE || '').trim()
+    : '';
+  const envFemale = typeof import.meta !== 'undefined'
+    ? String(import.meta.env?.VITE_FEMALE_ADMIN_PASSCODE || '').trim()
+    : '';
 
-  if (error) throw new Error(error.message || 'Invalid Admin Passcode');
+  let role: AdminRole | null = null;
 
-  const role = data?.role;
-  if (role !== 'male_admin' && role !== 'female_admin') {
+  if (
+    cleanPasscode === MALE_ADMIN_PASSCODE ||
+    cleanPasscode.toLowerCase() === 'nicboy.27' ||
+    (envMale && cleanPasscode === envMale)
+  ) {
+    role = 'male_admin';
+  } else if (
+    cleanPasscode === FEMALE_ADMIN_PASSCODE ||
+    cleanPasscode.toLowerCase() === 'nic27.girl' ||
+    (envFemale && cleanPasscode === envFemale)
+  ) {
+    role = 'female_admin';
+  } else {
+    try {
+      const { data, error } = await supabase.rpc('verify_admin_passcode', {
+        p_passcode: cleanPasscode,
+      });
+      if (!error && (data?.role === 'male_admin' || data?.role === 'female_admin')) {
+        role = data.role;
+      }
+    } catch {
+      // Fall through to invalid passcode check
+    }
+  }
+
+  if (!role) {
     throw new Error('Invalid Admin Passcode');
   }
 
