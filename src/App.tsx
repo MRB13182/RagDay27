@@ -280,23 +280,6 @@ export default function App() {
     }
   };
 
-  const handleEditRegistration = async (
-    registration_no: string,
-    updates: Partial<InvitationRecord>
-  ) => {
-    const target = invitations.find(item => item.registration_no === registration_no);
-    const regId = target?.dbId || registration_no;
-
-    const res = await updateRegistrationDetails(regId, updates);
-    if (res.success) {
-      showToast(`Registration ${registration_no} updated!`, 'success');
-      const fresh = await getRegistrationList();
-      if (fresh.success) setInvitations(fresh.data);
-    } else {
-      showToast(res.errorMessage || `Failed to update registration ${registration_no}`, 'error');
-    }
-  };
-
   return (
     <div className="min-h-screen flex flex-col bg-[#F8F9FC] text-[#111827] selection:bg-[#5B5FEF] selection:text-white relative">
       {/* Floating Action Toast Notification */}
