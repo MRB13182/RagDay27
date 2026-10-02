@@ -30,7 +30,6 @@ import {
   approveRegistration,
   rejectRegistration,
   deleteRegistration,
-  updateRegistrationDetails,
 } from './services';
 import { supabase } from './lib/supabase';
 import { ArrowRight, Bell, CheckCircle2, AlertCircle, Info, X, ShieldAlert, Ticket } from 'lucide-react';
@@ -163,10 +162,10 @@ export default function App() {
     currency: 'BDT',
     bkashEnabled: true,
     nagadEnabled: true,
-    maleBkashNumber: registrationSettingsConfig.malePaymentNumber,
-    maleNagadNumber: registrationSettingsConfig.malePaymentNumber,
-    femaleBkashNumber: registrationSettingsConfig.femalePaymentNumber,
-    femaleNagadNumber: registrationSettingsConfig.femalePaymentNumber,
+    maleBkashNumber: registrationSettingsConfig.maleBkashNumber,
+    maleNagadNumber: registrationSettingsConfig.maleNagadNumber,
+    femaleBkashNumber: registrationSettingsConfig.femaleBkashNumber,
+    femaleNagadNumber: registrationSettingsConfig.femaleNagadNumber,
     instructions: eventSettingsConfig.importantInstructions,
     paymentInstructions: eventSettingsConfig.importantInstructions,
   };
@@ -224,11 +223,7 @@ export default function App() {
 
   const handleSuccessSubmit = async (newRecord: InvitationRecord) => {
     const listRes = await getRegistrationList();
-    if (listRes.success) {
-      setInvitations(listRes.data);
-    } else {
-      setInvitations(prev => [newRecord, ...prev.filter(x => x.registrationNo !== newRecord.registrationNo)]);
-    }
+    if (listRes.success) setInvitations(listRes.data);
     showToast(`Registration successfully submitted!`, 'success');
   };
 
@@ -239,21 +234,21 @@ export default function App() {
   };
 
   const handleUpdateRegistrationStatus = async (
-    registrationNo: string,
+    registration_no: string,
     newStatus: InvitationStatus,
     reason?: string
   ) => {
-    const target = invitations.find(item => item.registrationNo === registrationNo);
-    const regId = target?.dbId || registrationNo;
+    const target = invitations.find(item => item.registration_no === registration_no);
+    const regId = target?.dbId || registration_no;
 
     if (newStatus === 'approved') {
       const res = await approveRegistration(regId);
       if (res.success) {
-        showToast(`Registration ${registrationNo} approved!`, 'success');
+        showToast(`Registration ${registration_no} approved!`, 'success');
         const fresh = await getRegistrationList();
         if (fresh.success) setInvitations(fresh.data);
       } else {
-        showToast(res.errorMessage || `Failed to approve registration ${registrationNo}`, 'error');
+        showToast(res.errorMessage || `Failed to approve registration ${registration_no}`, 'error');
       }
     } else if (newStatus === 'rejected') {
       if (!reason?.trim()) {
@@ -262,43 +257,43 @@ export default function App() {
       }
       const res = await rejectRegistration(regId, reason.trim());
       if (res.success) {
-        showToast(`Registration ${registrationNo} rejected.`, 'success');
+        showToast(`Registration ${registration_no} rejected.`, 'success');
         const fresh = await getRegistrationList();
         if (fresh.success) setInvitations(fresh.data);
       } else {
-        showToast(res.errorMessage || `Failed to reject registration ${registrationNo}`, 'error');
+        showToast(res.errorMessage || `Failed to reject registration ${registration_no}`, 'error');
       }
     }
   };
 
-  const handleDeleteRegistration = async (registrationNo: string) => {
-    const target = invitations.find(item => item.registrationNo === registrationNo);
-    const regId = target?.dbId || registrationNo;
+  const handleDeleteRegistration = async (registration_no: string) => {
+    const target = invitations.find(item => item.registration_no === registration_no);
+    const regId = target?.dbId || registration_no;
 
     const res = await deleteRegistration(regId);
     if (res.success) {
-      showToast(`Registration ${registrationNo} deleted.`, 'success');
+      showToast(`Registration ${registration_no} deleted.`, 'success');
       const fresh = await getRegistrationList();
       if (fresh.success) setInvitations(fresh.data);
     } else {
-      showToast(res.errorMessage || `Failed to delete registration ${registrationNo}`, 'error');
+      showToast(res.errorMessage || `Failed to delete registration ${registration_no}`, 'error');
     }
   };
 
   const handleEditRegistration = async (
-    registrationNo: string,
+    registration_no: string,
     updates: Partial<InvitationRecord>
   ) => {
-    const target = invitations.find(item => item.registrationNo === registrationNo);
-    const regId = target?.dbId || registrationNo;
+    const target = invitations.find(item => item.registration_no === registration_no);
+    const regId = target?.dbId || registration_no;
 
     const res = await updateRegistrationDetails(regId, updates);
     if (res.success) {
-      showToast(`Registration ${registrationNo} updated!`, 'success');
+      showToast(`Registration ${registration_no} updated!`, 'success');
       const fresh = await getRegistrationList();
       if (fresh.success) setInvitations(fresh.data);
     } else {
-      showToast(res.errorMessage || `Failed to update registration ${registrationNo}`, 'error');
+      showToast(res.errorMessage || `Failed to update registration ${registration_no}`, 'error');
     }
   };
 
