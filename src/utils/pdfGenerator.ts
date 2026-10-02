@@ -6,7 +6,7 @@ export const generateRegistrationListPDF = (
   records: InvitationRecord[],
   pdfSettings: PdfSettings,
   websiteSettings: WebsiteSettings,
-  adminRole: 'super_admin' | 'male_admin' | 'female_admin' | string
+  adminRole: 'male_admin' | 'female_admin'
 ) => {
   const doc = new jsPDF({
     orientation: 'landscape',
