@@ -1,5 +1,5 @@
 import { supabase } from '../lib/supabase';
-import type { InvitationRecord, InvitationStatus } from '../types';
+import type { InvitationRecord } from '../types';
 import { translateBackendError } from './registrations';
 
 /**
