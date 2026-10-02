@@ -254,7 +254,7 @@ export interface BackendRegistrationInput {
   status?: InvitationStatus;
 }
 
- {
+export interface AdminProfile {
   id?: string;
   auth_user_id: string;
   username: string | null;
@@ -264,7 +264,8 @@ export interface BackendRegistrationInput {
   created_at: string;
   updated_at: string;
 }
- {
+
+export interface PublicStudentResult {
   registration_no: string;
   full_name?: string;
   class_roll?: string;
@@ -279,4 +280,3 @@ export interface BackendRegistrationInput {
   status: InvitationStatus;
   reject_reason?: string;
 }
-
