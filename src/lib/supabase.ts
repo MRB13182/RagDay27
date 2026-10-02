@@ -379,13 +379,13 @@ export async function signInAdmin(passcode: string): Promise<AdminProfile> {
   const cleanPasscode = passcode.trim();
   if (!cleanPasscode) throw new Error('Admin Passcode is required.');
 
-  if (ENV_MALE_ADMIN_PASSCODE && cleanPasscode === ENV_MALE_ADMIN_PASSCODE) {
-    try { localStorage.setItem(ADMIN_ROLE_STORAGE_KEY, 'male_admin'); } catch {}
+  if (cleanPasscode === ENV_MALE_ADMIN_PASSCODE && ENV_MALE_ADMIN_PASSCODE) {
+    localStorage.setItem(ADMIN_ROLE_STORAGE_KEY, 'male_admin');
     return adminProfileForRole('male_admin');
   }
 
-  if (ENV_FEMALE_ADMIN_PASSCODE && cleanPasscode === ENV_FEMALE_ADMIN_PASSCODE) {
-    try { localStorage.setItem(ADMIN_ROLE_STORAGE_KEY, 'female_admin'); } catch {}
+  if (cleanPasscode === ENV_FEMALE_ADMIN_PASSCODE && ENV_FEMALE_ADMIN_PASSCODE) {
+    localStorage.setItem(ADMIN_ROLE_STORAGE_KEY, 'female_admin');
     return adminProfileForRole('female_admin');
   }
 
@@ -393,10 +393,6 @@ export async function signInAdmin(passcode: string): Promise<AdminProfile> {
 }
 
 export async function signOutAdmin(): Promise<void> {
-  try {
-    localStorage.removeItem(ADMIN_ROLE_STORAGE_KEY);
-  } catch {
-    // Ignore storage cleanup errors.
-  }
+  localStorage.removeItem(ADMIN_ROLE_STORAGE_KEY);
 }
 
