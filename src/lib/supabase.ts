@@ -345,9 +345,13 @@ export type AdminRole = 'male_admin' | 'female_admin';
 const ADMIN_ROLE_STORAGE_KEY = 'admin_role';
 
 const ENV_MALE_ADMIN_PASSCODE =
-  typeof import.meta !== 'undefined' ? import.meta.env?.VITE_MALE_ADMIN_PASSCODE : undefined;
+  typeof import.meta !== 'undefined'
+    ? String(import.meta.env?.VITE_MALE_ADMIN_PASSCODE || '').trim()
+    : '';
 const ENV_FEMALE_ADMIN_PASSCODE =
-  typeof import.meta !== 'undefined' ? import.meta.env?.VITE_FEMALE_ADMIN_PASSCODE : undefined;
+  typeof import.meta !== 'undefined'
+    ? String(import.meta.env?.VITE_FEMALE_ADMIN_PASSCODE || '').trim()
+    : '';
 
 function adminProfileForRole(role: AdminRole): AdminProfile {
   const now = new Date().toISOString();
