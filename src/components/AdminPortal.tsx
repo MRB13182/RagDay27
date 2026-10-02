@@ -1,6 +1,7 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import type { InvitationRecord, InvitationStatus, AdminProfile, PdfSettings, WebsiteSettings } from '../types';
 import { signInAdmin, signOutAdmin, getStoredAdminRole } from '../lib/supabase';
+import { getRegistrationList } from '../services/admin';
 import { generateRegistrationListPDF, generateInvitationCardPDF } from '../utils/pdfGenerator';
 import {
   websiteIdentityConfig,
@@ -43,6 +44,9 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
   const [rejectReason, setRejectReason] = useState('');
   const [deletingRegNo, setDeletingRegNo] = useState<string | null>(null);
   const [toastMessage, setToastMessage] = useState<string | null>(null);
+  const [adminRegistrations, setAdminRegistrations] = useState<InvitationRecord[]>([]);
+  const [isLoadingRegistrations, setIsLoadingRegistrations] = useState(false);
+  const [registrationLoadError, setRegistrationLoadError] = useState('');
 
   useEffect(() => {
     setLoginError('');
@@ -61,13 +65,40 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
     }
   }, []);
 
+  const loadAdminRegistrations = async () => {
+    setIsLoadingRegistrations(true);
+    setRegistrationLoadError('');
+    try {
+      const result = await getRegistrationList();
+      if (!result.success) {
+        setRegistrationLoadError(result.errorMessage || 'Unable to load registrations.');
+        return;
+      }
+      setAdminRegistrations(result.data);
+    } catch (error: any) {
+      setRegistrationLoadError(error?.message || 'Unable to load registrations.');
+    } finally {
+      setIsLoadingRegistrations(false);
+    }
+  };
+
+  useEffect(() => {
+    if (!admin?.role) {
+      setAdminRegistrations([]);
+      setRegistrationLoadError('');
+      setIsLoadingRegistrations(false);
+      return;
+    }
+    void loadAdminRegistrations();
+  }, [admin?.role]);
+
   const showToast = (msg: string) => {
     setToastMessage(msg);
     setTimeout(() => setToastMessage(null), 3500);
   };
 
   const scopedRows = useMemo(() => {
-    let rows = invitations;
+    let rows = adminRegistrations;
     if (admin?.role === 'male_admin') rows = rows.filter(r => r.gender === 'male');
     if (admin?.role === 'female_admin') rows = rows.filter(r => r.gender === 'female');
     if (statusFilter !== 'all') rows = rows.filter(r => r.status === statusFilter);
@@ -89,7 +120,7 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
       );
     }
     return rows;
-  }, [admin?.role, invitations, statusFilter, query]);
+  }, [admin?.role, adminRegistrations, statusFilter, query]);
 
   const login = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -106,11 +137,14 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
   const logout = async () => {
     await signOutAdmin();
     setAdmin(null);
+    setAdminRegistrations([]);
+    setRegistrationLoadError('');
     setPasscode('');
   };
 
   const handleApprove = async (regNo: string) => {
     await onUpdateStatus(regNo, 'approved');
+    await loadAdminRegistrations();
   };
 
   const openRejectModal = (regNo: string) => {
@@ -126,6 +160,7 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
       return;
     }
     await onUpdateStatus(rejecting, 'rejected', cleanReason);
+    await loadAdminRegistrations();
     setRejecting(null);
     setRejectReason('');
   };
@@ -133,6 +168,7 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
   const confirmDelete = async () => {
     if (onDeleteRegistration && deletingRegNo) {
       await onDeleteRegistration(deletingRegNo);
+      await loadAdminRegistrations();
       showToast(`Registration ${deletingRegNo} hidden from website.`);
       setDeletingRegNo(null);
     }
@@ -320,7 +356,7 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
                   tab === 'registrations' ? 'bg-indigo-700 text-white' : 'bg-slate-200 text-slate-700'
                 }`}
               >
-                {scopedRows.length}
+                {isLoadingRegistrations ? '…' : scopedRows.length}
               </span>
             </button>
 
@@ -375,7 +411,23 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
                 </div>
 
                 {/* Empty State */}
-                {scopedRows.length === 0 ? (
+                {isLoadingRegistrations ? (
+                  <div className="rounded-2xl border border-dashed border-slate-300 p-12 text-center bg-white">
+                    <p className="text-sm font-semibold text-slate-500">Loading registrations...</p>
+                  </div>
+                ) : registrationLoadError ? (
+                  <div className="rounded-2xl border border-rose-200 p-12 text-center bg-rose-50">
+                    <p className="text-sm font-semibold text-rose-700">Unable to load registrations.</p>
+                    <p className="text-xs text-rose-600 mt-2">{registrationLoadError}</p>
+                    <button
+                      type="button"
+                      onClick={() => void loadAdminRegistrations()}
+                      className="mt-4 px-4 py-2 rounded-xl bg-rose-600 hover:bg-rose-700 text-white text-xs font-bold cursor-pointer"
+                    >
+                      Retry
+                    </button>
+                  </div>
+                ) : scopedRows.length === 0 ? (
                   <div className="rounded-2xl border border-dashed border-slate-300 p-12 text-center bg-white">
                     <p className="text-sm font-semibold text-slate-500">No registrations found matching criteria.</p>
                   </div>
