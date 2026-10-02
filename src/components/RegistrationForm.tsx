@@ -254,7 +254,9 @@ export const RegistrationForm: React.FC<RegistrationFormProps> = ({
     const match = await checkDuplicateRegistration(
       formData.student_id,
       formData.full_name,
-      formData.class_roll
+      formData.class_roll,
+      formData.academic_group,
+      formData.academic_section
     );
 
     if (match) {
