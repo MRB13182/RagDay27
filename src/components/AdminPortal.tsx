@@ -1,6 +1,6 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import type { InvitationRecord, InvitationStatus, AdminProfile, PdfSettings, WebsiteSettings } from '../types';
-import { getCurrentAdminProfile, signInAdmin, signOutAdmin } from '../lib/supabase';
+import { signInAdmin, signOutAdmin, getStoredAdminRole } from '../lib/supabase';
 import { generateRegistrationListPDF, generateInvitationCardPDF } from '../utils/pdfGenerator';
 import {
   websiteIdentityConfig,
@@ -34,8 +34,7 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
   onDeleteRegistration,
 }) => {
   const [admin, setAdmin] = useState<AdminProfile | null>(null);
-  const [username, setUsername] = useState('');
-  const [password, setPassword] = useState('');
+  const [passcode, setPasscode] = useState('');
   const [loginError, setLoginError] = useState('');
   const [tab, setTab] = useState<'registrations'>('registrations');
   const [query, setQuery] = useState('');
@@ -47,7 +46,19 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
 
   useEffect(() => {
     setLoginError('');
-    void getCurrentAdminProfile().then(setAdmin).catch(() => setAdmin(null));
+    const storedRole = getStoredAdminRole();
+    if (storedRole) {
+      setAdmin({
+        id: undefined,
+        auth_user_id: `passcode:${storedRole}`,
+        username: null,
+        full_name: storedRole === 'male_admin' ? 'Male Admin' : 'Female Admin',
+        role: storedRole,
+        active: true,
+        created_at: new Date(0).toISOString(),
+        updated_at: new Date(0).toISOString(),
+      });
+    }
   }, []);
 
   const showToast = (msg: string) => {
@@ -84,18 +95,18 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
     e.preventDefault();
     setLoginError('');
     try {
-      const profile = await signInAdmin(username, password);
+      const profile = await signInAdmin(passcode);
       setAdmin(profile);
-      setUsername('');
-      setPassword('');
+      setPasscode('');
     } catch (e: any) {
-      setLoginError(e?.message || 'Invalid administrator credentials.');
+      setLoginError(e?.message || 'Invalid Admin Passcode');
     }
   };
 
   const logout = async () => {
     await signOutAdmin();
     setAdmin(null);
+    setPasscode('');
   };
 
   const handleApprove = async (regNo: string) => {
@@ -210,20 +221,20 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
               </div>
               <h2 className="mt-4 text-2xl font-black text-slate-900 tracking-tight">Admin Sign In</h2>
               <p className="mt-1 text-xs text-slate-500">
-                Sign in with your Supabase Auth administrator credentials.
+                Enter your administrator passcode to continue.
               </p>
             </div>
 
             <div className="space-y-1.5 pt-2">
               <label className="text-xs font-bold uppercase tracking-wider text-slate-700">
-                Username
+                Admin Passcode
               </label>
               <div className="relative">
                 <input
-                  value={username}
-                  onChange={e => setUsername(e.target.value)}
-                  type="text"
-                  placeholder="nicboy.27 or nic27.girl"
+                  value={passcode}
+                  onChange={e => setPasscode(e.target.value)}
+                  type="password"
+                  placeholder="Enter Admin Passcode"
                   required
                   autoFocus
                   className="w-full rounded-xl border border-slate-300 pl-4 pr-11 py-3 text-sm font-mono focus:border-indigo-600 focus:outline-none focus:ring-2 focus:ring-indigo-100 transition-all placeholder:text-slate-400"
@@ -232,7 +243,7 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
                   type="button"
                   onClick={() => undefined}
                   className="absolute right-3 top-3 text-slate-400 hover:text-slate-600 p-0.5 rounded cursor-pointer"
-                  title="Username"
+                  title="Admin Passcode"
                 >
                   <span />
                 </button>
@@ -319,7 +330,7 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
           {/* Tab Content Container */}
           <div className="p-4 sm:p-6">
             {/* ============================================================== */}
-            {/* 1. REGISTRATIONS TAB (Super Admin, Male Admin, Female Admin)   */}
+            {/* 1. REGISTRATIONS TAB (Male Admin / Female Admin)              */}
             {/* ============================================================== */}
             {tab === 'registrations' && (
               <section className="space-y-4 animate-fadeIn">
@@ -547,7 +558,7 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
             )}
 
             {/* ============================================================== */}
-            {/* 2. SUPER ADMIN CODE CONFIGURATION OVERVIEW (Super Admin Only)  */}
+            {/* 2. Legacy configuration view intentionally disabled           */}
             {/* ============================================================== */}
             {tab === 'registrations' && false && (
               <section className="space-y-6 animate-fadeIn pb-12">
@@ -765,7 +776,7 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
               </div>
             </div>
             <p className="text-xs text-slate-600 leading-relaxed">
-              Are you sure you want to permanently delete registration <strong>{deletingRegNo}</strong> from the database? This action will remove the record from both Supabase and website.
+              Are you sure you want to hide registration <strong>{deletingRegNo}</strong> from the website? The database record and registration number will be preserved.
             </p>
             <div className="mt-5 flex justify-end gap-2">
               <button
@@ -781,7 +792,7 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
                 className="px-4 py-2 rounded-xl bg-rose-600 hover:bg-rose-700 text-white text-xs font-bold shadow-md shadow-rose-200 flex items-center gap-1.5 cursor-pointer"
               >
                 <Trash2 className="w-4 h-4" />
-                <span>Delete Permanently</span>
+                <span>Hide From Website</span>
               </button>
             </div>
           </div>
