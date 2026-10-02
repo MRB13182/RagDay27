@@ -1,10 +1,7 @@
 import { supabase } from '../lib/supabase';
-import type { InvitationRecord } from '../types';
-import { mapRowToInvitation, getStoredRegistrations } from './admin';
+import type { InvitationRecord, InvitationStatus } from '../types';
+import { mapRowToInvitation } from './admin';
 
-/**
- * Look up an approved invitation card from public.registrations
- */
 export async function getPublicInvitation(
   registration_no: string | number
 ): Promise<{
@@ -13,100 +10,75 @@ export async function getPublicInvitation(
   error?: any;
   errorMessage?: string;
 }> {
-  const rawStr = String(registration_no).trim();
+  const value = String(registration_no).trim();
+  if (!value) return { success: false, data: null, errorMessage: 'Registration number is required.' };
 
-  try {
-    let query = supabase
-      .from('registrations')
-      .select('*')
-      .eq('status', 'approved');
+  const { data, error } = await supabase.rpc('lookup_invitation_card', {
+    p_registration_no: value,
+    p_student_name: null,
+  });
 
-    if (rawStr.toUpperCase().startsWith('RDB27') || rawStr.toUpperCase().startsWith('RDG27') || rawStr.toUpperCase().startsWith('RD27')) {
-      query = query.eq('registration_no', rawStr);
-    } else {
-      query = query.or(`registration_no.eq.${rawStr},student_id.eq.${rawStr},class_roll.eq.${rawStr}`);
-    }
-
-    const { data, error } = await query.maybeSingle();
-
-    if (!error && data) {
-      const record = mapRowToInvitation(data);
-      return {
-        success: true,
-        data: record,
-      };
-    }
-  } catch {}
-
-  // Fallback to local store
-  const stored = getStoredRegistrations();
-  const match = stored.find(
-    r =>
-      r.status === 'approved' &&
-      (r.registration_no.toUpperCase() === rawStr.toUpperCase() ||
-        r.class_roll === rawStr ||
-        r.student_id === rawStr)
-  );
-
-  if (match) {
-    return { success: true, data: match };
+  if (error) {
+    return { success: false, data: null, error, errorMessage: error.message };
   }
 
-  return {
-    success: false,
-    data: null,
-    errorMessage: 'No approved registration found for this registration number.',
-  };
+  if (!data?.found) {
+    return {
+      success: false,
+      data: null,
+      errorMessage: data?.status === 'hidden_or_not_found'
+        ? 'No public registration was found.'
+        : 'No registration found.',
+    };
+  }
+
+  if (data.status === 'pending' || data.status === 'rejected') {
+    return {
+      success: true,
+      data: {
+        id: undefined,
+        dbId: undefined,
+        registration_no: data.registration_no,
+        full_name: data.full_name || '',
+        class_roll: '',
+        student_id: '',
+        contact_mobile_number: '',
+        academic_group: '',
+        academic_section: '',
+        student_photo: null,
+        send_method: 'bkash',
+        sender_mobile_no: '',
+        payment_time: '',
+        transaction_id: undefined,
+        jersey_back_name: '',
+        jersey_number: '',
+        jersey_size: 'L',
+        gender: 'male',
+        status: data.status as InvitationStatus,
+        reject_reason: data.reject_reason || undefined,
+        rejected_at: data.rejected_at || null,
+        approved_by: null,
+        rejected_by: null,
+        approved_at: null,
+        created_at: '',
+        updated_at: '',
+      },
+    };
+  }
+
+  return { success: true, data: mapRowToInvitation(data) };
 }
 
-/**
- * Searches registrations in public.registrations by:
- * registration_no, full_name, student_id, class_roll (Requirement 13)
- */
-export async function searchPublicStudent(
-  searchTerm: string
-): Promise<{
-  success: boolean;
-  data: any[];
-  error?: any;
-  errorMessage?: string;
-}> {
+export async function searchPublicStudent(searchTerm: string) {
   const clean = searchTerm.trim();
-  if (!clean) {
-    return { success: true, data: [] };
-  }
+  if (!clean) return { success: true, data: [] as InvitationRecord[] };
 
-  try {
-    let query = supabase
-      .from('registrations')
-      .select('id, sl_no, registration_no, full_name, class_roll, student_id, contact_mobile_number, academic_group, academic_section, student_photo, send_method, sender_mobile_no, payment_time, transaction_id, jersey_back_name, jersey_number, jersey_size, gender, status, reject_reason');
-
-    query = query.or(`registration_no.ilike.%${clean}%,student_id.ilike.%${clean}%,class_roll.ilike.%${clean}%,full_name.ilike.%${clean}%`);
-
-    const { data, error } = await query.limit(10);
-
-    if (!error && data && data.length > 0) {
-      return {
-        success: true,
-        data: data.map(mapRowToInvitation),
-      };
-    }
-  } catch {}
-
-  // Fallback to local store
-  const stored = getStoredRegistrations();
-  const lower = clean.toLowerCase();
-  const matched = stored
-    .filter(
-      r =>
-        (r.registration_no || '').toLowerCase().includes(lower) ||
-        (r.full_name || '').toLowerCase().includes(lower) ||
-        (r.class_roll || '').toLowerCase().includes(lower) ||
-        (r.student_id || '').toLowerCase().includes(lower)
-    );
-
-  return {
-    success: true,
-    data: matched,
+  // Public lookup intentionally requires the exact registration number.
+  const result = await getPublicInvitation(clean);
+  return result.success && result.data ? { success: true, data: [result.data] } : {
+    success: false,
+    data: [] as InvitationRecord[],
+    error: result.error,
+    errorMessage: result.errorMessage,
   };
 }
