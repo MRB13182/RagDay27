@@ -70,7 +70,7 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
     setIsLoadingRegistrations(true);
     setRegistrationLoadError('');
     try {
-      const result = await getRegistrationList();
+      const result = await getRegistrationList(getStoredAdminPasscode() || '');
       if (!result.success) {
         setRegistrationLoadError(result.errorMessage || 'Unable to load registrations.');
         return;
@@ -84,7 +84,7 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
   };
 
   useEffect(() => {
-    if (!admin?.role) {
+    if (!admin?.role || !getStoredAdminPasscode()) {
       setAdminRegistrations([]);
       setRegistrationLoadError('');
       setIsLoadingRegistrations(false);
