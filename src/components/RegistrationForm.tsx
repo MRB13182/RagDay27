@@ -97,7 +97,13 @@ export const RegistrationForm: React.FC<RegistrationFormProps> = ({
   // Re-submission / editing state for rejected registrations
   const [editingRegNo, setEditingRegNo] = useState<string | null>(null);
   const [editingDbId, setEditingDbId] = useState<string | null>(null);
-  const [recoveryProof, setRecoveryProof] = useState<{ studentId: string; fullName: string; classRoll: string } | null>(null);
+  const [recoveryProof, setRecoveryProof] = useState<{
+    studentId: string;
+    fullName: string;
+    classRoll: string;
+    academicGroup: string;
+    academicSection: string;
+  } | null>(null);
 
   // Declaration checkbox state (Required: must be checked to submit)
   const [declarationChecked, setDeclarationChecked] = useState(false);
@@ -156,6 +162,8 @@ export const RegistrationForm: React.FC<RegistrationFormProps> = ({
         studentId: initialRecord.student_id || '',
         fullName: initialRecord.full_name || '',
         classRoll: initialRecord.class_roll || '',
+        academicGroup: initialRecord.academic_group || '',
+        academicSection: initialRecord.academic_section || '',
       });
     }
   }, [initialRecord]);
@@ -422,6 +430,8 @@ export const RegistrationForm: React.FC<RegistrationFormProps> = ({
       studentId: record.student_id || '',
       fullName: record.full_name || '',
       classRoll: record.class_roll || '',
+      academicGroup: record.academic_group || '',
+      academicSection: record.academic_section || '',
     });
     setDuplicateModal(null);
   };
