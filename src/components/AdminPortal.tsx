@@ -1,6 +1,6 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import type { InvitationRecord, InvitationStatus, AdminProfile, PdfSettings, WebsiteSettings } from '../types';
-import { signInAdmin, signOutAdmin, getStoredAdminRole } from '../lib/supabase';
+import { signInAdmin, signOutAdmin, getStoredAdminRole, getStoredAdminPasscode } from '../lib/supabase';
 import { getRegistrationList } from '../services/admin';
 import { generateRegistrationListPDF, generateInvitationCardPDF } from '../utils/pdfGenerator';
 import {
@@ -50,6 +50,7 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
 
   useEffect(() => {
     setLoginError('');
+    setAdminPasscode(getStoredAdminPasscode() || '');
     const storedRole = getStoredAdminRole();
     if (storedRole) {
       setAdmin({
