@@ -5,8 +5,17 @@
 
 create extension if not exists pgcrypto;
 
-create sequence if not exists public.male_reg_seq start 1 increment 1;
-create sequence if not exists public.female_reg_seq start 1 increment 1;
+-- Registration numbers are allocated exclusively by the database counter table.
+-- The counters remember the highest EVER issued number independently by gender.
+create table if not exists public.registration_number_counters (
+  gender text primary key check (gender in ('male','female')),
+  last_issued bigint not null default 0 check (last_issued >= 0),
+  updated_at timestamptz not null default now()
+);
+
+insert into public.registration_number_counters (gender,last_issued)
+values ('male',0),('female',0)
+on conflict (gender) do nothing;
 
 create table if not exists public.registrations (
   id uuid primary key default gen_random_uuid(),
@@ -60,3 +69,10 @@ begin
   alter publication supabase_realtime add table public.registrations;
 exception when duplicate_object then null;
 end $$;
+
+
+-- Production allocator contract (deployed through ordered Supabase migrations):
+-- public.next_registration_number(p_gender text)
+-- returns RDB27-<n> for male and RDG27-<n> for female using
+-- public.registration_number_counters.last_issued. Never use MAX(registration_no),
+-- frontend counters, or localStorage for allocation.
