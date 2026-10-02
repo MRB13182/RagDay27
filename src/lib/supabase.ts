@@ -18,7 +18,7 @@ import type { AdminProfile } from '../types';
 const SUPABASE_PROJECT_URL =
   'https://xulkacnjqjnluhmbqbcu.supabase.co';
 
-const SUPABASE_PUBLISHABLE_KEY =
+const DEFAULT_SUPABASE_PUBLISHABLE_KEY =
   'sb_publishable_fQRP801i7hVZYFEz7oMMNg_uvZyZsVX';
 
 /**
@@ -59,11 +59,11 @@ function resolveSupabaseUrl(): string {
  * Resolve the browser-safe publishable key.
  */
 function resolveSupabaseKey(): string {
-  const candidate = (ENV_SUPABASE_KEY || SUPABASE_PUBLISHABLE_KEY).trim();
+  const candidate = (ENV_SUPABASE_KEY || DEFAULT_SUPABASE_PUBLISHABLE_KEY).trim();
 
   // Never use an obviously invalid placeholder.
   if (!candidate || candidate === 'YOUR_SUPABASE_PUBLISHABLE_KEY') {
-    return SUPABASE_PUBLISHABLE_KEY;
+    return DEFAULT_SUPABASE_PUBLISHABLE_KEY;
   }
 
   return candidate;

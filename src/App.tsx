@@ -13,6 +13,7 @@ import {
   registrationSettingsConfig,
   countdownSettingsConfig,
   importantNoticeConfig,
+  logoRelatedConfig,
 } from './lib/superAdminConfig';
 import type {
   InvitationRecord,
@@ -199,6 +200,7 @@ export default function App() {
     enabled: true,
     sectionOrder:
       eventSettingsConfig.eventCardLayout === 'cards_first' ? 'cards_first' : 'showcase_first',
+    designCards: logoRelatedConfig.jerseyDesignCards,
     jerseys: [
       {
         id: 'jersey-batch27',
@@ -439,6 +441,7 @@ export default function App() {
                 <>
                   {jerseyShowcaseSettings.enabled && (
                     <JerseyShowcaseSection
+                      cards={logoRelatedConfig.jerseyDesignCards}
                       settings={jerseyShowcaseSettings}
                       onRegisterClick={handleOpenRegistration}
                     />
@@ -450,6 +453,7 @@ export default function App() {
                   <EventInformationSection cards={eventCards} layout={eventSettingsConfig.eventCardLayout} />
                   {jerseyShowcaseSettings.enabled && (
                     <JerseyShowcaseSection
+                      cards={logoRelatedConfig.jerseyDesignCards}
                       settings={jerseyShowcaseSettings}
                       onRegisterClick={handleOpenRegistration}
                     />

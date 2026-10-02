@@ -92,35 +92,40 @@ const jerseyBgGlob = import.meta.glob([
 ], { eager: true });
 
 // 06. Logo-Related Image Globs
-const logoRelatedWebsiteLogoGlob = import.meta.glob(
+const logoRelatedWebsiteLogoGlob = import.meta.glob([
   '../super-admin/06. logo-related/images/website-logo/*',
-  { eager: true }
-);
+  '../super-admin/06. logo-related/images/logo/*',
+  '../super-admin/06. logo-related/logo.*',
+  '../super-admin/06. logo-related/*logo*.*',
+], { eager: true });
 
-const logoRelatedFaviconGlob = import.meta.glob(
+const logoRelatedFaviconGlob = import.meta.glob([
   '../super-admin/06. logo-related/images/favicon/*',
-  { eager: true }
-);
+  '../super-admin/06. logo-related/favicon.*',
+  '../super-admin/06. logo-related/*favicon*.*',
+], { eager: true });
 
-const logoRelatedJerseyBackPreviewGlob = import.meta.glob(
+const logoRelatedJerseyBackPreviewGlob = import.meta.glob([
   '../super-admin/06. logo-related/images/jersey-back-preview/*',
-  { eager: true }
-);
+  '../super-admin/06. logo-related/jersey-back-preview.*',
+], { eager: true });
 
-const logoRelatedMaleJerseyGlob = import.meta.glob(
+const logoRelatedMaleJerseyGlob = import.meta.glob([
   '../super-admin/06. logo-related/images/male-jersey/*',
-  { eager: true }
-);
+  '../super-admin/06. logo-related/male-jersey.*',
+], { eager: true });
 
-const logoRelatedFemaleJerseyGlob = import.meta.glob(
+const logoRelatedFemaleJerseyGlob = import.meta.glob([
   '../super-admin/06. logo-related/images/female-jersey/*',
-  { eager: true }
-);
+  '../super-admin/06. logo-related/female-jersey.*',
+], { eager: true });
 
-const logoRelatedJerseyDesignGlob = import.meta.glob(
+const logoRelatedJerseyDesignGlob = import.meta.glob([
   '../super-admin/06. logo-related/images/jersey-design/*',
-  { eager: true }
-);
+  '../super-admin/06. logo-related/jersey design.*',
+  '../super-admin/06. logo-related/jersey-design.*',
+  '../super-admin/06. logo-related/*jersey*.*',
+], { eager: true });
 
 /**
  * Extracts first image URL from a Vite import.meta.glob record if present
@@ -150,16 +155,25 @@ function getAllImagesFromGlob(glob: Record<string, any>): string[] {
  * e.g. "jersey-one.png" -> matching imported module URL
  */
 export function getAssetByFilename(glob: Record<string, any>, filename: string): string {
-  if (!filename || !filename.trim()) return '';
+  if (!filename || !filename.trim()) {
+    const all = getAllImagesFromGlob(glob);
+    return all[0] || '';
+  }
   const target = filename.trim().toLowerCase();
+  const targetClean = target.replace(/[-_\s]/g, '');
+
   for (const [path, mod] of Object.entries(glob)) {
-    const base = path.split('/').pop()?.toLowerCase();
-    if (base === target) {
+    const base = path.split('/').pop()?.toLowerCase() || '';
+    const baseClean = base.replace(/[-_\s]/g, '');
+    if (base === target || baseClean === targetClean || baseClean.includes(targetClean) || targetClean.includes(baseClean)) {
       if (typeof mod === 'string') return mod;
       return (mod as any)?.default || '';
     }
   }
-  return '';
+
+  // Fallback to first image in glob if any
+  const all = getAllImagesFromGlob(glob);
+  return all[0] || '';
 }
 
 // ============================================================================
