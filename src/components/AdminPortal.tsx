@@ -20,9 +20,9 @@ interface AdminPortalProps {
   isOpen: boolean;
   onClose: () => void;
   invitations: InvitationRecord[];
-  onUpdateStatus: (registrationNo: string, newStatus: InvitationStatus, reason?: string) => Promise<void>;
+  onUpdateStatus: (registration_no: string, newStatus: InvitationStatus, reason?: string) => Promise<void>;
   onDeleteRegistration?: (registrationNo: string) => Promise<void>;
-  onEditRegistration?: (registrationNo: string, updates: Partial<InvitationRecord>) => Promise<void>;
+  onEditRegistration?: (registration_no: string, updates: Partial<InvitationRecord>) => Promise<void>;
 }
 
 type Tab = 'registrations';
@@ -341,7 +341,7 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
                     {/* Super Admin Gender Filter */}
                     {false && (
                       <select
-                        value={genderFilter}
+                        value={statusFilter}
                         onChange={e => setGenderFilter(e.target.value as any)}
                         className="px-3 py-2 text-xs rounded-xl border border-slate-200 bg-white font-semibold text-slate-700 outline-none cursor-pointer"
                       >
@@ -392,7 +392,7 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
 
                       return (
                         <article
-                          key={card.dbId || card.registrationNo}
+                          key={card.dbId || card.registration_no}
                           className="rounded-2xl bg-white border border-slate-200 p-5 shadow-sm hover:shadow-md transition-all space-y-4"
                         >
                           {/* Card Top Row */}
@@ -411,7 +411,7 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
                                 </span>
                               </div>
                               <div className="font-mono text-xs font-extrabold text-indigo-600 mt-0.5">
-                                {card.registrationNo}
+                                {card.registration_no}
                               </div>
                             </div>
 
@@ -524,7 +524,7 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
                               {!isApproved && (
                                 <button
                                   type="button"
-                                  onClick={() => handleApprove(card.registrationNo)}
+                                  onClick={() => handleApprove(card.registration_no)}
                                   className="px-3.5 py-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold flex items-center gap-1.5 shadow-sm shadow-emerald-200 transition-all cursor-pointer"
                                 >
                                   <Check className="w-3.5 h-3.5" />
@@ -534,7 +534,7 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
                               {!isRejected && (
                                 <button
                                   type="button"
-                                  onClick={() => openRejectModal(card.registrationNo)}
+                                  onClick={() => openRejectModal(card.registration_no)}
                                   className="px-3.5 py-1.5 rounded-xl border border-rose-200 text-rose-600 hover:bg-rose-50 text-xs font-bold flex items-center gap-1.5 transition-colors cursor-pointer"
                                 >
                                   <XCircle className="w-3.5 h-3.5" />
@@ -543,7 +543,7 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
                               )}
                               <button
                                 type="button"
-                                onClick={() => setDeletingRegNo(card.registrationNo)}
+                                onClick={() => setDeletingRegNo(card.registration_no)}
                                 className="px-3.5 py-1.5 rounded-xl border border-slate-200 text-slate-500 hover:text-rose-600 hover:bg-rose-50 text-xs font-bold flex items-center gap-1.5 transition-colors cursor-pointer"
                                 title="Delete Registration"
                               >
@@ -563,7 +563,7 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
             {/* ============================================================== */}
             {/* 2. SUPER ADMIN CODE CONFIGURATION OVERVIEW (Super Admin Only)  */}
             {/* ============================================================== */}
-            {tab === 'config_info' && false && (
+            {tab === 'registrations' && false && (
               <section className="space-y-6 animate-fadeIn pb-12">
                 <div className="p-6 rounded-3xl bg-white border border-slate-200 shadow-sm space-y-4">
                   <div className="flex items-center gap-2.5">
