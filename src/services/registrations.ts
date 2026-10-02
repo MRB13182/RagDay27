@@ -65,11 +65,19 @@ export async function fetchSections(groupNameOrId?: string, gender?: 'male' | 'f
   }));
 }
 
-export async function checkDuplicateRegistration(studentId: string, fullName: string, classRoll: string): Promise<InvitationRecord | null> {
+export async function checkDuplicateRegistration(
+  studentId: string,
+  fullName: string,
+  classRoll: string,
+  academicGroup: string,
+  academicSection: string
+): Promise<InvitationRecord | null> {
   const { data, error } = await supabase.rpc('find_registration_duplicate', {
     p_student_id: studentId.trim(),
     p_full_name: fullName.trim(),
     p_class_roll: classRoll.trim(),
+    p_academic_group: academicGroup.trim(),
+    p_academic_section: academicSection.trim(),
   });
   if (error) throw error;
   const row = Array.isArray(data) ? data[0] : data;
