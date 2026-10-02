@@ -203,7 +203,7 @@ export const PhotoUploadField: React.FC<PhotoUploadFieldProps> = ({
               >
                 {effectivePhoto
                   ? 'Click to change or select another photo'
-                  : 'JPG, PNG, or WEBP (Max 5 MB)'}
+                  : 'JPG, PNG, or WEBP (Max 3 MB)'}
               </p>
             </div>
           </div>
