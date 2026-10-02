@@ -72,10 +72,7 @@ function resolveSupabaseKey(): string {
 const currentConfig = {
   url: resolveSupabaseUrl(),
   key: resolveSupabaseKey(),
-  isCustom: false,
 };
-
-
 
 export const SUPABASE_URL = currentConfig.url;
 export const SUPABASE_PUBLISHABLE_KEY = currentConfig.key;
@@ -89,9 +86,9 @@ function createClientInstance(
 ): SupabaseClient {
   return createClient(url, key, {
     auth: {
-      persistSession: true,
-      autoRefreshToken: true,
-      detectSessionInUrl: true,
+      persistSession: false,
+      autoRefreshToken: false,
+      detectSessionInUrl: false,
     },
   });
 }
@@ -103,61 +100,6 @@ export let supabase = createClientInstance(
   currentConfig.url,
   currentConfig.key
 );
-
-/**
- * Set custom Supabase config.
- *
- * For safety, only the current RagDay27 project is accepted.
- */
-export function setSupabaseConfig(
-  url: string,
-  key: string
-): void {
-  const cleanUrl = url.trim().replace(/\/+$/, '');
-  const cleanKey = key.trim();
-
-  if (cleanUrl !== SUPABASE_PROJECT_URL) {
-    throw new Error(
-      'Only the current RagDay27 Supabase project is allowed.'
-    );
-  }
-
-  if (!cleanKey) {
-    throw new Error('A valid Supabase publishable key is required.');
-  }
-
-  try {
-    localStorage.setItem(
-      STORAGE_CUSTOM_URL_KEY,
-      cleanUrl
-    );
-    localStorage.setItem(
-      STORAGE_CUSTOM_KEY_KEY,
-      cleanKey
-    );
-  } catch {
-    // Ignore localStorage errors.
-  }
-
-  supabase = createClientInstance(cleanUrl, cleanKey);
-}
-
-/**
- * Reset to the official RagDay27 Supabase project.
- */
-export function resetSupabaseConfig(): void {
-  try {
-    localStorage.removeItem(STORAGE_CUSTOM_URL_KEY);
-    localStorage.removeItem(STORAGE_CUSTOM_KEY_KEY);
-  } catch {
-    // Ignore localStorage errors.
-  }
-
-  supabase = createClientInstance(
-    SUPABASE_PROJECT_URL,
-    SUPABASE_PUBLISHABLE_KEY
-  );
-}
 
 /**
  * Storage bucket.
