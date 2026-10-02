@@ -4,12 +4,16 @@ import { translateBackendError } from './registrations';
 
 const ADMIN_SESSION_KEY = 'admin_passcode_session';
 
+export function setAdminPasscodeSession(passcode: string): void {
+  sessionStorage.setItem(ADMIN_SESSION_KEY, passcode);
+}
+
+export function clearAdminPasscodeSession(): void {
+  sessionStorage.removeItem(ADMIN_SESSION_KEY);
+}
+
 function getAdminPasscode(): string {
-  try {
-    return localStorage.getItem(ADMIN_SESSION_KEY) || '';
-  } catch {
-    return '';
-  }
+  return sessionStorage.getItem(ADMIN_SESSION_KEY) || '';
 }
 
 /**
