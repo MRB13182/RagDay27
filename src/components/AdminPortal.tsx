@@ -79,7 +79,7 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
       );
     }
     return rows;
-  }, [admin?.role, invitations, statusFilter, genderFilter, query]);
+  }, [admin?.role, invitations, statusFilter, query]);
 
   const login = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -101,7 +101,6 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
 
   const handleApprove = async (regNo: string) => {
     await onUpdateStatus(regNo, 'approved');
-    showToast(`Registration ${regNo} approved!`);
   };
 
   const openRejectModal = (regNo: string) => {
@@ -117,7 +116,6 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
       return;
     }
     await onUpdateStatus(rejecting, 'rejected', cleanReason);
-    showToast(`Registration ${rejecting} rejected.`);
     setRejecting(null);
     setRejectReason('');
   };
@@ -125,7 +123,7 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
   const confirmDelete = async () => {
     if (onDeleteRegistration && deletingRegNo) {
       await onDeleteRegistration(deletingRegNo);
-      showToast(`Registration ${deletingRegNo} deleted permanently.`);
+      showToast(`Registration ${deletingRegNo} hidden from website.`);
       setDeletingRegNo(null);
     }
   };
