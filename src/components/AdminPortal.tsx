@@ -50,7 +50,7 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
 
   useEffect(() => {
     setLoginError('');
-    setAdminPasscode(getStoredAdminPasscode() || '');
+    setPasscode(getStoredAdminPasscode() || '');
     const storedRole = getStoredAdminRole();
     if (storedRole) {
       setAdmin({

@@ -25,6 +25,12 @@ import type {
   PaymentSettings,
   JerseyShowcaseSettings,
 } from './types';
+import {
+  approveRegistration,
+  rejectRegistration,
+  deleteRegistration,
+  getRegistrationList,
+} from './services';
 
 import { ArrowRight, Bell, CheckCircle2, AlertCircle, Info, X, ShieldAlert, Ticket } from 'lucide-react';
 
@@ -35,6 +41,7 @@ export default function App() {
   const [isAdminOpen, setIsAdminOpen] = useState(false);
   const [isNoticePopupOpen, setIsNoticePopupOpen] = useState<boolean>(importantNoticeConfig.popupEnabled);
   const [isRegClosedPopupOpen, setIsRegClosedPopupOpen] = useState<boolean>(false);
+  const [invitations, setInvitations] = useState<InvitationRecord[]>([]);
 
   const handleOpenRegistration = () => {
     if (!registrationSettingsConfig.registrationOpen) {
