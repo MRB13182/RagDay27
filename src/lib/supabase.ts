@@ -337,103 +337,62 @@ export async function testSupabaseConnection(): Promise<SupabaseHealthCheckResul
 }
 
 // ============================================================================
-// ADMIN SESSION — Supabase Auth only
+// ADMIN PASSCODE SESSION — production admin portal
 // ============================================================================
 
-export async function signInAdmin(
-  usernameOrEmail: string,
-  password: string
-): Promise<AdminProfile> {
-  const cleanInput = usernameOrEmail.trim();
-  const cleanPassword = password.trim();
+export type AdminRole = 'male_admin' | 'female_admin';
 
-  if (!cleanInput || !cleanPassword) {
-    throw new Error('Username and password are required.');
-  }
+const ADMIN_ROLE_STORAGE_KEY = 'admin_role';
 
-  // Supabase Auth accepts email/phone identifiers. The username labels are UI
-  // identifiers only; authorization is always resolved from auth.uid() ->
-  // public.admins after successful authentication.
-  if (!cleanInput.includes('@') && !/^\+?[0-9]{8,15}$/.test(cleanInput)) {
-    throw new Error(
-      'The Supabase Auth login identifier is not configured for this admin username.'
-    );
-  }
+const ENV_MALE_ADMIN_PASSCODE =
+  typeof import.meta !== 'undefined' ? import.meta.env?.VITE_MALE_ADMIN_PASSCODE : undefined;
+const ENV_FEMALE_ADMIN_PASSCODE =
+  typeof import.meta !== 'undefined' ? import.meta.env?.VITE_FEMALE_ADMIN_PASSCODE : undefined;
 
-  const credentials = cleanInput.includes('@')
-    ? { email: cleanInput }
-    : { phone: cleanInput };
-
-  const { data, error } = await supabase.auth.signInWithPassword({
-    ...credentials,
-    password: cleanPassword,
-  } as Parameters<typeof supabase.auth.signInWithPassword>[0]);
-
-  if (error || !data.user) {
-    throw error || new Error('Supabase authentication failed.');
-  }
-
-  const { data: adminRecord, error: adminError } = await supabase
-    .from('admins')
-    .select('id, auth_user_id, full_name, role, active, created_at, updated_at')
-    .eq('auth_user_id', data.user.id)
-    .eq('active', true)
-    .maybeSingle();
-
-  if (adminError) {
-    await supabase.auth.signOut();
-    throw adminError;
-  }
-
-  if (!adminRecord || !['male_admin', 'female_admin'].includes(adminRecord.role)) {
-    await supabase.auth.signOut();
-    throw new Error('Authenticated user is not an active RagDay27 administrator.');
-  }
-
+function adminProfileForRole(role: AdminRole): AdminProfile {
+  const now = new Date().toISOString();
   return {
-    id: adminRecord.id,
-    auth_user_id: adminRecord.auth_user_id,
+    auth_user_id: `passcode:${role}`,
     username: null,
-    full_name: adminRecord.full_name,
-    role: adminRecord.role as 'male_admin' | 'female_admin',
-    active: adminRecord.active,
-    created_at: adminRecord.created_at,
-    updated_at: adminRecord.updated_at,
+    full_name: role === 'male_admin' ? 'Male Admin' : 'Female Admin',
+    role,
+    active: true,
+    created_at: now,
+    updated_at: now,
   };
+}
+
+export function getStoredAdminRole(): AdminRole | null {
+  try {
+    const value = localStorage.getItem(ADMIN_ROLE_STORAGE_KEY);
+    return value === 'male_admin' || value === 'female_admin' ? value : null;
+  } catch {
+    return null;
+  }
+}
+
+export async function signInAdmin(passcode: string): Promise<AdminProfile> {
+  const cleanPasscode = passcode.trim();
+  if (!cleanPasscode) throw new Error('Admin Passcode is required.');
+
+  if (ENV_MALE_ADMIN_PASSCODE && cleanPasscode === ENV_MALE_ADMIN_PASSCODE) {
+    try { localStorage.setItem(ADMIN_ROLE_STORAGE_KEY, 'male_admin'); } catch {}
+    return adminProfileForRole('male_admin');
+  }
+
+  if (ENV_FEMALE_ADMIN_PASSCODE && cleanPasscode === ENV_FEMALE_ADMIN_PASSCODE) {
+    try { localStorage.setItem(ADMIN_ROLE_STORAGE_KEY, 'female_admin'); } catch {}
+    return adminProfileForRole('female_admin');
+  }
+
+  throw new Error('Invalid Admin Passcode');
 }
 
 export async function signOutAdmin(): Promise<void> {
-  const { error } = await supabase.auth.signOut();
-  if (error) throw error;
-}
-
-export async function getCurrentAdminProfile(): Promise<AdminProfile | null> {
-  const { data: { session }, error: sessionError } =
-    await supabase.auth.getSession();
-
-  if (sessionError) throw sessionError;
-  if (!session?.user) return null;
-
-  const { data: adminRecord, error } = await supabase
-    .from('admins')
-    .select('id, auth_user_id, full_name, role, active, created_at, updated_at')
-    .eq('auth_user_id', session.user.id)
-    .eq('active', true)
-    .maybeSingle();
-
-  if (error) throw error;
-  if (!adminRecord || !['male_admin', 'female_admin'].includes(adminRecord.role)) {
-    return null;
+  try {
+    localStorage.removeItem(ADMIN_ROLE_STORAGE_KEY);
+  } catch {
+    // Ignore storage cleanup errors.
   }
-
-  return {
-    id: adminRecord.id,
-    auth_user_id: adminRecord.auth_user_id,
-    username: null,
-    full_name: adminRecord.full_name,
-    role: adminRecord.role as 'male_admin' | 'female_admin',
-    active: adminRecord.active,
-    created_at: adminRecord.created_at,
-    updated_at: adminRecord.updated_at,
-  };
 }
+
