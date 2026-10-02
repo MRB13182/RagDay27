@@ -29,7 +29,6 @@ export async function uploadFileToStorage(
       .from(STORAGE_BUCKET)
       .upload(storagePath, file, {
         cacheControl: '3600',
-        upsert: true,
       });
 
     if (error) {
@@ -65,7 +64,7 @@ export async function uploadFileToStorage(
 
 /**
  * Uploads a student photo to `uploads/students/`
- * Returns storage path to be saved as `student_photo_path` in registration
+ * Returns a storage path saved in the canonical `student_photo` column.
  */
 export async function uploadStudentPhoto(
   file: File | Blob,
