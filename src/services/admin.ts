@@ -2,8 +2,18 @@ import { supabase } from '../lib/supabase';
 import type { InvitationRecord, InvitationStatus } from '../types';
 import { translateBackendError } from './registrations';
 
+const ADMIN_SESSION_KEY = 'admin_passcode_session';
+
+function getAdminPasscode(): string {
+  try {
+    return localStorage.getItem(ADMIN_SESSION_KEY) || '';
+  } catch {
+    return '';
+  }
+}
+
 /**
- * Maps a public.registrations database row to InvitationRecord
+ * Maps a public.registrations database row to InvitationRecord.
  */
 export function mapRowToInvitation(row: any): InvitationRecord {
   const regNoNum = row.registration_no;
@@ -48,33 +58,44 @@ export function mapRowToInvitation(row: any): InvitationRecord {
     rejected_at: row.rejected_at || null,
     created_at: row.created_at || new Date().toISOString(),
     updated_at: row.updated_at || new Date().toISOString(),
+    hidden_from_web: row.hidden_from_web ?? false,
+    hidden_by: row.hidden_by || null,
+    hidden_at: row.hidden_at || null,
   };
 }
 
-/** Load authoritative registration rows for the signed-in admin. */
-export async function getRegistrationList(): Promise<{
+/** Load only the registrations authorized by the current admin passcode. */
+export async function getRegistrationList(passcode: string = getAdminPasscode()): Promise<{
   success: boolean;
   data: InvitationRecord[];
   error?: any;
   errorMessage?: string;
 }> {
   try {
-    const { data, error } = await supabase
-      .from('registrations')
-      .select('*')
-      .order('created_at', { ascending: false });
+    const cleanPasscode = passcode.trim();
+    if (!cleanPasscode) {
+      return { success: false, data: [], errorMessage: 'Admin session is not available.' };
+    }
+
+    const { data, error } = await supabase.rpc('get_admin_registrations', {
+      p_passcode: cleanPasscode,
+    });
 
     if (error) throw error;
-    return { success: true, data: (data || []).map(mapRowToInvitation) };
+    return {
+      success: true,
+      data: (Array.isArray(data) ? data : data ? [data] : []).map(mapRowToInvitation),
+    };
   } catch (error:any) {
     return { success: false, data: [], error, errorMessage: translateBackendError(error) };
   }
 }
 
-export async function approveRegistration(registrationId: string) {
+export async function approveRegistration(registrationId: string, passcode: string = getAdminPasscode()) {
   try {
     const { data, error } = await supabase.rpc('approve_registration', {
       p_registration_id: registrationId,
+      p_passcode: passcode,
     });
     if (error) throw error;
     if (!data) throw new Error('Database did not return the approved registration.');
@@ -84,7 +105,11 @@ export async function approveRegistration(registrationId: string) {
   }
 }
 
-export async function rejectRegistration(registrationId: string, reason: string) {
+export async function rejectRegistration(
+  registrationId: string,
+  reason: string,
+  passcode: string = getAdminPasscode()
+) {
   const cleanReason = reason.trim();
   if (!cleanReason) {
     return { success: false, errorMessage: 'A rejection reason is required.' };
@@ -93,6 +118,7 @@ export async function rejectRegistration(registrationId: string, reason: string)
     const { data, error } = await supabase.rpc('reject_registration', {
       p_registration_id: registrationId,
       p_reason: cleanReason,
+      p_passcode: passcode,
     });
     if (error) throw error;
     if (!data) throw new Error('Database did not return the rejected registration.');
@@ -102,10 +128,14 @@ export async function rejectRegistration(registrationId: string, reason: string)
   }
 }
 
-export async function deleteRegistration(registrationId: string) {
+export async function deleteRegistration(
+  registrationId: string,
+  passcode: string = getAdminPasscode()
+) {
   try {
     const { data, error } = await supabase.rpc('hide_registration_from_web', {
       p_registration_id: registrationId,
+      p_passcode: passcode,
     });
     if (error) throw error;
     if (!data) throw new Error('Database did not return the hidden registration.');
@@ -114,4 +144,3 @@ export async function deleteRegistration(registrationId: string) {
     return { success: false, error, errorMessage: translateBackendError(error) };
   }
 }
-
