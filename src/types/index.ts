@@ -84,6 +84,9 @@ export interface RegistrationRecord {
   hidden_from_web?: boolean;
   hidden_by?: string | null;
   hidden_at?: string | null;
+  recovery_original_student_id?: string;
+  recovery_original_full_name?: string;
+  recovery_original_class_roll?: string;
 }
 
 export type InvitationRecord = RegistrationRecord;
