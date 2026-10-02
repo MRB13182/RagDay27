@@ -16,7 +16,7 @@ import {
   AlertTriangle,
 } from 'lucide-react';
 import { generateInvitationCardPDF } from '../utils/pdfGenerator';
-import { getPublicInvitation, searchPublicStudent } from '../services';
+import { getPublicInvitation } from '../services';
 import badgeImage from '../assets/images/rd27_invitation_badge_1790159004807.jpg';
 
 interface InvitationCardPageProps {
@@ -34,7 +34,6 @@ export const InvitationCardPage: React.FC<InvitationCardPageProps> = ({
   pdfSettings,
   websiteSettings,
 }) => {
-  const [searchName, setSearchName] = useState('');
   const [searchRegNo, setSearchRegNo] = useState(initialSearchRegNo);
   const [searched, setSearched] = useState(false);
   const [isSearching, setIsSearching] = useState(false);
@@ -45,11 +44,11 @@ export const InvitationCardPage: React.FC<InvitationCardPageProps> = ({
   useEffect(() => {
     if (initialSearchRegNo) {
       setSearchRegNo(initialSearchRegNo);
-      handleSearchWith(initialSearchRegNo, '');
+      handleSearchWith(initialSearchRegNo);
     }
   }, [initialSearchRegNo]);
 
-  const handleSearchWith = async (regNoVal: string, _nameVal: string) => {
+  const handleSearchWith = async (regNoVal: string) => {
     const cleanedReg = regNoVal.trim().toUpperCase();
     setSearched(true);
     setSearchError(null);
@@ -103,19 +102,9 @@ export const InvitationCardPage: React.FC<InvitationCardPageProps> = ({
 
       {/* Search Layout (Form) */}
       <div className="p-6 sm:p-8 rounded-3xl bg-white/80 backdrop-blur-xl border border-white/90 shadow-[0_20px_45px_-15px_rgba(91,95,239,0.08)] mb-8">
-        <form onSubmit={handleSearch} className="grid grid-cols-1 sm:grid-cols-12 gap-4">
+        <form onSubmit={e => { e.preventDefault(); void handleSearchWith(searchRegNo); }} className="grid grid-cols-1 sm:grid-cols-12 gap-4">
           <div className="sm:col-span-5">
-            <label className="block text-xs font-bold uppercase tracking-wider text-slate-700 mb-1.5">
-              Student Full Name
-            </label>
-            <input
-              type="text"
-              placeholder="e.g. Student Name"
-              value={searchName}
-              onChange={e => setSearchName(e.target.value)}
-              className="w-full px-4 py-3 rounded-xl text-sm bg-slate-50 border border-slate-200 text-slate-900 placeholder-slate-400 focus:bg-white focus:border-[#5B5FEF] focus:ring-2 focus:ring-[#5B5FEF]/20 outline-none transition-all"
-            />
-          </div>
+            <div className="sm:col-span-5 text-xs text-slate-500">Lookup requires the exact registration number.</div>
 
           <div className="sm:col-span-5">
             <label className="block text-xs font-bold uppercase tracking-wider text-slate-700 mb-1.5">
@@ -395,7 +384,7 @@ export const InvitationCardPage: React.FC<InvitationCardPageProps> = ({
                           Seating Zone
                         </span>
                         <span className="font-medium text-white truncate block">
-                          {matchedRecord.seatZone || 'Zone A - Amphitheatre'}
+                          {'Zone A - Amphitheatre'}
                         </span>
                       </div>
 
@@ -404,7 +393,7 @@ export const InvitationCardPage: React.FC<InvitationCardPageProps> = ({
                           Entry Gate
                         </span>
                         <span className="font-medium text-emerald-400 truncate block">
-                          {matchedRecord.gate || 'Gate 02 (North)'}
+                          {'Gate 02 (North)'}
                         </span>
                       </div>
                     </div>
