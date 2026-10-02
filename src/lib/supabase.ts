@@ -69,51 +69,13 @@ function resolveSupabaseKey(): string {
   return candidate;
 }
 
-const STORAGE_CUSTOM_URL_KEY = 'rd27_custom_supabase_url';
-const STORAGE_CUSTOM_KEY_KEY = 'rd27_custom_supabase_key';
+const currentConfig = {
+  url: resolveSupabaseUrl(),
+  key: resolveSupabaseKey(),
+  isCustom: false,
+};
 
-/**
- * Returns current Supabase connection configuration.
- *
- * Existing localStorage overrides are supported, but an override is accepted
- * only when it points to the current RagDay27 project.
- */
-export function getSupabaseConfig(): {
-  url: string;
-  key: string;
-  isCustom: boolean;
-} {
-  try {
-    const customUrl = localStorage.getItem(STORAGE_CUSTOM_URL_KEY);
-    const customKey = localStorage.getItem(STORAGE_CUSTOM_KEY_KEY);
 
-    if (customUrl && customKey) {
-      const cleanUrl = customUrl.trim().replace(/\/+$/, '');
-
-      if (cleanUrl === SUPABASE_PROJECT_URL) {
-        return {
-          url: cleanUrl,
-          key: customKey.trim(),
-          isCustom: true,
-        };
-      }
-
-      // Remove stale/old project override.
-      localStorage.removeItem(STORAGE_CUSTOM_URL_KEY);
-      localStorage.removeItem(STORAGE_CUSTOM_KEY_KEY);
-    }
-  } catch {
-    // Ignore localStorage errors.
-  }
-
-  return {
-    url: resolveSupabaseUrl(),
-    key: resolveSupabaseKey(),
-    isCustom: false,
-  };
-}
-
-const currentConfig = getSupabaseConfig();
 
 export const SUPABASE_URL = currentConfig.url;
 export const SUPABASE_PUBLISHABLE_KEY = currentConfig.key;
@@ -410,25 +372,20 @@ export async function signInAdmin(passcode: string): Promise<AdminProfile> {
   const cleanPasscode = passcode.trim();
   if (!cleanPasscode) throw new Error('Admin Passcode is required.');
 
-  const male = typeof import.meta !== 'undefined'
-    ? String(import.meta.env?.VITE_MALE_ADMIN_PASSCODE || '').trim()
-    : '';
-  const female = typeof import.meta !== 'undefined'
-    ? String(import.meta.env?.VITE_FEMALE_ADMIN_PASSCODE || '').trim()
-    : '';
+  const { data, error } = await supabase.rpc('verify_admin_passcode', {
+    p_passcode: cleanPasscode,
+  });
 
-  let role: AdminRole | null = null;
-  if (male && cleanPasscode === male) role = 'male_admin';
-  if (!role && female && cleanPasscode === female) role = 'female_admin';
+  if (error) throw new Error(error.message || 'Invalid Admin Passcode');
 
-  if (!role) throw new Error('Invalid Admin Passcode');
+  const role = data?.role;
+  if (role !== 'male_admin' && role !== 'female_admin') {
+    throw new Error('Invalid Admin Passcode');
+  }
 
-  // Session-only role. If sessionStorage is unavailable, keep the role only
-  // in React memory; login must still succeed in restricted browser contexts.
   safeSetSessionValue(ADMIN_ROLE_STORAGE_KEY, role);
   return adminProfileForRole(role);
 }
-
 export async function signOutAdmin(): Promise<void> {
   safeRemoveSessionValue(ADMIN_ROLE_STORAGE_KEY);
 }
