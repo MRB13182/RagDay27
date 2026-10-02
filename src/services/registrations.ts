@@ -76,7 +76,7 @@ export async function checkDuplicateRegistration(studentId: string, fullName: st
   return row ? mapRowToInvitation(row) : null;
 }
 
-export async function createRegistration(form: RegistrationFormData, existingRegNo?: string, existingDbId?: string): Promise<{success:boolean; data?:InvitationRecord; error?:any; errorMessage?:string}> {
+export async function createRegistration(form: RegistrationFormData, existingRegNo?: string, existingDbId?: string, recoveryProof?: { studentId: string; fullName: string; classRoll: string }): Promise<{success:boolean; data?:InvitationRecord; error?:any; errorMessage?:string}> {
   try {
     const payload = {
       p_full_name: form.full_name.trim(),
@@ -99,9 +99,9 @@ export async function createRegistration(form: RegistrationFormData, existingReg
     const result = existingRegNo || existingDbId
       ? await supabase.rpc('resubmit_rejected_registration', {
           p_registration_id: existingDbId || '',
-          p_original_student_id: form.student_id.trim(),
-          p_original_full_name: form.full_name.trim(),
-          p_original_class_roll: form.class_roll.trim(),
+          p_original_student_id: recoveryProof?.studentId || form.student_id.trim(),
+          p_original_full_name: recoveryProof?.fullName || form.full_name.trim(),
+          p_original_class_roll: recoveryProof?.classRoll || form.class_roll.trim(),
           ...payload,
         })
       : await supabase.rpc('create_registration', payload);
