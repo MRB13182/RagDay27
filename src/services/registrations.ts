@@ -32,6 +32,8 @@ export function translateBackendError(error: any): string {
   if (/INVALID_JERSEY_NAME/i.test(message)) return 'Jersey back name must be 1–14 characters.';
   if (/INVALID_JERSEY_SIZE/i.test(message)) return 'Invalid jersey size.';
   if (/REJECTED_REGISTRATION_NOT_FOUND/i.test(message)) return 'The previous rejected registration could not be recovered.';
+  if (/REJECTED_REGISTRATION_RECOVERY_REQUIRED/i.test(message)) return 'A rejected registration with these exact student details already exists. Please use the Register Again recovery flow.';
+  if (/REJECTED_REGISTRATION_PROOF_FAILED/i.test(message)) return 'The recovery details do not exactly match the original rejected registration.';
   if (/permission denied|unauthorized|not allowed|ADMIN_ACCESS_REQUIRED/i.test(message) || code === '42501') return 'You are not authorized to perform this action.';
   return message;
 }
@@ -84,7 +86,18 @@ export async function checkDuplicateRegistration(
   return row ? mapRowToInvitation(row) : null;
 }
 
-export async function createRegistration(form: RegistrationFormData, existingRegNo?: string, existingDbId?: string, recoveryProof?: { studentId: string; fullName: string; classRoll: string }): Promise<{success:boolean; data?:InvitationRecord; error?:any; errorMessage?:string}> {
+export async function createRegistration(
+  form: RegistrationFormData,
+  existingRegNo?: string,
+  existingDbId?: string,
+  recoveryProof?: {
+    studentId: string;
+    fullName: string;
+    classRoll: string;
+    academicGroup: string;
+    academicSection: string;
+  }
+): Promise<{success:boolean; data?:InvitationRecord; error?:any; errorMessage?:string}> {
   try {
     const payload = {
       p_full_name: form.full_name.trim(),
@@ -110,6 +123,8 @@ export async function createRegistration(form: RegistrationFormData, existingReg
           p_original_student_id: recoveryProof?.studentId || form.student_id.trim(),
           p_original_full_name: recoveryProof?.fullName || form.full_name.trim(),
           p_original_class_roll: recoveryProof?.classRoll || form.class_roll.trim(),
+          p_original_academic_group: recoveryProof?.academicGroup || form.academic_group.trim(),
+          p_original_academic_section: recoveryProof?.academicSection || form.academic_section.trim(),
           ...payload,
         })
       : await supabase.rpc('create_registration', payload);
