@@ -25,17 +25,12 @@ import type {
   PaymentSettings,
   JerseyShowcaseSettings,
 } from './types';
-import {
-  approveRegistration,
-  rejectRegistration,
-  deleteRegistration,
-} from './services/admin';
+
 import { supabase } from './lib/supabase';
 import { ArrowRight, Bell, CheckCircle2, AlertCircle, Info, X, ShieldAlert, Ticket } from 'lucide-react';
 
 export default function App() {
   const [activeTab, setActiveTab] = useState<'home' | 'register' | 'invitation'>('home');
-  const [invitations, setInvitations] = useState<InvitationRecord[]>([]);
   const [invitationSearchTarget, setInvitationSearchTarget] = useState<string>('');
   const [reRegisterRecord, setReRegisterRecord] = useState<InvitationRecord | null>(null);
   const [isAdminOpen, setIsAdminOpen] = useState(false);
@@ -192,8 +187,6 @@ export default function App() {
   // ============================================================================
 
   const handleSuccessSubmit = async (newRecord: InvitationRecord) => {
-    const listRes = await getRegistrationList();
-    if (listRes.success) setInvitations(listRes.data);
     showToast(`Registration successfully submitted!`, 'success');
   };
 
@@ -208,15 +201,10 @@ export default function App() {
     newStatus: InvitationStatus,
     reason?: string
   ) => {
-    const target = invitations.find(item => item.registration_no === registration_no);
-    const regId = target?.dbId || registration_no;
-
     if (newStatus === 'approved') {
-      const res = await approveRegistration(regId);
+      const res = await approveRegistration(registration_no);
       if (res.success) {
         showToast(`Registration ${registration_no} approved!`, 'success');
-        const fresh = await getRegistrationList();
-        if (fresh.success) setInvitations(fresh.data);
       } else {
         showToast(res.errorMessage || `Failed to approve registration ${registration_no}`, 'error');
       }
@@ -225,11 +213,9 @@ export default function App() {
         showToast('A rejection reason is strictly required.', 'error');
         return;
       }
-      const res = await rejectRegistration(regId, reason.trim());
+      const res = await rejectRegistration(registration_no, reason.trim());
       if (res.success) {
         showToast(`Registration ${registration_no} rejected.`, 'success');
-        const fresh = await getRegistrationList();
-        if (fresh.success) setInvitations(fresh.data);
       } else {
         showToast(res.errorMessage || `Failed to reject registration ${registration_no}`, 'error');
       }
@@ -237,10 +223,7 @@ export default function App() {
   };
 
   const handleDeleteRegistration = async (registration_no: string) => {
-    const target = invitations.find(item => item.registration_no === registration_no);
-    const regId = target?.dbId || registration_no;
-
-    const res = await deleteRegistration(regId);
+    const res = await deleteRegistration(registration_no);
     if (res.success) {
       showToast(`Registration ${registration_no} deleted.`, 'success');
       const fresh = await getRegistrationList();
@@ -492,7 +475,7 @@ export default function App() {
         <AdminPortal
           isOpen={isAdminOpen}
           onClose={() => setIsAdminOpen(false)}
-          invitations={invitations}
+          invitations={[]}
           onUpdateStatus={handleUpdateRegistrationStatus} 
           onDeleteRegistration={handleDeleteRegistration}
         />
