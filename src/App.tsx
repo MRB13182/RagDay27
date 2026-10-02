@@ -523,9 +523,8 @@ export default function App() {
           isOpen={isAdminOpen}
           onClose={() => setIsAdminOpen(false)}
           invitations={invitations}
-          onUpdateStatus={handleUpdateRegistrationStatus}
+          onUpdateStatus={handleUpdateRegistrationStatus} 
           onDeleteRegistration={handleDeleteRegistration}
-          onEditRegistration={handleEditRegistration}
         />
       )}
     </div>
