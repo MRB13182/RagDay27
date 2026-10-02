@@ -91,41 +91,11 @@ export const generateRegistrationListPDF = (
   );
 
   // Table Configuration based on Admin Role
-  const isSuperAdmin = adminRole === 'super_admin';
-
   let headCols: string[];
   let tableData: (string | number)[][];
   let columnStyles: { [key: number]: any };
 
-  if (isSuperAdmin) {
-    // 7. SUPER ADMIN PDF FORMAT
-    // No gender separation. Show all registrations together.
-    headCols = ['#', 'Reg No', 'Student Name', 'Gender', 'Roll & ID', 'Group', 'Section', 'Jersey Name', 'Jersey Number', 'Jersey Size'];
-    tableData = records.map((record, index) => [
-      index + 1,
-      record.registration_no,
-      record.full_name,
-      record.gender.toUpperCase(),
-      `Roll: ${record.class_roll}\nID: ${record.student_id}`,
-      record.academic_group,
-      record.academic_section,
-      record.jersey_back_name,
-      '#' + record.jersey_number,
-      record.jersey_size,
-    ]);
-    columnStyles = {
-      0: { cellWidth: 10, halign: 'center' },
-      1: { cellWidth: 22, fontStyle: 'bold', halign: 'center' },
-      2: { cellWidth: 36, fontStyle: 'bold' },
-      3: { cellWidth: 18, halign: 'center' },
-      4: { cellWidth: 32 },
-      5: { cellWidth: 30 },
-      6: { cellWidth: 24, halign: 'center', fontStyle: 'bold' },
-      7: { cellWidth: 30, fontStyle: 'bold' },
-      8: { cellWidth: 20, halign: 'center' },
-      9: { cellWidth: 18, halign: 'center' },
-    };
-  } else {
+  {
     // 5 & 6. MALE & FEMALE ADMIN PDF FORMAT
     // Columns: Reg No, Student Name, Gender, Roll & ID, Group, Section, Jersey Name, Jersey Number, Jersey Size
     headCols = [
