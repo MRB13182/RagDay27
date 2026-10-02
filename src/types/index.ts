@@ -81,8 +81,9 @@ export interface RegistrationRecord {
   rejected_at?: string | null;
   created_at?: string;
   updated_at?: string;
-  seatZone?: string;
-  gate?: string;
+  hidden_from_web?: boolean;
+  hidden_by?: string | null;
+  hidden_at?: string | null;
 }
 
 export type InvitationRecord = RegistrationRecord;
@@ -253,80 +254,17 @@ export interface BackendRegistrationInput {
   status?: InvitationStatus;
 }
 
-export interface SiteContentRow {
-  id: string;
-  logo: string | null;
-  favicon: string | null;
-  banner: string | null;
-  hero_background: string | null;
-  male_front: string | null;
-  male_back: string | null;
-  female_front: string | null;
-  female_back: string | null;
-  jersey_preview: string | null;
-  website_name: string | null;
-  event_name: string | null;
-  hero_title: string | null;
-  hero_subtitle: string | null;
-  event_date: string | null;
-  event_time: string | null;
-  venue: string | null;
-  registration_fee: number | null;
-  cards_json: EventCard[];
-  sections_json: any[];
-  content_blocks_json: {
-    pdf?: {
-      logo?: string | null;
-      title?: string;
-      subtitle?: string;
-      showLogo?: boolean;
-      showPhoto?: boolean;
-      footerText?: string;
-      signatureText?: string;
-      showRegistrationNo?: boolean;
-      showStudentDetails?: boolean;
-    };
-    jersey?: {
-      items?: any[];
-      sectionOrder?: string;
-      showcaseEnabled?: boolean;
-    };
-    payment?: {
-      currency?: string;
-      bkashNumber?: string;
-      nagadNumber?: string;
-      bkashEnabled?: boolean;
-      nagadEnabled?: boolean;
-      instructions?: string;
-    };
-    bannerText?: string;
-    footerText?: string;
-    description?: string;
-    bannerActive?: boolean;
-    copyrightText?: string;
-    dynamicSections?: any[];
-    registrationOpen?: boolean;
-    registrationDeadline?: string | null;
-  };
-  visible: boolean;
-  sort_order: number;
-  updated_by?: string | null;
-  created_at?: string;
-  updated_at?: string;
-}
-
-export interface AdminProfile {
+ {
   id?: string;
   auth_user_id: string;
   username: string | null;
   full_name: string;
-  role: 'super_admin' | 'male_admin' | 'female_admin';
+  role: 'male_admin' | 'female_admin';
   active: boolean;
   created_at: string;
   updated_at: string;
 }
-
-export interface PublicStudentResult {
+ {
   registration_no: string;
   full_name?: string;
   class_roll?: string;
