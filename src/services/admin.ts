@@ -88,118 +88,6 @@ export function mapRowToInvitation(row: any): InvitationRecord {
   };
 }
 
-const REGISTRATIONS_CACHE_KEY = 'rd27_admin_registrations_cache';
-
-const INITIAL_KNOWN_RECORDS: InvitationRecord[] = [
-  {
-    id: '551e1731-06af-41e0-80da-432e9681a1cf',
-    dbId: '551e1731-06af-41e0-80da-432e9681a1cf',
-    sl_no: 2,
-    registration_no: 'RDG27-0001',
-    full_name: 'Q',
-    class_roll: 'Q',
-    student_id: 'Q',
-    contact_mobile_number: '01812345678',
-    academic_group: 'Business Studies',
-    academic_section: 'BsG2',
-    student_photo: null,
-    send_method: 'bkash',
-    sender_mobile_no: '01812345678',
-    payment_time: '14:30:00',
-    transaction_id: 'Q',
-    jersey_back_name: 'NOVA',
-    jersey_number: '27',
-    jersey_size: 'L',
-    gender: 'female',
-    status: 'pending',
-    reject_reason: undefined,
-    approved_by: null,
-    rejected_by: null,
-    approved_at: null,
-    rejected_at: null,
-    hidden_from_web: false,
-    created_at: new Date().toISOString(),
-    updated_at: new Date().toISOString(),
-  },
-  {
-    id: '1e1e188c-c996-4c7f-a8bd-9c095c617c3b',
-    dbId: '1e1e188c-c996-4c7f-a8bd-9c095c617c3b',
-    sl_no: 3,
-    registration_no: 'RDB27-0001',
-    full_name: 'Test Student',
-    class_roll: '9999',
-    student_id: '999999',
-    contact_mobile_number: '01700000000',
-    academic_group: 'Science',
-    academic_section: 'ScB1',
-    student_photo: null,
-    send_method: 'bkash',
-    sender_mobile_no: '01700000000',
-    payment_time: '12:00:00',
-    transaction_id: 'TRX99999',
-    jersey_back_name: 'TEST',
-    jersey_number: '27',
-    jersey_size: 'L',
-    gender: 'male',
-    status: 'pending',
-    reject_reason: undefined,
-    approved_by: null,
-    rejected_by: null,
-    approved_at: null,
-    rejected_at: null,
-    hidden_from_web: false,
-    created_at: new Date().toISOString(),
-    updated_at: new Date().toISOString(),
-  },
-];
-
-export function getLocalRegistrations(): InvitationRecord[] {
-  try {
-    const raw = localStorage.getItem(REGISTRATIONS_CACHE_KEY);
-    if (!raw) {
-      localStorage.setItem(REGISTRATIONS_CACHE_KEY, JSON.stringify(INITIAL_KNOWN_RECORDS));
-      return [...INITIAL_KNOWN_RECORDS];
-    }
-    const parsed = JSON.parse(raw);
-    if (!Array.isArray(parsed)) return [...INITIAL_KNOWN_RECORDS];
-    // Ensure initial known records are present
-    const map = new Map<string, InvitationRecord>();
-    INITIAL_KNOWN_RECORDS.forEach(r => map.set(r.registration_no, r));
-    parsed.forEach((r: InvitationRecord) => map.set(r.registration_no, r));
-    return Array.from(map.values());
-  } catch {
-    return [...INITIAL_KNOWN_RECORDS];
-  }
-}
-
-export function saveLocalRegistrations(records: InvitationRecord[]): void {
-  try {
-    localStorage.setItem(REGISTRATIONS_CACHE_KEY, JSON.stringify(records));
-  } catch {
-    // Best-effort
-  }
-}
-
-export function upsertLocalRegistration(record: InvitationRecord): void {
-  try {
-    const all = getLocalRegistrations();
-    const idx = all.findIndex(
-      r =>
-        (record.registration_no && r.registration_no === record.registration_no) ||
-        (record.id && r.id === record.id) ||
-        (record.dbId && r.dbId === record.dbId)
-    );
-    if (idx >= 0) {
-      all[idx] = { ...all[idx], ...record };
-    } else {
-      all.push(record);
-    }
-    saveLocalRegistrations(all);
-  } catch {
-    // Best-effort
-  }
-}
-
 /** Load only the registrations authorized by the current admin passcode. */
 export async function getRegistrationList(passcode: string = getAdminPasscode()): Promise<{
   success: boolean;
@@ -209,91 +97,26 @@ export async function getRegistrationList(passcode: string = getAdminPasscode())
 }> {
   try {
     const cleanPasscode = passcode.trim();
-    if (!cleanPasscode) {
-      return { success: false, data: [], errorMessage: 'Admin session is not available.' };
-    }
+    if (!cleanPasscode) return { success: false, data: [], errorMessage: 'Admin session is not available.' };
 
-    // Try remote database RPC first
-    try {
-      const { data, error } = await supabase.rpc('get_admin_registrations', {
-        p_passcode: cleanPasscode,
-      });
-
-      if (!error && Array.isArray(data)) {
-        const mapped = data.map(mapRowToInvitation);
-        mapped.forEach(upsertLocalRegistration);
-        return { success: true, data: mapped };
-      }
-    } catch {
-      // Remote RPC failed; seamlessly fall back to local registry
-    }
-
-    // Resilient fallback to persistent local registrations registry
-    const all = getLocalRegistrations();
-    let scoped = all.filter(r => !r.hidden_from_web);
-
-    const isMalePass =
-      cleanPasscode === 'nicboy.27' ||
-      cleanPasscode.toLowerCase() === 'nicboy.27';
-    const isFemalePass =
-      cleanPasscode === 'nic27.girl' ||
-      cleanPasscode.toLowerCase() === 'nic27.girl';
-
-    if (isMalePass) {
-      scoped = scoped.filter(r => r.gender === 'male');
-    } else if (isFemalePass) {
-      scoped = scoped.filter(r => r.gender === 'female');
-    }
-
-    return {
-      success: true,
-      data: scoped,
-    };
-  } catch (error: any) {
+    const { data, error } = await supabase.rpc('get_admin_registrations', { p_passcode: cleanPasscode });
+    if (error) throw error;
+    return { success: true, data: (Array.isArray(data) ? data : data ? [data] : []).map(mapRowToInvitation) };
+  } catch (error:any) {
     return { success: false, data: [], error, errorMessage: translateBackendError(error) };
   }
 }
 
 export async function approveRegistration(registrationId: string, passcode: string = getAdminPasscode()) {
   try {
-    // Try remote RPC first
-    try {
-      const { data, error } = await supabase.rpc('approve_registration', {
-        p_registration_id: registrationId,
-        p_passcode: passcode,
-      });
-      if (!error && data) {
-        const inv = mapRowToInvitation(data);
-        upsertLocalRegistration(inv);
-        return { success: true, data: inv };
-      }
-    } catch {
-      // Remote RPC fallback
-    }
-
-    // Update in local registry
-    const list = getLocalRegistrations();
-    const target = list.find(
-      r =>
-        r.id === registrationId ||
-        r.dbId === registrationId ||
-        r.registration_no === registrationId
-    );
-    if (!target) {
-      throw new Error(`Registration ${registrationId} not found.`);
-    }
-
-    const updated: InvitationRecord = {
-      ...target,
-      status: 'approved',
-      approved_at: new Date().toISOString(),
-      approved_by: passcode.includes('girl') ? 'Female Admin' : 'Male Admin',
-      reject_reason: undefined,
-      updated_at: new Date().toISOString(),
-    };
-    upsertLocalRegistration(updated);
-    return { success: true, data: updated };
-  } catch (error: any) {
+    const { data, error } = await supabase.rpc('approve_registration', {
+      p_registration_id: registrationId,
+      p_passcode: passcode,
+    });
+    if (error) throw error;
+    if (!data) throw new Error('Database did not return the approved registration.');
+    return { success: true, data: mapRowToInvitation(data) };
+  } catch (error:any) {
     return { success: false, error, errorMessage: translateBackendError(error) };
   }
 }
@@ -304,49 +127,17 @@ export async function rejectRegistration(
   passcode: string = getAdminPasscode()
 ) {
   const cleanReason = reason.trim();
-  if (!cleanReason) {
-    return { success: false, errorMessage: 'A rejection reason is required.' };
-  }
+  if (!cleanReason) return { success: false, errorMessage: 'A rejection reason is required.' };
   try {
-    // Try remote RPC first
-    try {
-      const { data, error } = await supabase.rpc('reject_registration', {
-        p_registration_id: registrationId,
-        p_reason: cleanReason,
-        p_passcode: passcode,
-      });
-      if (!error && data) {
-        const inv = mapRowToInvitation(data);
-        upsertLocalRegistration(inv);
-        return { success: true, data: inv };
-      }
-    } catch {
-      // Remote RPC fallback
-    }
-
-    // Update in local registry
-    const list = getLocalRegistrations();
-    const target = list.find(
-      r =>
-        r.id === registrationId ||
-        r.dbId === registrationId ||
-        r.registration_no === registrationId
-    );
-    if (!target) {
-      throw new Error(`Registration ${registrationId} not found.`);
-    }
-
-    const updated: InvitationRecord = {
-      ...target,
-      status: 'rejected',
-      reject_reason: cleanReason,
-      rejected_at: new Date().toISOString(),
-      rejected_by: passcode.includes('girl') ? 'Female Admin' : 'Male Admin',
-      updated_at: new Date().toISOString(),
-    };
-    upsertLocalRegistration(updated);
-    return { success: true, data: updated };
-  } catch (error: any) {
+    const { data, error } = await supabase.rpc('reject_registration', {
+      p_registration_id: registrationId,
+      p_reason: cleanReason,
+      p_passcode: passcode,
+    });
+    if (error) throw error;
+    if (!data) throw new Error('Database did not return the rejected registration.');
+    return { success: true, data: mapRowToInvitation(data) };
+  } catch (error:any) {
     return { success: false, error, errorMessage: translateBackendError(error) };
   }
 }
@@ -356,43 +147,14 @@ export async function deleteRegistration(
   passcode: string = getAdminPasscode()
 ) {
   try {
-    // Try remote RPC first
-    try {
-      const { data, error } = await supabase.rpc('hide_registration_from_web', {
-        p_registration_id: registrationId,
-        p_passcode: passcode,
-      });
-      if (!error && data) {
-        const inv = mapRowToInvitation(data);
-        upsertLocalRegistration(inv);
-        return { success: true, data: inv };
-      }
-    } catch {
-      // Remote RPC fallback
-    }
-
-    // Update in local registry
-    const list = getLocalRegistrations();
-    const target = list.find(
-      r =>
-        r.id === registrationId ||
-        r.dbId === registrationId ||
-        r.registration_no === registrationId
-    );
-    if (!target) {
-      throw new Error(`Registration ${registrationId} not found.`);
-    }
-
-    const updated: InvitationRecord = {
-      ...target,
-      hidden_from_web: true,
-      hidden_at: new Date().toISOString(),
-      hidden_by: passcode.includes('girl') ? 'Female Admin' : 'Male Admin',
-      updated_at: new Date().toISOString(),
-    };
-    upsertLocalRegistration(updated);
-    return { success: true, data: updated };
-  } catch (error: any) {
+    const { data, error } = await supabase.rpc('hide_registration_from_web', {
+      p_registration_id: registrationId,
+      p_passcode: passcode,
+    });
+    if (error) throw error;
+    if (!data) throw new Error('Database did not return the hidden registration.');
+    return { success: true, data: mapRowToInvitation(data) };
+  } catch (error:any) {
     return { success: false, error, errorMessage: translateBackendError(error) };
   }
 }
