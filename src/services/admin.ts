@@ -4,16 +4,36 @@ import { translateBackendError } from './registrations';
 
 const ADMIN_SESSION_KEY = 'admin_passcode_session';
 
+function safeSessionStorage(): Storage | null {
+  try {
+    const storage = window.sessionStorage;
+    const testKey = '__rd27_admin_session_test__';
+    storage.setItem(testKey, '1');
+    storage.removeItem(testKey);
+    return storage;
+  } catch {
+    return null;
+  }
+}
+
 export function setAdminPasscodeSession(passcode: string): void {
-  sessionStorage.setItem(ADMIN_SESSION_KEY, passcode);
+  const storage = safeSessionStorage();
+  if (storage) {
+    try { storage.setItem(ADMIN_SESSION_KEY, passcode); } catch { /* memory fallback */ }
+  }
 }
 
 export function clearAdminPasscodeSession(): void {
-  sessionStorage.removeItem(ADMIN_SESSION_KEY);
+  const storage = safeSessionStorage();
+  if (storage) {
+    try { storage.removeItem(ADMIN_SESSION_KEY); } catch { /* best effort */ }
+  }
 }
 
-function getAdminPasscode(): string {
-  return sessionStorage.getItem(ADMIN_SESSION_KEY) || '';
+export function getAdminPasscodeSession(): string {
+  const storage = safeSessionStorage();
+  if (!storage) return '';
+  try { return storage.getItem(ADMIN_SESSION_KEY) || ''; } catch { return ''; }
 }
 
 /**
