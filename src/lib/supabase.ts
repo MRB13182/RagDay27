@@ -337,360 +337,103 @@ export async function testSupabaseConnection(): Promise<SupabaseHealthCheckResul
 }
 
 // ============================================================================
-// ADMIN SESSION
+// ADMIN SESSION — Supabase Auth only
 // ============================================================================
 
-const ADMIN_SESSION_KEY = 'rd27_admin_session';
-
-/**
- * Current final architecture:
- *   - male_admin
- *   - female_admin
- *
- * NOTE:
- * These passcodes are legacy application-level login values.
- * Supabase Auth remains the preferred secure authentication mechanism.
- */
-export const ADMIN_PASSCODES: Record<
-  string,
-  {
-    role: 'super_admin' | 'male_admin' | 'female_admin';
-    full_name: string;
-    username: string;
-  }
-> = {
-  'rdnic27.com': {
-    role: 'super_admin',
-    full_name: 'Super Administrator',
-    username: 'superadmin',
-  },
-  'rdnicboy.27': {
-    role: 'male_admin',
-    full_name: 'Male Administrator (Boys)',
-    username: 'maleadmin',
-  },
-  'rdnic.girl27': {
-    role: 'female_admin',
-    full_name: 'Female Administrator (Girls)',
-    username: 'femaleadmin',
-  },
-};
-
-/**
- * Sign in an admin.
- */
 export async function signInAdmin(
-  passcodeOrEmail: string,
-  password?: string
+  usernameOrEmail: string,
+  password: string
 ): Promise<AdminProfile> {
-  const cleanInput = (passcodeOrEmail || '').trim();
-  const cleanPass = (password || '').trim();
+  const cleanInput = usernameOrEmail.trim();
+  const cleanPassword = password.trim();
 
-  /**
-   * 1. Legacy passcode login.
-   */
-  const matched =
-    ADMIN_PASSCODES[cleanInput] ||
-    (cleanPass
-      ? ADMIN_PASSCODES[cleanPass]
-      : undefined);
-
-  if (matched) {
-    const profile: AdminProfile = {
-      id: `admin-${matched.role}`,
-      auth_user_id: `passcode-${matched.role}`,
-      username: matched.username,
-      full_name: matched.full_name,
-      role: matched.role,
-      active: true,
-      created_at: new Date().toISOString(),
-      updated_at: new Date().toISOString(),
-    };
-
-    try {
-      localStorage.setItem(
-        ADMIN_SESSION_KEY,
-        JSON.stringify(profile)
-      );
-    } catch {
-      // Ignore.
-    }
-
-    return profile;
+  if (!cleanInput || !cleanPassword) {
+    throw new Error('Username and password are required.');
   }
 
-  /**
-   * 2. Supabase Auth.
-   */
-  if (cleanInput.includes('@') && cleanPass) {
-    try {
-      const {
-        data: authData,
-        error: authError,
-      } = await supabase.auth.signInWithPassword({
-        email: cleanInput,
-        password: cleanPass,
-      });
-
-      if (authError) {
-        throw authError;
-      }
-
-      if (!authData?.user) {
-        throw new Error('Supabase authentication failed.');
-      }
-
-      const user = authData.user;
-
-      const {
-        data: adminRecord,
-        error: adminError,
-      } = await supabase
-        .from('admins')
-        .select('*')
-        .eq('auth_user_id', user.id)
-        .maybeSingle();
-
-      if (adminError) {
-        throw adminError;
-      }
-
-      if (!adminRecord || !adminRecord.active) {
-        throw new Error(
-          'Authenticated user is not an active RagDay27 administrator.'
-        );
-      }
-
-      const profile: AdminProfile = {
-        id: adminRecord.id,
-        auth_user_id: adminRecord.auth_user_id,
-        username: adminRecord.username ?? null,
-        full_name: adminRecord.full_name,
-        role: adminRecord.role,
-        active: adminRecord.active,
-        created_at:
-          adminRecord.created_at ||
-          new Date().toISOString(),
-        updated_at:
-          adminRecord.updated_at ||
-          new Date().toISOString(),
-      };
-
-      try {
-        localStorage.setItem(
-          ADMIN_SESSION_KEY,
-          JSON.stringify(profile)
-        );
-      } catch {
-        // Ignore.
-      }
-
-      return profile;
-    } catch {
-      // Continue to final error.
-    }
-  }
-
-  throw new Error(
-    'Invalid administrator credentials.'
-  );
-}
-
-/**
- * Sign out current admin.
- */
-export async function signOutAdmin(): Promise<void> {
-  try {
-    localStorage.removeItem(ADMIN_SESSION_KEY);
-  } catch {
-    // Ignore.
-  }
-
-  await supabase.auth.signOut().catch(() => {});
-}
-
-/**
- * Get current admin profile.
- */
-export async function getCurrentAdminProfile(): Promise<AdminProfile | null> {
-  /**
-   * 1. Cached legacy/session profile.
-   */
-  try {
-    const cached =
-      localStorage.getItem(ADMIN_SESSION_KEY);
-
-    if (cached) {
-      const parsed = JSON.parse(cached);
-
-      if (
-        parsed &&
-        parsed.role &&
-        parsed.active
-      ) {
-        return parsed;
-      }
-    }
-  } catch {
-    // Ignore.
-  }
-
-  /**
-   * 2. Supabase Auth session.
-   */
-  try {
-    const {
-      data: { session },
-    } = await supabase.auth.getSession();
-
-    if (!session?.user) {
-      return null;
-    }
-
-    const {
-      data: adminRecord,
-      error,
-    } = await supabase
-      .from('admins')
-      .select('*')
-      .eq('auth_user_id', session.user.id)
-      .maybeSingle();
-
-    if (
-      error ||
-      !adminRecord ||
-      !adminRecord.active
-    ) {
-      return null;
-    }
-
-    return {
-      id: adminRecord.id,
-      auth_user_id: adminRecord.auth_user_id,
-      username: adminRecord.username ?? null,
-      full_name: adminRecord.full_name,
-      role: adminRecord.role,
-      active: adminRecord.active,
-      created_at: adminRecord.created_at,
-      updated_at: adminRecord.updated_at,
-    };
-  } catch {
-    return null;
-  }
-}
-
-/**
- * Fetch admins from Supabase.
- *
- * IMPORTANT:
- * No fake/legacy fallback admin list is returned.
- * Database is the source of truth.
- */
-export async function fetchAdminsFromSupabase(): Promise<AdminProfile[]> {
-  try {
-    const {
-      data,
-      error,
-    } = await supabase
-      .from('admins')
-      .select('*')
-      .order('created_at', {
-        ascending: true,
-      });
-
-    if (error) {
-      throw error;
-    }
-
-    if (!data) {
-      return [];
-    }
-
-    return data.map(row => ({
-      id: row.id,
-      auth_user_id: row.auth_user_id,
-      username: row.username ?? null,
-      full_name: row.full_name,
-      role: row.role,
-      active: row.active,
-      created_at:
-        row.created_at ||
-        new Date().toISOString(),
-      updated_at:
-        row.updated_at ||
-        new Date().toISOString(),
-    }));
-  } catch {
-    return [];
-  }
-}
-
-/**
- * Save/update admin profile in Supabase.
- */
-export async function saveAdminProfileToSupabase(
-  profile: Partial<AdminProfile> & {
-    auth_user_id: string;
-  }
-): Promise<AdminProfile> {
-  const payload = {
-    auth_user_id: profile.auth_user_id,
-    full_name:
-      profile.full_name || 'Admin',
-    role:
-      profile.role === 'female_admin'
-        ? 'female_admin'
-        : 'male_admin',
-    active:
-      profile.active ?? true,
-    updated_at: new Date().toISOString(),
-  };
-
-  const {
-    data,
-    error,
-  } = await supabase
-    .from('admins')
-    .upsert(payload, {
-      onConflict: 'auth_user_id',
-    })
-    .select()
-    .single();
-
-  if (error) {
+  // Supabase Auth accepts email/phone identifiers. The username labels are UI
+  // identifiers only; authorization is always resolved from auth.uid() ->
+  // public.admins after successful authentication.
+  if (!cleanInput.includes('@') && !/^\+?[0-9]{8,15}$/.test(cleanInput)) {
     throw new Error(
-      `Unable to save admin profile: ${error.message}`
+      'The Supabase Auth login identifier is not configured for this admin username.'
     );
+  }
+
+  const credentials = cleanInput.includes('@')
+    ? { email: cleanInput }
+    : { phone: cleanInput };
+
+  const { data, error } = await supabase.auth.signInWithPassword({
+    ...credentials,
+    password: cleanPassword,
+  } as Parameters<typeof supabase.auth.signInWithPassword>[0]);
+
+  if (error || !data.user) {
+    throw error || new Error('Supabase authentication failed.');
+  }
+
+  const { data: adminRecord, error: adminError } = await supabase
+    .from('admins')
+    .select('id, auth_user_id, full_name, role, active, created_at, updated_at')
+    .eq('auth_user_id', data.user.id)
+    .eq('active', true)
+    .maybeSingle();
+
+  if (adminError) {
+    await supabase.auth.signOut();
+    throw adminError;
+  }
+
+  if (!adminRecord || !['male_admin', 'female_admin'].includes(adminRecord.role)) {
+    await supabase.auth.signOut();
+    throw new Error('Authenticated user is not an active RagDay27 administrator.');
   }
 
   return {
-    id: data.id,
-    auth_user_id: data.auth_user_id,
-    username: data.username ?? null,
-    full_name: data.full_name,
-    role: data.role,
-    active: data.active,
-    created_at: data.created_at,
-    updated_at: data.updated_at,
+    id: adminRecord.id,
+    auth_user_id: adminRecord.auth_user_id,
+    username: null,
+    full_name: adminRecord.full_name,
+    role: adminRecord.role as 'male_admin' | 'female_admin',
+    active: adminRecord.active,
+    created_at: adminRecord.created_at,
+    updated_at: adminRecord.updated_at,
   };
 }
 
-/**
- * Delete admin profile.
- */
-export async function deleteAdminProfileFromSupabase(
-  authUserId: string
-): Promise<void> {
-  const {
-    error,
-  } = await supabase
-    .from('admins')
-    .delete()
-    .eq('auth_user_id', authUserId);
+export async function signOutAdmin(): Promise<void> {
+  const { error } = await supabase.auth.signOut();
+  if (error) throw error;
+}
 
-  if (error) {
-    throw new Error(
-      `Unable to delete admin profile: ${error.message}`
-    );
+export async function getCurrentAdminProfile(): Promise<AdminProfile | null> {
+  const { data: { session }, error: sessionError } =
+    await supabase.auth.getSession();
+
+  if (sessionError) throw sessionError;
+  if (!session?.user) return null;
+
+  const { data: adminRecord, error } = await supabase
+    .from('admins')
+    .select('id, auth_user_id, full_name, role, active, created_at, updated_at')
+    .eq('auth_user_id', session.user.id)
+    .eq('active', true)
+    .maybeSingle();
+
+  if (error) throw error;
+  if (!adminRecord || !['male_admin', 'female_admin'].includes(adminRecord.role)) {
+    return null;
   }
+
+  return {
+    id: adminRecord.id,
+    auth_user_id: adminRecord.auth_user_id,
+    username: null,
+    full_name: adminRecord.full_name,
+    role: adminRecord.role as 'male_admin' | 'female_admin',
+    active: adminRecord.active,
+    created_at: adminRecord.created_at,
+    updated_at: adminRecord.updated_at,
+  };
 }
