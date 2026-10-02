@@ -1,7 +1,7 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import type { InvitationRecord, InvitationStatus, AdminProfile, PdfSettings, WebsiteSettings } from '../types';
-import { signInAdmin, signOutAdmin, getStoredAdminRole, getStoredAdminPasscode } from '../lib/supabase';
-import { getRegistrationList } from '../services/admin';
+import { signInAdmin, signOutAdmin, getStoredAdminRole } from '../lib/supabase';
+import { getRegistrationList, getAdminPasscodeSession, setAdminPasscodeSession, clearAdminPasscodeSession } from '../services/admin';
 import { generateRegistrationListPDF, generateInvitationCardPDF } from '../utils/pdfGenerator';
 import {
   websiteIdentityConfig,
@@ -50,9 +50,8 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
 
   useEffect(() => {
     setLoginError('');
-    setPasscode(getStoredAdminPasscode() || '');
     const storedRole = getStoredAdminRole();
-    if (storedRole) {
+    if (storedRole && getAdminPasscodeSession()) {
       setAdmin({
         id: undefined,
         auth_user_id: `passcode:${storedRole}`,
@@ -70,7 +69,7 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
     setIsLoadingRegistrations(true);
     setRegistrationLoadError('');
     try {
-      const result = await getRegistrationList(getStoredAdminPasscode() || '');
+      const result = await getRegistrationList(getAdminPasscodeSession());
       if (!result.success) {
         setRegistrationLoadError(result.errorMessage || 'Unable to load registrations.');
         return;
@@ -84,7 +83,7 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
   };
 
   useEffect(() => {
-    if (!admin?.role || !getStoredAdminPasscode()) {
+    if (!admin?.role || !getAdminPasscodeSession()) {
       setAdminRegistrations([]);
       setRegistrationLoadError('');
       setIsLoadingRegistrations(false);
@@ -128,6 +127,7 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
     setLoginError('');
     try {
       const profile = await signInAdmin(passcode);
+      setAdminPasscodeSession(passcode.trim());
       setAdmin(profile);
       setPasscode('');
     } catch (e: any) {
@@ -136,6 +136,7 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
   };
 
   const logout = async () => {
+    clearAdminPasscodeSession();
     await signOutAdmin();
     setAdmin(null);
     setAdminRegistrations([]);
