@@ -337,73 +337,78 @@ export async function testSupabaseConnection(): Promise<SupabaseHealthCheckResul
 }
 
 // ============================================================================
-// ADMIN PASSCODE SESSION — production admin portal
-// ============================================================================
-
-export type AdminRole = 'male_admin' | 'female_admin';
-
-const ADMIN_ROLE_STORAGE_KEY = 'admin_role';
-
-const ADMIN_PASSCODE_RPC = 'verify_admin_passcode';
-
-export type AdminRole = 'male_admin' | 'female_admin';
-const ADMIN_ROLE_STORAGE_KEY = 'admin_role';
-const ADMIN_PASSCODE_STORAGE_KEY = 'admin_passcode_session';
-
-function adminProfileForRole(role: AdminRole): AdminProfile {
-  const now = new Date().toISOString();
-  return {
-    auth_user_id: `passcode:${role}`,
-    username: null,
-    full_name: role === 'male_admin' ? 'Male Admin' : 'Female Admin',
-    role,
-    active: true,
-    created_at: now,
-    updated_at: now,
-  };
-}
-
-export function getStoredAdminRole(): AdminRole | null {
-  try {
-    const value = localStorage.getItem(ADMIN_ROLE_STORAGE_KEY);
-    return value === 'male_admin' || value === 'female_admin' ? value : null;
-  } catch {
-    return null;
-  }
-}
-
-export function getStoredAdminPasscode(): string | null {
-  try {
-    return localStorage.getItem(ADMIN_PASSCODE_STORAGE_KEY);
-  } catch {
-    return null;
-  }
-}
-
-export async function signInAdmin(passcode: string): Promise<AdminProfile> {
-  const cleanPasscode = passcode.trim();
-  if (!cleanPasscode) throw new Error('Admin Passcode is required.');
-
-  const { data, error } = await supabase.rpc(ADMIN_PASSCODE_RPC, {
-    p_passcode: cleanPasscode,
-  });
-  if (error) throw new Error('Invalid Admin Passcode');
-  const role = (data as any)?.role;
-  if (role !== 'male_admin' && role !== 'female_admin') {
-    throw new Error('Invalid Admin Passcode');
-  }
-
-  try {
-    localStorage.setItem(ADMIN_ROLE_STORAGE_KEY, role);
-    localStorage.setItem(ADMIN_PASSCODE_STORAGE_KEY, cleanPasscode);
-  } catch {
-    throw new Error('Unable to establish admin session on this browser.');
-  }
-  return adminProfileForRole(role);
-}
-
-export async function signOutAdmin(): Promise<void> {
-  localStorage.removeItem(ADMIN_ROLE_STORAGE_KEY);
-  localStorage.removeItem(ADMIN_PASSCODE_STORAGE_KEY);
-}
-
+ // ADMIN PASSCODE SESSION — production admin portal
+ // ============================================================================
+ 
+ export type AdminRole = 'male_admin' | 'female_admin';
+ 
+ const ADMIN_ROLE_STORAGE_KEY = 'admin_role';
+ const ADMIN_PASSCODE_STORAGE_KEY = 'admin_passcode_session';
+ 
+ function adminProfileForRole(role: AdminRole): AdminProfile {
+   const now = new Date().toISOString();
+   return {
+     auth_user_id: `passcode:${role}`,
+     username: null,
+     full_name: role === 'male_admin' ? 'Male Admin' : 'Female Admin',
+     role,
+     active: true,
+     created_at: now,
+     updated_at: now,
+   };
+ }
+ 
+ export function getStoredAdminRole(): AdminRole | null {
+   try {
+     const value = localStorage.getItem(ADMIN_ROLE_STORAGE_KEY);
+     return value === 'male_admin' || value === 'female_admin' ? value : null;
+   } catch {
+     return null;
+   }
+ }
+ 
+ export function getStoredAdminPasscode(): string | null {
+   try {
+     return localStorage.getItem(ADMIN_PASSCODE_STORAGE_KEY);
+   } catch {
+     return null;
+   }
+ }
+ 
+ /**
+  * Validate the passcode through the database-backed verifier.
+  * The browser stores the passcode only for the active session so protected
+  * admin RPCs can re-verify it. No passcode/hash is returned by the verifier.
+  */
+ export async function signInAdmin(passcode: string): Promise<AdminProfile> {
+   const cleanPasscode = passcode.trim();
+   if (!cleanPasscode) throw new Error('Admin Passcode is required.');
+ 
+   const { data, error } = await supabase.rpc('verify_admin_passcode', {
+     p_passcode: cleanPasscode,
+   });
+   if (error) throw new Error(/INVALID_ADMIN_PASSCODE/i.test(error.message) ? 'Invalid Admin Passcode' : error.message);
+ 
+   const role = (data as any)?.role;
+   if (role !== 'male_admin' && role !== 'female_admin') {
+     throw new Error('Invalid Admin Passcode');
+   }
+ 
+   try {
+     localStorage.setItem(ADMIN_ROLE_STORAGE_KEY, role);
+     localStorage.setItem(ADMIN_PASSCODE_STORAGE_KEY, cleanPasscode);
+   } catch {
+     throw new Error('Unable to establish admin session on this browser.');
+   }
+   return adminProfileForRole(role);
+ }
+ 
+ export async function signOutAdmin(): Promise<void> {
+   try {
+     localStorage.removeItem(ADMIN_ROLE_STORAGE_KEY);
+     localStorage.removeItem(ADMIN_PASSCODE_STORAGE_KEY);
+   } catch {
+     // Best-effort local cleanup.
+   }
+ }
+ 
