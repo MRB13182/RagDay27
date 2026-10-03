@@ -1,6 +1,6 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import type { InvitationRecord, InvitationStatus, AdminProfile, PdfSettings, WebsiteSettings } from '../types';
-import { signInAdmin, signOutAdmin } from '../lib/supabase';
+import { signInAdmin, signOutAdmin, getCurrentAdmin } from '../lib/supabase';
 import { getRegistrationList } from '../services/admin';
 import { fetchPublicRegistrations } from '../services/registrations';
 import { generateRegistrationListPDF, generateInvitationCardPDF } from '../utils/pdfGenerator';
@@ -36,6 +36,7 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
   onDeleteRegistration,
 }) => {
   const [admin, setAdmin] = useState<AdminProfile | null>(null);
+  const [adminEmail, setAdminEmail] = useState('');
   const [passcode, setPasscode] = useState('');
   const [loginError, setLoginError] = useState('');
   const [tab, setTab] = useState<'registrations'>('registrations');
@@ -51,9 +52,8 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
 
   useEffect(() => {
     setLoginError('');
-      void (async () => {
+    void (async () => {
       try {
-        const { getCurrentAdmin } = await import('../lib/supabase');
         const profile = await getCurrentAdmin();
         if (profile) setAdmin(profile);
       } catch {
@@ -123,7 +123,7 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
     e.preventDefault();
     setLoginError('');
     try {
-      const profile = await signInAdmin(passcode, passcode);
+      const profile = await signInAdmin(adminEmail, passcode);
       setAdmin(profile);
       setPasscode('');
     } catch (e: any) {
@@ -134,6 +134,7 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
   const logout = async () => {
     await signOutAdmin();
     setAdmin(null);
+    setAdminEmail('');
     setAdminRegistrations([]);
     setRegistrationLoadError('');
     setPasscode('');
@@ -274,17 +275,15 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
               <label className="text-xs font-bold uppercase tracking-wider text-slate-700">
                 Admin Password
               </label>
-              <div className="relative">
-                <input
-                  value={passcode}
-                  onChange={e => setPasscode(e.target.value)}
-                  type="password"
-                  placeholder="Enter Admin Password"
-                  required
-                  autoComplete="current-password"
-                  className="w-full rounded-xl border border-slate-300 pl-4 pr-11 py-3 text-sm font-mono focus:border-indigo-600 focus:outline-none focus:ring-2 focus:ring-indigo-100 transition-all placeholder:text-slate-400"
-                />
-              </div>
+              <input
+                value={passcode}
+                onChange={e => setPasscode(e.target.value)}
+                type="password"
+                placeholder="Enter Admin Password"
+                required
+                autoComplete="current-password"
+                className="w-full rounded-xl border border-slate-300 px-4 py-3 text-sm font-mono focus:border-indigo-600 focus:outline-none focus:ring-2 focus:ring-indigo-100 transition-all placeholder:text-slate-400"
+              />
             </div>
 
             {loginError && (
