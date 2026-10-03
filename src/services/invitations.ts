@@ -1,6 +1,5 @@
 import { supabase } from '../lib/supabase';
 import type { InvitationRecord, InvitationStatus } from '../types';
-import { mapRowToInvitation } from './admin';
 
 export async function getPublicInvitation(
   registration_no: string | number,
