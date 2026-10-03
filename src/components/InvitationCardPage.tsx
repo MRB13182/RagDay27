@@ -7,8 +7,6 @@ import {
   XCircle,
   Download,
   Sparkles,
-  Calendar,
-  MapPin,
   ArrowRight,
   AlertTriangle,
 } from 'lucide-react';
@@ -57,6 +55,8 @@ export const InvitationCardPage: React.FC<InvitationCardPageProps> = ({
 
     setIsSearching(true);
     try {
+      // Invitation lookup is database-backed and keyed by registration_no.
+      // The existing RPC accepts a name parameter, but the registration number remains the primary lookup key.
       const result = await getPublicInvitation(cleanedReg, studentName);
       if (result.success && result.data) {
         // The database lookup is authoritative; React state is not a data source.
