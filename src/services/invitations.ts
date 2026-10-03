@@ -12,16 +12,14 @@ export async function getPublicInvitation(
   errorMessage?: string;
 }> {
   const value = String(registration_no).trim().toUpperCase();
-  const name = studentName.trim();
-
-  // The registration number is the sole lookup key. Name is not required to retrieve the record.
+  // Registration number is the sole lookup key. The name field is retained in the function signature for compatibility.
   if (!/^[A-Z0-9-]+$/i.test(value)) {
     return { success: false, data: null, errorMessage: 'Invalid registration number.' };
   }
 
   // Keep support for compact inputs such as RDB27-1 without changing the database format.
   let queryRegNo = value;
-  const matchShort = value.match(/^(RD[BG]27-)(\\d{1,3})$/i);
+  const matchShort = value.match(/^(RD27-)(\\d{1,3})$/i);
   if (matchShort) {
     queryRegNo = `${matchShort[1]}${matchShort[2].padStart(4, '0')}`;
   }
@@ -40,7 +38,7 @@ export async function getPublicInvitation(
     if (queryRegNo !== value) {
       const retry = await supabase.rpc('lookup_invitation_card', {
         p_registration_no: value,
-        p_student_name: name,
+        p_student_name: null,
       });
       if (!retry.error && retry.data?.found) {
         return processFoundData(retry.data, value);
