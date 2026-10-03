@@ -1,21 +1,8 @@
--- RagDay27 canonical registrations database contract
--- Supabase project ref: xulkacnjqjnluhmbqbcu
--- This file mirrors the production repair architecture.
--- It intentionally contains no site_content or super_admin workflow.
+-- RagDay27 registration table contract
+-- Registration number allocation is database-owned and derived from current rows.
+-- No registration-number sequence/counter table and no frontend/localStorage counter.
 
 create extension if not exists pgcrypto;
-
--- Registration numbers are allocated exclusively by the database counter table.
--- The counters remember the highest EVER issued number independently by gender.
-create table if not exists public.registration_number_counters (
-  gender text primary key check (gender in ('male','female')),
-  last_issued bigint not null default 0 check (last_issued >= 0),
-  updated_at timestamptz not null default now()
-);
-
-insert into public.registration_number_counters (gender,last_issued)
-values ('male',0),('female',0)
-on conflict (gender) do nothing;
 
 create table if not exists public.registrations (
   id uuid primary key default gen_random_uuid(),
@@ -60,19 +47,32 @@ create index if not exists idx_registrations_hidden_gender_status on public.regi
 
 alter table public.registrations enable row level security;
 
--- Production policies are maintained by the dedicated repair migration.
--- Do not reintroduce broad anonymous SELECT/UPDATE/DELETE policies here.
-
--- Realtime
 do $$
 begin
   alter publication supabase_realtime add table public.registrations;
 exception when duplicate_object then null;
 end $$;
 
-
--- Production allocator contract (deployed through ordered Supabase migrations):
--- public.next_registration_number(p_gender text)
--- returns RDB27-<n> for male and RDG27-<n> for female using
--- public.registration_number_counters.last_issued. Never use MAX(registration_no),
--- frontend counters, or localStorage for allocation.
+-- Required create_registration allocator semantics:
+-- For a new row and gender = male:
+--   v_next := coalesce((
+--     select max((substring(registration_no from '^RDB27-([0-9]+)$'))::bigint)
+--     from public.registrations
+--     where gender = 'male'
+--       and registration_no ~ '^RDB27-[0-9]+$'
+--   ), 0) + 1;
+--   registration_no := 'RDB27-' || lpad(v_next::text, 4, '0');
+--
+-- For female use RDG27- and gender = female.
+--
+-- Therefore:
+--   * empty gender set -> 0001
+--   * deleting only the highest current number -> that number is reusable
+--   * deleting a middle number while a higher number exists -> gap is never reused
+--   * emptying the whole registrations table -> both genders restart at 0001
+--
+-- This is intentionally NOT a historical high-water-mark allocator.
+-- Never use localStorage, frontend counters, PostgreSQL registration-number
+-- sequences, or a separate counter table for registration_no.
+--
+-- Rejected re-submission must update the existing row and retain registration_no.
