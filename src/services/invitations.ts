@@ -1,5 +1,6 @@
 import { supabase } from '../lib/supabase';
 import type { InvitationRecord, InvitationStatus } from '../types';
+import { mapRowToInvitation } from './admin';
 
 export async function getPublicInvitation(
   registration_no: string | number,
@@ -12,7 +13,7 @@ export async function getPublicInvitation(
 }> {
   const value = String(registration_no).trim().toUpperCase();
   const name = studentName.trim();
-  if (!/^RDB27-\\d{4}$|^RDG27-\\d{4}$/.test(value)) return { success: false, data: null, errorMessage: 'Invalid registration number.' };
+  if (!/^RDB27-[0-9]{4}$|^RDG27-[0-9]{4}$/.test(value)) return { success: false, data: null, errorMessage: 'Invalid registration number.' };
   if (!name) return { success: false, data: null, errorMessage: 'Student name is required.' };
 
   const { data, error } = await supabase.rpc('lookup_invitation_card', {
