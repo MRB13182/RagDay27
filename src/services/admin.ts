@@ -90,125 +90,7 @@ export function mapRowToInvitation(row: any): InvitationRecord {
   };
 }
 
-const REGISTRY_STORAGE_KEY = 'rd27_admin_registrations_registry';
-
-const INITIAL_KNOWN_RECORDS: InvitationRecord[] = [
-  {
-    id: '551e1731-06af-41e0-80da-432e9681a1cf',
-    dbId: '551e1731-06af-41e0-80da-432e9681a1cf',
-    sl_no: 2,
-    registration_no: 'RDG27-0001',
-    full_name: 'Q',
-    class_roll: 'Q',
-    student_id: 'Q',
-    contact_mobile_number: '01812345678',
-    academic_group: 'Business Studies',
-    academic_section: 'BsG2',
-    student_photo: null,
-    send_method: 'bkash',
-    sender_mobile_no: '01812345678',
-    payment_time: '14:30:00',
-    transaction_id: 'Q',
-    jersey_back_name: 'NOVA',
-    jersey_number: '27',
-    jersey_size: 'L',
-    gender: 'female',
-    status: 'pending',
-    reject_reason: undefined,
-    approved_by: null,
-    rejected_by: null,
-    approved_at: null,
-    rejected_at: null,
-    hidden_from_web: false,
-    created_at: new Date().toISOString(),
-    updated_at: new Date().toISOString(),
-  },
-  {
-    id: '1e1e188c-c996-4c7f-a8bd-9c095c617c3b',
-    dbId: '1e1e188c-c996-4c7f-a8bd-9c095c617c3b',
-    sl_no: 3,
-    registration_no: 'RDB27-0001',
-    full_name: 'Test Student',
-    class_roll: '9999',
-    student_id: '999999',
-    contact_mobile_number: '01700000000',
-    academic_group: 'Science',
-    academic_section: 'ScB1',
-    student_photo: null,
-    send_method: 'bkash',
-    sender_mobile_no: '01700000000',
-    payment_time: '12:00:00',
-    transaction_id: 'TRX99999',
-    jersey_back_name: 'TEST',
-    jersey_number: '27',
-    jersey_size: 'L',
-    gender: 'male',
-    status: 'pending',
-    reject_reason: undefined,
-    approved_by: null,
-    rejected_by: null,
-    approved_at: null,
-    rejected_at: null,
-    hidden_from_web: false,
-    created_at: new Date().toISOString(),
-    updated_at: new Date().toISOString(),
-  },
-];
-
-export function getRegistryRegistrations(): InvitationRecord[] {
-  try {
-    const raw = localStorage.getItem(REGISTRY_STORAGE_KEY);
-    const map = new Map<string, InvitationRecord>();
-    INITIAL_KNOWN_RECORDS.forEach(r => map.set(r.registration_no, r));
-    if (raw) {
-      const parsed = JSON.parse(raw);
-      if (Array.isArray(parsed)) {
-        parsed.forEach((r: InvitationRecord) => {
-          if (r && r.registration_no) map.set(r.registration_no, r);
-        });
-      }
-    }
-    return Array.from(map.values());
-  } catch {
-    return [...INITIAL_KNOWN_RECORDS];
-  }
-}
-
-export function saveRegistryRegistrations(records: InvitationRecord[]): void {
-  try {
-    localStorage.setItem(REGISTRY_STORAGE_KEY, JSON.stringify(records));
-  } catch {
-    // Best-effort
-  }
-}
-
-export function upsertRegistryRegistration(record: InvitationRecord): void {
-  try {
-    const list = getRegistryRegistrations();
-    const idx = list.findIndex(
-      r =>
-        (record.registration_no && r.registration_no === record.registration_no) ||
-        (record.id && r.id === record.id) ||
-        (record.dbId && r.dbId === record.dbId)
-    );
-    if (idx >= 0) {
-      list[idx] = { ...list[idx], ...record };
-    } else {
-      list.push(record);
-    }
-    saveRegistryRegistrations(list);
-  } catch {
-    // Best-effort
-  }
-}
-
-export function getRegistrationByNumber(regNo: string): InvitationRecord | null {
-  const clean = regNo.trim().toUpperCase();
-  const list = getRegistryRegistrations();
-  return list.find(r => r.registration_no.toUpperCase() === clean) || null;
-}
-
-/** Load only the registrations authorized by the current admin passcode. */
+/** Load authoritative registration rows for the signed-in admin. */
 export async function getRegistrationList(passcode: string = getAdminPasscode()): Promise<{
   success: boolean;
   data: InvitationRecord[];
@@ -217,32 +99,17 @@ export async function getRegistrationList(passcode: string = getAdminPasscode())
 }> {
   try {
     const cleanPasscode = passcode.trim();
-    if (!cleanPasscode) return { success: false, data: [], errorMessage: 'Admin session is not available.' };
-
-    try {
-      const { data, error } = await supabase.rpc('get_admin_registrations', { p_passcode: cleanPasscode });
-      if (!error && Array.isArray(data)) {
-        const mapped = data.map(mapRowToInvitation);
-        mapped.forEach(upsertRegistryRegistration);
-        return { success: true, data: mapped };
-      }
-    } catch {
-      // Remote RPC failed; use synchronized registry
+    if (!cleanPasscode) {
+      return { success: false, data: [], errorMessage: 'Admin session is not available.' };
     }
-
-    const all = getRegistryRegistrations();
-    let scoped = all.filter(r => !r.hidden_from_web);
-
-    const isMale = cleanPasscode === 'nicboy.27' || cleanPasscode.toLowerCase() === 'nicboy.27';
-    const isFemale = cleanPasscode === 'nic27.girl' || cleanPasscode.toLowerCase() === 'nic27.girl';
-
-    if (isMale) {
-      scoped = scoped.filter(r => r.gender === 'male');
-    } else if (isFemale) {
-      scoped = scoped.filter(r => r.gender === 'female');
-    }
-
-    return { success: true, data: scoped };
+    const { data, error } = await supabase.rpc('get_admin_registrations', {
+      p_passcode: cleanPasscode,
+    });
+    if (error) throw error;
+    return {
+      success: true,
+      data: Array.isArray(data) ? data.map(mapRowToInvitation) : [],
+    };
   } catch (error:any) {
     return { success: false, data: [], error, errorMessage: translateBackendError(error) };
   }
@@ -250,46 +117,18 @@ export async function getRegistrationList(passcode: string = getAdminPasscode())
 
 export async function approveRegistration(registrationId: string, passcode: string = getAdminPasscode()) {
   try {
-    try {
-      const { data, error } = await supabase.rpc('approve_registration', {
-        p_registration_id: registrationId,
-        p_passcode: passcode,
-      });
-      if (!error && data) {
-        const inv = mapRowToInvitation(data);
-        upsertRegistryRegistration(inv);
-        return { success: true, data: inv };
-      }
-    } catch {
-      // Remote RPC fallback
-    }
-
-    const list = getRegistryRegistrations();
-    const target = list.find(
-      r =>
-        r.id === registrationId ||
-        r.dbId === registrationId ||
-        r.registration_no === registrationId
-    );
-    if (!target) {
-      throw new Error(`Registration ${registrationId} not found.`);
-    }
-
-    const isFemale = passcode.toLowerCase().includes('girl');
-    const updated: InvitationRecord = {
-      ...target,
-      status: 'approved',
-      approved_at: new Date().toISOString(),
-      approved_by: isFemale ? 'Female Admin' : 'Male Admin',
-      reject_reason: undefined,
-      updated_at: new Date().toISOString(),
-    };
-    upsertRegistryRegistration(updated);
-    return { success: true, data: updated };
+    const { data, error } = await supabase.rpc('approve_registration', {
+      p_registration_id: registrationId,
+      p_passcode: passcode,
+    });
+    if (error) throw error;
+    if (!data) throw new Error('Database did not return the approved registration.');
+    return { success: true, data: mapRowToInvitation(data) };
   } catch (error:any) {
     return { success: false, error, errorMessage: translateBackendError(error) };
   }
 }
+
 
 export async function rejectRegistration(
   registrationId: string,
@@ -299,89 +138,34 @@ export async function rejectRegistration(
   const cleanReason = reason.trim();
   if (!cleanReason) return { success: false, errorMessage: 'A rejection reason is required.' };
   try {
-    try {
-      const { data, error } = await supabase.rpc('reject_registration', {
-        p_registration_id: registrationId,
-        p_reason: cleanReason,
-        p_passcode: passcode,
-      });
-      if (!error && data) {
-        const inv = mapRowToInvitation(data);
-        upsertRegistryRegistration(inv);
-        return { success: true, data: inv };
-      }
-    } catch {
-      // Remote RPC fallback
-    }
-
-    const list = getRegistryRegistrations();
-    const target = list.find(
-      r =>
-        r.id === registrationId ||
-        r.dbId === registrationId ||
-        r.registration_no === registrationId
-    );
-    if (!target) {
-      throw new Error(`Registration ${registrationId} not found.`);
-    }
-
-    const isFemale = passcode.toLowerCase().includes('girl');
-    const updated: InvitationRecord = {
-      ...target,
-      status: 'rejected',
-      reject_reason: cleanReason,
-      rejected_at: new Date().toISOString(),
-      rejected_by: isFemale ? 'Female Admin' : 'Male Admin',
-      updated_at: new Date().toISOString(),
-    };
-    upsertRegistryRegistration(updated);
-    return { success: true, data: updated };
+    const { data, error } = await supabase.rpc('reject_registration', {
+      p_registration_id: registrationId,
+      p_reason: cleanReason,
+      p_passcode: passcode,
+    });
+    if (error) throw error;
+    if (!data) throw new Error('Database did not return the rejected registration.');
+    return { success: true, data: mapRowToInvitation(data) };
   } catch (error:any) {
     return { success: false, error, errorMessage: translateBackendError(error) };
   }
 }
+
 
 export async function deleteRegistration(
   registrationId: string,
   passcode: string = getAdminPasscode()
 ) {
   try {
-    try {
-      const { data, error } = await supabase.rpc('hide_registration_from_web', {
-        p_registration_id: registrationId,
-        p_passcode: passcode,
-      });
-      if (!error && data) {
-        const inv = mapRowToInvitation(data);
-        upsertRegistryRegistration(inv);
-        return { success: true, data: inv };
-      }
-    } catch {
-      // Remote RPC fallback
-    }
-
-    const list = getRegistryRegistrations();
-    const target = list.find(
-      r =>
-        r.id === registrationId ||
-        r.dbId === registrationId ||
-        r.registration_no === registrationId
-    );
-    if (!target) {
-      throw new Error(`Registration ${registrationId} not found.`);
-    }
-
-    const isFemale = passcode.toLowerCase().includes('girl');
-    const updated: InvitationRecord = {
-      ...target,
-      hidden_from_web: true,
-      hidden_at: new Date().toISOString(),
-      hidden_by: isFemale ? 'Female Admin' : 'Male Admin',
-      updated_at: new Date().toISOString(),
-    };
-    upsertRegistryRegistration(updated);
-    return { success: true, data: updated };
+    const { data, error } = await supabase.rpc('hide_registration_from_web', {
+      p_registration_id: registrationId,
+      p_passcode: passcode,
+    });
+    if (error) throw error;
+    if (!data) throw new Error('Database did not return the hidden registration.');
+    return { success: true, data: mapRowToInvitation(data) };
   } catch (error:any) {
     return { success: false, error, errorMessage: translateBackendError(error) };
   }
 }
+
