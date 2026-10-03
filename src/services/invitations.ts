@@ -17,7 +17,7 @@ export async function getPublicInvitation(
     return { success: false, data: null, errorMessage: 'Invalid registration number.' };
   }
 
-  // Keep support for compact inputs such as RDB27-1 without changing the database format.
+  // Accept compact input such as RD27-1 and normalize it to the database's four-digit storage format.
   let queryRegNo = value;
   const matchShort = value.match(/^(RD27-)(\\d{1,3})$/i);
   if (matchShort) {
