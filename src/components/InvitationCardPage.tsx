@@ -7,17 +7,13 @@ import {
   XCircle,
   Download,
   Sparkles,
-  QrCode,
   Calendar,
   MapPin,
-  ShieldCheck,
-  UserCheck,
   ArrowRight,
   AlertTriangle,
 } from 'lucide-react';
 import { generateInvitationCardPDF } from '../utils/pdfGenerator';
 import { getPublicInvitation } from '../services';
-import badgeImage from '../assets/images/rd27_invitation_badge_1790159004807.jpg';
 
 interface InvitationCardPageProps {
   invitations: InvitationRecord[];
@@ -311,149 +307,63 @@ export const InvitationCardPage: React.FC<InvitationCardPageProps> = ({
               )}
 
               {/* INVITATION CARD PREVIEW */}
-              <div className="print-invitation-card relative w-full rounded-3xl overflow-hidden shadow-[0_25px_60px_-15px_rgba(15,23,42,0.4)] border border-slate-800 bg-gradient-to-br from-[#0F172A] via-[#1E293B] to-[#0F172A] text-white">
-                {/* Holographic accent stripe */}
-                <div className="h-2 w-full bg-gradient-to-r from-[#5B5FEF] via-[#00D4FF] to-[#EC4899]" />
+              <div className="invitation-card-shell w-full">
+                <div className="invitation-card relative w-full overflow-hidden">
+                  <div className="invitation-orb invitation-orb-left" />
+                  <div className="invitation-orb invitation-orb-right" />
+                  <div className="invitation-academic-cap cap-left">◆</div>
+                  <div className="invitation-academic-cap cap-top-right">◆</div>
 
-                <div className="p-6 sm:p-8 grid grid-cols-1 md:grid-cols-12 gap-6 items-center">
-                  {/* Left Pass Section */}
-                  <div className="md:col-span-8 flex flex-col justify-between space-y-6">
-                    {/* Brand Header */}
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-3">
-                        <div className="w-10 h-10 rounded-xl bg-gradient-to-tr from-[#5B5FEF] to-[#00D4FF] p-[1.5px] flex items-center justify-center">
-                          <div className="w-full h-full bg-[#0F172A] rounded-[9px] flex items-center justify-center font-display font-black text-sm text-white">
-                            27
-                          </div>
-                        </div>
-                        <div>
-                          <div className="font-display text-lg font-black tracking-wider text-white">
-                            {pdfSettings.invitationCardTitle || `${websiteSettings.eventName} · OFFICIAL PASS`}
-                          </div>
-                          <div className="text-[10px] uppercase font-bold tracking-widest text-[#00D4FF]">
-                            Annual Grand Farewell Extravaganza
-                          </div>
-                        </div>
-                      </div>
-
-                      <div className="px-3 py-1 rounded-full bg-emerald-500/20 border border-emerald-400/40 text-emerald-300 text-xs font-bold uppercase tracking-wider flex items-center gap-1.5">
-                        <CheckCircle2 className="w-3.5 h-3.5" /> Approved
-                      </div>
+                  <div className="invitation-brand">
+                    <div className="invitation-logo-wrap">
+                      {pdfSettings.pdfLogo ? <img src={pdfSettings.pdfLogo} alt="National Ideal College" /> : <div className="invitation-logo-fallback">27</div>}
                     </div>
-
-                    {/* Student Identity */}
-                    <div className="flex items-center gap-4 p-4 rounded-2xl bg-white/5 border border-white/10 backdrop-blur-md">
-                      {matchedRecord.student_photo ? (
-                        <img
-                          src={matchedRecord.student_photo}
-                          alt={matchedRecord.full_name}
-                          className="w-16 h-16 rounded-xl object-cover border-2 border-white/20 shadow-md"
-                        />
-                      ) : (
-                        <div className="w-16 h-16 rounded-xl bg-gradient-to-br from-[#5B5FEF] to-[#7A6CFF] flex items-center justify-center text-xl font-bold font-display shadow-md">
-                          {matchedRecord.full_name.charAt(0)}
-                        </div>
-                      )}
-                      <div>
-                        <div className="text-xl font-extrabold text-white tracking-wide">
-                          {matchedRecord.full_name}
-                        </div>
-                        <div className="text-xs text-slate-300 mt-0.5 flex flex-wrap items-center gap-2">
-                          <span className="font-mono bg-white/10 px-2 py-0.5 rounded text-[11px]">
-                            Roll: {matchedRecord.class_roll}
-                          </span>
-                          <span className="font-mono bg-white/10 px-2 py-0.5 rounded text-[11px]">
-                            ID: {matchedRecord.id}
-                          </span>
-                          <span className="text-[#00D4FF] font-medium">
-                            {matchedRecord.academic_group} (Sec {matchedRecord.academic_section})
-                          </span>
-                        </div>
-                      </div>
-                    </div>
-
-                    {/* Metadata Grid */}
-                    <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 text-xs">
-                      <div className="p-3 rounded-xl bg-slate-900/60 border border-slate-700/60">
-                        <span className="text-[10px] uppercase font-bold text-slate-400 block mb-0.5">
-                          Jersey Back
-                        </span>
-                        <span className="font-display font-bold text-white tracking-wide">
-                          {matchedRecord.jersey_back_name}
-                        </span>
-                      </div>
-
-                      <div className="p-3 rounded-xl bg-slate-900/60 border border-slate-700/60">
-                        <span className="text-[10px] uppercase font-bold text-slate-400 block mb-0.5">
-                          Squad # & Size
-                        </span>
-                        <span className="font-mono font-bold text-[#00D4FF]">
-                          #{matchedRecord.jersey_number} · {matchedRecord.jersey_size}
-                        </span>
-                      </div>
-
-                      <div className="p-3 rounded-xl bg-slate-900/60 border border-slate-700/60">
-                        <span className="text-[10px] uppercase font-bold text-slate-400 block mb-0.5">
-                          Seating Zone
-                        </span>
-                        <span className="font-medium text-white truncate block">
-                          {'Zone A - Amphitheatre'}
-                        </span>
-                      </div>
-
-                      <div className="p-3 rounded-xl bg-slate-900/60 border border-slate-700/60">
-                        <span className="text-[10px] uppercase font-bold text-slate-400 block mb-0.5">
-                          Entry Gate
-                        </span>
-                        <span className="font-medium text-emerald-400 truncate block">
-                          {'Gate 02 (North)'}
-                        </span>
-                      </div>
-                    </div>
-
-                    {/* Event Timestamp and Location */}
-                    <div className="flex flex-wrap items-center gap-4 text-xs text-slate-300 pt-2 border-t border-white/10">
-                      <span className="flex items-center gap-1.5">
-                        <Calendar className="w-3.5 h-3.5 text-[#5B5FEF]" /> {websiteSettings.eventDate}
-                      </span>
-                      <span className="flex items-center gap-1.5">
-                        <MapPin className="w-3.5 h-3.5 text-[#00D4FF]" /> {websiteSettings.venue}
-                      </span>
-                      <span className="flex items-center gap-1.5 text-slate-400">
-                        <ShieldCheck className="w-3.5 h-3.5 text-emerald-400" /> Authorized
-                      </span>
+                    <div>
+                      <div className="invitation-college-name">National Ideal College</div>
+                      <div className="invitation-event-name">Rag Day of NIC 27</div>
                     </div>
                   </div>
 
-                  {/* Right Stub Section (Perforated ticket stub style) */}
-                  <div className="md:col-span-4 relative flex flex-col items-center justify-center p-6 rounded-2xl bg-white/5 border border-dashed border-slate-700 text-center">
-                    <div className="text-[11px] uppercase tracking-widest text-slate-400 font-semibold mb-2">
-                      Scan At Checkpoint
-                    </div>
+                  <div className="invitation-divider">
+                    <span />
+                    <b>◆</b>
+                    <span />
+                  </div>
 
-                    {/* QR Code graphic */}
-                    <div className="p-3 rounded-2xl bg-white text-slate-950 shadow-xl mb-3 flex items-center justify-center">
-                      <QrCode className="w-24 h-24 text-slate-900" />
-                    </div>
+                  <div className="invitation-info-panel">
+                    {[
+                      ['person','Name:',matchedRecord.full_name],
+                      ['building','Section:',matchedRecord.academic_section || '—'],
+                      ['cap','Roll:',matchedRecord.class_roll || '—'],
+                      ['stack','Group:',matchedRecord.academic_group || '—'],
+                      ['id','Registration No:',matchedRecord.registration_no],
+                    ].map(([icon,label,value]) => (
+                      <div className="invitation-info-row" key={String(label)}>
+                        <span className="invitation-icon-glass" aria-hidden="true">{icon === 'person' ? '●' : icon === 'building' ? '▥' : icon === 'cap' ? '◆' : icon === 'stack' ? '▤' : '▣'}</span>
+                        <span className="invitation-label">{label}</span>
+                        <strong>{value}</strong>
+                      </div>
+                    ))}
+                  </div>
 
-                    <div className="font-mono text-xs font-bold text-[#00D4FF] tracking-wider mb-1">
-                      {matchedRecord.registration_no}
-                    </div>
+                  <div className="invitation-photo-frame">
+                    {matchedRecord.student_photo ? (
+                      <img src={matchedRecord.student_photo} alt={matchedRecord.full_name} />
+                    ) : (
+                      <div className="invitation-photo-fallback">{matchedRecord.full_name.charAt(0).toUpperCase()}</div>
+                    )}
+                  </div>
+                  <div className="invitation-signature">{matchedRecord.full_name}</div>
 
-                    <div className="text-[10px] text-slate-400 leading-tight">
-                      Strictly non-transferable.
-                      <br />
-                      Valid for 1 Entry Only.
-                    </div>
+                  <div className="invitation-event-row">
+                    <div><span className="invitation-bottom-icon">▦</span><b>Event Date:</b> 15 December 2027</div>
+                    <div><span className="invitation-bottom-icon">●</span><b>Venue:</b> National Ideal College Campus</div>
+                  </div>
 
-                    <button
-                      type="button"
-                      onClick={handleDownloadPDF}
-                      className="mt-4 w-full py-2.5 px-3 rounded-xl bg-[#5B5FEF] hover:bg-[#4d51d4] text-white text-xs font-bold transition-colors flex items-center justify-center gap-1.5 cursor-pointer shadow-md"
-                    >
-                      <Download className="w-3.5 h-3.5" />
-                      <span>Download PDF</span>
-                    </button>
+                  <div className="invitation-footer-line">
+                    <span />
+                    <em>Official Entry Pass</em>
+                    <span />
                   </div>
                 </div>
               </div>
