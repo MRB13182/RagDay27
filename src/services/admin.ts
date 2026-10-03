@@ -1,8 +1,40 @@
 import type { InvitationRecord } from '../types';
-import { mapRowToInvitation } from './admin';
 import { supabase } from '../lib/supabase';
 
-export { mapRowToInvitation } from './admin';
+export function mapRowToInvitation(row: any): InvitationRecord {
+  return {
+    id: row?.id,
+    dbId: row?.id,
+    sl_no: row?.sl_no,
+    registration_no: row?.registration_no || '',
+    full_name: row?.full_name || '',
+    class_roll: row?.class_roll || '',
+    student_id: row?.student_id || '',
+    contact_mobile_number: row?.contact_mobile_number || '',
+    academic_group: row?.academic_group || '',
+    academic_section: row?.academic_section || '',
+    student_photo: row?.student_photo ?? null,
+    send_method: row?.send_method === 'nagad' ? 'nagad' : 'bkash',
+    sender_mobile_no: row?.sender_mobile_no || '',
+    payment_time: row?.payment_time || '',
+    transaction_id: row?.transaction_id || undefined,
+    jersey_back_name: row?.jersey_back_name || '',
+    jersey_number: row?.jersey_number || '',
+    jersey_size: row?.jersey_size || 'L',
+    gender: row?.gender === 'female' ? 'female' : 'male',
+    status: row?.status === 'approved' || row?.status === 'rejected' ? row.status : 'pending',
+    reject_reason: row?.reject_reason || undefined,
+    approved_by: row?.approved_by ?? null,
+    rejected_by: row?.rejected_by ?? null,
+    approved_at: row?.approved_at ?? null,
+    rejected_at: row?.rejected_at ?? null,
+    created_at: row?.created_at || '',
+    updated_at: row?.updated_at || '',
+    hidden_from_web: row?.hidden_from_web ?? false,
+    hidden_by: row?.hidden_by ?? null,
+    hidden_at: row?.hidden_at ?? null,
+  };
+}
 
 /** Load authoritative registration rows for the authenticated admin. */
 export async function getRegistrationList(): Promise<{
