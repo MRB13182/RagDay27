@@ -81,3 +81,64 @@
 .animate-float-reverse {
   animation: floatReverse 8s ease-in-out infinite;
 }
+
+/* Invitation card: canonical 16:10 composition */
+.invitation-card-shell {
+  width: 100%;
+  max-width: 980px;
+  margin-inline: auto;
+}
+.invitation-card {
+  aspect-ratio: 16 / 10;
+  position: relative;
+  overflow: hidden;
+  isolation: isolate;
+  color: #1f1730;
+  background:
+    radial-gradient(circle at 78% 18%, rgba(196, 181, 253, .32), transparent 24%),
+    radial-gradient(circle at 42% 62%, rgba(221, 214, 254, .22), transparent 30%),
+    linear-gradient(135deg, #ffffff 0%, #fbf8ff 45%, #eee9ff 100%);
+  border: 1px solid rgba(255,255,255,.92);
+  box-shadow: 0 26px 60px rgba(82, 47, 132, .18);
+  font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+}
+.invitation-orb{position:absolute;border-radius:999px;filter:blur(8px);background:rgba(124,58,237,.16);z-index:-1}
+.invitation-orb-left{width:220px;height:220px;left:-105px;bottom:-135px}
+.invitation-orb-right{width:190px;height:190px;right:-80px;top:-95px}
+.invitation-brand{position:absolute;left:6.3%;top:5.3%;display:flex;align-items:center;gap:14px;z-index:2}
+.invitation-logo-wrap{width:90px;height:90px;display:grid;place-items:center}
+.invitation-logo-wrap img{width:100%;height:100%;object-fit:contain;filter:drop-shadow(0 4px 7px rgba(91,33,182,.18))}
+.invitation-logo-fallback{font-weight:900;font-size:28px;color:#6d28d9}
+.invitation-college-name{font-family:'Syne','Plus Jakarta Sans',sans-serif;font-size:clamp(25px,2.7vw,49px);line-height:1;font-weight:900;letter-spacing:-.04em;color:#241042}
+.invitation-event-name{font-size:clamp(18px,1.9vw,31px);line-height:1.25;margin-top:8px;color:#241b2d}
+.invitation-divider{position:absolute;left:43%;right:12%;top:13.2%;display:flex;align-items:center;gap:10px}
+.invitation-divider span{height:1px;flex:1;background:linear-gradient(90deg,transparent,rgba(91,68,109,.7))}
+.invitation-divider b{font-size:11px;color:#6d28d9}
+.invitation-info-panel{position:absolute;left:6.8%;top:29.3%;width:54%;z-index:2}
+.invitation-info-row{display:grid;grid-template-columns:36px 160px 1fr;align-items:center;min-height:12.2%;font-size:clamp(16px,1.7vw,29px)}
+.invitation-info-row strong{font-weight:800;color:#21162f;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.invitation-label{color:#2b2631}
+.invitation-icon-glass,.invitation-bottom-icon{display:grid;place-items:center;color:#6d28d9}
+.invitation-icon-glass{width:32px;height:32px;border-radius:10px;background:linear-gradient(145deg,rgba(139,92,246,.26),rgba(255,255,255,.7));border:1px solid rgba(124,58,237,.25);box-shadow:inset 0 1px 0 rgba(255,255,255,.9),0 6px 14px rgba(109,40,217,.12);font-size:13px}
+.invitation-photo-frame{position:absolute;right:7.7%;top:20.2%;width:29.1%;height:51.2%;border-radius:30px;background:rgba(255,255,255,.72);padding:11px;box-shadow:0 15px 35px rgba(88,53,122,.18);border:2px solid rgba(255,255,255,.9);z-index:2}
+.invitation-photo-frame img,.invitation-photo-fallback{width:100%;height:100%;border-radius:22px;object-fit:cover;background:#f4effd}
+.invitation-photo-fallback{display:grid;place-items:center;color:#6d28d9;font-size:64px;font-weight:900}
+.invitation-signature{position:absolute;right:9.1%;top:74.8%;width:28.5%;text-align:center;color:#3b1758;font-family:cursive;font-style:italic;font-size:clamp(18px,2.1vw,38px);line-height:1;white-space:nowrap;overflow:hidden;text-overflow:clip;z-index:2}
+.invitation-event-row{position:absolute;left:9.2%;right:7.2%;bottom:8%;display:grid;grid-template-columns:1fr 1.2fr;gap:30px;align-items:center;font-size:clamp(14px,1.55vw,25px);z-index:2}
+.invitation-event-row>div{display:flex;align-items:center;gap:10px;white-space:nowrap;overflow:hidden}
+.invitation-event-row b{font-weight:900}
+.invitation-bottom-icon{width:32px;height:32px;font-size:18px;flex:0 0 auto}
+.invitation-footer-line{position:absolute;left:9.2%;right:7.2%;bottom:2.5%;display:flex;align-items:center;gap:24px;justify-content:center;color:#544b5e;font-size:clamp(12px,1.45vw,23px);z-index:2}
+.invitation-footer-line span{height:1px;flex:1;background:rgba(97,83,112,.4)}
+.invitation-footer-line em{font-style:normal;white-space:nowrap}
+.invitation-academic-cap{position:absolute;color:#6d28d9;opacity:.9;font-size:74px;transform:rotate(-20deg);z-index:1}
+.cap-left{left:-26px;top:23%;font-size:56px}
+.cap-top-right{right:-18px;top:8%;font-size:66px;transform:rotate(18deg)}
+@media (max-width: 700px){
+  .invitation-brand{gap:7px}
+  .invitation-logo-wrap{width:53px;height:53px}
+  .invitation-info-row{grid-template-columns:24px 90px 1fr}
+  .invitation-icon-glass{width:22px;height:22px;border-radius:7px;font-size:9px}
+  .invitation-event-row{gap:8px}
+  .invitation-event-row>div{gap:5px}
+}
