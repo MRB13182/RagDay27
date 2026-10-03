@@ -131,23 +131,27 @@ export async function getCurrentAdmin(): Promise<AdminProfile | null> {
   };
 }
 
-export async function signInAdmin(email: string, password: string): Promise<AdminProfile> {
-  const cleanEmail = email.trim();
-  if (!cleanEmail || !password) throw new Error('Admin credentials are required.');
+export async function signInAdmin(passcode: string): Promise<AdminProfile> {
+  const cleanPasscode = passcode.trim();
+  if (!cleanPasscode) throw new Error('Admin passcode is required.');
 
-  const { error } = await supabase.auth.signInWithPassword({
-    email: cleanEmail,
-    password,
+  const { data, error } = await supabase.rpc('verify_admin_passcode', {
+    p_passcode: cleanPasscode,
   });
-  if (error) throw new Error('Invalid admin credentials.');
 
-  const profile = await getCurrentAdmin();
-  if (!profile) {
-    await supabase.auth.signOut();
-    throw new Error('This account is not an active RagDay27 administrator.');
+  if (error || !data || (data.role !== 'male_admin' && data.role !== 'female_admin')) {
+    throw new Error('Invalid Admin Passcode');
   }
 
-  return profile;
+  return {
+    auth_user_id: `passcode:${data.admin_id}`,
+    username: null,
+    full_name: data.role === 'male_admin' ? 'Male Admin' : 'Female Admin',
+    role: data.role,
+    active: true,
+    created_at: new Date().toISOString(),
+    updated_at: new Date().toISOString(),
+  };
 }
 
 export async function signOutAdmin(): Promise<void> {
