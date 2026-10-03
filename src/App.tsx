@@ -67,8 +67,10 @@ export default function App() {
     let cancelled = false;
     const loadPublicRegistrations = async () => {
       try {
-        const result = await getRegistrationList();
-        if (!cancelled && result.success) setInvitations(result.data);
+        const result = await import('./services/registrations').then(({ fetchPublicRegistrations }) =>
+          fetchPublicRegistrations()
+        );
+        if (!cancelled) setInvitations(result);
       } catch (error) {
         console.error('Unable to load public registrations:', error);
       }
