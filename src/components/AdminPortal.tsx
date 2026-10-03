@@ -267,7 +267,7 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
                   value={passcode}
                   onChange={e => setPasscode(e.target.value)}
                   type="password"
-                  placeholder="Enter Admin Passcode"
+                  placeholder="Enter Admin Password"
                   required
                   autoFocus
                   className="w-full rounded-xl border border-slate-300 pl-4 pr-11 py-3 text-sm font-mono focus:border-indigo-600 focus:outline-none focus:ring-2 focus:ring-indigo-100 transition-all placeholder:text-slate-400"
