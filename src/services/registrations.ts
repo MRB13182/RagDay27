@@ -144,37 +144,12 @@ export async function createRegistration(
  * Fetch registrations from public.registrations for public application discovery.
  */
 export async function fetchPublicRegistrations(): Promise<InvitationRecord[]> {
-  try {
-    const { data, error } = await supabase
-      .from('registrations')
-      .select('*')
-      .eq('hidden_from_web', false)
-      .order('sl_no', { ascending: false });
+  const { data, error } = await supabase
+    .from('registrations')
+    .select('*')
+    .eq('hidden_from_web', false)
+    .order('sl_no', { ascending: false });
 
-    if (!error && Array.isArray(data) && data.length > 0) {
-      return data.map(mapRowToInvitation);
-    }
-  } catch {
-    // Continue to sequence probes
-  }
-
-  try {
-    const list: InvitationRecord[] = [];
-    const probes: PromiseLike<any>[] = [];
-    for (let i = 1; i <= 25; i++) {
-      probes.push(
-        supabase.rpc('lookup_invitation_card', { p_registration_no: `RDB27-${i}`, p_student_name: null }),
-        supabase.rpc('lookup_invitation_card', { p_registration_no: `RDG27-${i}`, p_student_name: null })
-      );
-    }
-    const results = await Promise.all(probes);
-    for (const r of results) {
-      if (r.data?.found && r.data.registration_no) {
-        list.push(mapRowToInvitation(r.data));
-      }
-    }
-    return list;
-  } catch {
-    return [];
-  }
+  if (error) throw error;
+  return Array.isArray(data) ? data.map(mapRowToInvitation) : [];
 }
