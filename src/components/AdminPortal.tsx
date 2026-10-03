@@ -36,7 +36,6 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
   onDeleteRegistration,
 }) => {
   const [admin, setAdmin] = useState<AdminProfile | null>(null);
-  const [adminEmail, setAdminEmail] = useState('');
   const [passcode, setPasscode] = useState('');
   const [loginError, setLoginError] = useState('');
   const [tab, setTab] = useState<'registrations'>('registrations');
@@ -123,7 +122,7 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
     e.preventDefault();
     setLoginError('');
     try {
-      const profile = await signInAdmin(adminEmail, passcode);
+      const profile = await signInAdmin(passcode);
       setAdmin(profile);
       setPasscode('');
     } catch (e: any) {
@@ -134,7 +133,6 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
   const logout = async () => {
     await signOutAdmin();
     setAdmin(null);
-    setAdminEmail('');
     setAdminRegistrations([]);
     setRegistrationLoadError('');
     setPasscode('');
@@ -261,30 +259,20 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
 
             <div className="space-y-1.5 pt-2">
               <label className="text-xs font-bold uppercase tracking-wider text-slate-700">
-                Admin Email
-              </label>
-              <input
-                value={adminEmail}
-                onChange={e => setAdminEmail(e.target.value)}
-                type="email"
-                placeholder="Enter admin email"
-                required
-                autoComplete="username"
-                className="w-full rounded-xl border border-slate-300 px-4 py-3 text-sm focus:border-indigo-600 focus:outline-none focus:ring-2 focus:ring-indigo-100 transition-all placeholder:text-slate-400 mb-3"
-              />
-              <label className="text-xs font-bold uppercase tracking-wider text-slate-700">
-                Admin Password
+                Admin Passcode
               </label>
               <input
                 value={passcode}
                 onChange={e => setPasscode(e.target.value)}
                 type="password"
-                placeholder="Enter Admin Password"
+                placeholder="Enter Admin Passcode"
                 required
+                autoFocus
                 autoComplete="current-password"
                 className="w-full rounded-xl border border-slate-300 px-4 py-3 text-sm font-mono focus:border-indigo-600 focus:outline-none focus:ring-2 focus:ring-indigo-100 transition-all placeholder:text-slate-400"
               />
             </div>
+
 
             {loginError && (
               <div className="rounded-xl bg-rose-50 border border-rose-200 text-rose-700 p-3 text-xs flex items-center gap-2">
