@@ -1,7 +1,7 @@
 import { supabase } from '../lib/supabase';
 import type { RegistrationFormData, InvitationRecord, GroupItem, SectionItem } from '../types';
 import { DEFAULT_SECTIONS } from '../data/mockData';
-import { mapRowToInvitation, upsertRegistryRegistration } from './admin';
+import { mapRowToInvitation } from './admin';
 
 export function formatPaymentTimeToPostgres(timeStr: string): string {
   const clean = timeStr.trim();
@@ -134,7 +134,6 @@ export async function createRegistration(
     const row = Array.isArray(result.data) ? result.data[0] : result.data;
     if (!row?.id || !row?.registration_no || row?.sl_no === undefined || row?.sl_no === null) return { success:false, errorMessage:'Supabase returned an incomplete registration record.' };
     const record = mapRowToInvitation(row);
-    upsertRegistryRegistration(record);
     return { success:true, data:record };
   } catch (error:any) {
     return { success:false, error, errorMessage:translateBackendError(error) };
