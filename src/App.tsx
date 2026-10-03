@@ -63,7 +63,20 @@ export default function App() {
     }, 4500);
   };
 
-  // Public App does not own admin registration state.
+  useEffect(() => {
+    let cancelled = false;
+    const loadPublicRegistrations = async () => {
+      try {
+        const result = await getRegistrationList();
+        if (!cancelled && result.success) setInvitations(result.data);
+      } catch (error) {
+        console.error('Unable to load public registrations:', error);
+      }
+    };
+    void loadPublicRegistrations();
+    return () => { cancelled = true; };
+  }, []);
+
 
   // Sync document title with Super Admin Website Identity
   useEffect(() => {
@@ -193,6 +206,17 @@ export default function App() {
   // ============================================================================
 
   const handleSuccessSubmit = async (newRecord: InvitationRecord) => {
+    setInvitations(prev => {
+      const index = prev.findIndex(item =>
+        (newRecord.id && item.id === newRecord.id) ||
+        (newRecord.dbId && item.dbId === newRecord.dbId) ||
+        item.registration_no === newRecord.registration_no
+      );
+      if (index === -1) return [newRecord, ...prev];
+      const next = [...prev];
+      next[index] = { ...next[index], ...newRecord };
+      return next;
+    });
     showToast(`Registration successfully submitted!`, 'success');
   };
 
