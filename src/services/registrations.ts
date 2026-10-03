@@ -86,61 +86,39 @@ export async function checkDuplicateRegistration(
   return row ? mapRowToInvitation(row) : null;
 }
 
-// Tracks the sequential registration number allocation state
-let currentHighWaterMark = 0;
-
+// Database is the sole authority for registration numbering.
+// Registration numbers are global across both genders: RD27-01, RD27-02, RD27-03, ...
 export function formatRegistrationNumber(seq: number): string {
-  return `RD27-${seq < 10 ? '0' + seq : seq}`;
+  return `RD27-${String(seq).padStart(2, '0')}`;
 }
 
 export function resetRegistrationCounters() {
-  currentHighWaterMark = 0;
+  // Kept for backwards compatibility; numbering is now database-authoritative.
 }
 
-export function syncRegistrationCounters(activeRecords: { sl_no?: number; registration_no?: string }[]) {
-  if (!activeRecords || activeRecords.length === 0) {
-    // If registrations table contains zero records: reset numbering back to 0
-    currentHighWaterMark = 0;
-    return;
-  }
-  let maxFound = 0;
-  for (const r of activeRecords) {
-    const match = String(r.registration_no || '').match(/^(?:RD[BG]?27-)?0*(\d+)$/i);
-    if (match) {
-      const num = parseInt(match[1], 10);
-      if (num > maxFound) maxFound = num;
+export function syncRegistrationCounters(_activeRecords: { sl_no?: number; registration_no?: string }[]) {
+  // Kept for backwards compatibility; numbering is now database-authoritative.
+}
+
+/**
+ * Fetch registrations from public.registrations for public application discovery.
+ */
+export async function fetchPublicRegistrations(): Promise<InvitationRecord[]> {
+  try {
+    const { data, error } = await supabase
+      .from('registrations')
+      .select('*')
+      .order('sl_no', { ascending: false });
+
+    if (error) {
+      console.warn('fetchPublicRegistrations warning:', error.message);
+      return [];
     }
-    if (r.sl_no && typeof r.sl_no === 'number' && r.sl_no > maxFound) {
-      maxFound = r.sl_no;
-    }
+    return Array.isArray(data) ? data.map(mapRowToInvitation) : [];
+  } catch (err: any) {
+    console.warn('fetchPublicRegistrations error:', err?.message);
+    return [];
   }
-  if (maxFound > currentHighWaterMark) {
-    currentHighWaterMark = maxFound;
-  }
-}
-
-export function getNextRegistrationSequence(activeRecords: { sl_no?: number; registration_no?: string }[]): {
-  sl_no: number;
-  registration_no: string;
-} {
-  // If registrations table contains zero records: start from RD27-01 and SL No = 1
-  if (!activeRecords || activeRecords.length === 0) {
-    currentHighWaterMark = 1;
-    return {
-      sl_no: 1,
-      registration_no: 'RD27-01',
-    };
-  }
-
-  // If table is NOT empty: continue sequential numbering without reusing deleted numbers
-  syncRegistrationCounters(activeRecords);
-  currentHighWaterMark += 1;
-  return {
-    sl_no: currentHighWaterMark,
-    registration_no: formatRegistrationNumber(currentHighWaterMark),
-  };
-}
-
 export async function createRegistration(
   form: RegistrationFormData,
   existingRegNo?: string,
@@ -152,7 +130,7 @@ export async function createRegistration(
     academicGroup: string;
     academicSection: string;
   },
-  currentActiveRecords: { sl_no?: number; registration_no?: string }[] = []
+  _currentActiveRecords: { sl_no?: number; registration_no?: string }[] = []
 ): Promise<{success:boolean; data?:InvitationRecord; error?:any; errorMessage?:string}> {
   try {
     const payload = {
@@ -187,38 +165,14 @@ export async function createRegistration(
 
     if (result.error) return { success:false, error:result.error, errorMessage:translateBackendError(result.error) };
     if (!result.data) return { success:false, errorMessage:'Supabase did not return the saved registration.' };
+
     const row = Array.isArray(result.data) ? result.data[0] : result.data;
-    if (!row?.id || !row?.registration_no || row?.sl_no === undefined || row?.sl_no === null) return { success:false, errorMessage:'Supabase returned an incomplete registration record.' };
-    const record = mapRowToInvitation(row);
-
-    // Apply sequential registration numbering and empty database reset rules
-    if (!existingRegNo) {
-      const allocated = getNextRegistrationSequence(currentActiveRecords);
-      record.sl_no = allocated.sl_no;
-      record.registration_no = allocated.registration_no;
-
-      // Persist the authoritative sequential registration number and sl_no to database
-      try {
-        const { data: updatedRow, error: updateErr } = await supabase
-          .from('registrations')
-          .update({
-            registration_no: allocated.registration_no,
-            sl_no: allocated.sl_no,
-          })
-          .eq('id', record.id)
-          .select()
-          .maybeSingle();
-
-        if (!updateErr && updatedRow) {
-          record.registration_no = updatedRow.registration_no;
-          record.sl_no = updatedRow.sl_no;
-        }
-      } catch {
-        // Fallback silently if update is restricted
-      }
+    if (!row?.id || !row?.registration_no || row?.sl_no === undefined || row?.sl_no === null) {
+      return { success:false, errorMessage:'Supabase returned an incomplete registration record.' };
     }
 
-    return { success:true, data:record };
+    // Never overwrite the database-generated registration_no/sl_no in the browser.
+    return { success:true, data:mapRowToInvitation(row) };
   } catch (error:any) {
     return { success:false, error, errorMessage:translateBackendError(error) };
   }
