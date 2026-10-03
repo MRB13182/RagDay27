@@ -39,63 +39,39 @@ export const InvitationCardPage: React.FC<InvitationCardPageProps> = ({
   useEffect(() => {
     if (initialSearchRegNo) {
       setSearchRegNo(initialSearchRegNo);
-      const match = invitations.find(r => r.registration_no?.trim().toUpperCase() === initialSearchRegNo.trim().toUpperCase());
-      if (match?.full_name && !studentName) {
-        setStudentName(match.full_name);
-      }
-      handleSearchWith(initialSearchRegNo);
+      void handleSearchWith(initialSearchRegNo);
     }
-  }, [initialSearchRegNo, invitations]);
+  }, [initialSearchRegNo]);
 
   const handleSearchWith = async (regNoVal: string) => {
     const cleanedReg = regNoVal.trim().toUpperCase();
-    const cleanedName = studentName.trim();
     setSearched(true);
     setSearchError(null);
 
-    if (!cleanedReg && !cleanedName) {
+    if (!cleanedReg) {
       setMatchedRecord(null);
+      setSearchError('Registration Number is required.');
       return;
     }
 
     setIsSearching(true);
     try {
-      // 1. Check if record exists in invitations state (populated from DB create_registration)
-      const matchInState = invitations.find(r =>
-        (cleanedReg && r.registration_no?.trim().toUpperCase() === cleanedReg) ||
-        (cleanedName && !cleanedReg && r.full_name?.trim().toLowerCase() === cleanedName.toLowerCase())
-      );
-
-      const effectiveName = cleanedName || matchInState?.full_name || '';
-      const effectiveReg = cleanedReg || matchInState?.registration_no || '';
-
-      if (effectiveReg && effectiveName) {
-        const result = await getPublicInvitation(effectiveReg, effectiveName);
-        if (result.success && result.data) {
-          setMatchedRecord(matchInState ? { ...matchInState, ...result.data } : result.data);
-          return;
-        }
-      }
-
-      if (matchInState) {
-        setMatchedRecord(matchInState);
+      const result = await getPublicInvitation(cleanedReg, '');
+      if (result.success && result.data) {
+        setMatchedRecord(result.data);
         return;
       }
 
       setMatchedRecord(null);
-      setSearchError('No registration found. Please check your Registration Number and Student Name.');
+      setSearchError(result.errorMessage || 'No registration found.');
     } catch (error: any) {
-      const matchInState = invitations.find(r => cleanedReg && r.registration_no?.trim().toUpperCase() === cleanedReg);
-      if (matchInState) {
-        setMatchedRecord(matchInState);
-        return;
-      }
       setMatchedRecord(null);
       setSearchError(error?.message || 'Unable to verify registration.');
     } finally {
       setIsSearching(false);
     }
   };
+
 
   const handleDownloadPDF = () => {
     if (!matchedRecord || matchedRecord.status !== 'approved') return;
