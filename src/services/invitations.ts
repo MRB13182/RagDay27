@@ -4,7 +4,7 @@ import { mapRowToInvitation } from './admin';
 
 export async function getPublicInvitation(
   registration_no: string | number,
-  studentName: string
+  _studentName = ''
 ): Promise<{
   success: boolean;
   data: InvitationRecord | null;
@@ -12,16 +12,16 @@ export async function getPublicInvitation(
   errorMessage?: string;
 }> {
   const value = String(registration_no).trim().toUpperCase();
-  // Registration number is the sole lookup key. The name field is retained in the function signature for compatibility.
+
   if (!/^[A-Z0-9-]+$/i.test(value)) {
     return { success: false, data: null, errorMessage: 'Invalid registration number.' };
   }
 
-  // Accept compact input such as RD27-1 and normalize it to the database's four-digit storage format.
+  // Canonical format is RD27-01. Accept compact RD27-1 as user input.
   let queryRegNo = value;
-  const matchShort = value.match(/^(RD27-)(\\d{1,3})$/i);
+  const matchShort = value.match(/^(RD27-)(\\d{1,2})$/i);
   if (matchShort) {
-    queryRegNo = `${matchShort[1]}${matchShort[2].padStart(4, '0')}`;
+    queryRegNo = `${matchShort[1]}${matchShort[2].padStart(2, '0')}`;
   }
 
   const { data, error } = await supabase.rpc('lookup_invitation_card', {
@@ -34,17 +34,6 @@ export async function getPublicInvitation(
   }
 
   if (!data?.found) {
-    // If not found with padded queryRegNo and queryRegNo !== value, try with original value
-    if (queryRegNo !== value) {
-      const retry = await supabase.rpc('lookup_invitation_card', {
-        p_registration_no: value,
-        p_student_name: null,
-      });
-      if (!retry.error && retry.data?.found) {
-        return processFoundData(retry.data, value);
-      }
-    }
-
     return {
       success: false,
       data: null,
@@ -54,7 +43,7 @@ export async function getPublicInvitation(
     };
   }
 
-  return processFoundData(data, value);
+  return processFoundData(data, queryRegNo);
 }
 
 function processFoundData(data: any, originalRegNo: string): {
