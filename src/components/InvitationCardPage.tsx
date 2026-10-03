@@ -35,6 +35,7 @@ export const InvitationCardPage: React.FC<InvitationCardPageProps> = ({
   websiteSettings,
 }) => {
   const [searchRegNo, setSearchRegNo] = useState(initialSearchRegNo);
+  const [studentName, setStudentName] = useState('');
   const [searched, setSearched] = useState(false);
   const [isSearching, setIsSearching] = useState(false);
   const [searchError, setSearchError] = useState<string | null>(null);
@@ -60,7 +61,7 @@ export const InvitationCardPage: React.FC<InvitationCardPageProps> = ({
 
     setIsSearching(true);
     try {
-      const result = await getPublicInvitation(cleanedReg);
+      const result = await getPublicInvitation(cleanedReg, studentName);
       if (result.success && result.data) {
         const stateMatch = invitations.find(
           i => (i.registration_no && i.registration_no.toUpperCase() === cleanedReg) || (i.id && i.id === result.data?.id)
@@ -111,7 +112,17 @@ export const InvitationCardPage: React.FC<InvitationCardPageProps> = ({
       <div className="p-6 sm:p-8 rounded-3xl bg-white/80 backdrop-blur-xl border border-white/90 shadow-[0_20px_45px_-15px_rgba(91,95,239,0.08)] mb-8">
         <form onSubmit={e => { e.preventDefault(); void handleSearchWith(searchRegNo); }} className="grid grid-cols-1 sm:grid-cols-12 gap-4">
           <div className="sm:col-span-5">
-            <div className="sm:col-span-5 text-xs text-slate-500">Lookup requires the exact registration number.</div>
+            <label className="block text-xs font-bold uppercase tracking-wider text-slate-700 mb-1.5">
+              Student Name
+            </label>
+            <input
+              type="text"
+              placeholder="Enter your full name..."
+              value={studentName}
+              onChange={e => setStudentName(e.target.value)}
+              autoComplete="name"
+              className="w-full px-4 py-3 rounded-xl text-sm font-semibold bg-slate-50 border border-slate-200 text-slate-900 placeholder-slate-400 focus:bg-white focus:border-[#5B5FEF] focus:ring-2 focus:ring-[#5B5FEF]/20 outline-none transition-all"
+            />
           </div>
 
           <div className="sm:col-span-5">
