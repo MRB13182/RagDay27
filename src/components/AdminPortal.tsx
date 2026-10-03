@@ -260,7 +260,19 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
 
             <div className="space-y-1.5 pt-2">
               <label className="text-xs font-bold uppercase tracking-wider text-slate-700">
-                Admin Passcode
+                Admin Email
+              </label>
+              <input
+                value={adminEmail}
+                onChange={e => setAdminEmail(e.target.value)}
+                type="email"
+                placeholder="Enter admin email"
+                required
+                autoComplete="username"
+                className="w-full rounded-xl border border-slate-300 px-4 py-3 text-sm focus:border-indigo-600 focus:outline-none focus:ring-2 focus:ring-indigo-100 transition-all placeholder:text-slate-400 mb-3"
+              />
+              <label className="text-xs font-bold uppercase tracking-wider text-slate-700">
+                Admin Password
               </label>
               <div className="relative">
                 <input
@@ -269,17 +281,9 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
                   type="password"
                   placeholder="Enter Admin Password"
                   required
-                  autoFocus
+                  autoComplete="current-password"
                   className="w-full rounded-xl border border-slate-300 pl-4 pr-11 py-3 text-sm font-mono focus:border-indigo-600 focus:outline-none focus:ring-2 focus:ring-indigo-100 transition-all placeholder:text-slate-400"
                 />
-                <button
-                  type="button"
-                  onClick={() => undefined}
-                  className="absolute right-3 top-3 text-slate-400 hover:text-slate-600 p-0.5 rounded cursor-pointer"
-                  title="Admin Passcode"
-                >
-                  <span />
-                </button>
               </div>
             </div>
 
