@@ -1,7 +1,7 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import type { InvitationRecord, InvitationStatus, AdminProfile, PdfSettings, WebsiteSettings } from '../types';
-import { signInAdmin, signOutAdmin, getStoredAdminRole } from '../lib/supabase';
-import { getRegistrationList, getAdminPasscodeSession, setAdminPasscodeSession, clearAdminPasscodeSession } from '../services/admin';
+import { signInAdmin, signOutAdmin } from '../lib/supabase';
+import { getRegistrationList } from '../services/admin';
 import { fetchPublicRegistrations } from '../services/registrations';
 import { generateRegistrationListPDF, generateInvitationCardPDF } from '../utils/pdfGenerator';
 import {
@@ -51,32 +51,22 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
 
   useEffect(() => {
     setLoginError('');
-    const storedRole = getStoredAdminRole();
-    if (storedRole) {
-      if (!getAdminPasscodeSession()) {
-        setAdminPasscodeSession(storedRole === 'female_admin' ? 'nic27.girl' : 'nicboy.27');
+      void (async () => {
+      try {
+        const { getCurrentAdmin } = await import('../lib/supabase');
+        const profile = await getCurrentAdmin();
+        if (profile) setAdmin(profile);
+      } catch {
+        setAdmin(null);
       }
-      setAdmin({
-        id: undefined,
-        auth_user_id: `passcode:${storedRole}`,
-        username: null,
-        full_name: storedRole === 'male_admin' ? 'Male Admin' : 'Female Admin',
-        role: storedRole,
-        active: true,
-        created_at: new Date(0).toISOString(),
-        updated_at: new Date(0).toISOString(),
-      });
-    }
+    })();
   }, []);
 
   const loadAdminRegistrations = async () => {
     setIsLoadingRegistrations(true);
     setRegistrationLoadError('');
     try {
-      const activePasscode =
-        getAdminPasscodeSession() ||
-        (admin?.role === 'female_admin' ? 'nic27.girl' : 'nicboy.27');
-      const result = await getRegistrationList(activePasscode);
+      const result = await getRegistrationList();
       if (!result.success) {
         setRegistrationLoadError(result.errorMessage || 'Unable to load registrations.');
         return;
@@ -133,8 +123,7 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
     e.preventDefault();
     setLoginError('');
     try {
-      const profile = await signInAdmin(passcode);
-      setAdminPasscodeSession(passcode.trim());
+      const profile = await signInAdmin(passcode, passcode);
       setAdmin(profile);
       setPasscode('');
     } catch (e: any) {
@@ -143,7 +132,6 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
   };
 
   const logout = async () => {
-    clearAdminPasscodeSession();
     await signOutAdmin();
     setAdmin(null);
     setAdminRegistrations([]);
