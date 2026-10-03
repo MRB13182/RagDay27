@@ -2,6 +2,7 @@ import React, { useEffect, useMemo, useState } from 'react';
 import type { InvitationRecord, InvitationStatus, AdminProfile, PdfSettings, WebsiteSettings } from '../types';
 import { signInAdmin, signOutAdmin, getStoredAdminRole } from '../lib/supabase';
 import { getRegistrationList, getAdminPasscodeSession, setAdminPasscodeSession, clearAdminPasscodeSession } from '../services/admin';
+import { fetchPublicRegistrations } from '../services/registrations';
 import { generateRegistrationListPDF, generateInvitationCardPDF } from '../utils/pdfGenerator';
 import {
   websiteIdentityConfig,

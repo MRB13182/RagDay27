@@ -62,7 +62,14 @@ export const InvitationCardPage: React.FC<InvitationCardPageProps> = ({
     try {
       const result = await getPublicInvitation(cleanedReg);
       if (result.success && result.data) {
-        setMatchedRecord(result.data);
+        const stateMatch = invitations.find(
+          i => (i.registration_no && i.registration_no.toUpperCase() === cleanedReg) || (i.id && i.id === result.data?.id)
+        );
+        if (stateMatch) {
+          setMatchedRecord({ ...stateMatch, ...result.data, status: result.data.status });
+        } else {
+          setMatchedRecord(result.data);
+        }
       } else {
         setMatchedRecord(null);
         setSearchError(result.errorMessage || 'No registration found.');
