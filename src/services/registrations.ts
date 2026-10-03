@@ -93,11 +93,11 @@ export function formatRegistrationNumber(seq: number): string {
 }
 
 export function resetRegistrationCounters() {
-  // Kept for backwards compatibility; numbering is now database-authoritative.
+  // Database is the sole source of truth for numbering.
 }
 
 export function syncRegistrationCounters(_activeRecords: { sl_no?: number; registration_no?: string }[]) {
-  // Kept for backwards compatibility; numbering is now database-authoritative.
+  // Database is the sole source of truth for numbering.
 }
 
 export async function createRegistration(
@@ -144,15 +144,23 @@ export async function createRegistration(
         })
       : await supabase.rpc('create_registration', payload);
 
-    if (result.error) return { success:false, error:result.error, errorMessage:translateBackendError(result.error) };
-    if (!result.data) return { success:false, errorMessage:'Supabase did not return the saved registration.' };
+    if (result.error) {
+      return {
+        success:false,
+        error:result.error,
+        errorMessage:translateBackendError(result.error)
+      };
+    }
+    if (!result.data) {
+      return { success:false, errorMessage:'Supabase did not return the saved registration.' };
+    }
 
     const row = Array.isArray(result.data) ? result.data[0] : result.data;
     if (!row?.id || !row?.registration_no || row?.sl_no === undefined || row?.sl_no === null) {
       return { success:false, errorMessage:'Supabase returned an incomplete registration record.' };
     }
 
-    // Never overwrite the database-generated registration_no/sl_no in the browser.
+    // Never calculate or overwrite registration numbers in the browser.
     return { success:true, data:mapRowToInvitation(row) };
   } catch (error:any) {
     return { success:false, error, errorMessage:translateBackendError(error) };
