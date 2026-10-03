@@ -2,7 +2,6 @@ import React, { useEffect, useMemo, useState } from 'react';
 import type { InvitationRecord, InvitationStatus, AdminProfile, PdfSettings, WebsiteSettings } from '../types';
 import { signInAdmin, signOutAdmin, getCurrentAdmin, supabase } from '../lib/supabase';
 import { getRegistrationList, mapRowToInvitation } from '../services/admin';
-import { fetchPublicRegistrations } from '../services/registrations';
 import { generateRegistrationListPDF, generateInvitationCardPDF } from '../utils/pdfGenerator';
 import {
   websiteIdentityConfig,
