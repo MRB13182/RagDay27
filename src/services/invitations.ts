@@ -3,19 +3,22 @@ import type { InvitationRecord, InvitationStatus } from '../types';
 import { mapRowToInvitation } from './admin';
 
 export async function getPublicInvitation(
-  registration_no: string | number
+  registration_no: string | number,
+  studentName: string
 ): Promise<{
   success: boolean;
   data: InvitationRecord | null;
   error?: any;
   errorMessage?: string;
 }> {
-  const value = String(registration_no).trim();
-  if (!value) return { success: false, data: null, errorMessage: 'Registration number is required.' };
+  const value = String(registration_no).trim().toUpperCase();
+  const name = studentName.trim();
+  if (!/^RDB27-\\d{4}$|^RDG27-\\d{4}$/.test(value)) return { success: false, data: null, errorMessage: 'Invalid registration number.' };
+  if (!name) return { success: false, data: null, errorMessage: 'Student name is required.' };
 
   const { data, error } = await supabase.rpc('lookup_invitation_card', {
     p_registration_no: value,
-    p_student_name: null,
+    p_student_name: name,
   });
 
   if (error) {
@@ -69,12 +72,12 @@ export async function getPublicInvitation(
   return { success: true, data: mapRowToInvitation(data) };
 }
 
-export async function searchPublicStudent(searchTerm: string) {
+export async function searchPublicStudent(searchTerm: string, studentName = '') {
   const clean = searchTerm.trim();
   if (!clean) return { success: true, data: [] as InvitationRecord[] };
 
   // Public lookup intentionally requires the exact registration number.
-  const result = await getPublicInvitation(clean);
+  const result = await getPublicInvitation(clean, studentName);
   return result.success && result.data ? { success: true, data: [result.data] } : {
     success: false,
     data: [] as InvitationRecord[],
