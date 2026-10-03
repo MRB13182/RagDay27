@@ -100,25 +100,6 @@ export function syncRegistrationCounters(_activeRecords: { sl_no?: number; regis
   // Kept for backwards compatibility; numbering is now database-authoritative.
 }
 
-/**
- * Fetch registrations from public.registrations for public application discovery.
- */
-export async function fetchPublicRegistrations(): Promise<InvitationRecord[]> {
-  try {
-    const { data, error } = await supabase
-      .from('registrations')
-      .select('*')
-      .order('sl_no', { ascending: false });
-
-    if (error) {
-      console.warn('fetchPublicRegistrations warning:', error.message);
-      return [];
-    }
-    return Array.isArray(data) ? data.map(mapRowToInvitation) : [];
-  } catch (err: any) {
-    console.warn('fetchPublicRegistrations error:', err?.message);
-    return [];
-  }
 export async function createRegistration(
   form: RegistrationFormData,
   existingRegNo?: string,
