@@ -8,6 +8,17 @@ export const generateRegistrationListPDF = (
   websiteSettings: WebsiteSettings,
   adminRole: 'male_admin' | 'female_admin'
 ) => {
+  const expectedGender =
+    adminRole === 'male_admin' ? 'male' : adminRole === 'female_admin' ? 'female' : null;
+
+  if (!expectedGender) {
+    throw new Error('Invalid admin role for registration ledger PDF.');
+  }
+
+  if (records.some(record => record.gender !== expectedGender)) {
+    throw new Error(`Registration ledger contains records outside the ${adminRole} scope.`);
+  }
+
   const doc = new jsPDF({
     orientation: 'landscape',
     unit: 'mm',

@@ -16,10 +16,8 @@ create table if not exists public.admins (
 );
 
 create unique index if not exists admins_role_unique on public.admins(role);
-create index if not exists idx_admin_auth on public.admins(auth_user_id);
-create index if not exists idx_admin_role on public.admins(role);
 
 alter table public.admins enable row level security;
 
--- The repair migration owns the final RLS policies and Auth-role mapping.
--- Keep auth_user_id nullable only until the real two Supabase Auth users exist.
+-- Production migrations own the final RLS policies and Auth-role mapping.
+-- Keep auth_user_id nullable only while the two real Supabase Auth users are being provisioned.

@@ -1,5 +1,4 @@
 import {
-  InvitationRecord,
   EventCard,
   WebsiteSettings,
   BrandingSettings,
@@ -9,8 +8,6 @@ import {
 } from '../types';
 import defaultWhiteJersey from '../assets/images/white_hero_jersey_1790359567080.jpg';
 import darkHeroJersey from '../assets/images/hero_white_kit_1790359583250.jpg';
-
-export const INITIAL_INVITATIONS: InvitationRecord[] = [];
 
 export const DEFAULT_EVENT_CARDS: EventCard[] = [
   {

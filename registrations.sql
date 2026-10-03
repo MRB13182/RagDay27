@@ -1,6 +1,6 @@
 -- RagDay27 registration table contract
--- Registration number allocation is database-owned and derived from current rows.
--- No registration-number sequence/counter table and no frontend/localStorage counter.
+-- Registration numbers are database-owned and allocated from the private
+-- registration_counters high-water mark; the frontend/localStorage never allocates numbers.
 
 create extension if not exists pgcrypto;
 
@@ -36,7 +36,6 @@ create table if not exists public.registrations (
   updated_at timestamptz not null default now()
 );
 
-create index if not exists idx_registrations_registration_no on public.registrations(registration_no);
 create index if not exists idx_registrations_student_id on public.registrations(student_id);
 create index if not exists idx_registrations_class_roll on public.registrations(class_roll);
 create index if not exists idx_registrations_gender_status on public.registrations(gender,status);
@@ -53,26 +52,14 @@ begin
 exception when duplicate_object then null;
 end $$;
 
--- Required create_registration allocator semantics:
--- For a new row and gender = male:
---   v_next := coalesce((
---     select max((substring(registration_no from '^RDB27-([0-9]+)$'))::bigint)
---     from public.registrations
---     where gender = 'male'
---       and registration_no ~ '^RDB27-[0-9]+$'
---   ), 0) + 1;
---   registration_no := 'RDB27-' || lpad(v_next::text, 4, '0');
---
--- For female use RDG27- and gender = female.
---
--- Therefore:
---   * empty gender set -> 0001
---   * deleting only the highest current number -> that number is reusable
---   * deleting a middle number while a higher number exists -> gap is never reused
---   * emptying the whole registrations table -> both genders restart at 0001
---
--- This is intentionally NOT a historical high-water-mark allocator.
--- Never use localStorage, frontend counters, PostgreSQL registration-number
--- sequences, or a separate counter table for registration_no.
---
--- Rejected re-submission must update the existing row and retain registration_no.
+-- Registration-number allocation semantics:
+--   * private.registration_counters stores one high-water mark per gender.
+--   * private.allocate_registration_number() increments that counter atomically.
+--   * male numbers use RDB27-####; female numbers use RDG27-####.
+--   * a counter starting at 0 produces 0001 for that gender.
+--   * hidden/deleted rows and gaps never cause an allocated number to be reused.
+--   * clearing public.registrations does NOT reset the counters; the next
+--     registration continues from the last number ever allocated.
+--   * rejected re-submission updates the existing row and retains registration_no.
+-- The public next_registration_number() helper is not used by the client
+-- allocation path; the private allocator is the source of truth.

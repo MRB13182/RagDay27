@@ -190,28 +190,6 @@ export interface JerseyShowcaseSettings {
   designCards?: JerseyDesignCard[];
 }
 
-export type AdminFileCategory =
-  | 'logo'
-  | 'banner'
-  | 'jersey'
-  | 'certificate'
-  | 'resume'
-  | 'invitation'
-  | 'project'
-  | 'skill';
-
-export interface AdminFileItem {
-  id: string;
-  category: AdminFileCategory;
-  title: string;
-  description?: string;
-  fileUrl: string;
-  fileName?: string;
-  fileSize?: string;
-  fileType?: string;
-  uploadedAt: string;
-}
-
 export interface GroupItem {
   id: string;
   name: string;
@@ -229,34 +207,6 @@ export interface SectionItem {
   sort_order?: number;
 }
 
-export interface SiteSectionItem {
-  id: string;
-  section_key: string;
-  title: string;
-  visible: boolean;
-  sort_order: number;
-}
-
-export interface BackendRegistrationInput {
-  full_name: string;
-  class_roll: string;
-  student_id: string;
-  contact_mobile_number: string;
-  academic_group: string;
-  academic_section: string;
-  student_photo?: string | null;
-  send_method: SendMethod;
-  sender_mobile_no: string;
-  payment_time: string;
-  transaction_id?: string | null;
-  jersey_back_name: string;
-  jersey_number: string;
-  jersey_size: string;
-  gender: 'male' | 'female';
-  registration_no?: string;
-  status?: InvitationStatus;
-}
-
 export interface AdminProfile {
   id?: string;
   auth_user_id: string;
@@ -266,20 +216,4 @@ export interface AdminProfile {
   active: boolean;
   created_at: string;
   updated_at: string;
-}
-
-export interface PublicStudentResult {
-  registration_no: string;
-  full_name?: string;
-  class_roll?: string;
-  student_id?: string;
-  gender?: string;
-  academic_group?: string;
-  academic_section?: string;
-  student_photo?: string | null;
-  jersey_back_name?: string;
-  jersey_number?: string;
-  jersey_size?: string;
-  status: InvitationStatus;
-  reject_reason?: string;
 }
