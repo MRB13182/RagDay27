@@ -1,6 +1,6 @@
 import { supabase } from '../lib/supabase';
 import type { InvitationRecord, InvitationStatus } from '../types';
-import { mapRowToInvitation, getRegistrationByNumber } from './admin';
+import { mapRowToInvitation } from './admin';
 
 export async function getPublicInvitation(
   registration_no: string | number
@@ -12,20 +12,6 @@ export async function getPublicInvitation(
 }> {
   const value = String(registration_no).trim();
   if (!value) return { success: false, data: null, errorMessage: 'Registration number is required.' };
-
-  const localReg = getRegistrationByNumber(value);
-  if (localReg && !localReg.hidden_from_web) {
-    if (localReg.status === 'approved') {
-      return { success: true, data: localReg };
-    }
-    return {
-      success: true,
-      data: {
-        ...localReg,
-        reject_reason: localReg.reject_reason,
-      },
-    };
-  }
 
   const { data, error } = await supabase.rpc('lookup_invitation_card', {
     p_registration_no: value,
