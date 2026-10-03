@@ -31,9 +31,7 @@ import {
   deleteRegistration,
   getRegistrationList,
 } from './services';
-import { supabase } from './lib/supabase';
-import { mapRowToInvitation } from './services/admin';
-import { syncRegistrationCounters } from './services/registrations';
+import { getRegistrationList } from './services';
 
 import { ArrowRight, Bell, CheckCircle2, AlertCircle, Info, X, ShieldAlert, Ticket } from 'lucide-react';
 
@@ -66,71 +64,8 @@ export default function App() {
     }, 4500);
   };
 
-  useEffect(() => {
-    let cancelled = false;
-    const loadPublicRegistrations = async () => {
-      try {
-        const result = await import('./services/registrations').then(({ fetchPublicRegistrations, syncRegistrationCounters }) =>
-          fetchPublicRegistrations().then(res => {
-            syncRegistrationCounters(res);
-            return res;
-          })
-        );
-        if (!cancelled) setInvitations(result);
-      } catch (error) {
-        console.error('Unable to load public registrations:', error);
-      }
-    };
-    void loadPublicRegistrations();
-
-    // Supabase Realtime synchronization for public.registrations
-    const channel = supabase
-      .channel('app-registrations-sync')
-      .on(
-        'postgres_changes',
-        { event: '*', schema: 'public', table: 'registrations' },
-        payload => {
-          if (cancelled) return;
-          if (payload.eventType === 'INSERT' && payload.new) {
-            const newRecord = mapRowToInvitation(payload.new);
-            setInvitations(prev => {
-              const exists = prev.some(
-                r => r.registration_no === newRecord.registration_no || (newRecord.id && r.id === newRecord.id)
-              );
-              if (exists) return prev;
-              const next = [newRecord, ...prev];
-              syncRegistrationCounters(next);
-              return next;
-            });
-          } else if (payload.eventType === 'UPDATE' && payload.new) {
-            const updated = mapRowToInvitation(payload.new);
-            setInvitations(prev =>
-              prev.map(r =>
-                r.registration_no === updated.registration_no || (updated.id && r.id === updated.id)
-                  ? { ...r, ...updated }
-                  : r
-              )
-            );
-          } else if (payload.eventType === 'DELETE' && payload.old) {
-            const oldId = payload.old.id;
-            const oldReg = payload.old.registration_no;
-            setInvitations(prev => {
-              const remaining = prev.filter(r => (oldId ? r.id !== oldId && r.dbId !== oldId : true) && (oldReg ? r.registration_no !== oldReg : true));
-              if (remaining.length === 0) {
-                syncRegistrationCounters([]);
-              }
-              return remaining;
-            });
-          }
-        }
-      )
-      .subscribe();
-
-    return () => {
-      cancelled = true;
-      void supabase.removeChannel(channel);
-    };
-  }, []);
+  // Registration data is loaded only by the relevant admin/invitation flows.
+  // Do not query public.registrations directly on app startup: anon is intentionally denied direct table SELECT.
 
 
   // Sync document title with Super Admin Website Identity
