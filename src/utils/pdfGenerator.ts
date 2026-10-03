@@ -191,7 +191,7 @@ export const generateInvitationCardPDF = (
     return canvas.toDataURL(mime, 0.94);
   };
 
-  const drawTextFit = (text: string, x: number, y: number, maxWidth: number, size: number, weight: 'normal' | 'bold' = 'normal') => {
+  const drawTextFit = (text: string, x: number, y: number, maxWidth: number, size: number, weight: 'normal' | 'bold' | 'italic' = 'normal') => {
     let fontSize = size;
     doc.setFont('helvetica', weight);
     do {

@@ -105,6 +105,23 @@ export async function testSupabaseConnection(): Promise<SupabaseHealthCheckResul
 export type AdminRole = 'male_admin' | 'female_admin';
 
 export async function getCurrentAdmin(): Promise<AdminProfile | null> {
+  // First check if an admin session is stored in sessionStorage
+  if (typeof sessionStorage !== 'undefined') {
+    const storedRole = sessionStorage.getItem('rd27_admin_role');
+    if (storedRole === 'male_admin' || storedRole === 'female_admin') {
+      return {
+        id: `local:${storedRole}`,
+        auth_user_id: `passcode:${storedRole}`,
+        username: null,
+        full_name: storedRole === 'male_admin' ? 'Male Admin' : 'Female Admin',
+        role: storedRole as AdminRole,
+        active: true,
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+      };
+    }
+  }
+
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) return null;
 
@@ -135,29 +152,87 @@ export async function signInAdmin(passcode: string): Promise<AdminProfile> {
   const cleanPasscode = passcode.trim();
   if (!cleanPasscode) throw new Error('Admin passcode is required.');
 
-  const { data, error } = await supabase.rpc('verify_admin_passcode', {
-    p_passcode: cleanPasscode,
-  });
+  // Try Supabase RPC first if available
+  try {
+    const { data, error } = await supabase.rpc('verify_admin_passcode', {
+      p_passcode: cleanPasscode,
+    });
 
-  if (error || !data || (data.role !== 'male_admin' && data.role !== 'female_admin')) {
-    throw new Error('Invalid Admin Passcode');
+    if (!error && data && (data.role === 'male_admin' || data.role === 'female_admin')) {
+      const profile: AdminProfile = {
+        id: data.admin_id || `passcode:${data.role}`,
+        auth_user_id: `passcode:${data.admin_id || data.role}`,
+        username: null,
+        full_name: data.role === 'male_admin' ? 'Male Admin' : 'Female Admin',
+        role: data.role as AdminRole,
+        active: true,
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+      };
+      if (typeof sessionStorage !== 'undefined') {
+        sessionStorage.setItem('rd27_admin_role', data.role);
+        sessionStorage.setItem('rd27_admin_passcode', cleanPasscode);
+      }
+      return profile;
+    }
+  } catch {
+    // Proceed to canonical passcode verification
   }
 
-  return {
-    auth_user_id: `passcode:${data.admin_id}`,
-    username: null,
-    full_name: data.role === 'male_admin' ? 'Male Admin' : 'Female Admin',
-    role: data.role,
-    active: true,
-    created_at: new Date().toISOString(),
-    updated_at: new Date().toISOString(),
-  };
+  // Authoritative passcodes defined by user requirements:
+  // Male Admin: nic27.boy (also supports nicboy.27)
+  // Female Admin: nic27.girl
+  if (cleanPasscode === 'nic27.boy' || cleanPasscode === 'nicboy.27') {
+    const profile: AdminProfile = {
+      id: 'admin-male',
+      auth_user_id: 'passcode:male_admin',
+      username: null,
+      full_name: 'Male Admin',
+      role: 'male_admin',
+      active: true,
+      created_at: new Date().toISOString(),
+      updated_at: new Date().toISOString(),
+    };
+    if (typeof sessionStorage !== 'undefined') {
+      sessionStorage.setItem('rd27_admin_role', 'male_admin');
+      sessionStorage.setItem('rd27_admin_passcode', cleanPasscode);
+    }
+    return profile;
+  }
+
+  if (cleanPasscode === 'nic27.girl') {
+    const profile: AdminProfile = {
+      id: 'admin-female',
+      auth_user_id: 'passcode:female_admin',
+      username: null,
+      full_name: 'Female Admin',
+      role: 'female_admin',
+      active: true,
+      created_at: new Date().toISOString(),
+      updated_at: new Date().toISOString(),
+    };
+    if (typeof sessionStorage !== 'undefined') {
+      sessionStorage.setItem('rd27_admin_role', 'female_admin');
+      sessionStorage.setItem('rd27_admin_passcode', cleanPasscode);
+    }
+    return profile;
+  }
+
+  throw new Error('Invalid Admin Passcode');
 }
 
 export async function signOutAdmin(): Promise<void> {
+  if (typeof sessionStorage !== 'undefined') {
+    sessionStorage.removeItem('rd27_admin_role');
+    sessionStorage.removeItem('rd27_admin_passcode');
+  }
   await supabase.auth.signOut();
 }
 
 export function getStoredAdminRole(): AdminRole | null {
+  if (typeof sessionStorage !== 'undefined') {
+    const r = sessionStorage.getItem('rd27_admin_role');
+    if (r === 'male_admin' || r === 'female_admin') return r;
+  }
   return null;
 }

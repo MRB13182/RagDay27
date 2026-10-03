@@ -19,5 +19,14 @@ create unique index if not exists admins_role_unique on public.admins(role);
 
 alter table public.admins enable row level security;
 
--- Production migrations own the final RLS policies and Auth-role mapping.
--- Keep auth_user_id nullable only while the two real Supabase Auth users are being provisioned.
+-- Supabase permissions
+grant usage on schema public to anon, authenticated, service_role;
+grant select on table public.admins to anon, authenticated, service_role;
+
+-- RLS policies
+drop policy if exists "Allow read admins" on public.admins;
+create policy "Allow read admins"
+  on public.admins
+  for select
+  to anon, authenticated, service_role
+  using (true);

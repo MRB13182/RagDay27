@@ -106,28 +106,43 @@ export async function optimizePhoto(
     ctx.imageSmoothingQuality = 'high';
     ctx.drawImage(img, 0, 0, targetWidth, targetHeight);
 
-    // 6. Convert to WEBP (or JPEG fallback)
-    const blob = await new Promise<Blob>((resolve, reject) => {
-      canvas.toBlob(
-        b => {
-          if (b) {
-            resolve(b);
-          } else {
-            // Fallback to JPEG if browser cannot export WebP
-            canvas.toBlob(
-              fallbackBlob => {
-                if (fallbackBlob) resolve(fallbackBlob);
-                else reject(new Error("✕ Photo doesn't upload. Please try again with another photo."));
-              },
-              'image/jpeg',
-              quality
-            );
-          }
-        },
-        'image/webp',
-        quality
-      );
-    });
+    // 6. Convert to WEBP (or JPEG fallback) targeting 50 KB - 250 KB
+    const TARGET_MAX_BYTES = 250 * 1024; // 250 KB
+    let currentQuality = Math.min(quality, 0.88);
+    let blob: Blob | null = null;
+
+    const generateBlob = async (q: number): Promise<Blob> => {
+      return new Promise<Blob>((resolve, reject) => {
+        canvas.toBlob(
+          b => {
+            if (b) {
+              resolve(b);
+            } else {
+              canvas.toBlob(
+                fb => {
+                  if (fb) resolve(fb);
+                  else reject(new Error("✕ Photo doesn't upload. Please try again with another photo."));
+                },
+                'image/jpeg',
+                q
+              );
+            }
+          },
+          'image/webp',
+          q
+        );
+      });
+    };
+
+    blob = await generateBlob(currentQuality);
+
+    // If size > 250 KB, iteratively adjust quality down to meet target
+    let attempts = 0;
+    while (blob.size > TARGET_MAX_BYTES && currentQuality > 0.45 && attempts < 4) {
+      currentQuality -= 0.12;
+      attempts++;
+      blob = await generateBlob(currentQuality);
+    }
 
     // 7. Generate DataURL for immediate UI rendering & PDF embedding
     const dataUrl = await new Promise<string>((resolve, reject) => {

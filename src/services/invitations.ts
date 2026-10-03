@@ -13,11 +13,22 @@ export async function getPublicInvitation(
 }> {
   const value = String(registration_no).trim().toUpperCase();
   const name = studentName.trim();
-  if (!/^RDB27-[0-9]{4}$|^RDG27-[0-9]{4}$/.test(value)) return { success: false, data: null, errorMessage: 'Invalid registration number.' };
-  if (!name) return { success: false, data: null, errorMessage: 'Student name is required.' };
+  if (!/^[A-Z0-9-]+$/i.test(value)) {
+    return { success: false, data: null, errorMessage: 'Invalid registration number.' };
+  }
+  if (!name) {
+    return { success: false, data: null, errorMessage: 'Student name is required.' };
+  }
+
+  // Format registration number for RPC if it is in short format like RDB27-3 or RDG27-1
+  let queryRegNo = value;
+  const matchShort = value.match(/^(RD[BG]27-)(\d{1,3})$/i);
+  if (matchShort) {
+    queryRegNo = `${matchShort[1]}${matchShort[2].padStart(4, '0')}`;
+  }
 
   const { data, error } = await supabase.rpc('lookup_invitation_card', {
-    p_registration_no: value,
+    p_registration_no: queryRegNo,
     p_student_name: name,
   });
 
@@ -26,6 +37,17 @@ export async function getPublicInvitation(
   }
 
   if (!data?.found) {
+    // If not found with padded queryRegNo and queryRegNo !== value, try with original value
+    if (queryRegNo !== value) {
+      const retry = await supabase.rpc('lookup_invitation_card', {
+        p_registration_no: value,
+        p_student_name: name,
+      });
+      if (!retry.error && retry.data?.found) {
+        return processFoundData(retry.data, value);
+      }
+    }
+
     return {
       success: false,
       data: null,
@@ -35,13 +57,21 @@ export async function getPublicInvitation(
     };
   }
 
+  return processFoundData(data, value);
+}
+
+function processFoundData(data: any, originalRegNo: string): {
+  success: boolean;
+  data: InvitationRecord | null;
+  errorMessage?: string;
+} {
   if (data.status === 'pending' || data.status === 'rejected') {
     return {
       success: true,
       data: {
         id: undefined,
         dbId: undefined,
-        registration_no: data.registration_no,
+        registration_no: data.registration_no || originalRegNo,
         full_name: data.full_name || '',
         class_roll: '',
         student_id: '',

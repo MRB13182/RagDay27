@@ -219,10 +219,33 @@ export const RegistrationForm: React.FC<RegistrationFormProps> = ({
     ? paymentSettings?.femaleNagadNumber || '01812-345678'
     : paymentSettings?.maleNagadNumber || '01712-345678';
 
-  const handleCopyAccount = (number: string, label: string) => {
-    navigator.clipboard.writeText(number);
+  const handleCopyAccount = async (number: string, label: string) => {
+    try {
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        await navigator.clipboard.writeText(number);
+      } else {
+        throw new Error('Clipboard API unavailable');
+      }
+    } catch {
+      const textarea = document.createElement('textarea');
+      textarea.value = number;
+      textarea.style.position = 'fixed';
+      textarea.style.opacity = '0';
+      document.body.appendChild(textarea);
+      textarea.select();
+      document.execCommand('copy');
+      document.body.removeChild(textarea);
+    }
     setCopiedAccount(label);
     setTimeout(() => setCopiedAccount(null), 2500);
+  };
+
+  const getMobileError = (val: string): string => {
+    const trimmed = val.trim();
+    if (!trimmed) return '';
+    if (!/^\d+$/.test(trimmed)) return 'Must contain numbers only.';
+    if (trimmed.length !== 11) return 'Must be 11 digits.';
+    return '';
   };
 
   const handleGenderSelect = (selectedGender: 'male' | 'female') => {
@@ -297,12 +320,25 @@ export const RegistrationForm: React.FC<RegistrationFormProps> = ({
     if (!formData.full_name.trim()) errors.full_name = 'Full name is required.';
     if (!formData.class_roll.trim()) errors.class_roll = 'Roll number is required.';
     if (!formData.student_id.trim()) errors.student_id = 'Student ID is required.';
-    if (!formData.contact_mobile_number.trim()) errors.contact_mobile_number = 'Contact number is required.';
+    
+    const contactErr = getMobileError(formData.contact_mobile_number);
+    if (!formData.contact_mobile_number.trim()) {
+      errors.contact_mobile_number = 'Contact number is required.';
+    } else if (contactErr) {
+      errors.contact_mobile_number = contactErr;
+    }
+
     if (!formData.academic_group.trim()) errors.academic_group = 'Please select your academic group.';
     if (!formData.academic_section.trim()) errors.academic_section = 'Please select your section.';
 
     // Send Method & Payment Validation
-    if (!formData.sender_mobile_no.trim()) errors.sender_mobile_no = 'Sender payment number is required.';
+    const senderErr = getMobileError(formData.sender_mobile_no);
+    if (!formData.sender_mobile_no.trim()) {
+      errors.sender_mobile_no = 'Sender payment number is required.';
+    } else if (senderErr) {
+      errors.sender_mobile_no = senderErr;
+    }
+
     if (!formData.payment_time.trim()) errors.payment_time = 'Payment time is required.';
 
     // Jersey Validation
@@ -372,7 +408,8 @@ export const RegistrationForm: React.FC<RegistrationFormProps> = ({
         },
         editingRegNo || undefined,
         editingDbId || undefined,
-        recoveryProof || undefined
+        recoveryProof || undefined,
+        existingRegistrations
       );
 
       if (!result.success || !result.data) {
@@ -688,7 +725,7 @@ export const RegistrationForm: React.FC<RegistrationFormProps> = ({
                     </label>
                     <input
                       type="tel"
-                      placeholder="e.g. 01712-345678"
+                      placeholder="e.g. 017XXXXXXXX"
                       value={formData.contact_mobile_number}
                       onChange={e => {
                         setFormData({ ...formData, contact_mobile_number: e.target.value });
@@ -696,8 +733,10 @@ export const RegistrationForm: React.FC<RegistrationFormProps> = ({
                       }}
                       className={`w-full px-4 py-3 rounded-xl text-sm font-medium transition-colors outline-none ${inputClasses}`}
                     />
-                    {formErrors.contact_mobile_number && (
-                      <p className="text-rose-500 text-xs mt-1 font-semibold">{formErrors.contact_mobile_number}</p>
+                    {(getMobileError(formData.contact_mobile_number) || formErrors.contact_mobile_number) && (
+                      <p className="text-rose-500 text-xs mt-1 font-semibold">
+                        {getMobileError(formData.contact_mobile_number) || formErrors.contact_mobile_number}
+                      </p>
                     )}
                   </div>
 
@@ -892,8 +931,10 @@ export const RegistrationForm: React.FC<RegistrationFormProps> = ({
                         }}
                         className={`w-full px-4 py-3 rounded-xl text-sm font-medium transition-colors outline-none ${inputClasses}`}
                       />
-                      {formErrors.sender_mobile_no && (
-                        <p className="text-rose-500 text-xs mt-1 font-semibold">{formErrors.sender_mobile_no}</p>
+                      {(getMobileError(formData.sender_mobile_no) || formErrors.sender_mobile_no) && (
+                        <p className="text-rose-500 text-xs mt-1 font-semibold">
+                          {getMobileError(formData.sender_mobile_no) || formErrors.sender_mobile_no}
+                        </p>
                       )}
                     </div>
 
@@ -903,8 +944,7 @@ export const RegistrationForm: React.FC<RegistrationFormProps> = ({
                         Payment Time <span className="text-rose-500">*</span>
                       </label>
                       <input
-                        type="text"
-                        placeholder="e.g. 02:30 PM"
+                        type="time"
                         value={formData.payment_time}
                         onChange={e => {
                           setFormData({ ...formData, payment_time: e.target.value });

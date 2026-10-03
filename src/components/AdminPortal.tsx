@@ -1,7 +1,7 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import type { InvitationRecord, InvitationStatus, AdminProfile, PdfSettings, WebsiteSettings } from '../types';
-import { signInAdmin, signOutAdmin, getCurrentAdmin } from '../lib/supabase';
-import { getRegistrationList } from '../services/admin';
+import { signInAdmin, signOutAdmin, getCurrentAdmin, supabase } from '../lib/supabase';
+import { getRegistrationList, mapRowToInvitation } from '../services/admin';
 import { fetchPublicRegistrations } from '../services/registrations';
 import { generateRegistrationListPDF, generateInvitationCardPDF } from '../utils/pdfGenerator';
 import {
@@ -65,18 +65,122 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
     setIsLoadingRegistrations(true);
     setRegistrationLoadError('');
     try {
-      const result = await getRegistrationList();
-      if (!result.success) {
-        setRegistrationLoadError(result.errorMessage || 'Unable to load registrations.');
-        return;
+      const result = await getRegistrationList(admin?.role);
+      if (result.success && Array.isArray(result.data)) {
+        setAdminRegistrations(result.data);
+      } else if (invitations && invitations.length > 0) {
+        const scoped = invitations.filter(r => {
+          if (admin?.role === 'male_admin') return String(r.gender || '').toLowerCase() === 'male';
+          if (admin?.role === 'female_admin') return String(r.gender || '').toLowerCase() === 'female';
+          return true;
+        });
+        setAdminRegistrations(scoped);
+      } else if (!result.success && result.errorMessage) {
+        setRegistrationLoadError(result.errorMessage);
+        setAdminRegistrations([]);
+      } else {
+        setAdminRegistrations([]);
       }
-      setAdminRegistrations(result.data);
     } catch (error: any) {
-      setRegistrationLoadError(error?.message || 'Unable to load registrations.');
+      if (invitations && invitations.length > 0) {
+        const scoped = invitations.filter(r => {
+          if (admin?.role === 'male_admin') return String(r.gender || '').toLowerCase() === 'male';
+          if (admin?.role === 'female_admin') return String(r.gender || '').toLowerCase() === 'female';
+          return true;
+        });
+        setAdminRegistrations(scoped);
+      } else {
+        setRegistrationLoadError(error?.message || 'Unable to load registrations.');
+        setAdminRegistrations([]);
+      }
     } finally {
       setIsLoadingRegistrations(false);
     }
   };
+
+  // Sync state when invitations prop updates
+  useEffect(() => {
+    if (invitations && invitations.length > 0) {
+      setAdminRegistrations(prev => {
+        const map = new Map<string, InvitationRecord>();
+        invitations.forEach(r => {
+          // Scope by current admin role
+          if (admin?.role === 'male_admin' && String(r.gender || '').toLowerCase() !== 'male') return;
+          if (admin?.role === 'female_admin' && String(r.gender || '').toLowerCase() !== 'female') return;
+          const key = r.registration_no || r.id || r.dbId || '';
+          if (key) map.set(key, r);
+        });
+        prev.forEach(r => {
+          if (admin?.role === 'male_admin' && String(r.gender || '').toLowerCase() !== 'male') return;
+          if (admin?.role === 'female_admin' && String(r.gender || '').toLowerCase() !== 'female') return;
+          const key = r.registration_no || r.id || r.dbId || '';
+          if (key) map.set(key, { ...(map.get(key) || ({} as InvitationRecord)), ...r });
+        });
+        return Array.from(map.values());
+      });
+    }
+  }, [invitations, admin?.role]);
+
+  // Realtime subscription to registrations table
+  useEffect(() => {
+    const channel = supabase
+      .channel('admin-portal-registrations-sync')
+      .on(
+        'postgres_changes',
+        { event: '*', schema: 'public', table: 'registrations' },
+        payload => {
+          if (payload.eventType === 'INSERT' && payload.new) {
+            const newRecord = mapRowToInvitation(payload.new);
+            if (
+              (admin?.role === 'male_admin' && newRecord.gender !== 'male') ||
+              (admin?.role === 'female_admin' && newRecord.gender !== 'female')
+            ) {
+              return;
+            }
+            setAdminRegistrations(prev => {
+              const exists = prev.some(
+                r => r.registration_no === newRecord.registration_no || (newRecord.id && (r.id === newRecord.id || r.dbId === newRecord.id))
+              );
+              if (exists) return prev;
+              return [newRecord, ...prev];
+            });
+          } else if (payload.eventType === 'UPDATE' && payload.new) {
+            const updated = mapRowToInvitation(payload.new);
+            setAdminRegistrations(prev => {
+              const exists = prev.some(
+                r => r.registration_no === updated.registration_no || (updated.id && (r.id === updated.id || r.dbId === updated.id))
+              );
+              if (exists) {
+                return prev.map(r =>
+                  r.registration_no === updated.registration_no || (updated.id && (r.id === updated.id || r.dbId === updated.id))
+                    ? { ...r, ...updated }
+                    : r
+                );
+              }
+              if (
+                (!admin?.role) ||
+                (admin?.role === 'male_admin' && updated.gender === 'male') ||
+                (admin?.role === 'female_admin' && updated.gender === 'female')
+              ) {
+                return [updated, ...prev];
+              }
+              return prev;
+            });
+          } else if (payload.eventType === 'DELETE' && payload.old) {
+            const oldId = payload.old.id;
+            const oldReg = payload.old.registration_no;
+            setAdminRegistrations(prev =>
+              prev.filter(r => (oldId ? r.id !== oldId && r.dbId !== oldId : true) && (oldReg ? r.registration_no !== oldReg : true))
+            );
+          }
+        }
+      )
+      .subscribe();
+
+    return () => {
+      void supabase.removeChannel(channel);
+    };
+  }, [admin?.role]);
 
   useEffect(() => {
     if (!admin?.role) {
@@ -94,10 +198,15 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
   };
 
   const scopedRows = useMemo(() => {
-    let rows = adminRegistrations;
-    if (admin?.role === 'male_admin') rows = rows.filter(r => r.gender === 'male');
-    if (admin?.role === 'female_admin') rows = rows.filter(r => r.gender === 'female');
-    if (statusFilter !== 'all') rows = rows.filter(r => r.status === statusFilter);
+    let rows = adminRegistrations.length > 0 ? adminRegistrations : invitations;
+    if (admin?.role === 'male_admin') {
+      rows = rows.filter(r => String(r.gender || '').toLowerCase() === 'male');
+    } else if (admin?.role === 'female_admin') {
+      rows = rows.filter(r => String(r.gender || '').toLowerCase() === 'female');
+    }
+    if (statusFilter !== 'all') {
+      rows = rows.filter(r => r.status === statusFilter);
+    }
     if (query.trim()) {
       const q = query.trim().toLowerCase();
       rows = rows.filter(r =>
@@ -106,6 +215,7 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
           r.full_name,
           r.class_roll,
           r.id,
+          r.student_id,
           r.academic_group,
           r.academic_section,
           r.jersey_back_name,
@@ -116,7 +226,7 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
       );
     }
     return rows;
-  }, [admin?.role, adminRegistrations, statusFilter, query]);
+  }, [admin?.role, adminRegistrations, invitations, statusFilter, query]);
 
   const login = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -139,8 +249,10 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
   };
 
   const handleApprove = async (regNo: string) => {
+    setAdminRegistrations(prev =>
+      prev.map(r => (r.registration_no === regNo ? { ...r, status: 'approved' } : r))
+    );
     await onUpdateStatus(regNo, 'approved');
-    await loadAdminRegistrations();
   };
 
   const openRejectModal = (regNo: string) => {
@@ -155,17 +267,23 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
       showToast('Rejection reason is strictly required.');
       return;
     }
-    await onUpdateStatus(rejecting, 'rejected', cleanReason);
-    await loadAdminRegistrations();
+    const targetReg = rejecting;
+    setAdminRegistrations(prev =>
+      prev.map(r =>
+        r.registration_no === targetReg ? { ...r, status: 'rejected', reject_reason: cleanReason } : r
+      )
+    );
+    await onUpdateStatus(targetReg, 'rejected', cleanReason);
     setRejecting(null);
     setRejectReason('');
   };
 
   const confirmDelete = async () => {
     if (onDeleteRegistration && deletingRegNo) {
-      await onDeleteRegistration(deletingRegNo);
-      await loadAdminRegistrations();
-      showToast(`Registration ${deletingRegNo} hidden from website.`);
+      const targetReg = deletingRegNo;
+      setAdminRegistrations(prev => prev.filter(r => r.registration_no !== targetReg));
+      await onDeleteRegistration(targetReg);
+      showToast(`Registration ${targetReg} deleted.`);
       setDeletingRegNo(null);
     }
   };

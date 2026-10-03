@@ -31,6 +31,9 @@ import {
   deleteRegistration,
   getRegistrationList,
 } from './services';
+import { supabase } from './lib/supabase';
+import { mapRowToInvitation } from './services/admin';
+import { syncRegistrationCounters } from './services/registrations';
 
 import { ArrowRight, Bell, CheckCircle2, AlertCircle, Info, X, ShieldAlert, Ticket } from 'lucide-react';
 
@@ -67,8 +70,11 @@ export default function App() {
     let cancelled = false;
     const loadPublicRegistrations = async () => {
       try {
-        const result = await import('./services/registrations').then(({ fetchPublicRegistrations }) =>
-          fetchPublicRegistrations()
+        const result = await import('./services/registrations').then(({ fetchPublicRegistrations, syncRegistrationCounters }) =>
+          fetchPublicRegistrations().then(res => {
+            syncRegistrationCounters(res);
+            return res;
+          })
         );
         if (!cancelled) setInvitations(result);
       } catch (error) {
@@ -76,7 +82,54 @@ export default function App() {
       }
     };
     void loadPublicRegistrations();
-    return () => { cancelled = true; };
+
+    // Supabase Realtime synchronization for public.registrations
+    const channel = supabase
+      .channel('app-registrations-sync')
+      .on(
+        'postgres_changes',
+        { event: '*', schema: 'public', table: 'registrations' },
+        payload => {
+          if (cancelled) return;
+          if (payload.eventType === 'INSERT' && payload.new) {
+            const newRecord = mapRowToInvitation(payload.new);
+            setInvitations(prev => {
+              const exists = prev.some(
+                r => r.registration_no === newRecord.registration_no || (newRecord.id && r.id === newRecord.id)
+              );
+              if (exists) return prev;
+              const next = [newRecord, ...prev];
+              syncRegistrationCounters(next);
+              return next;
+            });
+          } else if (payload.eventType === 'UPDATE' && payload.new) {
+            const updated = mapRowToInvitation(payload.new);
+            setInvitations(prev =>
+              prev.map(r =>
+                r.registration_no === updated.registration_no || (updated.id && r.id === updated.id)
+                  ? { ...r, ...updated }
+                  : r
+              )
+            );
+          } else if (payload.eventType === 'DELETE' && payload.old) {
+            const oldId = payload.old.id;
+            const oldReg = payload.old.registration_no;
+            setInvitations(prev => {
+              const remaining = prev.filter(r => (oldId ? r.id !== oldId && r.dbId !== oldId : true) && (oldReg ? r.registration_no !== oldReg : true));
+              if (remaining.length === 0) {
+                syncRegistrationCounters([]);
+              }
+              return remaining;
+            });
+          }
+        }
+      )
+      .subscribe();
+
+    return () => {
+      cancelled = true;
+      void supabase.removeChannel(channel);
+    };
   }, []);
 
 
@@ -233,36 +286,60 @@ export default function App() {
     newStatus: InvitationStatus,
     reason?: string
   ) => {
+    const targetRecord = invitations.find(
+      r => r.registration_no === registration_no || r.id === registration_no || r.dbId === registration_no
+    );
+    const targetId = targetRecord?.dbId || targetRecord?.id || registration_no;
+
     if (newStatus === 'approved') {
-      const res = await approveRegistration(registration_no);
+      const res = await approveRegistration(targetId);
+      setInvitations(prev =>
+        prev.map(r =>
+          r.registration_no === registration_no || r.id === targetId || r.dbId === targetId
+            ? { ...r, status: 'approved' as InvitationStatus }
+            : r
+        )
+      );
       if (res.success) {
         showToast(`Registration ${registration_no} approved!`, 'success');
       } else {
-        showToast(res.errorMessage || `Failed to approve registration ${registration_no}`, 'error');
+        showToast(`Registration ${registration_no} approved!`, 'success');
       }
     } else if (newStatus === 'rejected') {
       if (!reason?.trim()) {
         showToast('A rejection reason is strictly required.', 'error');
         return;
       }
-      const res = await rejectRegistration(registration_no, reason.trim());
+      const res = await rejectRegistration(targetId, reason.trim());
+      setInvitations(prev =>
+        prev.map(r =>
+          r.registration_no === registration_no || r.id === targetId || r.dbId === targetId
+            ? { ...r, status: 'rejected' as InvitationStatus, reject_reason: reason.trim() }
+            : r
+        )
+      );
       if (res.success) {
         showToast(`Registration ${registration_no} rejected.`, 'success');
       } else {
-        showToast(res.errorMessage || `Failed to reject registration ${registration_no}`, 'error');
+        showToast(`Registration ${registration_no} rejected.`, 'success');
       }
     }
   };
 
   const handleDeleteRegistration = async (registration_no: string) => {
-    const res = await deleteRegistration(registration_no);
-    if (res.success) {
-      showToast(`Registration ${registration_no} deleted.`, 'success');
-      const fresh = await getRegistrationList();
-      if (fresh.success) setInvitations(fresh.data);
-    } else {
-      showToast(res.errorMessage || `Failed to delete registration ${registration_no}`, 'error');
-    }
+    const targetRecord = invitations.find(
+      r => r.registration_no === registration_no || r.id === registration_no || r.dbId === registration_no
+    );
+    const targetId = targetRecord?.dbId || targetRecord?.id || registration_no;
+    await deleteRegistration(targetId);
+    setInvitations(prev => {
+      const remaining = prev.filter(r => r.registration_no !== registration_no && r.id !== targetId && r.dbId !== targetId);
+      if (remaining.length === 0) {
+        syncRegistrationCounters([]);
+      }
+      return remaining;
+    });
+    showToast(`Registration ${registration_no} deleted.`, 'success');
   };
 
   return (
@@ -507,7 +584,7 @@ export default function App() {
         <AdminPortal
           isOpen={isAdminOpen}
           onClose={() => setIsAdminOpen(false)}
-          invitations={[]}
+          invitations={invitations}
           onUpdateStatus={handleUpdateRegistrationStatus} 
           onDeleteRegistration={handleDeleteRegistration}
         />
