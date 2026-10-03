@@ -31,7 +31,6 @@ import {
   deleteRegistration,
   getRegistrationList,
 } from './services';
-import { getRegistrationList } from './services';
 
 import { ArrowRight, Bell, CheckCircle2, AlertCircle, Info, X, ShieldAlert, Ticket } from 'lucide-react';
 
