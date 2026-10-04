@@ -113,15 +113,13 @@ export async function getCurrentAdmin(): Promise<AdminProfile | null> {
   if (storedRole !== 'male_admin' && storedRole !== 'female_admin') return null;
   if (!storedPasscode) return null;
 
-  // The passcode-authenticated admin flow does not create a Supabase Auth session.
-  // Re-validate the stored passcode through the protected RPC before restoring
-  // the client-side admin state after reload.
+  // The admin portal uses passcode authentication, not Supabase Auth.
+  // Re-validate the stored passcode directly against the same RPC used at login.
   try {
     const { data, error } = await supabase.rpc('verify_admin_passcode', {
       p_passcode: storedPasscode,
     });
-    if (error || !data) return null;
-    if (data.role !== storedRole) return null;
+    if (error || !data || data.role !== storedRole) return null;
 
     return {
       id: data.admin_id || `passcode:${data.role}`,
@@ -156,7 +154,6 @@ export async function signInAdmin(passcode: string): Promise<AdminProfile> {
 
   const profile: AdminProfile = {
     id: data.admin_id || `passcode:${data.role}`,
-    // This is a passcode-authenticated profile, not a Supabase Auth identity.
     auth_user_id: `passcode:${data.admin_id || data.role}`,
     username: null,
     full_name: data.role === 'male_admin' ? 'Male Admin' : 'Female Admin',
