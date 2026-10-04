@@ -207,10 +207,15 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
   };
 
   const handleApprove = async (regNo: string) => {
-    setAdminRegistrations(prev =>
-      prev.map(r => (r.registration_no === regNo ? { ...r, status: 'approved' } : r))
+    const rec = adminRegistrations.find(
+      r => r.registration_no === regNo || r.id === regNo || r.dbId === regNo
     );
-    await onUpdateStatus(regNo, 'approved');
+    const targetId = rec?.id || rec?.dbId || regNo;
+
+    setAdminRegistrations(prev =>
+      prev.map(r => (r.registration_no === regNo || r.id === targetId ? { ...r, status: 'approved' } : r))
+    );
+    await onUpdateStatus(targetId, 'approved');
   };
 
   const openRejectModal = (regNo: string) => {
@@ -226,12 +231,17 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
       return;
     }
     const targetReg = rejecting;
+    const rec = adminRegistrations.find(
+      r => r.registration_no === targetReg || r.id === targetReg || r.dbId === targetReg
+    );
+    const targetId = rec?.id || rec?.dbId || targetReg;
+
     setAdminRegistrations(prev =>
       prev.map(r =>
-        r.registration_no === targetReg ? { ...r, status: 'rejected', reject_reason: cleanReason } : r
+        r.registration_no === targetReg || r.id === targetId ? { ...r, status: 'rejected', reject_reason: cleanReason } : r
       )
     );
-    await onUpdateStatus(targetReg, 'rejected', cleanReason);
+    await onUpdateStatus(targetId, 'rejected', cleanReason);
     setRejecting(null);
     setRejectReason('');
   };
@@ -239,8 +249,13 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
   const confirmDelete = async () => {
     if (onDeleteRegistration && deletingRegNo) {
       const targetReg = deletingRegNo;
-      setAdminRegistrations(prev => prev.filter(r => r.registration_no !== targetReg));
-      await onDeleteRegistration(targetReg);
+      const rec = adminRegistrations.find(
+        r => r.registration_no === targetReg || r.id === targetReg || r.dbId === targetReg
+      );
+      const targetId = rec?.id || rec?.dbId || targetReg;
+
+      setAdminRegistrations(prev => prev.filter(r => r.registration_no !== targetReg && r.id !== targetId));
+      await onDeleteRegistration(targetId);
       showToast(`Registration ${targetReg} deleted.`);
       setDeletingRegNo(null);
     }

@@ -216,29 +216,30 @@ export default function App() {
   };
 
   const handleUpdateRegistrationStatus = async (
-    registration_no: string,
+    targetIdentifier: string,
     newStatus: InvitationStatus,
     reason?: string
   ) => {
     const targetRecord = invitations.find(
-      r => r.registration_no === registration_no || r.id === registration_no || r.dbId === registration_no
+      r => r.registration_no === targetIdentifier || r.id === targetIdentifier || r.dbId === targetIdentifier
     );
-    const targetId = targetRecord?.dbId || targetRecord?.id || registration_no;
+    const targetId = targetRecord?.dbId || targetRecord?.id || targetIdentifier;
+    const displayRegNo = targetRecord?.registration_no || targetIdentifier;
 
     if (newStatus === 'approved') {
       const res = await approveRegistration(targetId);
       if (!res.success) {
-        showToast(res.errorMessage || `Unable to approve registration ${registration_no}.`, 'error');
+        showToast(res.errorMessage || `Unable to approve registration ${displayRegNo}.`, 'error');
         return;
       }
       setInvitations(prev =>
         prev.map(r =>
-          r.registration_no === registration_no || r.id === targetId || r.dbId === targetId
+          r.registration_no === displayRegNo || r.id === targetId || r.dbId === targetId
             ? { ...r, status: 'approved' as InvitationStatus }
             : r
         )
       );
-      showToast(`Registration ${registration_no} approved!`, 'success');
+      showToast(`Registration ${displayRegNo} approved!`, 'success');
     } else if (newStatus === 'rejected') {
       if (!reason?.trim()) {
         showToast('A rejection reason is strictly required.', 'error');
@@ -246,34 +247,31 @@ export default function App() {
       }
       const res = await rejectRegistration(targetId, reason.trim());
       if (!res.success) {
-        showToast(res.errorMessage || `Unable to reject registration ${registration_no}.`, 'error');
+        showToast(res.errorMessage || `Unable to reject registration ${displayRegNo}.`, 'error');
         return;
       }
       setInvitations(prev =>
         prev.map(r =>
-          r.registration_no === registration_no || r.id === targetId || r.dbId === targetId
+          r.registration_no === displayRegNo || r.id === targetId || r.dbId === targetId
             ? { ...r, status: 'rejected' as InvitationStatus, reject_reason: reason.trim() }
             : r
         )
       );
-      showToast(`Registration ${registration_no} rejected.`, 'success');
+      showToast(`Registration ${displayRegNo} rejected.`, 'success');
     }
   };
 
-  const handleDeleteRegistration = async (registration_no: string) => {
+  const handleDeleteRegistration = async (targetIdentifier: string) => {
     const targetRecord = invitations.find(
-      r => r.registration_no === registration_no || r.id === registration_no || r.dbId === registration_no
+      r => r.registration_no === targetIdentifier || r.id === targetIdentifier || r.dbId === targetIdentifier
     );
-    const targetId = targetRecord?.dbId || targetRecord?.id || registration_no;
+    const targetId = targetRecord?.dbId || targetRecord?.id || targetIdentifier;
+    const displayRegNo = targetRecord?.registration_no || targetIdentifier;
     await deleteRegistration(targetId);
-    setInvitations(prev => {
-      const remaining = prev.filter(r => r.registration_no !== registration_no && r.id !== targetId && r.dbId !== targetId);
-      if (remaining.length === 0) {
-        syncRegistrationCounters([]);
-      }
-      return remaining;
-    });
-    showToast(`Registration ${registration_no} deleted.`, 'success');
+    setInvitations(prev =>
+      prev.filter(r => r.registration_no !== displayRegNo && r.id !== targetId && r.dbId !== targetId)
+    );
+    showToast(`Registration ${displayRegNo} deleted.`, 'success');
   };
 
   return (

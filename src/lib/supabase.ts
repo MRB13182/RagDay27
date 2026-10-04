@@ -67,23 +67,13 @@ export async function testSupabaseConnection(): Promise<SupabaseHealthCheckResul
   };
 
   try {
-    const { count, error } = await supabase
-      .from('registrations')
-      .select('id', { count: 'exact', head: true });
-
-    if (!error) {
-      result.connected = true;
-      result.registrationsTable = true;
-      result.details.registrationsCount = count ?? 0;
-    } else {
-      result.details.error = error.message || 'Unable to access registrations table.';
-    }
-
     const { error: adminError } = await supabase.from('admins').select('id', { head: true });
     if (!adminError) {
       result.connected = true;
       result.adminsTable = true;
       result.details.adminsFound = true;
+    } else {
+      result.details.error = adminError.message;
     }
 
     const { data: buckets, error: bucketError } = await supabase.storage.listBuckets();
