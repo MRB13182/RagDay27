@@ -156,7 +156,7 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
   };
 
   const scopedRows = useMemo(() => {
-    let rows = adminRegistrations.length > 0 ? adminRegistrations : invitations;
+    let rows = adminRegistrations;
     if (admin?.role === 'male_admin') {
       rows = rows.filter(r => String(r.gender || '').toLowerCase() === 'male');
     } else if (admin?.role === 'female_admin') {
