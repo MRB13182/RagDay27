@@ -39,10 +39,13 @@ export function mapRowToInvitation(row: any): InvitationRecord {
 }
 
 /**
- * Load authoritative registration rows directly from the database for the authenticated admin.
- * Male Admin receives all gender='male' records.
- * Female Admin receives all gender='female' records.
- * All statuses (pending, approved, rejected) are included.
+ * Authoritative admin registration list.
+ *
+ * IMPORTANT:
+ * - Never query public.registrations directly from the browser for admin data.
+ * - The RPC is the single admin data-access boundary.
+ * - The RPC validates the authenticated Supabase user and derives the admin role
+ *   from public.admins, then returns only that role's rows.
  */
 export async function getRegistrationList(adminRole?: 'male_admin' | 'female_admin' | null): Promise<{
   success: boolean;
@@ -51,57 +54,63 @@ export async function getRegistrationList(adminRole?: 'male_admin' | 'female_adm
   errorMessage?: string;
 }> {
   try {
-    // 1. Direct query from public.registrations table
-    let query = supabase.from('registrations').select('*');
-
-    if (adminRole === 'male_admin') {
-      query = query.eq('gender', 'male');
-    } else if (adminRole === 'female_admin') {
-      query = query.eq('gender', 'female');
-    }
-
-    const { data: selectData, error: selectErr } = await query.order('sl_no', { ascending: false });
-
-    if (!selectErr && Array.isArray(selectData)) {
+    const { data: sessionData, error: sessionError } = await supabase.auth.getSession();
+    if (sessionError) {
       return {
-        success: true,
-        data: selectData.map(mapRowToInvitation),
+        success: false,
+        data: [],
+        error: sessionError,
+        errorMessage: sessionError.message,
       };
     }
 
-    // 2. Fallback to RPC get_admin_registrations if direct query encountered an error
-    const passcode = typeof sessionStorage !== 'undefined' ? sessionStorage.getItem('rd27_admin_passcode') : '';
+    if (!sessionData.session?.user) {
+      return {
+        success: false,
+        data: [],
+        errorMessage: 'Admin authentication session is missing. Please sign in again.',
+      };
+    }
+
     const { data: rpcData, error: rpcErr } = await supabase.rpc('get_admin_registrations', {
-      p_passcode: passcode || undefined,
+      p_passcode: null,
     });
 
-    if (!rpcErr && Array.isArray(rpcData)) {
-      let mapped = rpcData.map(mapRowToInvitation);
-      if (adminRole === 'male_admin') {
-        mapped = mapped.filter(r => r.gender === 'male');
-      } else if (adminRole === 'female_admin') {
-        mapped = mapped.filter(r => r.gender === 'female');
-      }
+    if (rpcErr) {
       return {
-        success: true,
-        data: mapped,
+        success: false,
+        data: [],
+        error: rpcErr,
+        errorMessage: String(rpcErr.message || 'Unable to load registrations from the admin database function.'),
       };
     }
 
-    // Return the actual database error so dashboard state management can handle it
-    const activeError = selectErr || rpcErr;
+    if (!Array.isArray(rpcData)) {
+      return {
+        success: false,
+        data: [],
+        errorMessage: 'Admin database function returned an invalid registration list.',
+      };
+    }
+
+    const mapped = rpcData.map(mapRowToInvitation);
+
+    // Defense-in-depth: the database RPC is authoritative. Keep the UI role
+    // filter as a sanity check, but never use it as the security boundary.
+    const scoped = adminRole
+      ? mapped.filter(r => r.gender === (adminRole === 'male_admin' ? 'male' : 'female'))
+      : mapped;
+
     return {
-      success: false,
-      data: [],
-      error: activeError,
-      errorMessage: String(activeError?.message || 'Unable to load registrations from database.'),
+      success: true,
+      data: scoped,
     };
   } catch (error: any) {
     return {
       success: false,
       data: [],
       error,
-      errorMessage: String(error?.message || 'Unable to load registrations.'),
+      errorMessage: String(error?.message || 'Unable to load registrations from database.'),
     };
   }
 }
@@ -111,32 +120,16 @@ export async function approveRegistration(registrationId: string) {
     const passcode = typeof sessionStorage !== 'undefined' ? sessionStorage.getItem('rd27_admin_passcode') : null;
     const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(registrationId);
 
-    // 1. Direct database update
-    const { data: updateData, error: updateErr } = await supabase
-      .from('registrations')
-      .update({
-        status: 'approved',
-        reject_reason: null,
-        approved_at: new Date().toISOString(),
-        updated_at: new Date().toISOString(),
-      })
-      .eq('id', registrationId)
-      .select()
-      .maybeSingle();
-
-    if (!updateErr && updateData) {
-      return { success: true, data: mapRowToInvitation(updateData) };
-    }
-
-    // 2. RPC fallback
     if (isUuid) {
       const { data, error } = await supabase.rpc('approve_registration', {
         p_registration_id: registrationId,
         p_passcode: passcode,
       });
       if (!error && data) return { success: true, data: mapRowToInvitation(data) };
+      return { success: false, error, errorMessage: String(error?.message || 'Unable to approve registration.') };
     }
-    return { success: true };
+
+    return { success: false, errorMessage: 'Invalid registration identifier.' };
   } catch (error: any) {
     return { success: false, error, errorMessage: String(error?.message || 'Unable to approve registration.') };
   }
@@ -149,24 +142,6 @@ export async function rejectRegistration(registrationId: string, reason: string)
     const passcode = typeof sessionStorage !== 'undefined' ? sessionStorage.getItem('rd27_admin_passcode') : null;
     const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(registrationId);
 
-    // 1. Direct database update
-    const { data: updateData, error: updateErr } = await supabase
-      .from('registrations')
-      .update({
-        status: 'rejected',
-        reject_reason: cleanReason,
-        rejected_at: new Date().toISOString(),
-        updated_at: new Date().toISOString(),
-      })
-      .eq('id', registrationId)
-      .select()
-      .maybeSingle();
-
-    if (!updateErr && updateData) {
-      return { success: true, data: mapRowToInvitation(updateData) };
-    }
-
-    // 2. RPC fallback
     if (isUuid) {
       const { data, error } = await supabase.rpc('reject_registration', {
         p_registration_id: registrationId,
@@ -174,8 +149,10 @@ export async function rejectRegistration(registrationId: string, reason: string)
         p_passcode: passcode,
       });
       if (!error && data) return { success: true, data: mapRowToInvitation(data) };
+      return { success: false, error, errorMessage: String(error?.message || 'Unable to reject registration.') };
     }
-    return { success: true };
+
+    return { success: false, errorMessage: 'Invalid registration identifier.' };
   } catch (error: any) {
     return { success: false, error, errorMessage: String(error?.message || 'Unable to reject registration.') };
   }
@@ -186,24 +163,17 @@ export async function deleteRegistration(registrationId: string) {
     const passcode = typeof sessionStorage !== 'undefined' ? sessionStorage.getItem('rd27_admin_passcode') : null;
     const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(registrationId);
 
-    // 1. Direct database delete
-    const { error: delErr } = await supabase
-      .from('registrations')
-      .delete()
-      .eq('id', registrationId);
-
-    if (!delErr) return { success: true };
-
-    // 2. RPC hide fallback
     if (isUuid) {
       const { data, error } = await supabase.rpc('hide_registration_from_web', {
         p_registration_id: registrationId,
         p_passcode: passcode,
       });
       if (!error && data) return { success: true, data: mapRowToInvitation(data) };
+      return { success: false, error, errorMessage: String(error?.message || 'Unable to hide registration.') };
     }
-    return { success: true };
+
+    return { success: false, errorMessage: 'Invalid registration identifier.' };
   } catch (error: any) {
-    return { success: false, error, errorMessage: String(error?.message || 'Unable to delete registration.') };
+    return { success: false, error, errorMessage: String(error?.message || 'Unable to hide registration.') };
   }
 }
