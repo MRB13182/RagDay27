@@ -226,38 +226,46 @@ export default function App() {
     const targetId = targetRecord?.dbId || targetRecord?.id || targetIdentifier;
     const displayRegNo = targetRecord?.registration_no || targetIdentifier;
 
-    if (newStatus === 'approved') {
-      const res = await approveRegistration(targetId);
-      if (!res.success) {
-        showToast(res.errorMessage || `Unable to approve registration ${displayRegNo}.`, 'error');
+    if (newStatus === 'rejected' && !reason?.trim()) {
+      showToast('A rejection reason is strictly required.', 'error');
+      return;
+    }
+
+    try {
+      const result = newStatus === 'approved'
+        ? await approveRegistration(targetId)
+        : await rejectRegistration(targetId, reason!.trim());
+
+      if (!result.success || !result.data) {
+        showToast(result.errorMessage || `Unable to update registration ${displayRegNo}.`, 'error');
         return;
       }
-      setInvitations(prev =>
-        prev.map(r =>
-          r.registration_no === displayRegNo || r.id === targetId || r.dbId === targetId
-            ? { ...r, status: 'approved' as InvitationStatus }
-            : r
-        )
+
+      const confirmed = result.data;
+
+      // The database response is authoritative. Replace the local record with
+      // the exact row returned by the approval/rejection RPC so every UI
+      // consumer receives the same status/reason as the server.
+      setInvitations(prev => {
+        const index = prev.findIndex(r =>
+          r.registration_no === displayRegNo ||
+          r.id === targetId ||
+          r.dbId === targetId
+        );
+        if (index === -1) return [confirmed, ...prev];
+        const next = [...prev];
+        next[index] = { ...next[index], ...confirmed };
+        return next;
+      });
+
+      showToast(
+        newStatus === 'approved'
+          ? `Registration ${displayRegNo} approved!`
+          : `Registration ${displayRegNo} rejected.`,
+        'success'
       );
-      showToast(`Registration ${displayRegNo} approved!`, 'success');
-    } else if (newStatus === 'rejected') {
-      if (!reason?.trim()) {
-        showToast('A rejection reason is strictly required.', 'error');
-        return;
-      }
-      const res = await rejectRegistration(targetId, reason.trim());
-      if (!res.success) {
-        showToast(res.errorMessage || `Unable to reject registration ${displayRegNo}.`, 'error');
-        return;
-      }
-      setInvitations(prev =>
-        prev.map(r =>
-          r.registration_no === displayRegNo || r.id === targetId || r.dbId === targetId
-            ? { ...r, status: 'rejected' as InvitationStatus, reject_reason: reason.trim() }
-            : r
-        )
-      );
-      showToast(`Registration ${displayRegNo} rejected.`, 'success');
+    } catch (error: any) {
+      showToast(error?.message || `Unable to update registration ${displayRegNo}.`, 'error');
     }
   };
 
