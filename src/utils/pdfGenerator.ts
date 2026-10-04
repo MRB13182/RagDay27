@@ -77,24 +77,41 @@ export const generateRegistrationListPDF = (
     27
   );
 
-  const headCols = ['#', 'Reg No', 'Student Name', 'Gender', 'Roll & ID', 'Group', 'Section', 'Jersey Name', 'Jersey Number', 'Jersey Size'];
+  const headCols = [
+    'SL NO',
+    'REG NO',
+    'NAME',
+    'ROLL',
+    'STUDENT ID',
+    'GROUP',
+    'SECTION',
+    'JERSEY NAME',
+    'JERSEY NUMBER',
+    'JERSEY SIZE',
+  ];
   const tableData = records.map((record, index) => [
-    index + 1,
+    record.sl_no ?? (index + 1),
     record.registration_no,
     record.full_name,
-    record.gender.toUpperCase(),
-    `Roll: ${record.class_roll}\nID: ${record.student_id}`,
-    record.academic_group,
-    record.academic_section,
-    record.jersey_back_name,
-    `#${record.jersey_number}`,
-    record.jersey_size,
+    record.class_roll || '–',
+    record.student_id || '–',
+    record.academic_group || '–',
+    record.academic_section || '–',
+    record.jersey_back_name || '–',
+    record.jersey_number ? `#${record.jersey_number}` : '–',
+    record.jersey_size || '–',
   ]);
   const columnStyles: { [key: number]: any } = {
-    0: { cellWidth: 12, halign: 'center' }, 1: { cellWidth: 28, fontStyle: 'bold', halign: 'center' },
-    2: { cellWidth: 42, fontStyle: 'bold' }, 3: { cellWidth: 20, halign: 'center' },
-    4: { cellWidth: 34 }, 5: { cellWidth: 34 }, 6: { cellWidth: 22, halign: 'center', fontStyle: 'bold' },
-    7: { cellWidth: 34, fontStyle: 'bold' }, 8: { cellWidth: 22, halign: 'center' }, 9: { cellWidth: 20, halign: 'center' },
+    0: { cellWidth: 14, halign: 'center' },
+    1: { cellWidth: 26, fontStyle: 'bold', halign: 'center' },
+    2: { cellWidth: 46, fontStyle: 'bold' },
+    3: { cellWidth: 18, halign: 'center' },
+    4: { cellWidth: 26, halign: 'center' },
+    5: { cellWidth: 34 },
+    6: { cellWidth: 22, halign: 'center', fontStyle: 'bold' },
+    7: { cellWidth: 36, fontStyle: 'bold' },
+    8: { cellWidth: 25, halign: 'center' },
+    9: { cellWidth: 22, halign: 'center' },
   };
 
   autoTable(doc, {

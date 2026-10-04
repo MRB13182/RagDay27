@@ -503,178 +503,213 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
                     <p className="text-sm font-semibold text-slate-500">No registrations found matching criteria.</p>
                   </div>
                 ) : (
-                  /* Registration Cards List */
-                  <div className="grid gap-4">
-                    {scopedRows.map(card => {
-                      const isRejected = card.status === 'rejected';
-                      const isApproved = card.status === 'approved';
-                      const isPending = card.status === 'pending';
+                  /* Compact Registrations Table Layout */
+                  <div className="overflow-hidden rounded-2xl bg-white border border-slate-200 shadow-sm">
+                    <div className="overflow-x-auto">
+                      <table className="w-full min-w-[1300px] border-collapse text-left text-xs">
+                        <thead>
+                          <tr className="bg-slate-900 text-white border-b border-slate-800 text-[11px] font-bold uppercase tracking-wider">
+                            <th className="px-3 py-3 text-center w-14">SL NO</th>
+                            <th className="px-3 py-3 text-center w-16">PHOTO</th>
+                            <th className="px-3 py-3 w-28">REG NO</th>
+                            <th className="px-3 py-3 min-w-[140px]">NAME</th>
+                            <th className="px-3 py-3 text-center w-16">ROLL</th>
+                            <th className="px-3 py-3 text-center w-24">STUDENT ID</th>
+                            <th className="px-3 py-3 w-28">GROUP</th>
+                            <th className="px-3 py-3 text-center w-20">SECTION</th>
+                            <th className="px-3 py-3 w-32 font-mono">SENDER NUMBER</th>
+                            <th className="px-3 py-3 w-24">PAYMENT TIME</th>
+                            <th className="px-3 py-3 w-32 font-mono">TRANSACTION ID</th>
+                            <th className="px-3 py-3 text-center w-20">FEE</th>
+                            <th className="px-3 py-3 text-center w-28">✔ APPROVE</th>
+                            <th className="px-3 py-3 text-center w-24">✘ REJECT</th>
+                            <th className="px-3 py-3 text-center w-16">🗑 DELETE</th>
+                          </tr>
+                        </thead>
+                        <tbody className="divide-y divide-slate-100">
+                          {scopedRows.map((card, index) => {
+                            const isRejected = card.status === 'rejected';
+                            const isApproved = card.status === 'approved';
+                            const isPending = card.status === 'pending';
+                            const slNo = card.sl_no ?? (index + 1);
 
-                      return (
-                        <article
-                          key={card.dbId || card.registration_no}
-                          className="rounded-2xl bg-white border border-slate-200 p-5 shadow-sm hover:shadow-md transition-all space-y-4"
-                        >
-                          {/* Card Top Row */}
-                          <div className="flex flex-wrap items-start justify-between gap-3 border-b border-slate-100 pb-3">
-                            <div>
-                              <div className="flex items-center gap-2">
-                                <h3 className="text-base font-extrabold text-slate-900">{card.full_name}</h3>
-                                <span
-                                  className={`px-2 py-0.5 rounded-full text-[10px] font-bold uppercase ${
-                                    card.gender === 'male'
-                                      ? 'bg-sky-50 text-sky-700 border border-sky-200'
-                                      : 'bg-pink-50 text-pink-700 border border-pink-200'
-                                  }`}
-                                >
-                                  {card.gender}
-                                </span>
-                              </div>
-                              <div className="font-mono text-xs font-extrabold text-indigo-600 mt-0.5">
-                                {card.registration_no}
-                              </div>
-                            </div>
-
-                            {/* Status Badge */}
-                            <div>
-                              {isApproved && (
-                                <span className="inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs font-extrabold bg-emerald-50 text-emerald-700 border border-emerald-200">
-                                  <Check className="w-3.5 h-3.5" />
-                                  <span>Approved</span>
-                                </span>
-                              )}
-                              {isPending && (
-                                <span className="inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs font-extrabold bg-amber-50 text-amber-700 border border-amber-200">
-                                  <Clock className="w-3.5 h-3.5" />
-                                  <span>Pending</span>
-                                </span>
-                              )}
-                              {isRejected && (
-                                <span className="inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs font-extrabold bg-rose-50 text-rose-700 border border-rose-200">
-                                  <XCircle className="w-3.5 h-3.5" />
-                                  <span>Rejected</span>
-                                </span>
-                              )}
-                            </div>
-                          </div>
-
-                          {/* Complete Registration Information Grid */}
-                          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3 text-xs">
-                            <div className="space-y-0.5">
-                              <span className="text-[10px] font-bold uppercase text-slate-400">Roll:</span>
-                              <div className="font-semibold text-slate-800">{card.class_roll || '–'}</div>
-                            </div>
-                            <div className="space-y-0.5">
-                              <span className="text-[10px] font-bold uppercase text-slate-400">Student ID:</span>
-                              <div className="font-semibold text-slate-800">{card.student_id || '–'}</div>
-                            </div>
-                            <div className="space-y-0.5">
-                              <span className="text-[10px] font-bold uppercase text-slate-400">Group:</span>
-                              <div className="font-semibold text-slate-800">{card.academic_group || '–'}</div>
-                            </div>
-                            <div className="space-y-0.5">
-                              <span className="text-[10px] font-bold uppercase text-slate-400">Section:</span>
-                              <div className="font-semibold text-slate-800">{card.academic_section || '–'}</div>
-                            </div>
-                            <div className="space-y-0.5">
-                              <span className="text-[10px] font-bold uppercase text-slate-400">Jersey Name:</span>
-                              <div className="font-bold text-slate-900 uppercase font-mono">{card.jersey_back_name || '–'}</div>
-                            </div>
-                            <div className="space-y-0.5">
-                              <span className="text-[10px] font-bold uppercase text-slate-400">Jersey Number:</span>
-                              <div className="font-extrabold text-indigo-600 font-mono">{card.jersey_number || '–'}</div>
-                            </div>
-                            <div className="space-y-0.5">
-                              <span className="text-[10px] font-bold uppercase text-slate-400">Jersey Size:</span>
-                              <div className="font-semibold text-slate-800">{card.jersey_size || '–'}</div>
-                            </div>
-                            <div className="space-y-0.5">
-                              <span className="text-[10px] font-bold uppercase text-slate-400">Sender Number:</span>
-                              <div className="font-mono text-slate-800">{card.sender_mobile_no || '–'}</div>
-                            </div>
-                            <div className="space-y-0.5">
-                              <span className="text-[10px] font-bold uppercase text-slate-400">Payment Time:</span>
-                              <div className="text-slate-800">{card.payment_time || '–'}</div>
-                            </div>
-                            <div className="space-y-0.5">
-                              <span className="text-[10px] font-bold uppercase text-slate-400">Transaction ID:</span>
-                              <div className="font-mono text-slate-800 font-bold">{card.transaction_id || '–'}</div>
-                            </div>
-                            <div className="space-y-0.5">
-                              <span className="text-[10px] font-bold uppercase text-slate-400">Registration Date:</span>
-                              <div className="text-slate-600">
-                                {card.created_at ? new Date(card.created_at).toLocaleDateString() : '–'}
-                              </div>
-                            </div>
-                            <div className="space-y-0.5">
-                              <span className="text-[10px] font-bold uppercase text-slate-400">Fee Amount:</span>
-                              <div className="font-bold text-slate-800">{500} BDT</div>
-                            </div>
-                          </div>
-
-                          {/* Rejection Notice Banner */}
-                          {isRejected && (
-                            <div className="rounded-xl bg-rose-50 border border-rose-200 p-3 text-xs text-rose-800 space-y-1">
-                              <div className="font-bold flex items-center gap-1.5 text-rose-700">
-                                <AlertTriangle className="w-3.5 h-3.5" />
-                                <span>Rejected by Admin</span>
-                              </div>
-                              <p className="text-rose-600 font-medium pl-5">
-                                Reason: {card.reject_reason || 'No specific reason provided.'}
-                              </p>
-                            </div>
-                          )}
-
-                          {/* Action Buttons Row */}
-                          <div className="flex flex-wrap items-center justify-between gap-2 pt-2 border-t border-slate-100">
-                            {isApproved && (
-                              <button
-                                type="button"
-                                onClick={() => {
-                                  generateInvitationCardPDF(card, derivedPdfSettings, derivedWebsiteSettings);
-                                  showToast(`Downloading pass for ${card.full_name}...`);
-                                }}
-                                className="px-3.5 py-1.5 rounded-xl border border-slate-200 hover:bg-slate-50 text-slate-700 text-xs font-bold flex items-center gap-1.5 transition-colors cursor-pointer"
+                            return (
+                              <tr
+                                key={card.dbId || card.registration_no}
+                                className={`hover:bg-slate-50/80 transition-colors ${
+                                  isApproved
+                                    ? 'bg-emerald-50/20'
+                                    : isRejected
+                                    ? 'bg-rose-50/20'
+                                    : 'bg-white'
+                                }`}
                               >
-                                <Download className="w-3.5 h-3.5 text-indigo-600" />
-                                <span>Download Pass</span>
-                              </button>
-                            )}
-                            <div className="flex items-center gap-2 ml-auto">
-                              {!isApproved && (
-                                <button
-                                  type="button"
-                                  onClick={() => handleApprove(card.registration_no)}
-                                  className="px-3.5 py-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold flex items-center gap-1.5 shadow-sm shadow-emerald-200 transition-all cursor-pointer"
-                                >
-                                  <Check className="w-3.5 h-3.5" />
-                                  <span>Approve</span>
-                                </button>
-                              )}
-                              {!isRejected && (
-                                <button
-                                  type="button"
-                                  onClick={() => openRejectModal(card.registration_no)}
-                                  className="px-3.5 py-1.5 rounded-xl border border-rose-200 text-rose-600 hover:bg-rose-50 text-xs font-bold flex items-center gap-1.5 transition-colors cursor-pointer"
-                                >
-                                  <XCircle className="w-3.5 h-3.5" />
-                                  <span>Reject</span>
-                                </button>
-                              )}
-                              <button
-                                type="button"
-                                onClick={() => setDeletingRegNo(card.registration_no)}
-                                className="px-3.5 py-1.5 rounded-xl border border-slate-200 text-slate-500 hover:text-rose-600 hover:bg-rose-50 text-xs font-bold flex items-center gap-1.5 transition-colors cursor-pointer"
-                                title="Delete Registration"
-                              >
-                                <Trash2 className="w-3.5 h-3.5" />
-                                <span>Delete</span>
-                              </button>
-                            </div>
-                          </div>
-                        </article>
-                      );
-                    })}
+                                {/* 1. SL NO */}
+                                <td className="px-3 py-2.5 text-center font-mono font-bold text-slate-600">
+                                  {slNo}
+                                </td>
+
+                                {/* 2. PHOTO */}
+                                <td className="px-3 py-2 text-center">
+                                  {card.student_photo ? (
+                                    <img
+                                      src={card.student_photo}
+                                      alt={card.full_name}
+                                      className="w-9 h-9 rounded-lg object-cover border border-slate-200 mx-auto shadow-2xs"
+                                    />
+                                  ) : (
+                                    <div className="w-9 h-9 rounded-lg bg-slate-100 border border-slate-200 flex items-center justify-center text-slate-400 text-[10px] font-bold mx-auto">
+                                      No Pic
+                                    </div>
+                                  )}
+                                </td>
+
+                                {/* 3. REG NO */}
+                                <td className="px-3 py-2.5 whitespace-nowrap">
+                                  <div className="font-mono text-xs font-black text-indigo-600">
+                                    {card.registration_no}
+                                  </div>
+                                  <div>
+                                    {isApproved && (
+                                      <span className="inline-flex items-center gap-0.5 text-[10px] font-extrabold text-emerald-700">
+                                        <Check className="w-3 h-3" /> Approved
+                                      </span>
+                                    )}
+                                    {isPending && (
+                                      <span className="inline-flex items-center gap-0.5 text-[10px] font-extrabold text-amber-700">
+                                        <Clock className="w-3 h-3" /> Pending
+                                      </span>
+                                    )}
+                                    {isRejected && (
+                                      <span
+                                        className="inline-flex items-center gap-0.5 text-[10px] font-extrabold text-rose-700"
+                                        title={card.reject_reason || ''}
+                                      >
+                                        <XCircle className="w-3 h-3" /> Rejected
+                                      </span>
+                                    )}
+                                  </div>
+                                </td>
+
+                                {/* 4. NAME */}
+                                <td className="px-3 py-2.5 font-bold text-slate-900 whitespace-nowrap">
+                                  <div>{card.full_name}</div>
+                                  <div className="text-[10px] font-semibold text-slate-400 uppercase">
+                                    {card.gender}
+                                  </div>
+                                </td>
+
+                                {/* 5. ROLL */}
+                                <td className="px-3 py-2.5 text-center font-semibold text-slate-800 whitespace-nowrap">
+                                  {card.class_roll || '–'}
+                                </td>
+
+                                {/* 6. STUDENT ID */}
+                                <td className="px-3 py-2.5 text-center font-mono text-slate-700 whitespace-nowrap">
+                                  {card.student_id || '–'}
+                                </td>
+
+                                {/* 7. GROUP */}
+                                <td className="px-3 py-2.5 text-slate-800 whitespace-nowrap">
+                                  {card.academic_group || '–'}
+                                </td>
+
+                                {/* 8. SECTION */}
+                                <td className="px-3 py-2.5 text-center font-bold text-slate-800 whitespace-nowrap">
+                                  {card.academic_section || '–'}
+                                </td>
+
+                                {/* 9. SENDER NUMBER */}
+                                <td className="px-3 py-2.5 font-mono text-slate-800 whitespace-nowrap">
+                                  {card.sender_mobile_no || '–'}
+                                </td>
+
+                                {/* 10. PAYMENT TIME */}
+                                <td className="px-3 py-2.5 text-slate-700 whitespace-nowrap">
+                                  {card.payment_time || '–'}
+                                </td>
+
+                                {/* 11. TRANSACTION ID */}
+                                <td className="px-3 py-2.5 font-mono font-bold text-slate-900 whitespace-nowrap">
+                                  {card.transaction_id || '–'}
+                                </td>
+
+                                {/* 12. FEE */}
+                                <td className="px-3 py-2.5 text-center font-bold text-slate-800 whitespace-nowrap">
+                                  500 BDT
+                                </td>
+
+                                {/* 13. ✔ APPROVE */}
+                                <td className="px-3 py-2 text-center whitespace-nowrap">
+                                  {isApproved ? (
+                                    <div className="inline-flex items-center gap-1.5">
+                                      <span className="inline-flex items-center gap-1 px-2 py-1 rounded-lg text-[11px] font-extrabold bg-emerald-100 text-emerald-800 border border-emerald-300">
+                                        <Check className="w-3.5 h-3.5" />
+                                        Approved
+                                      </span>
+                                      <button
+                                        type="button"
+                                        onClick={() => {
+                                          generateInvitationCardPDF(card, derivedPdfSettings, derivedWebsiteSettings);
+                                          showToast(`Downloading pass for ${card.full_name}...`);
+                                        }}
+                                        className="p-1 rounded-lg border border-slate-200 hover:bg-slate-100 text-indigo-600 transition-colors cursor-pointer"
+                                        title="Download Pass PDF"
+                                      >
+                                        <Download className="w-3.5 h-3.5" />
+                                      </button>
+                                    </div>
+                                  ) : (
+                                    <button
+                                      type="button"
+                                      onClick={() => handleApprove(card.registration_no)}
+                                      className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white text-[11px] font-bold shadow-2xs transition-all cursor-pointer"
+                                    >
+                                      <Check className="w-3.5 h-3.5" />
+                                      Approve
+                                    </button>
+                                  )}
+                                </td>
+
+                                {/* 14. ✘ REJECT */}
+                                <td className="px-3 py-2 text-center whitespace-nowrap">
+                                  {isRejected ? (
+                                    <span
+                                      className="inline-flex items-center gap-1 px-2 py-1 rounded-lg text-[11px] font-extrabold bg-rose-100 text-rose-800 border border-rose-300"
+                                      title={card.reject_reason ? `Reason: ${card.reject_reason}` : 'Rejected'}
+                                    >
+                                      <XCircle className="w-3.5 h-3.5" />
+                                      Rejected
+                                    </span>
+                                  ) : (
+                                    <button
+                                      type="button"
+                                      onClick={() => openRejectModal(card.registration_no)}
+                                      className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg border border-rose-200 text-rose-600 hover:bg-rose-50 text-[11px] font-bold transition-colors cursor-pointer"
+                                    >
+                                      <XCircle className="w-3.5 h-3.5" />
+                                      Reject
+                                    </button>
+                                  )}
+                                </td>
+
+                                {/* 15. 🗑 DELETE */}
+                                <td className="px-3 py-2 text-center whitespace-nowrap">
+                                  <button
+                                    type="button"
+                                    onClick={() => setDeletingRegNo(card.registration_no)}
+                                    className="p-1.5 rounded-lg border border-slate-200 text-slate-400 hover:text-rose-600 hover:bg-rose-50 transition-colors cursor-pointer"
+                                    title="Delete Registration"
+                                  >
+                                    <Trash2 className="w-3.5 h-3.5" />
+                                  </button>
+                                </td>
+                              </tr>
+                            );
+                          })}
+                        </tbody>
+                      </table>
+                    </div>
                   </div>
                 )}
               </section>
