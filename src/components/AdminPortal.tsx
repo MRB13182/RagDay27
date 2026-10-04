@@ -212,9 +212,6 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
     );
     const targetId = rec?.id || rec?.dbId || regNo;
 
-    setAdminRegistrations(prev =>
-      prev.map(r => (r.registration_no === regNo || r.id === targetId ? { ...r, status: 'approved' } : r))
-    );
     await onUpdateStatus(targetId, 'approved');
   };
 
@@ -236,11 +233,6 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
     );
     const targetId = rec?.id || rec?.dbId || targetReg;
 
-    setAdminRegistrations(prev =>
-      prev.map(r =>
-        r.registration_no === targetReg || r.id === targetId ? { ...r, status: 'rejected', reject_reason: cleanReason } : r
-      )
-    );
     await onUpdateStatus(targetId, 'rejected', cleanReason);
     setRejecting(null);
     setRejectReason('');
