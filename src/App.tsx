@@ -227,6 +227,10 @@ export default function App() {
 
     if (newStatus === 'approved') {
       const res = await approveRegistration(targetId);
+      if (!res.success) {
+        showToast(res.errorMessage || `Unable to approve registration ${registration_no}.`, 'error');
+        return;
+      }
       setInvitations(prev =>
         prev.map(r =>
           r.registration_no === registration_no || r.id === targetId || r.dbId === targetId
@@ -234,17 +238,17 @@ export default function App() {
             : r
         )
       );
-      if (res.success) {
-        showToast(`Registration ${registration_no} approved!`, 'success');
-      } else {
-        showToast(`Registration ${registration_no} approved!`, 'success');
-      }
+      showToast(`Registration ${registration_no} approved!`, 'success');
     } else if (newStatus === 'rejected') {
       if (!reason?.trim()) {
         showToast('A rejection reason is strictly required.', 'error');
         return;
       }
       const res = await rejectRegistration(targetId, reason.trim());
+      if (!res.success) {
+        showToast(res.errorMessage || `Unable to reject registration ${registration_no}.`, 'error');
+        return;
+      }
       setInvitations(prev =>
         prev.map(r =>
           r.registration_no === registration_no || r.id === targetId || r.dbId === targetId
@@ -252,11 +256,7 @@ export default function App() {
             : r
         )
       );
-      if (res.success) {
-        showToast(`Registration ${registration_no} rejected.`, 'success');
-      } else {
-        showToast(`Registration ${registration_no} rejected.`, 'success');
-      }
+      showToast(`Registration ${registration_no} rejected.`, 'success');
     }
   };
 
