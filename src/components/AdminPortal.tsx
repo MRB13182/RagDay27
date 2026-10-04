@@ -67,58 +67,17 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
       const result = await getRegistrationList(admin?.role);
       if (result.success && Array.isArray(result.data)) {
         setAdminRegistrations(result.data);
-      } else if (invitations && invitations.length > 0) {
-        const scoped = invitations.filter(r => {
-          if (admin?.role === 'male_admin') return String(r.gender || '').toLowerCase() === 'male';
-          if (admin?.role === 'female_admin') return String(r.gender || '').toLowerCase() === 'female';
-          return true;
-        });
-        setAdminRegistrations(scoped);
-      } else if (!result.success && result.errorMessage) {
-        setRegistrationLoadError(result.errorMessage);
-        setAdminRegistrations([]);
       } else {
+        setRegistrationLoadError(result.errorMessage || 'Unable to load registrations from database.');
         setAdminRegistrations([]);
       }
     } catch (error: any) {
-      if (invitations && invitations.length > 0) {
-        const scoped = invitations.filter(r => {
-          if (admin?.role === 'male_admin') return String(r.gender || '').toLowerCase() === 'male';
-          if (admin?.role === 'female_admin') return String(r.gender || '').toLowerCase() === 'female';
-          return true;
-        });
-        setAdminRegistrations(scoped);
-      } else {
-        setRegistrationLoadError(error?.message || 'Unable to load registrations.');
-        setAdminRegistrations([]);
-      }
+      setRegistrationLoadError(error?.message || 'Unable to load registrations from database.');
+      setAdminRegistrations([]);
     } finally {
       setIsLoadingRegistrations(false);
     }
   };
-
-  // Sync state when invitations prop updates
-  useEffect(() => {
-    if (invitations && invitations.length > 0) {
-      setAdminRegistrations(prev => {
-        const map = new Map<string, InvitationRecord>();
-        invitations.forEach(r => {
-          // Scope by current admin role
-          if (admin?.role === 'male_admin' && String(r.gender || '').toLowerCase() !== 'male') return;
-          if (admin?.role === 'female_admin' && String(r.gender || '').toLowerCase() !== 'female') return;
-          const key = r.registration_no || r.id || r.dbId || '';
-          if (key) map.set(key, r);
-        });
-        prev.forEach(r => {
-          if (admin?.role === 'male_admin' && String(r.gender || '').toLowerCase() !== 'male') return;
-          if (admin?.role === 'female_admin' && String(r.gender || '').toLowerCase() !== 'female') return;
-          const key = r.registration_no || r.id || r.dbId || '';
-          if (key) map.set(key, { ...(map.get(key) || ({} as InvitationRecord)), ...r });
-        });
-        return Array.from(map.values());
-      });
-    }
-  }, [invitations, admin?.role]);
 
   // Realtime subscription to registrations table
   useEffect(() => {
