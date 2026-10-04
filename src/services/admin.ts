@@ -46,10 +46,7 @@ export async function getRegistrationList(
   adminRole?: 'male_admin' | 'female_admin' | null
 ): Promise<{ success: boolean; data: InvitationRecord[]; error?: any; errorMessage?: string }> {
   try {
-    const { data: sessionData, error: sessionError } = await supabase.auth.getSession();
-    if (sessionError) throw sessionError;
-
-    // Existing project uses passcode-based admin login. There is intentionally no
+    // Admin authentication is passcode-based. There is intentionally no
     // Supabase Auth session created by that flow, so do not require auth.uid() here.
     const passcode = typeof sessionStorage !== 'undefined'
       ? sessionStorage.getItem('rd27_admin_passcode')
