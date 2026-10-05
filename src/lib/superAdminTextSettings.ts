@@ -26,32 +26,23 @@ export const EDITABLE_SUPER_ADMIN_TEXT_FILES: EditableSuperAdminTextFile[] = [
   { id: 'notice-enable-disable', label: 'Notice enable / disable', path: '05. important-notice/Text/Enable Disable.txt', defaultValue: 'enable' },
 ];
 
-function normalizeConfigPath(path: string): string {
-  return path.replace(/^src\/super-admin\//, '').replace(/^\/+/, '');
-}
-
-/**
- * This helper is intentionally storage-backed rather than using browser-local
- * persistence. The protected Super Admin editor can call a guarded RPC for
- * durable configuration writes without introducing a new registration table.
- */
 export async function saveEditableSuperAdminText(path: string, content: string): Promise<void> {
-  const normalizedPath = normalizeConfigPath(path);
-  const { data, error } = await supabase.rpc('save_super_admin_text', {
-    p_path: normalizedPath,
+  const { error } = await supabase.rpc('save_super_admin_text', {
+    p_path: path,
     p_content: content,
   });
 
   if (error) throw new Error(error.message || 'Unable to save Super Admin configuration.');
-  if (data === false) throw new Error('Super Admin configuration write was rejected.');
 }
 
 export async function saveEditableSuperAdminImage(path: string, file: File): Promise<void> {
-  const normalizedPath = normalizeConfigPath(path);
-  const objectPath = `super-admin/${normalizedPath}`;
+  const normalizedPath = path.replace(/^src\/super-admin\//, '').replace(/^\/+/, '');
   const { error } = await supabase.storage
     .from('uploads')
-    .upload(objectPath, file, { upsert: true, contentType: file.type || 'application/octet-stream' });
+    .upload(`super-admin/${normalizedPath}`, file, {
+      upsert: true,
+      contentType: file.type || 'application/octet-stream',
+    });
 
   if (error) throw new Error(error.message || 'Unable to upload Super Admin image.');
 }
