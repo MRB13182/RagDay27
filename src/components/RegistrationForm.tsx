@@ -8,6 +8,7 @@ import {
   PaymentSettings,
 } from '../types';
 import { DEFAULT_PAYMENT_SETTINGS } from '../data/mockData';
+import { getConfiguredSections } from '../lib/superAdminConfig';
 import {
   createRegistration,
   uploadStudentPhoto,
@@ -48,21 +49,12 @@ interface RegistrationFormProps {
 const JERSEY_SIZES: JerseySize[] = ['S', 'M', 'L', 'XL', '2XL', '3XL', '4XL'];
 
 /**
- * Returns exact section codes based on Group and Gender
- * Male: ScB1–ScB5, BsB1–BsB5, HuB1–HuB5
- * Female: ScG1–ScG5, BsG1–BsG5, HuG1–HuG5
+ * Resolves registration sections from protected super-admin configuration.
+ * Sections depend on gender + academic group and are not hardcoded to five entries.
  */
 export const getAvailableSections = (gender: GenderType, group: string): string[] => {
-  if (gender === 'male') {
-    if (group === 'Science') return ['ScB1', 'ScB2', 'ScB3', 'ScB4', 'ScB5'];
-    if (group === 'Business Studies') return ['BsB1', 'BsB2', 'BsB3', 'BsB4', 'BsB5'];
-    if (group === 'Humanities') return ['HuB1', 'HuB2', 'HuB3', 'HuB4', 'HuB5'];
-  } else if (gender === 'female') {
-    if (group === 'Science') return ['ScG1', 'ScG2', 'ScG3', 'ScG4', 'ScG5'];
-    if (group === 'Business Studies') return ['BsG1', 'BsG2', 'BsG3', 'BsG4', 'BsG5'];
-    if (group === 'Humanities') return ['HuG1', 'HuG2', 'HuG3', 'HuG4', 'HuG5'];
-  }
-  return [];
+  if (gender !== 'male' && gender !== 'female') return [];
+  return getConfiguredSections(gender, group);
 };
 
 export const RegistrationForm: React.FC<RegistrationFormProps> = ({
