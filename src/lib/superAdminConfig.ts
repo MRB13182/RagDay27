@@ -15,6 +15,9 @@
  */
 
 import type { EventCard, JerseyDesignCard } from '../types';
+// Dynamic registration section configuration
+import sectionsConfigRaw from '../super-admin/03. registration-settings/text/sections/sections.json?raw';
+
 
 // ============================================================================
 // 1. RAW TEXT IMPORTS (Vite ?raw)
@@ -350,6 +353,24 @@ export function parseJerseyDesignContent(
 }
 
 // ============================================================================
+
+export type RegistrationSectionConfig = Record<string, Record<string, Array<{ value: string; label: string; enabled?: boolean; sort_order?: number }>>>;
+
+export function getConfiguredSections(gender: 'male' | 'female', group: string): string[] {
+  try {
+    const config = JSON.parse(sectionsConfigRaw) as RegistrationSectionConfig;
+    const genderConfig = config[gender] || {};
+    const key = group.trim().toLowerCase().replace(/\s+/g, '_');
+    return (genderConfig[key] || [])
+      .filter(item => item && item.enabled !== false && item.value)
+      .sort((a,b) => (a.sort_order ?? 0) - (b.sort_order ?? 0))
+      .map(item => item.value.trim())
+      .filter(Boolean);
+  } catch {
+    return [];
+  }
+}
+
 // 4. DERIVED CONFIGURATION OBJECTS
 // ============================================================================
 
