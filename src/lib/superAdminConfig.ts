@@ -24,16 +24,16 @@ import sectionsConfigRaw from '../super-admin/03. registration-settings/text/sec
 // ============================================================================
 
 // 01. Website Identity
-import websiteNameRaw from '../super-admin/01. website-identity/text/website-name.txt?raw';
-import websiteSubtitleRaw from '../super-admin/01. website-identity/text/website-subtitle.txt?raw';
-import footerTextRaw from '../super-admin/01. website-identity/text/footer-text.txt?raw';
+import websiteNameRaw from '../super-admin/01. website-identity/Text/web name.txt?raw';
+import websiteSubtitleRaw from '../super-admin/01. website-identity/Text/web header.txt?raw';
+import footerTextRaw from '../super-admin/01. website-identity/Text/web footer.txt?raw';
 
 // 02. Event Settings
-import eventNameRaw from '../super-admin/02. event-settings/text/event-name.txt?raw';
+import eventNameRaw from '../super-admin/02. event-settings/Text/Event name.txt?raw';
 import eventDescriptionRaw from '../super-admin/02. event-settings/text/event-description.txt?raw';
 import welcomeMessageRaw from '../super-admin/02. event-settings/text/welcome-message.txt?raw';
 import eventCardLayoutRaw from '../super-admin/02. event-settings/text/event-card-layout.txt?raw';
-import eventCardsContentRaw from '../super-admin/02. event-settings/text/event-cards-content.txt?raw';
+import eventCardsContentRaw from '../super-admin/02. event-settings/Text/Event card.txt?raw';
 import importantInstructionsRaw from '../super-admin/02. event-settings/text/important-instructions.txt?raw';
 
 // 03. Registration Settings
@@ -45,16 +45,16 @@ import maleSignatureRaw from '../super-admin/03. registration-settings/text/male
 import femaleSignatureRaw from '../super-admin/03. registration-settings/text/female-signature.txt?raw';
 
 // 04. Countdown Settings
-import eventDateRaw from '../super-admin/04. countdown-settings/text/event-date.txt?raw';
-import registrationDeadlineRaw from '../super-admin/04. countdown-settings/text/registration-deadline.txt?raw';
-import countdownEnableDisableRaw from '../super-admin/04. countdown-settings/text/countdown-enable-disable.txt?raw';
+import eventDateRaw from '../super-admin/02. event-settings/Text/Event date.txt?raw';
+import registrationDeadlineRaw from '../super-admin/03. reg-settings/Text/Last registration date countdown.txt?raw';
+import countdownEnableDisableRaw from '../super-admin/04. countdown-settings/Text/Enable Disable.txt?raw';
 
 // 05. Important Notice
-import noticeEnableDisableRaw from '../super-admin/05. important-notice/text/notice-enable-disable.txt?raw';
+import noticeEnableDisableRaw from '../super-admin/05. important-notice/Text/Enable Disable.txt?raw';
 import popupEnableDisableRaw from '../super-admin/05. important-notice/text/popup-enable-disable.txt?raw';
 import popupTitleRaw from '../super-admin/05. important-notice/text/popup-title.txt?raw';
-import popupMessageRaw from '../super-admin/05. important-notice/text/popup-message.txt?raw';
-import noticeContentRaw from '../super-admin/05. important-notice/text/notice-content.txt?raw';
+import popupMessageRaw from '../super-admin/05. important-notice/Text/Popup Notice.txt?raw';
+import noticeContentRaw from '../super-admin/05. important-notice/Text/Notice Board.txt?raw';
 import closeButtonTextRaw from '../super-admin/05. important-notice/text/close-button-text.txt?raw';
 
 // 06. Logo Related & Jersey Design
