@@ -60,6 +60,30 @@ import closeButtonTextRaw from '../super-admin/05. important-notice/text/close-b
 // 06. Logo Related & Jersey Design
 import jerseyDesignRaw from '../super-admin/06. logo-related/text/jersey-design.txt?raw';
 
+
+// 01. Website Identity (new editable file locations)
+import websiteNameEditableRaw from '../super-admin/01. website-identity/Text/web name.txt?raw';
+import websiteHeaderEditableRaw from '../super-admin/01. website-identity/Text/web header.txt?raw';
+import footerEditableRaw from '../super-admin/01. website-identity/Text/web footer.txt?raw';
+
+// 02. Event Settings (new editable file locations)
+import eventCardEditableRaw from '../super-admin/02. event-settings/Text/Event card.txt?raw';
+import eventDateEditableRaw from '../super-admin/02. event-settings/Text/Event date.txt?raw';
+import venueEditableRaw from '../super-admin/02. event-settings/Text/Venue.txt?raw';
+
+// 03. Registration Settings (new editable file locations)
+import sectionSettingsEditableRaw from '../super-admin/03. reg-settings/Text/Section settings.txt?raw';
+import paymentNumberEditableRaw from '../super-admin/03. reg-settings/Text/Payment number.txt?raw';
+import lastRegistrationEditableRaw from '../super-admin/03. reg-settings/Text/Last registration date countdown.txt?raw';
+import registrationToggleEditableRaw from '../super-admin/03. reg-settings/Text/Enable Disable.txt?raw';
+
+// 04. Countdown Settings (new editable file locations)
+import countdownEventEditableRaw from '../super-admin/04. countdown-settings/Text/Countdown of Event.txt?raw';
+
+// 05. Important Notice (new editable file locations)
+import noticeBoardEditableRaw from '../super-admin/05. important-notice/Text/Notice Board.txt?raw';
+import popupNoticeEditableRaw from '../super-admin/05. important-notice/Text/Popup Notice.txt?raw';
+
 // ============================================================================
 // 2. IMAGE FOLDERS IMPORTS (Vite import.meta.glob)
 // ============================================================================
@@ -386,16 +410,16 @@ export const logoRelatedConfig = {
 
 // 01. Website Identity
 export const websiteIdentityConfig = {
-  websiteName: websiteNameRaw.trim() || 'Rag Day 27 (RD27)',
-  websiteSubtitle: websiteSubtitleRaw.trim() || 'Annual Grand Farewell & Batch 27 Celebration',
-  footerText: footerTextRaw.trim() || '© 2027 Rag Day 27 (RD27) Committee. All Rights Reserved. Crafted for Batch 27.',
+  websiteName: websiteNameEditableRaw.trim() || websiteNameRaw.trim() || 'Rag Day 27 (RD27)',
+  websiteSubtitle: websiteHeaderEditableRaw.trim() || websiteSubtitleRaw.trim() || 'Annual Grand Farewell & Batch 27 Celebration',
+  footerText: footerEditableRaw.trim() || footerTextRaw.trim() || '© 2027 Rag Day 27 (RD27) Committee. All Rights Reserved. Crafted for Batch 27.',
   websiteLogo: logoRelatedConfig.websiteLogo || getFirstImageFromGlob(logoImagesGlob),
   favicon: logoRelatedConfig.favicon || getFirstImageFromGlob(faviconImagesGlob),
 };
 
 // 02. Event Settings
 const parsedLayout = eventCardLayoutRaw.trim().toLowerCase() === 'one-column' ? 'one-column' : 'two-column';
-const parsedCards = parseEventCardsContent(eventCardsContentRaw);
+const parsedCards = parseEventCardsContent((eventCardEditableRaw.trim() || eventCardsContentRaw));
 
 export const eventSettingsConfig = {
   eventName: eventNameRaw.trim() || 'RAG DAY 27 (RD27) GRAND CELEBRATION',
@@ -414,7 +438,7 @@ const regOpenClean = registrationOpenCloseRaw.trim().toLowerCase();
 const isRegistrationOpen = regOpenClean !== 'close' && regOpenClean !== 'closed';
 
 export const registrationSettingsConfig = {
-  registrationOpen: isRegistrationOpen,
+  registrationOpen: (registrationToggleEditableRaw.trim() ? !/^(disable|disabled|close|closed)$/i.test(registrationToggleEditableRaw.trim()) : isRegistrationOpen),
   registrationFee: registrationFeeRaw.trim() || '500 BDT',
   malePaymentNumber: malePayment.bkash || malePayment.nagad || '01712-345678',
   maleBkashNumber: malePayment.bkash || '01712-345678',
@@ -434,8 +458,8 @@ const countdownEnableClean = countdownEnableDisableRaw.trim().toLowerCase();
 const isCountdownEnabled = countdownEnableClean !== 'disable' && countdownEnableClean !== 'disabled';
 
 export const countdownSettingsConfig = {
-  eventDate: eventDateRaw.trim() || '2027-11-27T10:00:00',
-  registrationDeadline: registrationDeadlineRaw.trim() || '2027-10-31T23:59:59',
+  eventDate: (eventDateEditableRaw.trim() || eventDateRaw.trim()) || '2027-11-27T10:00:00',
+  registrationDeadline: (lastRegistrationEditableRaw.trim() || registrationDeadlineRaw.trim()) || '2027-10-31T23:59:59',
   countdownEnabled: isCountdownEnabled,
 };
 
@@ -447,7 +471,7 @@ export const importantNoticeConfig = {
   noticeEnabled: noticeEnableClean !== 'disable' && noticeEnableClean !== 'disabled',
   popupEnabled: popupEnableClean === 'enable' || popupEnableClean === 'enabled',
   popupTitle: popupTitleRaw.trim() || 'IMPORTANT NOTICE FOR RAG DAY 27',
-  popupMessage: popupMessageRaw.trim() || 'Welcome Batch 27! Registration is open.',
-  noticeContent: noticeContentRaw.trim() || 'Official Batch 27 Registration is now OPEN.',
+  popupMessage: popupNoticeEditableRaw.trim() || popupMessageRaw.trim() || 'Welcome Batch 27! Registration is open.',
+  noticeContent: noticeBoardEditableRaw.trim() || noticeContentRaw.trim() || 'Official Batch 27 Registration is now OPEN.',
   closeButtonText: closeButtonTextRaw.trim() || 'I Understand',
 };
