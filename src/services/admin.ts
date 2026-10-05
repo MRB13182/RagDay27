@@ -65,7 +65,7 @@ export async function getRegistrationList(): Promise<{ success: boolean; data: I
 
 function cleanRegistrationNo(value: string): string {
   const clean = value.trim().toUpperCase();
-  const short = clean.match(/^(RD27-)(d{1,})$/i);
+  const short = clean.match(/^(RD27-)(\d{1,})$/i);
   return short ? `${short[1]}${short[2].padStart(2, '0')}` : clean;
 }
 
