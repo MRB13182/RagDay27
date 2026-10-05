@@ -1,7 +1,7 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import type { InvitationRecord, InvitationStatus, AdminProfile, PdfSettings, WebsiteSettings } from '../types';
-import { signInAdmin, signOutAdmin, getCurrentAdmin, supabase } from '../lib/supabase';
-import { getRegistrationList, mapRowToInvitation } from '../services/admin';
+import { signInAdmin, signOutAdmin, getCurrentAdmin } from '../lib/supabase';
+import { getRegistrationList } from '../services/admin';
 import { generateRegistrationListPDF, generateInvitationCardPDF } from '../utils/pdfGenerator';
 import {
   websiteIdentityConfig,
@@ -41,7 +41,6 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
   const [rejecting, setRejecting] = useState<string | null>(null);
   const [rejectReason, setRejectReason] = useState('');
   const [deletingRegNo, setDeletingRegNo] = useState<string | null>(null);
-  const [toastMessage, setToastMessage] = useState<string | null>(null);
   const [adminRegistrations, setAdminRegistrations] = useState<InvitationRecord[]>([]);
   const [isLoadingRegistrations, setIsLoadingRegistrations] = useState(false);
   const [registrationLoadError, setRegistrationLoadError] = useState('');
