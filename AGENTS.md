@@ -1,7 +1,7 @@
 # Repository Safety Rules
 
 ## Protected configuration
-`src/super-admin/**` is protected. Never delete, rename, or restructure this directory during cleanup, refactoring, optimization, bug fixing, or code generation unless the user explicitly requests that change.
+The `src/super-admin/**` directory is protected. Never delete, rename, or restructure this directory during cleanup, refactoring, optimization, bug fixing, or code generation unless the user explicitly requests that change.
 
 The six required top-level directories must remain present:
 - `01. website-identity`
