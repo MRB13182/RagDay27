@@ -1,5 +1,5 @@
 import type { InvitationRecord } from '../types';
-import { supabase } from '../lib/supabase';
+import { supabase, getStoredAdminPasscode } from '../lib/supabase';
 
 export function mapRowToInvitation(row: any): InvitationRecord {
   const rawGender = String(row?.gender || '').trim().toLowerCase();
@@ -40,9 +40,7 @@ export function mapRowToInvitation(row: any): InvitationRecord {
 
 export async function getRegistrationList(): Promise<{ success: boolean; data: InvitationRecord[]; error?: any; errorMessage?: string }> {
   try {
-    const passcode = typeof sessionStorage !== 'undefined'
-      ? sessionStorage.getItem('rd27_admin_passcode')
-      : null;
+    const passcode = getStoredAdminPasscode();
 
     if (!passcode) {
       return { success: false, data: [], errorMessage: 'Admin passcode session is missing. Please sign in again.' };
@@ -70,19 +68,27 @@ function cleanRegistrationNo(value: string): string {
 }
 
 export async function approveRegistration(registrationNo: string) {
-  const passcode = typeof sessionStorage !== 'undefined' ? sessionStorage.getItem('rd27_admin_passcode') : null;
+  const passcode = getStoredAdminPasscode();
   const regNo = cleanRegistrationNo(registrationNo);
 
   if (!passcode) return { success: false, errorMessage: 'Admin passcode session is missing. Please sign in again.' };
   if (!/^RD27-\d+$/i.test(regNo)) return { success: false, errorMessage: 'Invalid registration number.' };
 
   try {
-    const { data, error } = await supabase.rpc('approve_registration', {
-      p_registration_no: regNo,
+    let result = await supabase.rpc('approve_registration', {
       p_passcode: passcode,
+      p_registration_no: regNo,
     });
-    if (error) return { success: false, error, errorMessage: String(error.message || 'Unable to approve registration.') };
-    return { success: true, data: data ? mapRowToInvitation(data) : undefined };
+
+    if (result.error && result.error.code === 'PGRST202') {
+      result = await supabase.rpc('approve_registration', {
+        p_registration_no: regNo,
+        p_passcode: passcode,
+      });
+    }
+
+    if (result.error) return { success: false, error: result.error, errorMessage: String(result.error.message || 'Unable to approve registration.') };
+    return { success: true, data: result.data ? mapRowToInvitation(result.data) : undefined };
   } catch (error: any) {
     return { success: false, error, errorMessage: String(error?.message || 'Unable to approve registration.') };
   }
@@ -90,7 +96,7 @@ export async function approveRegistration(registrationNo: string) {
 
 export async function rejectRegistration(registrationNo: string, reason: string) {
   const cleanReason = reason.trim();
-  const passcode = typeof sessionStorage !== 'undefined' ? sessionStorage.getItem('rd27_admin_passcode') : null;
+  const passcode = getStoredAdminPasscode();
   const regNo = cleanRegistrationNo(registrationNo);
 
   if (!cleanReason) return { success: false, errorMessage: 'A rejection reason is required.' };
@@ -98,33 +104,73 @@ export async function rejectRegistration(registrationNo: string, reason: string)
   if (!/^RD27-\d+$/i.test(regNo)) return { success: false, errorMessage: 'Invalid registration number.' };
 
   try {
-    const { data, error } = await supabase.rpc('reject_registration', {
-      p_registration_no: regNo,
-      p_reason: cleanReason,
+    let result = await supabase.rpc('reject_registration', {
       p_passcode: passcode,
+      p_reason: cleanReason,
+      p_registration_no: regNo,
     });
-    if (error) return { success: false, error, errorMessage: String(error.message || 'Unable to reject registration.') };
-    return { success: true, data: data ? mapRowToInvitation(data) : undefined };
+
+    if (result.error && result.error.code === 'PGRST202') {
+      result = await supabase.rpc('reject_registration', {
+        p_registration_no: regNo,
+        p_reason: cleanReason,
+        p_passcode: passcode,
+      });
+    }
+
+    if (result.error) return { success: false, error: result.error, errorMessage: String(result.error.message || 'Unable to reject registration.') };
+    return { success: true, data: result.data ? mapRowToInvitation(result.data) : undefined };
   } catch (error: any) {
     return { success: false, error, errorMessage: String(error?.message || 'Unable to reject registration.') };
   }
 }
 
 export async function deleteRegistration(registrationNo: string) {
-  const passcode = typeof sessionStorage !== 'undefined' ? sessionStorage.getItem('rd27_admin_passcode') : null;
+  const passcode = getStoredAdminPasscode();
   const regNo = cleanRegistrationNo(registrationNo);
 
   if (!passcode) return { success: false, errorMessage: 'Admin passcode session is missing. Please sign in again.' };
   if (!/^RD27-\d+$/i.test(regNo)) return { success: false, errorMessage: 'Invalid registration number.' };
 
   try {
-    const { data, error } = await supabase.rpc('hide_registration_from_web', {
-      p_registration_no: regNo,
+    let result = await supabase.rpc('hide_registration_from_web', {
       p_passcode: passcode,
+      p_registration_no: regNo,
     });
-    if (error) return { success: false, error, errorMessage: String(error.message || 'Unable to hide registration.') };
-    return { success: true, data: data ? mapRowToInvitation(data) : undefined };
+
+    if (result.error && result.error.code === 'PGRST202') {
+      result = await supabase.rpc('hide_registration_from_web', {
+        p_registration_no: regNo,
+        p_passcode: passcode,
+      });
+    }
+
+    if (result.error) return { success: false, error: result.error, errorMessage: String(result.error.message || 'Unable to hide registration from web.') };
+    return { success: true, data: result.data ? mapRowToInvitation(result.data) : undefined };
   } catch (error: any) {
-    return { success: false, error, errorMessage: String(error?.message || 'Unable to hide registration.') };
+    return { success: false, error, errorMessage: String(error?.message || 'Unable to hide registration from web.') };
+  }
+}
+
+export async function deleteRegistrationPermanently(registrationNo: string) {
+  const passcode = getStoredAdminPasscode();
+  const regNo = cleanRegistrationNo(registrationNo);
+
+  if (!passcode) return { success: false, errorMessage: 'Admin passcode session is missing. Please sign in again.' };
+  if (!/^RD27-\d+$/i.test(regNo)) return { success: false, errorMessage: 'Invalid registration number.' };
+
+  try {
+    const result = await supabase.rpc('delete_registration_permanently', {
+      p_passcode: passcode,
+      p_registration_no: regNo,
+    });
+
+    if (result.error) {
+      return { success: false, error: result.error, errorMessage: String(result.error.message || 'Unable to permanently delete registration from database.') };
+    }
+
+    return { success: true };
+  } catch (error: any) {
+    return { success: false, error, errorMessage: String(error?.message || 'Unable to permanently delete registration.') };
   }
 }

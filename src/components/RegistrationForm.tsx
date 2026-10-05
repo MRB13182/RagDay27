@@ -38,7 +38,7 @@ import {
 
 interface RegistrationFormProps {
   onSuccessSubmit: (newRecord: InvitationRecord) => void;
-  onGoToInvitation: (regNo: string) => void;
+  onGoToInvitation: (regNo: string, studentName?: string) => void;
   paymentSettings?: PaymentSettings;
   existingRegistrations?: InvitationRecord[];
   initialRecord?: InvitationRecord | null;
@@ -1196,8 +1196,9 @@ export const RegistrationForm: React.FC<RegistrationFormProps> = ({
                     type="button"
                     onClick={() => {
                       const regNo = duplicateModal.record.registration_no;
+                      const name = duplicateModal.record.full_name;
                       setDuplicateModal(null);
-                      onGoToInvitation(regNo);
+                      onGoToInvitation(regNo, name);
                     }}
                     className="w-full py-3 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs shadow-md"
                   >
@@ -1222,8 +1223,9 @@ export const RegistrationForm: React.FC<RegistrationFormProps> = ({
                     type="button"
                     onClick={() => {
                       const regNo = duplicateModal.record.registration_no;
+                      const name = duplicateModal.record.full_name;
                       setDuplicateModal(null);
-                      onGoToInvitation(regNo);
+                      onGoToInvitation(regNo, name);
                     }}
                     className="w-full py-3 rounded-xl bg-amber-600 hover:bg-amber-700 text-white font-bold text-xs shadow-md"
                   >
@@ -1355,8 +1357,9 @@ export const RegistrationForm: React.FC<RegistrationFormProps> = ({
                 type="button"
                 onClick={() => {
                   const regNo = successModalData.regNo;
+                  const studentName = successModalData.name;
                   setSuccessModalData(null);
-                  onGoToInvitation(regNo);
+                  onGoToInvitation(regNo, studentName);
                 }}
                 className="py-3 px-4 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs shadow-md shadow-indigo-200 transition-all flex items-center justify-center gap-1.5 cursor-pointer"
               >

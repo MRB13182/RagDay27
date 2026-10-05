@@ -38,15 +38,15 @@ export const SUPABASE_URL = resolveSupabaseUrl();
 export const SUPABASE_PUBLISHABLE_KEY = resolveSupabaseKey();
 export const supabase = createSupabaseClient(SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY);
 
+import { safeStorage } from './safeStorage';
+
 export const STORAGE_BUCKET = 'uploads';
 
 export type AdminRole = 'male_admin' | 'female_admin';
 
 export async function getCurrentAdmin(): Promise<AdminProfile | null> {
-  if (typeof sessionStorage === 'undefined') return null;
-
-  const storedRole = sessionStorage.getItem('rd27_admin_role');
-  const storedPasscode = sessionStorage.getItem('rd27_admin_passcode');
+  const storedRole = safeStorage.getItem('rd27_admin_role');
+  const storedPasscode = safeStorage.getItem('rd27_admin_passcode');
 
   if (storedRole !== 'male_admin' && storedRole !== 'female_admin') return null;
   if (!storedPasscode) return null;
@@ -99,24 +99,28 @@ export async function signInAdmin(passcode: string): Promise<AdminProfile> {
     updated_at: new Date().toISOString(),
   };
 
-  sessionStorage.setItem('rd27_admin_role', data.role);
-  sessionStorage.setItem('rd27_admin_passcode', cleanPasscode);
+  safeStorage.setItem('rd27_admin_role', data.role);
+  safeStorage.setItem('rd27_admin_passcode', cleanPasscode);
 
   return profile;
 }
 
 export async function signOutAdmin(): Promise<void> {
-  if (typeof sessionStorage !== 'undefined') {
-    sessionStorage.removeItem('rd27_admin_role');
-    sessionStorage.removeItem('rd27_admin_passcode');
+  safeStorage.removeItem('rd27_admin_role');
+  safeStorage.removeItem('rd27_admin_passcode');
+  try {
+    await supabase.auth.signOut();
+  } catch {
+    // Ignore offline signOut
   }
-  await supabase.auth.signOut();
 }
 
 export function getStoredAdminRole(): AdminRole | null {
-  if (typeof sessionStorage !== 'undefined') {
-    const role = sessionStorage.getItem('rd27_admin_role');
-    if (role === 'male_admin' || role === 'female_admin') return role;
-  }
+  const role = safeStorage.getItem('rd27_admin_role');
+  if (role === 'male_admin' || role === 'female_admin') return role;
   return null;
+}
+
+export function getStoredAdminPasscode(): string | null {
+  return safeStorage.getItem('rd27_admin_passcode');
 }

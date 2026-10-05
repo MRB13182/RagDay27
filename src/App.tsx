@@ -14,7 +14,7 @@ import {
   countdownSettingsConfig,
   importantNoticeConfig,
   logoRelatedConfig,
-} from './lib/superAdminConfig';
+} from './config/eventConfig';
 import type {
   InvitationRecord,
   InvitationStatus,
@@ -36,6 +36,7 @@ import { ArrowRight, Bell, CheckCircle2, AlertCircle, Info, X, ShieldAlert, Tick
 export default function App() {
   const [activeTab, setActiveTab] = useState<'home' | 'register' | 'invitation'>('home');
   const [invitationSearchTarget, setInvitationSearchTarget] = useState<string>('');
+  const [invitationStudentNameTarget, setInvitationStudentNameTarget] = useState<string>('');
   const [reRegisterRecord, setReRegisterRecord] = useState<InvitationRecord | null>(null);
   const [isAdminOpen, setIsAdminOpen] = useState(false);
   const [isNoticePopupOpen, setIsNoticePopupOpen] = useState<boolean>(importantNoticeConfig.popupEnabled);
@@ -60,6 +61,23 @@ export default function App() {
       setToast(prev => (prev?.message === message ? null : prev));
     }, 4500);
   };
+
+  const [, setConfigVersion] = useState(0);
+
+  useEffect(() => {
+    const handleConfigUpdate = () => {
+      setConfigVersion(v => v + 1);
+      if (websiteIdentityConfig.websiteName) {
+        document.title = websiteIdentityConfig.websiteName;
+      }
+      if (websiteIdentityConfig.favicon) {
+        let link: HTMLLinkElement | null = document.querySelector("link[rel*='icon']");
+        if (link) link.href = websiteIdentityConfig.favicon;
+      }
+    };
+    window.addEventListener('superadmin-config-updated', handleConfigUpdate);
+    return () => window.removeEventListener('superadmin-config-updated', handleConfigUpdate);
+  }, []);
 
   useEffect(() => {
     if (websiteIdentityConfig.websiteName) {
@@ -158,8 +176,7 @@ export default function App() {
 
   const jerseyShowcaseSettings: JerseyShowcaseSettings = {
     enabled: true,
-    sectionOrder:
-      eventSettingsConfig.eventCardLayout === 'cards_first' ? 'cards_first' : 'showcase_first',
+    sectionOrder: 'showcase_first',
     designCards: logoRelatedConfig.jerseyDesignCards,
     jerseys: [
       {
@@ -189,8 +206,9 @@ export default function App() {
     showToast('Registration successfully submitted!', 'success');
   };
 
-  const handleGoToInvitation = (regNo: string) => {
+  const handleGoToInvitation = (regNo: string, studentName?: string) => {
     setInvitationSearchTarget(regNo);
+    setInvitationStudentNameTarget(studentName || '');
     setActiveTab('invitation');
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
@@ -448,6 +466,7 @@ export default function App() {
               <InvitationCardPage
                 invitations={invitations}
                 initialSearchRegNo={invitationSearchTarget}
+                initialSearchStudentName={invitationStudentNameTarget}
                 onNavigateToRegister={(record?: InvitationRecord) => {
                   if (record) {
                     setReRegisterRecord(record);

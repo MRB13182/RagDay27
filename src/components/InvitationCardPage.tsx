@@ -16,6 +16,7 @@ import { getPublicInvitation } from '../services';
 interface InvitationCardPageProps {
   invitations: InvitationRecord[];
   initialSearchRegNo?: string;
+  initialSearchStudentName?: string;
   onNavigateToRegister: (record?: InvitationRecord) => void;
   pdfSettings: PdfSettings;
   websiteSettings: WebsiteSettings;
@@ -24,11 +25,13 @@ interface InvitationCardPageProps {
 export const InvitationCardPage: React.FC<InvitationCardPageProps> = ({
   invitations,
   initialSearchRegNo = '',
+  initialSearchStudentName = '',
   onNavigateToRegister,
   pdfSettings,
   websiteSettings,
 }) => {
   const [searchRegNo, setSearchRegNo] = useState(initialSearchRegNo);
+  const [searchStudentName, setSearchStudentName] = useState(initialSearchStudentName);
   const [searched, setSearched] = useState(false);
   const [isSearching, setIsSearching] = useState(false);
   const [searchError, setSearchError] = useState<string | null>(null);
@@ -38,12 +41,18 @@ export const InvitationCardPage: React.FC<InvitationCardPageProps> = ({
   useEffect(() => {
     if (initialSearchRegNo) {
       setSearchRegNo(initialSearchRegNo);
-      void handleSearchWith(initialSearchRegNo);
     }
-  }, [initialSearchRegNo]);
+    if (initialSearchStudentName) {
+      setSearchStudentName(initialSearchStudentName);
+    }
+    if (initialSearchRegNo && initialSearchStudentName) {
+      void handleSearchWith(initialSearchRegNo, initialSearchStudentName);
+    }
+  }, [initialSearchRegNo, initialSearchStudentName]);
 
-  const handleSearchWith = async (regNoVal: string) => {
+  const handleSearchWith = async (regNoVal: string, studentNameVal: string) => {
     const cleanedReg = regNoVal.trim().toUpperCase();
+    const cleanedName = studentNameVal.trim();
     setSearched(true);
     setSearchError(null);
 
@@ -53,16 +62,22 @@ export const InvitationCardPage: React.FC<InvitationCardPageProps> = ({
       return;
     }
 
+    if (!cleanedName) {
+      setMatchedRecord(null);
+      setSearchError('Student Name is required.');
+      return;
+    }
+
     setIsSearching(true);
     try {
-      const result = await getPublicInvitation(cleanedReg);
+      const result = await getPublicInvitation(cleanedReg, cleanedName);
       if (result.success && result.data) {
         setMatchedRecord(result.data);
         return;
       }
 
       setMatchedRecord(null);
-      setSearchError(result.errorMessage || 'No registration found.');
+      setSearchError(result.errorMessage || 'No registration found matching both Registration Number and Student Name.');
     } catch (error: any) {
       setMatchedRecord(null);
       setSearchError(error?.message || 'Unable to verify registration.');
@@ -70,7 +85,6 @@ export const InvitationCardPage: React.FC<InvitationCardPageProps> = ({
       setIsSearching(false);
     }
   };
-
 
   const handleDownloadPDF = () => {
     if (!matchedRecord || matchedRecord.status !== 'approved') return;
@@ -93,33 +107,51 @@ export const InvitationCardPage: React.FC<InvitationCardPageProps> = ({
           Verify & Download Invitation Card
         </h1>
         <p className="text-sm text-slate-600 mt-2">
-          Enter your registered <strong>Registration Number</strong> to review committee authorization and download your entry ticket.
+          Enter your <strong>Registration Number</strong> and <strong>Student Name</strong> to verify committee authorization and access your digital pass. Both fields are required for security verification.
         </p>
       </div>
 
       {/* Search Layout (Form) */}
       <div className="p-6 sm:p-8 rounded-3xl bg-white/80 backdrop-blur-xl border border-white/90 shadow-[0_20px_45px_-15px_rgba(91,95,239,0.08)] mb-8">
-        <form onSubmit={e => { e.preventDefault(); void handleSearchWith(searchRegNo); }} className="grid grid-cols-1 sm:grid-cols-12 gap-4">
-          <div className="sm:col-span-10">
-            <label className="block text-xs font-bold uppercase tracking-wider text-slate-700 mb-1.5">
-              Registration Number
-            </label>
-            <input
-              type="text"
-              placeholder="Enter registration no..."
-              value={searchRegNo}
-              onChange={e => setSearchRegNo(e.target.value.toUpperCase())}
-              className="w-full px-4 py-3 rounded-xl text-sm font-mono font-bold bg-slate-50 border border-slate-200 text-slate-900 placeholder-slate-400 focus:bg-white focus:border-[#5B5FEF] focus:ring-2 focus:ring-[#5B5FEF]/20 outline-none transition-all"
-            />
+        <form onSubmit={e => { e.preventDefault(); void handleSearchWith(searchRegNo, searchStudentName); }} className="space-y-4">
+          <div className="grid grid-cols-1 sm:grid-cols-12 gap-4">
+            <div className="sm:col-span-6">
+              <label className="block text-xs font-bold uppercase tracking-wider text-slate-700 mb-1.5">
+                Registration Number <span className="text-rose-500">*</span>
+              </label>
+              <input
+                type="text"
+                placeholder="e.g. RD27-01"
+                value={searchRegNo}
+                onChange={e => setSearchRegNo(e.target.value.toUpperCase())}
+                className="w-full px-4 py-3 rounded-xl text-sm font-mono font-bold bg-slate-50 border border-slate-200 text-slate-900 placeholder-slate-400 focus:bg-white focus:border-[#5B5FEF] focus:ring-2 focus:ring-[#5B5FEF]/20 outline-none transition-all"
+                required
+              />
+            </div>
+
+            <div className="sm:col-span-6">
+              <label className="block text-xs font-bold uppercase tracking-wider text-slate-700 mb-1.5">
+                Student Name <span className="text-rose-500">*</span>
+              </label>
+              <input
+                type="text"
+                placeholder="Enter student full name..."
+                value={searchStudentName}
+                onChange={e => setSearchStudentName(e.target.value)}
+                className="w-full px-4 py-3 rounded-xl text-sm font-medium bg-slate-50 border border-slate-200 text-slate-900 placeholder-slate-400 focus:bg-white focus:border-[#5B5FEF] focus:ring-2 focus:ring-[#5B5FEF]/20 outline-none transition-all"
+                required
+              />
+            </div>
           </div>
 
-          <div className="sm:col-span-2 flex items-end">
+          <div className="flex justify-end pt-2">
             <button
               type="submit"
-              className="w-full py-3.5 px-4 rounded-xl bg-gradient-to-r from-[#5B5FEF] to-[#7A6CFF] text-white font-bold text-sm shadow-md shadow-[#5B5FEF]/25 hover:shadow-lg hover:shadow-[#5B5FEF]/35 transition-all flex items-center justify-center gap-2 cursor-pointer"
+              disabled={isSearching}
+              className="py-3 px-6 rounded-xl bg-gradient-to-r from-[#5B5FEF] to-[#7A6CFF] text-white font-bold text-sm shadow-md shadow-[#5B5FEF]/25 hover:shadow-lg hover:shadow-[#5B5FEF]/35 transition-all flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50"
             >
               <Search className="w-4 h-4" />
-              <span>Search</span>
+              <span>{isSearching ? 'Verifying with Database…' : 'Verify & Search'}</span>
             </button>
           </div>
         </form>

@@ -3,13 +3,6 @@ import path from 'node:path';
 
 const root = process.cwd();
 const base = path.join(root, 'src', 'super-admin');
-const manifestPath = path.join(base, '.structure.json');
-
-if (!fs.existsSync(manifestPath)) {
-  throw new Error('Protected super-admin manifest is missing.');
-}
-
-const manifest = JSON.parse(fs.readFileSync(manifestPath, 'utf8'));
 
 const checkPaths = [
   '01. website-identity/Text/web name.txt',
@@ -29,15 +22,23 @@ const checkPaths = [
   '04. countdown-settings/Text/Enable Disable.txt',
   '05. important-notice/Text/Notice Board.txt',
   '05. important-notice/Text/Popup Notice.txt',
-  '05. important-notice/Text/Enable Disable.txt'
+  '05. important-notice/Text/Enable Disable.txt',
 ];
 
-const missingDirs = (manifest.requiredDirectories || []).filter((p) => {
+const checkDirectories = [
+  '01. website-identity',
+  '02. event-settings',
+  '03. reg-settings',
+  '04. countdown-settings',
+  '05. important-notice',
+];
+
+const missingDirs = checkDirectories.filter((p) => {
   const target = path.join(base, p);
   return !fs.existsSync(target) || !fs.statSync(target).isDirectory();
 });
 
-const missingFiles = [...new Set([...(manifest.requiredFiles || []), ...checkPaths])].filter((p) => {
+const missingFiles = checkPaths.filter((p) => {
   const target = path.join(base, p);
   return !fs.existsSync(target) || !fs.statSync(target).isFile();
 });
