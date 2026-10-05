@@ -4,135 +4,69 @@ IMPORTANT
 
 READ FIRST. ANALYZE FIRST. UNDERSTAND FIRST.
 
-The project contains a protected configuration area:
+This directory is the protected Super Admin configuration layer for RagDay27.
 
-`src/super-admin/`
+## Required Editable Configuration
 
-## Protected Super Admin Structure
+The following configuration files are intended to be editable from the protected Super Admin context:
 
-```
-src/super-admin/
+### 01. Website Identity
+- `01. website-identity/Text/web name.txt`
+- `01. website-identity/Text/web header.txt`
+- `01. website-identity/Text/web footer.txt`
+- `01. website-identity/Pic/logo.png`
+- `01. website-identity/Pic/favicon.png`
 
-01. website-identity/
-├─ Pic/
-│  ├─ logo.png
-│  └─ favicon.png
-└─ Text/
-   ├─ web name.txt
-   ├─ web header
-   └─ web footer
+### 02. Event Settings
+- `02. event-settings/Pic/jersey.png`
+- `02. event-settings/Text/Event name.txt`
+- `02. event-settings/Text/Event card.txt`
+- `02. event-settings/Text/Event date.txt`
+- `02. event-settings/Text/Venue.txt`
 
-02. event-settings/
-├─ Pic/
-│  └─ jersey
-└─ Text/
-   ├─ Event name.txt
-   ├─ Event card
-   ├─ Event date
-   └─ Venue
+### 03. Registration Settings
+- `03. reg-settings/Pic/back jersey preview.png`
+- `03. reg-settings/Text/Section settings.txt`
+- `03. reg-settings/Text/Payment number.txt`
+- `03. reg-settings/Text/Last registration date countdown.txt`
+- `03. reg-settings/Text/Enable Disable.txt`
 
-03. reg-settings/
-├─ Pic/
-│  └─ back jersey preview.png
-└─ Text/
-   ├─ Section settings.txt
-   ├─ Payment number
-   │  ├─ Male Bkash
-   │  ├─ Male Nagad
-   │  └─ Female
-   ├─ Last registration date countdown
-   └─ Enable / Disable
+### 04. Countdown Settings
+- `04. countdown-settings/Text/Countdown of Event.txt`
+- `04. countdown-settings/Text/Enable Disable.txt`
 
-04. countdown-settings/
-└─ Text/
-   ├─ Countdown of Event
-   └─ Enable / Disable
+### 05. Important Notice
+- `05. important-notice/Text/Notice Board.txt`
+- `05. important-notice/Text/Popup Notice.txt`
+- `05. important-notice/Text/Enable Disable.txt`
 
-05. important-notice/
-└─ Text/
-   ├─ Notice Board
-   ├─ Popup Notice
-   └─ Enable / Disable
-```
+Text files are UTF-8 plain text and must remain editable without introducing database-backed registration data.
+
+Image entries are image assets and must remain image assets. The application must use them as images, provide preview/upload/replacement behavior in the protected Super Admin context, and never reinterpret them as text.
 
 ## Security Rules
 
-1. `src/super-admin/` is SUPER ADMIN ONLY.
-
-2. By default, `src/super-admin/` is READ-ONLY for all normal development and admin work.
-
-3. Normal admin requests MUST NOT:
-   - modify files inside `src/super-admin/`
-   - delete files inside `src/super-admin/`
-   - rename files inside `src/super-admin/`
-   - move files inside `src/super-admin/`
-   - restructure directories inside `src/super-admin/`
-   - refactor code/configuration inside `src/super-admin/`
-   - replace existing Super Admin assets/configuration
-   - recreate missing Super Admin files automatically
-
-4. Allowed normal admin roles remain:
+1. `src/super-admin/**` is SUPER ADMIN ONLY.
+2. By default this directory is READ-ONLY for normal development and normal admin roles.
+3. Normal admin roles remain only:
    - `male_admin`
    - `female_admin`
+4. Never create a new `super_admin` authentication role or any other admin role unless the user explicitly requests a role-model change.
+5. Normal admin code must not modify, delete, rename, move, refactor, replace, regenerate, or restructure protected files.
+6. Only an explicit Super Admin instruction authorizes changes inside this directory.
+7. Validation may verify the protected structure, but must never recreate missing protected files automatically.
+8. Supabase remains the source of truth for real registration records.
 
-5. DO NOT create, rename, or introduce any additional admin role. In particular, DO NOT create a new `super_admin` authentication role unless explicitly requested by the user. The existing protected directory is a configuration boundary, not authorization to redesign the role model.
+## Execution Rules
 
-6. Only an explicit instruction such as:
-   - "Modify Super Admin"
-   - "Change src/super-admin"
-   - "Update Super Admin settings"
-   - "Rebuild the Super Admin module"
+Apply approved changes directly to the existing codebase.
 
-   authorizes changes inside `src/super-admin/`.
-
-7. If the current task does NOT explicitly authorize Super Admin changes:
-   - preserve all existing Super Admin files
-   - preserve all existing Super Admin directories
-   - preserve all existing Super Admin assets
-   - preserve all existing Super Admin configuration
-   - do not optimize or clean up this area
-
-8. When implementing a normal task:
-   - start the requested work immediately
-   - inspect the existing code first
-   - preserve existing functionality
-   - add only missing non-protected pieces
-   - remove only unnecessary non-protected pieces required by the task
-   - keep the existing architecture coherent
-   - do not create duplicate or parallel implementations
-
-9. If a requested normal-admin change appears to require touching `src/super-admin/`, stop that portion of the change and implement the solution outside the protected directory instead.
-
-10. Validation may CHECK the Super Admin structure, but validation MUST NOT recreate missing files automatically. Missing required protected files must be reported as an error.
-
-## Source-of-Truth Rule
-
-Supabase remains the source of truth for real registration data.
-
-`src/super-admin/` contains protected configuration and assets consumed by the application. Do not move real registration records into this directory.
-
-## Execution Requirement
-
-Perform all approved work directly on the existing codebase.
-
-DO NOT:
+Do NOT:
 - create a new branch
-- create a pull request (PR)
+- create a PR
 - fork the project
 - duplicate the application
-- introduce parallel implementations
-- create architecture fragmentation
+- create parallel implementations
+- fragment the architecture
 
-Apply changes directly within the current project structure while preserving existing functionality.
-
-All work must be completed without merge conflicts, branch conflicts, code duplication, or unnecessary architecture fragmentation.
-
-Use the existing codebase as the single source of truth.
-
-## Current Repository Reality
-
-The repository already contains an existing protected `src/super-admin/` structure. Do not replace that existing structure with a simplified or newly invented one unless the user explicitly authorizes a Super Admin restructure.
-
-If a normal task can be completed without touching the protected directory, it MUST be completed that way.
-
-Unauthorized modification of `src/super-admin/` is considered a security violation.
+Preserve existing functionality and reuse existing code paths whenever possible.
