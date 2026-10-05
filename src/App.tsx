@@ -94,7 +94,7 @@ export default function App() {
       ? 'November'
       : eventDateObj.toLocaleDateString('en-US', { month: 'long' }),
     eventYear: isNaN(eventDateObj.getTime()) ? 2027 : eventDateObj.getFullYear(),
-    venue: 'Central Amphitheatre',
+    venue: eventSettingsConfig.venue,
     registrationFee: registrationSettingsConfig.registrationFee,
     lastRegDate: countdownSettingsConfig.registrationDeadline,
     footerText: websiteIdentityConfig.footerText,
