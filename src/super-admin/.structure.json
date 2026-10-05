@@ -1,0 +1,29 @@
+{
+  "requiredDirectories": ["01. website-identity","02. event-settings","03. registration-settings","04. countdown-settings","05. important-notice","06. logo-related"],
+  "requiredFiles": [
+    "01. website-identity/text/website-name.txt",
+    "01. website-identity/text/website-subtitle.txt",
+    "01. website-identity/text/footer-text.txt",
+    "02. event-settings/text/event-name.txt",
+    "02. event-settings/text/event-description.txt",
+    "02. event-settings/text/welcome-message.txt",
+    "02. event-settings/text/event-card-layout.txt",
+    "02. event-settings/text/event-cards-content.txt",
+    "02. event-settings/text/important-instructions.txt",
+    "03. registration-settings/text/registration-open-close.txt",
+    "03. registration-settings/text/registration-fee.txt",
+    "03. registration-settings/text/male-signature.txt",
+    "03. registration-settings/text/female-signature.txt",
+    "03. registration-settings/text/sections/sections.json",
+    "04. countdown-settings/text/countdown-enable-disable.txt",
+    "04. countdown-settings/text/event-date.txt",
+    "04. countdown-settings/text/registration-deadline.txt",
+    "05. important-notice/text/notice-content.txt",
+    "05. important-notice/text/notice-enable-disable.txt",
+    "05. important-notice/text/popup-title.txt",
+    "05. important-notice/text/popup-message.txt",
+    "05. important-notice/text/popup-enable-disable.txt",
+    "05. important-notice/text/close-button-text.txt",
+    "06. logo-related/text/jersey-design.txt"
+  ]
+}
