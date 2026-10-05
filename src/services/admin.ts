@@ -38,73 +38,47 @@ export function mapRowToInvitation(row: any): InvitationRecord {
   };
 }
 
-/**
- * Admin list access is RPC-only. The browser never SELECTs public.registrations directly.
- * The database function derives the allowed gender from the authenticated user -> public.admins.
- */
-export async function getRegistrationList(
-  adminRole?: 'male_admin' | 'female_admin' | null
-): Promise<{ success: boolean; data: InvitationRecord[]; error?: any; errorMessage?: string }> {
+export async function getRegistrationList(): Promise<{ success: boolean; data: InvitationRecord[]; error?: any; errorMessage?: string }> {
   try {
-    // Admin authentication is passcode-based. There is intentionally no
-    // Supabase Auth session created by that flow, so do not require auth.uid() here.
     const passcode = typeof sessionStorage !== 'undefined'
       ? sessionStorage.getItem('rd27_admin_passcode')
       : null;
 
     if (!passcode) {
-      return {
-        success: false,
-        data: [],
-        errorMessage: 'Admin passcode session is missing. Please sign in again.',
-      };
+      return { success: false, data: [], errorMessage: 'Admin passcode session is missing. Please sign in again.' };
     }
 
-    const { data: rpcData, error: rpcErr } = await supabase.rpc('get_admin_registrations', {
-      p_passcode: passcode,
-    });
-
-    if (rpcErr) {
-      return {
-        success: false,
-        data: [],
-        error: rpcErr,
-        errorMessage: String(rpcErr.message || 'Unable to load registrations from the admin database function.'),
-      };
+    const { data, error } = await supabase.rpc('get_admin_registrations', { p_passcode: passcode });
+    if (error) {
+      return { success: false, data: [], error, errorMessage: String(error.message || 'Unable to load registrations from the admin database function.') };
     }
 
-    if (!Array.isArray(rpcData)) {
-      return {
-        success: false,
-        data: [],
-        errorMessage: 'Admin database function returned an invalid registration list.',
-      };
+    if (!Array.isArray(data)) {
+      return { success: false, data: [], errorMessage: 'Admin database function returned an invalid registration list.' };
     }
 
-    const mapped = rpcData.map(mapRowToInvitation);
-    const scoped = adminRole
-      ? mapped.filter(r => r.gender === (adminRole === 'male_admin' ? 'male' : 'female'))
-      : mapped;
-
-    return { success: true, data: scoped };
+    return { success: true, data: data.map(mapRowToInvitation) };
   } catch (error: any) {
-    return {
-      success: false,
-      data: [],
-      error,
-      errorMessage: String(error?.message || 'Unable to load registrations from database.'),
-    };
+    return { success: false, data: [], error, errorMessage: String(error?.message || 'Unable to load registrations from database.') };
   }
 }
 
-export async function approveRegistration(registrationId: string) {
-  try {
-    const passcode = typeof sessionStorage !== 'undefined' ? sessionStorage.getItem('rd27_admin_passcode') : null;
-    const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(registrationId);
-    if (!isUuid) return { success: false, errorMessage: 'Invalid registration identifier.' };
+function cleanRegistrationNo(value: string): string {
+  const clean = value.trim().toUpperCase();
+  const short = clean.match(/^(RD27-)(d{1,})$/i);
+  return short ? `${short[1]}${short[2].padStart(2, '0')}` : clean;
+}
 
+export async function approveRegistration(registrationNo: string) {
+  const passcode = typeof sessionStorage !== 'undefined' ? sessionStorage.getItem('rd27_admin_passcode') : null;
+  const regNo = cleanRegistrationNo(registrationNo);
+
+  if (!passcode) return { success: false, errorMessage: 'Admin passcode session is missing. Please sign in again.' };
+  if (!/^RD27-d+$/i.test(regNo)) return { success: false, errorMessage: 'Invalid registration number.' };
+
+  try {
     const { data, error } = await supabase.rpc('approve_registration', {
-      p_registration_id: registrationId,
+      p_registration_no: regNo,
       p_passcode: passcode,
     });
     if (error) return { success: false, error, errorMessage: String(error.message || 'Unable to approve registration.') };
@@ -114,16 +88,18 @@ export async function approveRegistration(registrationId: string) {
   }
 }
 
-export async function rejectRegistration(registrationId: string, reason: string) {
+export async function rejectRegistration(registrationNo: string, reason: string) {
   const cleanReason = reason.trim();
-  if (!cleanReason) return { success: false, errorMessage: 'A rejection reason is required.' };
-  try {
-    const passcode = typeof sessionStorage !== 'undefined' ? sessionStorage.getItem('rd27_admin_passcode') : null;
-    const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(registrationId);
-    if (!isUuid) return { success: false, errorMessage: 'Invalid registration identifier.' };
+  const passcode = typeof sessionStorage !== 'undefined' ? sessionStorage.getItem('rd27_admin_passcode') : null;
+  const regNo = cleanRegistrationNo(registrationNo);
 
+  if (!cleanReason) return { success: false, errorMessage: 'A rejection reason is required.' };
+  if (!passcode) return { success: false, errorMessage: 'Admin passcode session is missing. Please sign in again.' };
+  if (!/^RD27-d+$/i.test(regNo)) return { success: false, errorMessage: 'Invalid registration number.' };
+
+  try {
     const { data, error } = await supabase.rpc('reject_registration', {
-      p_registration_id: registrationId,
+      p_registration_no: regNo,
       p_reason: cleanReason,
       p_passcode: passcode,
     });
@@ -134,14 +110,16 @@ export async function rejectRegistration(registrationId: string, reason: string)
   }
 }
 
-export async function deleteRegistration(registrationId: string) {
-  try {
-    const passcode = typeof sessionStorage !== 'undefined' ? sessionStorage.getItem('rd27_admin_passcode') : null;
-    const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(registrationId);
-    if (!isUuid) return { success: false, errorMessage: 'Invalid registration identifier.' };
+export async function deleteRegistration(registrationNo: string) {
+  const passcode = typeof sessionStorage !== 'undefined' ? sessionStorage.getItem('rd27_admin_passcode') : null;
+  const regNo = cleanRegistrationNo(registrationNo);
 
+  if (!passcode) return { success: false, errorMessage: 'Admin passcode session is missing. Please sign in again.' };
+  if (!/^RD27-d+$/i.test(regNo)) return { success: false, errorMessage: 'Invalid registration number.' };
+
+  try {
     const { data, error } = await supabase.rpc('hide_registration_from_web', {
-      p_registration_id: registrationId,
+      p_registration_no: regNo,
       p_passcode: passcode,
     });
     if (error) return { success: false, error, errorMessage: String(error.message || 'Unable to hide registration.') };
