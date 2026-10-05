@@ -434,7 +434,7 @@ export const eventSettingsConfig = {
 };
 
 // 03. Registration Settings
-const combinedPayment = parsePaymentWayFile(paymentNumberEditableRaw.trim() || malePaymentRaw || femalePaymentRaw);
+const combinedPayment = parsePaymentWayFile(paymentNumberEditableRaw.trim());
 const malePayment = parsePaymentWayFile(malePaymentRaw);
 const femalePayment = parsePaymentWayFile(femalePaymentRaw);
 const regOpenClean = registrationToggleEditableRaw.trim() || registrationOpenCloseRaw.trim();
