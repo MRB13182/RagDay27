@@ -1,32 +1,15 @@
 import { createClient, SupabaseClient } from '@supabase/supabase-js';
 import type { AdminProfile } from '../types';
 
-const SUPABASE_PROJECT_URL = 'https://xulkacnjqjnluhmbqbcu.supabase.co';
-const DEFAULT_SUPABASE_PUBLISHABLE_KEY = 'sb_publishable_fQRP801i7hVZYFEz7oMMNg_uvZyZsVX';
-
 const ENV_SUPABASE_URL =
   typeof import.meta !== 'undefined' ? import.meta.env?.VITE_SUPABASE_URL : undefined;
 const ENV_SUPABASE_KEY =
   typeof import.meta !== 'undefined'
-    ? (import.meta.env?.VITE_SUPABASE_PUBLISHABLE_KEY || import.meta.env?.VITE_SUPABASE_ANON_KEY)
+    ? import.meta.env?.VITE_SUPABASE_PUBLISHABLE_KEY
     : undefined;
 
-function resolveSupabaseUrl(): string {
-  const candidate = (ENV_SUPABASE_URL || SUPABASE_PROJECT_URL).trim();
-  return candidate === SUPABASE_PROJECT_URL || candidate.startsWith(`${SUPABASE_PROJECT_URL}/`)
-    ? candidate.replace(/\/+$/, '')
-    : SUPABASE_PROJECT_URL;
-}
-
-function resolveSupabaseKey(): string {
-  const candidate = (ENV_SUPABASE_KEY || DEFAULT_SUPABASE_PUBLISHABLE_KEY).trim();
-  return candidate && candidate !== 'YOUR_SUPABASE_PUBLISHABLE_KEY'
-    ? candidate
-    : DEFAULT_SUPABASE_PUBLISHABLE_KEY;
-}
-
-function createClientInstance(url: string, key: string): SupabaseClient {
-  return createClient(url, key, {
+export function createSupabaseClient(url: string, key: string): SupabaseClient {
+  return createClient(url.trim(), key.trim(), {
     auth: {
       persistSession: true,
       autoRefreshToken: true,
@@ -35,62 +18,27 @@ function createClientInstance(url: string, key: string): SupabaseClient {
   });
 }
 
+function resolveSupabaseUrl(): string {
+  const candidate = String(ENV_SUPABASE_URL || '').trim();
+  if (!candidate) {
+    throw new Error('VITE_SUPABASE_URL is not configured.');
+  }
+  return candidate.replace(/\/+$/, '');
+}
+
+function resolveSupabaseKey(): string {
+  const candidate = String(ENV_SUPABASE_KEY || '').trim();
+  if (!candidate) {
+    throw new Error('VITE_SUPABASE_PUBLISHABLE_KEY is not configured.');
+  }
+  return candidate;
+}
+
 export const SUPABASE_URL = resolveSupabaseUrl();
 export const SUPABASE_PUBLISHABLE_KEY = resolveSupabaseKey();
-export let supabase = createClientInstance(SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY);
+export const supabase = createSupabaseClient(SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY);
 
 export const STORAGE_BUCKET = 'uploads';
-
-export interface SupabaseHealthCheckResult {
-  connected: boolean;
-  registrationsTable: boolean;
-  siteContentTable: boolean;
-  adminsTable: boolean;
-  storageBucket: boolean;
-  details: {
-    registrationsCount?: number;
-    siteContentFound?: boolean;
-    adminsFound?: boolean;
-    storageAccessible?: boolean;
-    error?: string;
-  };
-}
-
-export async function testSupabaseConnection(): Promise<SupabaseHealthCheckResult> {
-  const result: SupabaseHealthCheckResult = {
-    connected: false,
-    registrationsTable: false,
-    siteContentTable: false,
-    adminsTable: false,
-    storageBucket: false,
-    details: {},
-  };
-
-  try {
-    const { error: adminError } = await supabase.from('admins').select('id', { head: true });
-    if (!adminError) {
-      result.connected = true;
-      result.adminsTable = true;
-      result.details.adminsFound = true;
-    } else {
-      result.details.error = adminError.message;
-    }
-
-    const { data: buckets, error: bucketError } = await supabase.storage.listBuckets();
-    if (!bucketError && Array.isArray(buckets)) {
-      result.connected = true;
-      result.storageBucket = buckets.some(
-        bucket => bucket.name === STORAGE_BUCKET || bucket.id === STORAGE_BUCKET
-      );
-      result.details.storageAccessible = true;
-    }
-
-    return result;
-  } catch (error: any) {
-    result.details.error = error?.message || 'Supabase connection test failed.';
-    return result;
-  }
-}
 
 export type AdminRole = 'male_admin' | 'female_admin';
 
@@ -103,8 +51,6 @@ export async function getCurrentAdmin(): Promise<AdminProfile | null> {
   if (storedRole !== 'male_admin' && storedRole !== 'female_admin') return null;
   if (!storedPasscode) return null;
 
-  // The admin portal uses passcode authentication, not Supabase Auth.
-  // Re-validate the stored passcode directly against the same RPC used at login.
   try {
     const { data, error } = await supabase.rpc('verify_admin_passcode', {
       p_passcode: storedPasscode,
@@ -169,8 +115,8 @@ export async function signOutAdmin(): Promise<void> {
 
 export function getStoredAdminRole(): AdminRole | null {
   if (typeof sessionStorage !== 'undefined') {
-    const r = sessionStorage.getItem('rd27_admin_role');
-    if (r === 'male_admin' || r === 'female_admin') return r;
+    const role = sessionStorage.getItem('rd27_admin_role');
+    if (role === 'male_admin' || role === 'female_admin') return role;
   }
   return null;
 }
