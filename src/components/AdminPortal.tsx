@@ -235,10 +235,12 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
 
         <div className="px-5 py-4 border-b border-slate-200 flex flex-wrap items-center gap-2">
           <button onClick={() => setActiveTab('registrations')} className={`px-3 py-2 rounded-xl text-xs font-bold ${activeTab === 'registrations' ? 'bg-slate-900 text-white' : 'bg-slate-100 text-slate-700'}`}>Registrations</button>
-          <button onClick={() => setActiveTab('super-admin')} className={`px-3 py-2 rounded-xl text-xs font-bold ${activeTab === 'super-admin' ? 'bg-slate-900 text-white' : 'bg-slate-100 text-slate-700'}`}>Super Admin</button>
+          {admin.role === 'super_admin' && (
+            <button onClick={() => setActiveTab('super-admin')} className={`px-3 py-2 rounded-xl text-xs font-bold ${activeTab === 'super-admin' ? 'bg-slate-900 text-white' : 'bg-slate-100 text-slate-700'}`}>Super Admin</button>
+          )}
         </div>
 
-        {activeTab === 'super-admin' && (
+        {activeTab === 'super-admin' && admin.role === 'super_admin' && (
           <div className="flex-1 overflow-auto p-5 space-y-5">
             <div className="rounded-2xl border border-amber-200 bg-amber-50 p-4 text-xs text-amber-800">
               Protected configuration editor. This tab is reserved for the explicitly authorized Super Admin context.
