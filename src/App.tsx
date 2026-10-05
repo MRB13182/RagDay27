@@ -29,7 +29,6 @@ import {
   approveRegistration,
   rejectRegistration,
   deleteRegistration,
-  getRegistrationList,
 } from './services';
 
 import { ArrowRight, Bell, CheckCircle2, AlertCircle, Info, X, ShieldAlert, Ticket } from 'lucide-react';
@@ -53,7 +52,6 @@ export default function App() {
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
-  // Database Action Toast Notification
   const [toast, setToast] = useState<{ message: string; type: 'success' | 'error' | 'info' } | null>(null);
 
   const showToast = (message: string, type: 'success' | 'error' | 'info' = 'success') => {
@@ -63,18 +61,12 @@ export default function App() {
     }, 4500);
   };
 
-  // Registration data is loaded only by the relevant admin/invitation flows.
-  // Do not query public.registrations directly on app startup: anon is intentionally denied direct table SELECT.
-
-
-  // Sync document title with Super Admin Website Identity
   useEffect(() => {
     if (websiteIdentityConfig.websiteName) {
       document.title = websiteIdentityConfig.websiteName;
     }
   }, []);
 
-  // Sync document favicon with Super Admin Website Identity
   useEffect(() => {
     if (websiteIdentityConfig.favicon) {
       let link: HTMLLinkElement | null = document.querySelector("link[rel*='icon']");
@@ -87,13 +79,9 @@ export default function App() {
     }
   }, []);
 
-  // ============================================================================
-  // 2. CODE-BASED SUPER ADMIN SETTINGS DERIVATION
-  // ============================================================================
-
   const eventDateObj = new Date(countdownSettingsConfig.eventDate);
   const websiteSettings: WebsiteSettings = {
-    eventName: websiteIdentityConfig.websiteName,
+    eventName: eventSettingsConfig.eventName || websiteIdentityConfig.websiteName,
     eventDescription: eventSettingsConfig.eventDescription,
     eventDate: isNaN(eventDateObj.getTime())
       ? countdownSettingsConfig.eventDate
@@ -128,7 +116,7 @@ export default function App() {
   };
 
   const numericFee =
-    parseInt(registrationSettingsConfig.registrationFee.replace(/\D/g, ''), 10) || 500;
+    parseInt(registrationSettingsConfig.registrationFee.replace(/D/g, ''), 10) || 500;
 
   const paymentSettings: PaymentSettings = {
     registrationFee: numericFee,
@@ -190,23 +178,15 @@ export default function App() {
     ],
   };
 
-  // ============================================================================
-  // 3. REGISTRATION HANDLERS
-  // ============================================================================
-
   const handleSuccessSubmit = async (newRecord: InvitationRecord) => {
     setInvitations(prev => {
-      const index = prev.findIndex(item =>
-        (newRecord.id && item.id === newRecord.id) ||
-        (newRecord.dbId && item.dbId === newRecord.dbId) ||
-        item.registration_no === newRecord.registration_no
-      );
+      const index = prev.findIndex(item => item.registration_no === newRecord.registration_no);
       if (index === -1) return [newRecord, ...prev];
       const next = [...prev];
       next[index] = { ...next[index], ...newRecord };
       return next;
     });
-    showToast(`Registration successfully submitted!`, 'success');
+    showToast('Registration successfully submitted!', 'success');
   };
 
   const handleGoToInvitation = (regNo: string) => {
@@ -216,16 +196,14 @@ export default function App() {
   };
 
   const handleUpdateRegistrationStatus = async (
-    targetIdentifier: string,
+    registrationNo: string,
     newStatus: InvitationStatus,
     reason?: string
   ) => {
-    const targetRecord = invitations.find(
-      r => r.registration_no === targetIdentifier || r.id === targetIdentifier || r.dbId === targetIdentifier
-    );
-    const targetId = targetRecord?.dbId || targetRecord?.id || targetIdentifier;
-    const displayRegNo = targetRecord?.registration_no || targetIdentifier;
-
+    if (!registrationNo.trim()) {
+      showToast('Registration number is required.', 'error');
+      return;
+    }
     if (newStatus === 'rejected' && !reason?.trim()) {
       showToast('A rejection reason is strictly required.', 'error');
       return;
@@ -233,25 +211,17 @@ export default function App() {
 
     try {
       const result = newStatus === 'approved'
-        ? await approveRegistration(targetId)
-        : await rejectRegistration(targetId, reason!.trim());
+        ? await approveRegistration(registrationNo)
+        : await rejectRegistration(registrationNo, reason!.trim());
 
       if (!result.success || !result.data) {
-        showToast(result.errorMessage || `Unable to update registration ${displayRegNo}.`, 'error');
+        showToast(result.errorMessage || `Unable to update registration ${registrationNo}.`, 'error');
         return;
       }
 
       const confirmed = result.data;
-
-      // The database response is authoritative. Replace the local record with
-      // the exact row returned by the approval/rejection RPC so every UI
-      // consumer receives the same status/reason as the server.
       setInvitations(prev => {
-        const index = prev.findIndex(r =>
-          r.registration_no === displayRegNo ||
-          r.id === targetId ||
-          r.dbId === targetId
-        );
+        const index = prev.findIndex(r => r.registration_no === confirmed.registration_no);
         if (index === -1) return [confirmed, ...prev];
         const next = [...prev];
         next[index] = { ...next[index], ...confirmed };
@@ -260,31 +230,37 @@ export default function App() {
 
       showToast(
         newStatus === 'approved'
-          ? `Registration ${displayRegNo} approved!`
-          : `Registration ${displayRegNo} rejected.`,
+          ? `Registration ${confirmed.registration_no} approved!`
+          : `Registration ${confirmed.registration_no} rejected.`,
         'success'
       );
     } catch (error: any) {
-      showToast(error?.message || `Unable to update registration ${displayRegNo}.`, 'error');
+      showToast(error?.message || `Unable to update registration ${registrationNo}.`, 'error');
     }
   };
 
-  const handleDeleteRegistration = async (targetIdentifier: string) => {
-    const targetRecord = invitations.find(
-      r => r.registration_no === targetIdentifier || r.id === targetIdentifier || r.dbId === targetIdentifier
-    );
-    const targetId = targetRecord?.dbId || targetRecord?.id || targetIdentifier;
-    const displayRegNo = targetRecord?.registration_no || targetIdentifier;
-    await deleteRegistration(targetId);
-    setInvitations(prev =>
-      prev.filter(r => r.registration_no !== displayRegNo && r.id !== targetId && r.dbId !== targetId)
-    );
-    showToast(`Registration ${displayRegNo} deleted.`, 'success');
+  const handleDeleteRegistration = async (registrationNo: string) => {
+    if (!registrationNo.trim()) {
+      showToast('Registration number is required.', 'error');
+      return;
+    }
+
+    try {
+      const result = await deleteRegistration(registrationNo);
+      if (!result.success) {
+        showToast(result.errorMessage || `Unable to delete registration ${registrationNo}.`, 'error');
+        return;
+      }
+
+      setInvitations(prev => prev.filter(r => r.registration_no !== registrationNo));
+      showToast(`Registration ${registrationNo} removed from the admin web list.`, 'success');
+    } catch (error: any) {
+      showToast(error?.message || `Unable to remove registration ${registrationNo}.`, 'error');
+    }
   };
 
   return (
-    <div className="min-h-screen flex flex-col bg-[#F8F9FC] text-[#111827] selection:bg-[#5B5FEF] selection:text-white relative">
-      {/* Floating Action Toast Notification */}
+    <div className="min-h-screen flex flex-col bg-[#F8F9FC] text-[#111827] selection:bg-[#5B5FEF] selection:text-white selection:text-white relative">
       {toast && (
         <aside
           aria-label="Notification"
@@ -305,9 +281,7 @@ export default function App() {
               <Info className="w-5 h-5" />
             </div>
           )}
-          <div className="flex-1 text-xs sm:text-sm font-semibold text-slate-800 leading-snug">
-            {toast.message}
-          </div>
+          <div className="flex-1 text-xs sm:text-sm font-semibold text-slate-800 leading-snug">{toast.message}</div>
           <button
             onClick={() => setToast(null)}
             className="p-1 rounded-lg text-slate-400 hover:text-slate-700 hover:bg-slate-100 transition-colors cursor-pointer"
@@ -317,7 +291,6 @@ export default function App() {
         </aside>
       )}
 
-      {/* Important Notice Modal Popup (Controlled by Super Admin - 5. Important Notice) */}
       {isNoticePopupOpen && (
         <div className="fixed inset-0 z-[150] flex items-center justify-center p-4 bg-slate-950/60 backdrop-blur-sm animate-fadeIn">
           <div className="w-full max-w-md bg-white rounded-3xl p-6 sm:p-7 shadow-2xl border border-slate-100 relative space-y-4">
@@ -332,9 +305,7 @@ export default function App() {
             </div>
             <div>
               <h3 className="text-lg font-black text-slate-900">{importantNoticeConfig.popupTitle}</h3>
-              <p className="text-xs text-slate-600 mt-2 leading-relaxed whitespace-pre-line">
-                {importantNoticeConfig.popupMessage}
-              </p>
+              <p className="text-xs text-slate-600 mt-2 leading-relaxed whitespace-pre-line">{importantNoticeConfig.popupMessage}</p>
             </div>
             <button
               onClick={() => setIsNoticePopupOpen(false)}
@@ -346,7 +317,6 @@ export default function App() {
         </div>
       )}
 
-      {/* Registration Closed Modal Popup (Controlled by Super Admin - 03. registration-settings) */}
       {isRegClosedPopupOpen && (
         <div className="fixed inset-0 z-[160] flex items-center justify-center p-4 bg-slate-950/70 backdrop-blur-sm animate-fadeIn">
           <div className="w-full max-w-md bg-white rounded-3xl p-6 sm:p-7 shadow-2xl border border-slate-100 text-slate-900 space-y-4 text-center">
@@ -354,9 +324,7 @@ export default function App() {
               <ShieldAlert className="w-7 h-7" />
             </div>
             <h3 className="text-xl font-black text-slate-900">Registration Closed</h3>
-            <p className="text-xs sm:text-sm text-slate-600 leading-relaxed">
-              Registration is currently closed. Please contact the organizers manually.
-            </p>
+            <p className="text-xs sm:text-sm text-slate-600 leading-relaxed">Registration is currently closed. Please contact the organizers manually.</p>
             <div className="pt-2">
               <button
                 type="button"
@@ -370,7 +338,6 @@ export default function App() {
         </div>
       )}
 
-      {/* 1. Sticky/Fixed Navbar */}
       <Navbar
         activeTab={activeTab}
         onNavigate={tab => {
@@ -385,9 +352,7 @@ export default function App() {
         eventName={websiteSettings.eventName}
       />
 
-      {/* Main Content Area */}
       <div className="pt-16 sm:pt-18 flex-1 flex flex-col">
-        {/* Important Notice Announcement Banner (Controlled by Super Admin - 5. Important Notice) */}
         {importantNoticeConfig.noticeEnabled && importantNoticeConfig.noticeContent && (
           <aside
             aria-label="Announcement"
@@ -399,12 +364,8 @@ export default function App() {
         )}
 
         <main className="flex-1">
-          {/* ======================================================== */}
-          {/* HOMEPAGE STRUCTURE */}
-          {/* ======================================================== */}
           {activeTab === 'home' && (
             <div className="animate-fadeIn">
-              {/* 1. Hero Section */}
               <HeroSection
                 onRegisterClick={handleOpenRegistration}
                 onInvitationClick={() => {
@@ -416,7 +377,6 @@ export default function App() {
                 jerseySettings={jerseyShowcaseSettings}
               />
 
-              {/* Dynamic Section Ordering based on Super Admin Event Settings */}
               {jerseyShowcaseSettings.sectionOrder === 'showcase_first' ? (
                 <>
                   {jerseyShowcaseSettings.enabled && (
@@ -441,7 +401,6 @@ export default function App() {
                 </>
               )}
 
-              {/* 3. Register Now Action Section */}
               <section className="py-8 sm:py-12 text-center">
                 <div className="max-w-md mx-auto px-4">
                   {registrationSettingsConfig.registrationOpen ? (
@@ -470,9 +429,6 @@ export default function App() {
             </div>
           )}
 
-          {/* ======================================================== */}
-          {/* REGISTRATION PAGE */}
-          {/* ======================================================== */}
           {activeTab === 'register' && (
             <div className="animate-fadeIn">
               <RegistrationForm
@@ -487,9 +443,6 @@ export default function App() {
             </div>
           )}
 
-          {/* ======================================================== */}
-          {/* INVITATION CARD VERIFICATION & DOWNLOAD PAGE */}
-          {/* ======================================================== */}
           {activeTab === 'invitation' && (
             <div className="animate-fadeIn">
               <InvitationCardPage
@@ -512,20 +465,18 @@ export default function App() {
         </main>
       </div>
 
-      {/* 4. Footer with Admin Access */}
       <Footer
         onOpenAdmin={() => setIsAdminOpen(true)}
         websiteSettings={websiteSettings}
         brandingSettings={brandingSettings}
       />
 
-      {/* Admin Portal Modal (Super Admin, Male Admin, Female Admin) */}
       {isAdminOpen && (
         <AdminPortal
           isOpen={isAdminOpen}
           onClose={() => setIsAdminOpen(false)}
           invitations={invitations}
-          onUpdateStatus={handleUpdateRegistrationStatus} 
+          onUpdateStatus={handleUpdateRegistrationStatus}
           onDeleteRegistration={handleDeleteRegistration}
         />
       )}
