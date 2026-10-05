@@ -410,16 +410,17 @@ export const logoRelatedConfig = {
 
 // 01. Website Identity
 export const websiteIdentityConfig = {
-  websiteName: websiteNameEditableRaw.trim() || websiteNameRaw.trim() || 'Rag Day 27 (RD27)',
-  websiteSubtitle: websiteHeaderEditableRaw.trim() || websiteSubtitleRaw.trim() || 'Annual Grand Farewell & Batch 27 Celebration',
-  footerText: footerEditableRaw.trim() || footerTextRaw.trim() || '© 2027 Rag Day 27 (RD27) Committee. All Rights Reserved. Crafted for Batch 27.',
+  websiteName: websiteNameEditableRaw.trim() || 'Rag Day 27 (RD27)',
+  websiteSubtitle: websiteHeaderEditableRaw.trim() || 'Annual Grand Farewell & Batch 27 Celebration',
+  footerText: footerEditableRaw.trim() || '© 2027 Rag Day 27 (RD27) Committee. All Rights Reserved.',
   websiteLogo: logoRelatedConfig.websiteLogo || getFirstImageFromGlob(logoImagesGlob),
   favicon: logoRelatedConfig.favicon || getFirstImageFromGlob(faviconImagesGlob),
 };
 
 // 02. Event Settings
 const parsedLayout = eventCardLayoutRaw.trim().toLowerCase() === 'one-column' ? 'one-column' : 'two-column';
-const parsedCards = parseEventCardsContent((eventCardEditableRaw.trim() || eventCardsContentRaw));
+const parsedCards = parseEventCardsContent(eventCardEditableRaw.trim() || eventCardsContentRaw);
+const venueRaw = venueEditableRaw.trim();
 
 export const eventSettingsConfig = {
   eventName: eventNameRaw.trim() || 'RAG DAY 27 (RD27) GRAND CELEBRATION',
@@ -429,20 +430,22 @@ export const eventSettingsConfig = {
   eventCardsContent: parsedCards,
   importantInstructions: importantInstructionsRaw.trim() || 'Please transfer the exact registration fee before submitting.',
   cardImages: getAllImagesFromGlob(eventCardImagesGlob),
+  venue: venueRaw || 'Central Amphitheatre',
 };
 
 // 03. Registration Settings
+const combinedPayment = parsePaymentWayFile(paymentNumberEditableRaw.trim() || malePaymentRaw || femalePaymentRaw);
 const malePayment = parsePaymentWayFile(malePaymentRaw);
 const femalePayment = parsePaymentWayFile(femalePaymentRaw);
-const regOpenClean = registrationOpenCloseRaw.trim().toLowerCase();
-const isRegistrationOpen = regOpenClean !== 'close' && regOpenClean !== 'closed';
+const regOpenClean = registrationToggleEditableRaw.trim() || registrationOpenCloseRaw.trim();
+const isRegistrationOpen = !/^(disable|disabled|close|closed)$/i.test(regOpenClean);
 
 export const registrationSettingsConfig = {
-  registrationOpen: (registrationToggleEditableRaw.trim() ? !/^(disable|disabled|close|closed)$/i.test(registrationToggleEditableRaw.trim()) : isRegistrationOpen),
+  registrationOpen: isRegistrationOpen,
   registrationFee: registrationFeeRaw.trim() || '500 BDT',
-  malePaymentNumber: malePayment.bkash || malePayment.nagad || '01712-345678',
-  maleBkashNumber: malePayment.bkash || '01712-345678',
-  maleNagadNumber: malePayment.nagad || malePayment.bkash || '01712-345678',
+  malePaymentNumber: combinedPayment.bkash || malePayment.bkash || '01712-345678',
+  maleBkashNumber: combinedPayment.bkash || malePayment.bkash || '01712-345678',
+  maleNagadNumber: combinedPayment.nagad || malePayment.nagad || '01712-345678',
   femalePaymentNumber: femalePayment.bkash || femalePayment.nagad || '01812-345678',
   femaleBkashNumber: femalePayment.bkash || '01812-345678',
   femaleNagadNumber: femalePayment.nagad || femalePayment.bkash || '01812-345678',
@@ -458,8 +461,8 @@ const countdownEnableClean = countdownEnableDisableRaw.trim().toLowerCase();
 const isCountdownEnabled = countdownEnableClean !== 'disable' && countdownEnableClean !== 'disabled';
 
 export const countdownSettingsConfig = {
-  eventDate: (eventDateEditableRaw.trim() || eventDateRaw.trim()) || '2027-11-27T10:00:00',
-  registrationDeadline: (lastRegistrationEditableRaw.trim() || registrationDeadlineRaw.trim()) || '2027-10-31T23:59:59',
+  eventDate: eventDateEditableRaw.trim() || '2027-11-27T10:00:00',
+  registrationDeadline: lastRegistrationEditableRaw.trim() || '2027-10-31T23:59:59',
   countdownEnabled: isCountdownEnabled,
 };
 
