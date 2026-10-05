@@ -238,6 +238,63 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
           <button onClick={() => setActiveTab('super-admin')} className={`px-3 py-2 rounded-xl text-xs font-bold ${activeTab === 'super-admin' ? 'bg-slate-900 text-white' : 'bg-slate-100 text-slate-700'}`}>Super Admin</button>
         </div>
 
+        {activeTab === 'super-admin' && (
+          <div className="flex-1 overflow-auto p-5 space-y-5">
+            <div className="rounded-2xl border border-amber-200 bg-amber-50 p-4 text-xs text-amber-800">
+              Protected configuration editor. This tab is reserved for the explicitly authorized Super Admin context.
+            </div>
+            {superAdminMessage && (
+              <div className="rounded-xl bg-slate-100 px-4 py-3 text-xs font-semibold text-slate-700">
+                {superAdminMessage}
+              </div>
+            )}
+            <div className="grid gap-4 lg:grid-cols-2">
+              {EDITABLE_SUPER_ADMIN_TEXT_FILES.map(file => (
+                <section key={file.id} className="rounded-2xl border border-slate-200 p-4 bg-white shadow-sm">
+                  <label className="block text-sm font-black text-slate-900 mb-2">{file.label}</label>
+                  <div className="text-[10px] text-slate-400 mb-2 font-mono break-all">{file.path}</div>
+                  <textarea
+                    value={superAdminValues[file.id] ?? file.defaultValue}
+                    onChange={e => setSuperAdminValues(prev => ({ ...prev, [file.id]: e.target.value }))}
+                    className="w-full min-h-28 rounded-xl border border-slate-200 px-3 py-3 text-sm font-mono resize-y"
+                  />
+                  <div className="mt-3 flex justify-end">
+                    <button
+                      type="button"
+                      disabled={superAdminSaving === file.id}
+                      onClick={() => void handleSaveSuperAdminText(file.id)}
+                      className="px-4 py-2 rounded-xl bg-slate-900 text-white text-xs font-bold disabled:opacity-50"
+                    >
+                      {superAdminSaving === file.id ? 'Saving…' : 'Save .txt'}
+                    </button>
+                  </div>
+                </section>
+              ))}
+            </div>
+
+            <section className="rounded-2xl border border-slate-200 p-4 bg-white shadow-sm">
+              <h3 className="text-sm font-black text-slate-900 mb-2">Image Upload</h3>
+              <select
+                value={superAdminImagePath}
+                onChange={e => setSuperAdminImagePath(e.target.value)}
+                className="w-full rounded-xl border border-slate-200 px-3 py-2 text-xs mb-3"
+              >
+                <option value="02. event-settings/Pic/jersey.png">Event jersey</option>
+                <option value="03. reg-settings/Pic/back jersey preview.png">Back jersey preview</option>
+              </select>
+              <input
+                type="file"
+                accept="image/png,image/jpeg,image/webp"
+                onChange={e => {
+                  const file = e.target.files?.[0];
+                  if (file) void handleSuperAdminImageUpload(file);
+                }}
+                className="text-xs"
+              />
+            </section>
+          </div>
+        )}
+
         {activeTab === 'registrations' && (
           <>
             <div className="px-5 py-4 border-b border-slate-200 flex flex-wrap items-center gap-2">
