@@ -116,7 +116,7 @@ export default function App() {
   };
 
   const numericFee =
-    parseInt(registrationSettingsConfig.registrationFee.replace(/D/g, ''), 10) || 500;
+    parseInt(registrationSettingsConfig.registrationFee.replace(/\D/g, ''), 10) || 500;
 
   const paymentSettings: PaymentSettings = {
     registrationFee: numericFee,
@@ -260,7 +260,7 @@ export default function App() {
   };
 
   return (
-    <div className="min-h-screen flex flex-col bg-[#F8F9FC] text-[#111827] selection:bg-[#5B5FEF] selection:text-white selection:text-white relative">
+    <div className="min-h-screen flex flex-col bg-[#F8F9FC] text-[#111827] selection:bg-[#5B5FEF] selection:text-white relative">
       {toast && (
         <aside
           aria-label="Notification"
