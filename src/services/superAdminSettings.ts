@@ -1,5 +1,4 @@
 import { supabase } from '../lib/supabase';
-import { getStoredAdminRole } from '../lib/supabase';
 
 export interface SuperAdminTextFile {
   id: string;
@@ -27,10 +26,6 @@ export const SUPER_ADMIN_TEXT_FILES: SuperAdminTextFile[] = [
   { id: 'popup-notice', label: 'Popup Notice', path: 'src/super-admin/05. important-notice/Text/Popup Notice.txt', initialValue: 'IMPORTANT NOTICE FOR RAG DAY 27\n\nWelcome Batch 27! Registration is open.' },
   { id: 'notice-enable-disable', label: 'Notice enable / disable', path: 'src/super-admin/05. important-notice/Text/Enable Disable.txt', initialValue: 'enable' },
 ];
-
-export function canEditSuperAdmin(): boolean {
-  return getStoredAdminRole() === null;
-}
 
 export async function saveSuperAdminText(path: string, content: string): Promise<void> {
   if (!canEditSuperAdmin()) throw new Error('Only the protected Super Admin context may edit this configuration.');
