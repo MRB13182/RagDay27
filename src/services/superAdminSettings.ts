@@ -28,7 +28,6 @@ export const SUPER_ADMIN_TEXT_FILES: SuperAdminTextFile[] = [
 ];
 
 export async function saveSuperAdminText(path: string, content: string): Promise<void> {
-  if (!canEditSuperAdmin()) throw new Error('Only the protected Super Admin context may edit this configuration.');
   const { error } = await supabase.rpc('save_super_admin_text', {
     p_path: path,
     p_content: content,
@@ -37,7 +36,6 @@ export async function saveSuperAdminText(path: string, content: string): Promise
 }
 
 export async function saveSuperAdminImage(path: string, file: File): Promise<void> {
-  if (!canEditSuperAdmin()) throw new Error('Only the protected Super Admin context may edit this configuration.');
   const safeName = file.name.replace(/[^a-zA-Z0-9._ -]/g, '_');
   const objectPath = 'super-admin/' + path.replace(/^src\/super-admin\//, '').replaceAll('\\', '/') + '/' + safeName;
   const { error } = await supabase.storage.from('uploads').upload(objectPath, file, { upsert: true, contentType: file.type });
