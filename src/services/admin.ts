@@ -74,7 +74,7 @@ export async function approveRegistration(registrationNo: string) {
   const regNo = cleanRegistrationNo(registrationNo);
 
   if (!passcode) return { success: false, errorMessage: 'Admin passcode session is missing. Please sign in again.' };
-  if (!/^RD27-d+$/i.test(regNo)) return { success: false, errorMessage: 'Invalid registration number.' };
+  if (!/^RD27-\d+$/i.test(regNo)) return { success: false, errorMessage: 'Invalid registration number.' };
 
   try {
     const { data, error } = await supabase.rpc('approve_registration', {
@@ -95,7 +95,7 @@ export async function rejectRegistration(registrationNo: string, reason: string)
 
   if (!cleanReason) return { success: false, errorMessage: 'A rejection reason is required.' };
   if (!passcode) return { success: false, errorMessage: 'Admin passcode session is missing. Please sign in again.' };
-  if (!/^RD27-d+$/i.test(regNo)) return { success: false, errorMessage: 'Invalid registration number.' };
+  if (!/^RD27-\d+$/i.test(regNo)) return { success: false, errorMessage: 'Invalid registration number.' };
 
   try {
     const { data, error } = await supabase.rpc('reject_registration', {
@@ -115,7 +115,7 @@ export async function deleteRegistration(registrationNo: string) {
   const regNo = cleanRegistrationNo(registrationNo);
 
   if (!passcode) return { success: false, errorMessage: 'Admin passcode session is missing. Please sign in again.' };
-  if (!/^RD27-d+$/i.test(regNo)) return { success: false, errorMessage: 'Invalid registration number.' };
+  if (!/^RD27-\d+$/i.test(regNo)) return { success: false, errorMessage: 'Invalid registration number.' };
 
   try {
     const { data, error } = await supabase.rpc('hide_registration_from_web', {
