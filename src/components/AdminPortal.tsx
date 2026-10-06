@@ -4,27 +4,10 @@ import { signInAdmin, signOutAdmin, getCurrentAdmin } from '../lib/supabase';
 import { getRegistrationList } from '../services/admin';
 import { generateRegistrationListPDF, generateInvitationCardPDF } from '../utils/pdfGenerator';
 import {
-  websiteIdentityConfig,
-  eventSettingsConfig,
-  registrationSettingsConfig,
-  countdownSettingsConfig,
-  importantNoticeConfig,
-} from '../lib/superAdminConfig';
-import {
-  EDITABLE_SUPER_ADMIN_TEXT_FILES,
-  saveEditableSuperAdminText,
-  saveEditableSuperAdminImage,
-  getSavedSuperAdminText,
-  getSuperAdminImageUrl,
-} from '../lib/superAdminTextSettings';
-import eventJerseyPic from '../super-admin/02. event-settings/Pic/jersey.png';
-
-import {
-  X, Lock, LogIn, LogOut, Search, Check, XCircle,
-  Trash2, Download, Eye, EyeOff, FileText, CheckCircle2,
-  AlertTriangle, CreditCard, ShieldCheck, QrCode, Sliders,
-  FolderTree, Calendar, Clock, Bell, UserCheck, AlertCircle,
-  Upload, ImageIcon, ExternalLink, RefreshCw
+  X, Lock, LogIn, LogOut, Check, XCircle,
+  Trash2, Download, Search, RefreshCw, AlertCircle,
+  CheckCircle2, Clock, Shirt, CreditCard, User,
+  FileSpreadsheet
 } from 'lucide-react';
 
 interface AdminPortalProps {
@@ -33,56 +16,82 @@ interface AdminPortalProps {
   invitations: InvitationRecord[];
   onUpdateStatus: (registration_no: string, newStatus: InvitationStatus, reason?: string) => Promise<void>;
   onDeleteRegistration?: (registration_no: string) => Promise<void>;
+  pdfSettings?: PdfSettings;
+  websiteSettings?: WebsiteSettings;
 }
-
-type Tab = 'registrations' | 'super-admin';
 
 export const AdminPortal: React.FC<AdminPortalProps> = ({
   isOpen,
   onClose,
-  invitations,
+  invitations: _propInvitations,
   onUpdateStatus,
   onDeleteRegistration,
+  pdfSettings = {
+    pdfHeader: 'RAG DAY 27 (RD27) - OFFICIAL REGISTRATION LEDGER',
+    pdfSubHeader: 'Batch 27 Executive Committee Ledger',
+    watermarkLogo: 'RD27 OFFICIAL',
+    watermarkOpacity: 0.08,
+    footerText: 'Official Rag Day 27 Portal',
+    signatureArea: 'Authorized Committee Signatures',
+    signatureTitle: 'Convener & Finance Committee',
+    approvalText: 'Verified & Approved',
+    invitationCardTitle: 'Official Gate Pass',
+    customNotes: 'Batch 27 Pass',
+  },
+  websiteSettings = {
+    eventName: 'RAG DAY of NIC 27',
+    eventDescription: 'Official Rag Day Celebration',
+    eventDate: 'November 27, 2027',
+    eventTime: '10:00 AM',
+    venue: 'Central Amphitheatre',
+    registrationFee: '500 BDT',
+    lastRegDate: 'November 01, 2027',
+    footerText: 'Rag Day 27 Committee',
+    copyrightText: 'Rag Day 27',
+    bannerText: '',
+    bannerActive: false,
+  },
 }) => {
   const [admin, setAdmin] = useState<AdminProfile | null>(null);
   const [passcode, setPasscode] = useState('');
   const [loginError, setLoginError] = useState('');
-  const [statusFilter, setStatusFilter] = useState<'all' | InvitationStatus>('all');
-  const [rejecting, setRejecting] = useState<string | null>(null);
-  const [rejectReason, setRejectReason] = useState('');
-  const [deletingRegNo, setDeletingRegNo] = useState<string | null>(null);
+  const [isLoggingIn, setIsLoggingIn] = useState(false);
+
   const [adminRegistrations, setAdminRegistrations] = useState<InvitationRecord[]>([]);
   const [isLoadingRegistrations, setIsLoadingRegistrations] = useState(false);
   const [registrationLoadError, setRegistrationLoadError] = useState('');
-  const [activeTab, setActiveTab] = useState<Tab>('registrations');
-  const [selectedCategory, setSelectedCategory] = useState<string>('all');
-  const [superAdminValues, setSuperAdminValues] = useState<Record<string, string>>(() =>
-    Object.fromEntries(
-      EDITABLE_SUPER_ADMIN_TEXT_FILES.map(file => [
-        file.id,
-        getSavedSuperAdminText(file.path, file.defaultValue),
-      ])
-    )
-  );
-  const [superAdminSaving, setSuperAdminSaving] = useState<string | null>(null);
-  const [superAdminMessage, setSuperAdminMessage] = useState('');
-  const [superAdminImagePath, setSuperAdminImagePath] = useState('02. event-settings/Pic/jersey.png');
-  const [pendingImageFile, setPendingImageFile] = useState<File | null>(null);
-  const [pendingImagePreview, setPendingImagePreview] = useState<string | null>(null);
-  const [imageReloadKey, setImageReloadKey] = useState(0);
 
+  // Filters & Search
+  const [statusFilter, setStatusFilter] = useState<'all' | InvitationStatus>('all');
+  const [searchTerm, setSearchTerm] = useState('');
+
+  // Modals & In-flight actions
+  const [rejectingRecord, setRejectingRecord] = useState<InvitationRecord | null>(null);
+  const [rejectReason, setRejectReason] = useState('');
+  const [isSubmittingReject, setIsSubmittingReject] = useState(false);
+  const [approvingRegNo, setApprovingRegNo] = useState<string | null>(null);
+  const [hidingRegNo, setHidingRegNo] = useState<string | null>(null);
+  const [actionMessage, setActionMessage] = useState<{ text: string; type: 'success' | 'error' } | null>(null);
+
+  // Expanded details drawer/modal
+  const [selectedRecord, setSelectedRecord] = useState<InvitationRecord | null>(null);
+
+  // Restore active session on mount
   useEffect(() => {
     setLoginError('');
     void (async () => {
       try {
         const profile = await getCurrentAdmin();
-        if (profile) setAdmin(profile);
+        if (profile) {
+          setAdmin(profile);
+        }
       } catch {
         setAdmin(null);
       }
     })();
   }, []);
 
+  // Fetch registrations from database whenever admin logs in
   const loadAdminRegistrations = async () => {
     setIsLoadingRegistrations(true);
     setRegistrationLoadError('');
@@ -103,487 +112,895 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
   };
 
   useEffect(() => {
-    if (!admin?.role) {
+    if (admin?.role) {
+      void loadAdminRegistrations();
+    } else {
       setAdminRegistrations([]);
       setRegistrationLoadError('');
-      return;
     }
-    void loadAdminRegistrations();
   }, [admin?.role]);
 
-  const scopedRows = useMemo(() => {
-    let rows = adminRegistrations;
-    if (admin?.role === 'male_admin') {
-      rows = rows.filter(r => String(r.gender || '').toLowerCase() === 'male');
-    } else if (admin?.role === 'female_admin') {
-      rows = rows.filter(r => String(r.gender || '').toLowerCase() === 'female');
-    }
-
-    if (statusFilter !== 'all') {
-      rows = rows.filter(r => r.status === statusFilter);
-    }
-
-    return rows;
-  }, [admin?.role, adminRegistrations, statusFilter]);
-
-  const login = async (e: React.FormEvent) => {
+  // Login handler
+  const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoginError('');
+    setIsLoggingIn(true);
     try {
       const profile = await signInAdmin(passcode);
       setAdmin(profile);
       setPasscode('');
-    } catch (e: any) {
-      setLoginError(e?.message || 'Invalid Admin Passcode');
+    } catch (err: any) {
+      setLoginError(err?.message || 'Invalid Admin Passcode');
+    } finally {
+      setIsLoggingIn(false);
     }
   };
 
-  const logout = async () => {
+  // Logout handler
+  const handleLogout = async () => {
     await signOutAdmin();
     setAdmin(null);
     setAdminRegistrations([]);
     setRegistrationLoadError('');
     setPasscode('');
+    setSelectedRecord(null);
+    setRejectingRecord(null);
   };
 
+  // Filtered registrations
+  const filteredRegistrations = useMemo(() => {
+    return adminRegistrations.filter(r => {
+      // Status filter
+      if (statusFilter !== 'all' && r.status !== statusFilter) {
+        return false;
+      }
+      // Search query (Reg No, Full Name, Student ID, Roll, Contact No, Txn ID, Jersey Name)
+      if (searchTerm.trim()) {
+        const query = searchTerm.trim().toLowerCase();
+        const matchesReg = r.registration_no?.toLowerCase().includes(query);
+        const matchesName = r.full_name?.toLowerCase().includes(query);
+        const matchesId = r.student_id?.toLowerCase().includes(query);
+        const matchesRoll = r.class_roll?.toLowerCase().includes(query);
+        const matchesMobile = r.contact_mobile_number?.includes(query) || r.sender_mobile_no?.includes(query);
+        const matchesTxn = r.transaction_id?.toLowerCase().includes(query);
+        const matchesJersey = r.jersey_back_name?.toLowerCase().includes(query);
+        return Boolean(matchesReg || matchesName || matchesId || matchesRoll || matchesMobile || matchesTxn || matchesJersey);
+      }
+      return true;
+    });
+  }, [adminRegistrations, statusFilter, searchTerm]);
+
+  // Statistics
+  const stats = useMemo(() => {
+    const total = adminRegistrations.length;
+    const pending = adminRegistrations.filter(r => r.status === 'pending').length;
+    const approved = adminRegistrations.filter(r => r.status === 'approved').length;
+    const rejected = adminRegistrations.filter(r => r.status === 'rejected').length;
+    return { total, pending, approved, rejected };
+  }, [adminRegistrations]);
+
+  // Approve action
   const handleApprove = async (regNo: string) => {
-    await onUpdateStatus(regNo, 'approved');
-  };
-
-  const openRejectModal = (regNo: string) => {
-    setRejecting(regNo);
-    setRejectReason('');
-  };
-
-  const confirmReject = async () => {
-    if (!rejecting) return;
-    const regNo = rejecting;
-    await onUpdateStatus(regNo, 'rejected', rejectReason);
-    setRejecting(null);
-    setRejectReason('');
-  };
-
-
-  const handleSaveSuperAdminText = async (fileId: string) => {
-    const file = EDITABLE_SUPER_ADMIN_TEXT_FILES.find(item => item.id === fileId);
-    if (!file) return;
-    setSuperAdminSaving(fileId);
-    setSuperAdminMessage('');
+    setApprovingRegNo(regNo);
+    setActionMessage(null);
     try {
-      await saveEditableSuperAdminText(file.path, superAdminValues[fileId] ?? '');
-      setSuperAdminMessage(`✓ ${file.label} saved successfully and updated live.`);
-    } catch (error: any) {
-      setSuperAdminMessage(error?.message || 'Unable to save Super Admin configuration.');
+      await onUpdateStatus(regNo, 'approved');
+      // Update local state immediately with approved status
+      setAdminRegistrations(prev =>
+        prev.map(r =>
+          r.registration_no === regNo
+            ? { ...r, status: 'approved', reject_reason: undefined, approved_at: new Date().toISOString() }
+            : r
+        )
+      );
+      if (selectedRecord?.registration_no === regNo) {
+        setSelectedRecord(prev => prev ? { ...prev, status: 'approved', reject_reason: undefined } : null);
+      }
+      setActionMessage({ text: `Registration ${regNo} approved successfully!`, type: 'success' });
+    } catch (err: any) {
+      setActionMessage({ text: err?.message || `Unable to approve ${regNo}`, type: 'error' });
     } finally {
-      setSuperAdminSaving(null);
+      setApprovingRegNo(null);
     }
   };
 
-  const handleResetSuperAdminText = (fileId: string) => {
-    const file = EDITABLE_SUPER_ADMIN_TEXT_FILES.find(item => item.id === fileId);
-    if (!file) return;
-    setSuperAdminValues(prev => ({ ...prev, [fileId]: file.defaultValue }));
-    void saveEditableSuperAdminText(file.path, file.defaultValue);
-    setSuperAdminMessage(`Reset ${file.label} to default content.`);
+  // Open reject modal
+  const openRejectModal = (record: InvitationRecord) => {
+    setRejectingRecord(record);
+    setRejectReason(record.reject_reason || '');
   };
 
-  const handleFileSelectionForImage = (file: File) => {
-    setPendingImageFile(file);
-    const objectUrl = URL.createObjectURL(file);
-    setPendingImagePreview(objectUrl);
-  };
-
-  const handleSuperAdminImageUpload = async () => {
-    if (!pendingImageFile) return;
-    setSuperAdminSaving('__image__');
-    setSuperAdminMessage('');
+  // Confirm rejection
+  const handleConfirmReject = async () => {
+    if (!rejectingRecord) return;
+    const cleanReason = rejectReason.trim();
+    if (!cleanReason) {
+      setActionMessage({ text: 'Rejection reason is strictly required.', type: 'error' });
+      return;
+    }
+    const regNo = rejectingRecord.registration_no;
+    setIsSubmittingReject(true);
+    setActionMessage(null);
     try {
-      await saveEditableSuperAdminImage(superAdminImagePath, pendingImageFile);
-      setSuperAdminMessage(`✓ Replaced and saved ${superAdminImagePath} successfully.`);
-      setPendingImageFile(null);
-      if (pendingImagePreview) URL.revokeObjectURL(pendingImagePreview);
-      setPendingImagePreview(null);
-      setImageReloadKey(k => k + 1);
-    } catch (error: any) {
-      setSuperAdminMessage(error?.message || 'Unable to upload Super Admin image.');
+      await onUpdateStatus(regNo, 'rejected', cleanReason);
+      setAdminRegistrations(prev =>
+        prev.map(r =>
+          r.registration_no === regNo
+            ? { ...r, status: 'rejected', reject_reason: cleanReason, rejected_at: new Date().toISOString() }
+            : r
+        )
+      );
+      if (selectedRecord?.registration_no === regNo) {
+        setSelectedRecord(prev => prev ? { ...prev, status: 'rejected', reject_reason: cleanReason } : null);
+      }
+      setRejectingRecord(null);
+      setRejectReason('');
+      setActionMessage({ text: `Registration ${regNo} rejected with reason recorded.`, type: 'success' });
+    } catch (err: any) {
+      setActionMessage({ text: err?.message || `Unable to reject ${regNo}`, type: 'error' });
     } finally {
-      setSuperAdminSaving(null);
+      setIsSubmittingReject(false);
     }
   };
 
-  const currentDisplayImage = useMemo(() => {
-    if (superAdminImagePath === '02. event-settings/Pic/jersey.png') {
-      return getSuperAdminImageUrl('02. event-settings/Pic/jersey.png', eventJerseyPic);
-    }
-    return getSuperAdminImageUrl(superAdminImagePath, eventJerseyPic);
-  }, [superAdminImagePath, imageReloadKey]);
-
-  const filteredTextFiles = useMemo(() => {
-    if (selectedCategory === 'all') return EDITABLE_SUPER_ADMIN_TEXT_FILES;
-    if (selectedCategory === 'images') return [];
-    return EDITABLE_SUPER_ADMIN_TEXT_FILES.filter(f => f.category === selectedCategory);
-  }, [selectedCategory]);
-
-  const handleDelete = async (regNo: string) => {
+  // Hide / Delete action (Web-only soft delete)
+  const handleHide = async (regNo: string) => {
     if (!onDeleteRegistration) return;
-    setDeletingRegNo(regNo);
+    const confirmed = window.confirm(`Are you sure you want to remove ${regNo} from the web view? This record will remain safely stored in the database.`);
+    if (!confirmed) return;
+
+    setHidingRegNo(regNo);
+    setActionMessage(null);
     try {
       await onDeleteRegistration(regNo);
+      // Remove from current admin view immediately as designed
+      setAdminRegistrations(prev => prev.filter(r => r.registration_no !== regNo));
+      if (selectedRecord?.registration_no === regNo) {
+        setSelectedRecord(null);
+      }
+      setActionMessage({ text: `Registration ${regNo} removed from view. (Database record preserved)`, type: 'success' });
+    } catch (err: any) {
+      setActionMessage({ text: err?.message || `Unable to remove ${regNo}`, type: 'error' });
     } finally {
-      setDeletingRegNo(null);
+      setHidingRegNo(null);
+    }
+  };
+
+  // Export ledger to PDF
+  const handleExportPDF = () => {
+    if (!admin?.role) return;
+    try {
+      generateRegistrationListPDF(adminRegistrations, pdfSettings, websiteSettings, admin.role);
+    } catch (err: any) {
+      alert(err?.message || 'Unable to generate PDF ledger.');
     }
   };
 
   if (!isOpen) return null;
 
+  // --------------------------------------------------------------------------
+  // LOGIN SCREEN (If not authenticated)
+  // --------------------------------------------------------------------------
   if (!admin) {
     return (
-      <div className="fixed inset-0 z-[300] bg-black/70 backdrop-blur-sm flex items-center justify-center p-4">
-        <div className="w-full max-w-sm bg-white rounded-3xl shadow-2xl p-6 relative">
-          <button onClick={onClose} className="absolute top-3 right-3 p-2 rounded-xl hover:bg-slate-100">
+      <div className="fixed inset-0 z-[300] bg-black/75 backdrop-blur-md flex items-center justify-center p-4">
+        <div className="w-full max-w-md bg-white rounded-3xl shadow-2xl p-6 sm:p-8 relative border border-slate-100 animate-scaleUp">
+          <button
+            onClick={onClose}
+            className="absolute top-4 right-4 p-2 rounded-xl text-slate-400 hover:text-slate-700 hover:bg-slate-100 transition-colors"
+          >
             <X className="w-5 h-5" />
           </button>
-          <div className="flex items-center gap-3 mb-6">
-            <div className="w-11 h-11 rounded-2xl bg-indigo-50 text-indigo-600 grid place-items-center">
-              <Lock className="w-5 h-5" />
+
+          <div className="flex items-center gap-3.5 mb-6">
+            <div className="w-12 h-12 rounded-2xl bg-indigo-50 border border-indigo-100 text-indigo-600 grid place-items-center shadow-sm">
+              <Lock className="w-6 h-6" />
             </div>
             <div>
-              <h2 className="text-xl font-black text-slate-900">Admin Access</h2>
-              <p className="text-xs text-slate-500">Enter the admin passcode to continue.</p>
+              <h2 className="text-xl font-extrabold text-slate-900 tracking-tight">Admin Access</h2>
+              <p className="text-xs text-slate-500 mt-0.5">Enter committee passcode to unlock your admin panel.</p>
             </div>
           </div>
-          <form onSubmit={login} className="space-y-4">
-            <input type="password" value={passcode} onChange={e => setPasscode(e.target.value)} className="w-full px-4 py-3 rounded-xl border border-slate-200" placeholder="Admin passcode" />
-            {loginError && <p className="text-xs text-rose-600 font-semibold">{loginError}</p>}
-            <button type="submit" className="w-full py-3 rounded-xl bg-slate-900 text-white font-bold">
-              <span className="inline-flex items-center gap-2"><LogIn className="w-4 h-4" />Sign In</span>
+
+          <form onSubmit={handleLogin} className="space-y-4">
+            <div>
+              <label className="block text-xs font-bold uppercase tracking-wider text-slate-700 mb-1.5">
+                Passcode
+              </label>
+              <input
+                type="password"
+                value={passcode}
+                onChange={e => setPasscode(e.target.value)}
+                placeholder="Enter Male or Female Admin passcode"
+                className="w-full px-4 py-3.5 rounded-xl border border-slate-200 bg-slate-50 text-sm font-mono font-medium focus:bg-white focus:border-indigo-600 focus:ring-2 focus:ring-indigo-100 outline-none transition-all placeholder:text-slate-400"
+                autoFocus
+                required
+              />
+            </div>
+
+            {loginError && (
+              <div className="p-3 rounded-xl bg-rose-50 border border-rose-200 text-rose-700 text-xs font-semibold flex items-center gap-2">
+                <AlertCircle className="w-4 h-4 shrink-0" />
+                <span>{loginError}</span>
+              </div>
+            )}
+
+            <button
+              type="submit"
+              disabled={isLoggingIn || !passcode.trim()}
+              className="w-full py-3.5 rounded-xl bg-slate-900 hover:bg-indigo-600 active:bg-indigo-700 text-white font-bold text-sm shadow-md transition-all flex items-center justify-center gap-2 disabled:opacity-50 cursor-pointer"
+            >
+              {isLoggingIn ? (
+                <>
+                  <RefreshCw className="w-4 h-4 animate-spin" />
+                  <span>Verifying Passcode…</span>
+                </>
+              ) : (
+                <>
+                  <LogIn className="w-4 h-4" />
+                  <span>Sign In</span>
+                </>
+              )}
             </button>
           </form>
+
+          <div className="mt-6 pt-5 border-t border-slate-100 text-center">
+            <span className="text-[11px] text-slate-400 font-medium">
+              Database-backed role resolution: <strong className="text-slate-600">Male Admin</strong> or <strong className="text-slate-600">Female Admin</strong>
+            </span>
+          </div>
         </div>
       </div>
     );
   }
 
+  // --------------------------------------------------------------------------
+  // AUTHENTICATED ADMIN PANEL (Shared structure for Male & Female Admin)
+  // --------------------------------------------------------------------------
+  const isMaleAdmin = admin.role === 'male_admin';
+  const roleBadgeColor = isMaleAdmin
+    ? 'bg-blue-50 text-blue-700 border-blue-200'
+    : 'bg-pink-50 text-pink-700 border-pink-200';
+  const panelTitle = isMaleAdmin ? 'Male Admin Panel' : 'Female Admin Panel';
+  const genderSubtext = isMaleAdmin ? 'Boys Wing Registrations' : 'Girls Wing Registrations';
+
   return (
-    <div className="fixed inset-0 z-[300] bg-black/60 backdrop-blur-sm flex items-center justify-center p-4">
-      <div className="w-full max-w-7xl max-h-[92vh] overflow-hidden rounded-3xl bg-white shadow-2xl border border-white/60 flex flex-col">
-        <div className="flex items-center justify-between px-5 py-4 border-b border-slate-200">
-          <div>
-            <h2 className="text-lg font-black text-slate-900">Admin Portal</h2>
-            <p className="text-xs text-slate-500">{admin.full_name} · {admin.role}</p>
+    <div className="fixed inset-0 z-[300] bg-black/70 backdrop-blur-md flex items-center justify-center p-2 sm:p-4 md:p-6">
+      <div className="w-full max-w-7xl h-[95vh] rounded-3xl bg-white shadow-2xl border border-slate-200 flex flex-col overflow-hidden animate-scaleUp">
+
+        {/* 1. ADMIN HEADER */}
+        <header className="px-5 py-4 border-b border-slate-200 bg-white flex flex-wrap items-center justify-between gap-3 shrink-0">
+          <div className="flex items-center gap-3">
+            <div className={`w-11 h-11 rounded-2xl grid place-items-center font-black text-lg border ${roleBadgeColor}`}>
+              {isMaleAdmin ? '♂' : '♀'}
+            </div>
+            <div>
+              <div className="flex items-center gap-2">
+                <h2 className="text-lg font-black text-slate-900 tracking-tight">{panelTitle}</h2>
+                <span className={`px-2.5 py-0.5 rounded-full text-[11px] font-extrabold border ${roleBadgeColor}`}>
+                  {admin.role}
+                </span>
+              </div>
+              <p className="text-xs text-slate-500">
+                Logged in as <strong className="text-slate-700">{admin.full_name}</strong> · {genderSubtext}
+              </p>
+            </div>
           </div>
+
           <div className="flex items-center gap-2">
-            <button onClick={loadAdminRegistrations} className="px-3 py-2 rounded-xl bg-slate-100 text-xs font-bold">Refresh</button>
-            <button onClick={logout} className="px-3 py-2 rounded-xl bg-slate-100 text-xs font-bold inline-flex items-center gap-2"><LogOut className="w-4 h-4" />Logout</button>
+            <button
+              onClick={handleExportPDF}
+              disabled={adminRegistrations.length === 0}
+              className="px-3.5 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold transition-colors inline-flex items-center gap-1.5 disabled:opacity-40 cursor-pointer"
+              title="Download registration ledger as PDF"
+            >
+              <FileSpreadsheet className="w-4 h-4 text-slate-600" />
+              <span className="hidden sm:inline">Export PDF</span>
+            </button>
+
+            <button
+              onClick={loadAdminRegistrations}
+              disabled={isLoadingRegistrations}
+              className="px-3.5 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold transition-colors inline-flex items-center gap-1.5 cursor-pointer disabled:opacity-50"
+              title="Refresh registrations from database"
+            >
+              <RefreshCw className={`w-4 h-4 ${isLoadingRegistrations ? 'animate-spin text-indigo-600' : 'text-slate-600'}`} />
+              <span className="hidden sm:inline">Refresh</span>
+            </button>
+
+            <button
+              onClick={handleLogout}
+              className="px-3.5 py-2 rounded-xl bg-slate-900 hover:bg-rose-600 text-white text-xs font-bold transition-colors inline-flex items-center gap-1.5 cursor-pointer"
+              title="Sign out of admin session"
+            >
+              <LogOut className="w-4 h-4" />
+              <span className="hidden sm:inline">Logout</span>
+            </button>
+
+            <button
+              onClick={onClose}
+              className="p-2 rounded-xl text-slate-400 hover:text-slate-700 hover:bg-slate-100 transition-colors ml-1"
+              title="Close Admin Panel"
+            >
+              <X className="w-5 h-5" />
+            </button>
           </div>
-        </div>
+        </header>
 
-        <div className="px-5 py-4 border-b border-slate-200 flex flex-wrap items-center gap-2">
-          <button onClick={() => setActiveTab('registrations')} className={`px-3 py-2 rounded-xl text-xs font-bold ${activeTab === 'registrations' ? 'bg-slate-900 text-white' : 'bg-slate-100 text-slate-700'}`}>Registrations</button>
-          {(admin.role as string) === 'super_admin' && (
-            <button onClick={() => setActiveTab('super-admin')} className={`px-3 py-2 rounded-xl text-xs font-bold ${activeTab === 'super-admin' ? 'bg-slate-900 text-white' : 'bg-slate-100 text-slate-700'}`}>Super Admin</button>
-          )}
-        </div>
-
-        {activeTab === 'super-admin' && (admin.role as string) === 'super_admin' && (
-          <div className="flex-1 overflow-auto p-5 space-y-6">
-            <div className="rounded-2xl border border-amber-200 bg-amber-50 p-4 text-xs text-amber-800 flex items-start gap-3">
-              <ShieldCheck className="w-5 h-5 text-amber-600 shrink-0 mt-0.5" />
-              <div>
-                <strong className="font-bold">Super Admin Configuration Suite:</strong> Edit official <code className="bg-amber-100 px-1 py-0.5 rounded font-mono">.txt</code> settings files and replace event graphics including <code className="bg-amber-100 px-1 py-0.5 rounded font-mono">jersey.png</code>. All changes immediately sync live with the application.
-              </div>
+        {/* Action toast/banner */}
+        {actionMessage && (
+          <div
+            className={`px-5 py-2.5 text-xs font-semibold flex items-center justify-between border-b ${
+              actionMessage.type === 'success'
+                ? 'bg-emerald-50 text-emerald-800 border-emerald-200'
+                : 'bg-rose-50 text-rose-800 border-rose-200'
+            }`}
+          >
+            <div className="flex items-center gap-2">
+              {actionMessage.type === 'success' ? <Check className="w-4 h-4 text-emerald-600" /> : <AlertCircle className="w-4 h-4 text-rose-600" />}
+              <span>{actionMessage.text}</span>
             </div>
-
-            {superAdminMessage && (
-              <div className="rounded-xl bg-slate-900 text-white px-4 py-3 text-xs font-semibold flex items-center justify-between shadow-lg">
-                <span>{superAdminMessage}</span>
-                <button onClick={() => setSuperAdminMessage('')} className="text-slate-400 hover:text-white text-xs">Dismiss</button>
-              </div>
-            )}
-
-            {/* Category Navigation */}
-            <div className="flex flex-wrap items-center gap-2 border-b border-slate-200 pb-3">
-              {[
-                { id: 'all', label: 'All Files (16)' },
-                { id: '01. Website Identity', label: '01. Website Identity (3)' },
-                { id: '02. Event Settings', label: '02. Event Settings (4)' },
-                { id: '03. Registration Settings', label: '03. Registration Settings (4)' },
-                { id: '04. Countdown Settings', label: '04. Countdown Settings (2)' },
-                { id: '05. Important Notice', label: '05. Important Notice (3)' },
-                { id: 'images', label: '🖼️ Event Jersey & Images' },
-              ].map(cat => (
-                <button
-                  key={cat.id}
-                  onClick={() => setSelectedCategory(cat.id)}
-                  className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-colors ${
-                    selectedCategory === cat.id
-                      ? 'bg-indigo-600 text-white shadow-sm'
-                      : 'bg-slate-100 text-slate-700 hover:bg-slate-200'
-                  }`}
-                >
-                  {cat.label}
-                </button>
-              ))}
-            </div>
-
-            {/* Event Settings Image Management (Prominent when images, all, or 02. Event Settings selected) */}
-            {(selectedCategory === 'all' || selectedCategory === 'images' || selectedCategory === '02. Event Settings') && (
-              <section className="rounded-3xl border-2 border-indigo-100 bg-gradient-to-br from-indigo-50/50 via-white to-slate-50 p-6 shadow-sm">
-                <div className="flex flex-wrap items-center justify-between gap-3 mb-5">
-                  <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 rounded-2xl bg-indigo-600 text-white grid place-items-center shadow-md">
-                      <ImageIcon className="w-5 h-5" />
-                    </div>
-                    <div>
-                      <h3 className="text-base font-black text-slate-900">
-                        Event Settings Image & Graphics Manager
-                      </h3>
-                      <p className="text-xs text-slate-500">
-                        Target: <span className="font-mono font-bold text-indigo-600">jersey.png</span> (stored as actual image file, supporting upload, replacement, preview & retrieval)
-                      </p>
-                    </div>
-                  </div>
-
-                  <div className="flex items-center gap-2">
-                    <select
-                      value={superAdminImagePath}
-                      onChange={e => {
-                        setSuperAdminImagePath(e.target.value);
-                        setPendingImageFile(null);
-                        if (pendingImagePreview) URL.revokeObjectURL(pendingImagePreview);
-                        setPendingImagePreview(null);
-                      }}
-                      className="rounded-xl border border-slate-300 bg-white px-3 py-2 text-xs font-bold text-slate-800 shadow-sm"
-                    >
-                      <option value="02. event-settings/Pic/jersey.png">02. event-settings/Pic/jersey.png (Event Jersey)</option>
-                      <option value="03. reg-settings/Pic/back jersey preview.png">03. reg-settings/Pic/back jersey preview.png</option>
-                      <option value="01. website-identity/Pic/logo.png">01. website-identity/Pic/logo.png</option>
-                      <option value="01. website-identity/Pic/favicon.png">01. website-identity/Pic/favicon.png</option>
-                    </select>
-                  </div>
-                </div>
-
-                <div className="grid grid-cols-1 md:grid-cols-12 gap-6 items-center">
-                  {/* Current Active Image Preview & Retrieval */}
-                  <div className="md:col-span-4 flex flex-col items-center justify-center p-4 bg-white rounded-2xl border border-slate-200 shadow-inner">
-                    <div className="text-[11px] font-bold uppercase tracking-wider text-slate-400 mb-2">
-                      Active Image Preview
-                    </div>
-                    <div className="w-44 h-44 rounded-xl overflow-hidden border border-slate-200 bg-slate-950/5 flex items-center justify-center p-2 relative group">
-                      <img
-                        key={currentDisplayImage}
-                        src={currentDisplayImage}
-                        alt="Super Admin Graphic"
-                        className="max-w-full max-h-full object-contain"
-                      />
-                    </div>
-                    <div className="mt-3 flex items-center gap-2">
-                      <a
-                        href={currentDisplayImage}
-                        download={superAdminImagePath.split('/').pop() || 'image.png'}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold transition-colors"
-                      >
-                        <Download className="w-3.5 h-3.5" />
-                        Retrieve / Download
-                      </a>
-                    </div>
-                    <span className="text-[10px] text-slate-400 font-mono mt-1 break-all">
-                      {superAdminImagePath}
-                    </span>
-                  </div>
-
-                  {/* Upload & Replacement Controls */}
-                  <div className="md:col-span-8 space-y-4">
-                    <div className="rounded-2xl border-2 border-dashed border-slate-300 p-5 bg-white/70 hover:bg-white transition-colors">
-                      <label className="block text-xs font-black text-slate-800 uppercase tracking-wider mb-2">
-                        Upload & Replace Image File
-                      </label>
-                      <p className="text-xs text-slate-500 mb-4">
-                        Select an image file (PNG, JPG, or WebP) to replace the current item. The replacement will update the filesystem mapping and reflect across the portal.
-                      </p>
-                      
-                      <div className="flex flex-wrap items-center gap-3">
-                        <input
-                          id="super-admin-image-input"
-                          type="file"
-                          accept="image/png,image/jpeg,image/webp"
-                          onChange={e => {
-                            const file = e.target.files?.[0];
-                            if (file) handleFileSelectionForImage(file);
-                          }}
-                          className="text-xs text-slate-600 file:mr-3 file:py-2 file:px-4 file:rounded-xl file:border-0 file:text-xs file:font-bold file:bg-slate-900 file:text-white hover:file:bg-slate-800 cursor-pointer"
-                        />
-                      </div>
-
-                      {pendingImagePreview && (
-                        <div className="mt-4 pt-4 border-t border-slate-100 flex items-center gap-4">
-                          <div className="w-16 h-16 rounded-xl border border-indigo-200 bg-indigo-50/50 flex items-center justify-center p-1 overflow-hidden shrink-0">
-                            <img src={pendingImagePreview} alt="Replacement Preview" className="max-w-full max-h-full object-contain" />
-                          </div>
-                          <div className="flex-1 min-w-0">
-                            <div className="text-xs font-bold text-slate-900 truncate">{pendingImageFile?.name}</div>
-                            <div className="text-[11px] text-slate-500 font-mono">
-                              {pendingImageFile ? (pendingImageFile.size / 1024).toFixed(1) + ' KB' : ''} · Ready to save as <span className="font-bold text-indigo-600">{superAdminImagePath.split('/').pop()}</span>
-                            </div>
-                          </div>
-                          <button
-                            type="button"
-                            disabled={superAdminSaving === '__image__'}
-                            onClick={() => void handleSuperAdminImageUpload()}
-                            className="px-4 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold shadow-md disabled:opacity-50 inline-flex items-center gap-2"
-                          >
-                            <Upload className="w-4 h-4" />
-                            {superAdminSaving === '__image__' ? 'Replacing…' : 'Confirm Replacement'}
-                          </button>
-                        </div>
-                      )}
-                    </div>
-                  </div>
-                </div>
-              </section>
-            )}
-
-            {/* Editable .txt Files Grid */}
-            {filteredTextFiles.length > 0 && (
-              <div className="grid gap-4 lg:grid-cols-2">
-                {filteredTextFiles.map(file => (
-                  <section key={file.id} className="rounded-2xl border border-slate-200 p-4 bg-white shadow-sm flex flex-col justify-between">
-                    <div>
-                      <div className="flex items-center justify-between gap-2 mb-1">
-                        <label className="text-sm font-black text-slate-900">{file.label}</label>
-                        <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-slate-100 text-slate-600">
-                          {file.category}
-                        </span>
-                      </div>
-                      <div className="text-[11px] text-slate-400 mb-3 font-mono break-all flex items-center gap-1">
-                        <FileText className="w-3.5 h-3.5 text-slate-400 shrink-0" />
-                        <span>src/super-admin/{file.path}</span>
-                      </div>
-                      <textarea
-                        rows={Math.max(3, Math.min(10, (superAdminValues[file.id] ?? file.defaultValue).split('\n').length + 1))}
-                        value={superAdminValues[file.id] ?? file.defaultValue}
-                        onChange={e => setSuperAdminValues(prev => ({ ...prev, [file.id]: e.target.value }))}
-                        className="w-full rounded-xl border border-slate-200 bg-slate-50/50 focus:bg-white focus:border-indigo-500 px-3.5 py-3 text-xs font-mono resize-y leading-relaxed outline-none transition-colors"
-                      />
-                    </div>
-                    <div className="mt-3 pt-3 border-t border-slate-100 flex items-center justify-between">
-                      <button
-                        type="button"
-                        onClick={() => handleResetSuperAdminText(file.id)}
-                        className="text-[11px] font-semibold text-slate-400 hover:text-slate-600 underline"
-                      >
-                        Reset to default
-                      </button>
-                      <button
-                        type="button"
-                        disabled={superAdminSaving === file.id}
-                        onClick={() => void handleSaveSuperAdminText(file.id)}
-                        className="px-4 py-2 rounded-xl bg-slate-900 hover:bg-slate-800 text-white text-xs font-bold shadow-sm disabled:opacity-50 inline-flex items-center gap-1.5"
-                      >
-                        <Check className="w-3.5 h-3.5" />
-                        {superAdminSaving === file.id ? 'Saving…' : 'Save .txt'}
-                      </button>
-                    </div>
-                  </section>
-                ))}
-              </div>
-            )}
+            <button onClick={() => setActionMessage(null)} className="text-xs font-bold underline cursor-pointer">
+              Dismiss
+            </button>
           </div>
         )}
 
-        {activeTab === 'registrations' && (
-          <>
-            <div className="px-5 py-4 border-b border-slate-200 flex flex-wrap items-center gap-2">
-              {(['all', 'pending', 'approved', 'rejected'] as const).map(f => (
-                <button
-                  key={f}
-                  onClick={() => setStatusFilter(f)}
-                  className={`px-3 py-2 rounded-xl text-xs font-bold ${statusFilter === f ? 'bg-slate-900 text-white' : 'bg-slate-100 text-slate-700'}`}
-                >
-                  {f}
-                </button>
-              ))}
-            </div>
+        {/* 2. REGISTRATION STATISTICS & SUMMARY */}
+        <section className="px-5 py-3.5 border-b border-slate-200 bg-slate-50/70 grid grid-cols-2 sm:grid-cols-4 gap-3 shrink-0">
+          <div className="p-3 rounded-2xl bg-white border border-slate-200/80 shadow-xs">
+            <span className="text-[10px] font-extrabold uppercase tracking-wider text-slate-400 block">Total {isMaleAdmin ? 'Male' : 'Female'}</span>
+            <div className="text-xl font-black text-slate-900 mt-0.5">{stats.total}</div>
+          </div>
+          <div className="p-3 rounded-2xl bg-white border border-amber-200/80 shadow-xs">
+            <span className="text-[10px] font-extrabold uppercase tracking-wider text-amber-600 block">Pending Review</span>
+            <div className="text-xl font-black text-amber-700 mt-0.5">{stats.pending}</div>
+          </div>
+          <div className="p-3 rounded-2xl bg-white border border-emerald-200/80 shadow-xs">
+            <span className="text-[10px] font-extrabold uppercase tracking-wider text-emerald-600 block">Approved</span>
+            <div className="text-xl font-black text-emerald-700 mt-0.5">{stats.approved}</div>
+          </div>
+          <div className="p-3 rounded-2xl bg-white border border-rose-200/80 shadow-xs">
+            <span className="text-[10px] font-extrabold uppercase tracking-wider text-rose-600 block">Rejected</span>
+            <div className="text-xl font-black text-rose-700 mt-0.5">{stats.rejected}</div>
+          </div>
+        </section>
 
-            <div className="flex-1 overflow-auto">
-              {isLoadingRegistrations ? (
-                <div className="p-8 text-center text-sm text-slate-500">Loading registrations…</div>
-              ) : registrationLoadError ? (
-                <div className="p-8 text-center text-sm text-rose-600">{registrationLoadError}</div>
-              ) : scopedRows.length === 0 ? (
-                <div className="p-8 text-center text-sm text-slate-500">No registrations found.</div>
-              ) : (
-                <table className="w-full text-xs">
-                  <thead className="sticky top-0 bg-slate-50">
-                    <tr>
-                      <th className="px-3 py-3 text-left">SL</th>
-                      <th className="px-3 py-3 text-left">Photo</th>
-                      <th className="px-3 py-3 text-left">Reg No</th>
-                      <th className="px-3 py-3 text-left">Name</th>
-                      <th className="px-3 py-3 text-left">Gender</th>
-                      <th className="px-3 py-3 text-left">Roll</th>
-                      <th className="px-3 py-3 text-left">Section</th>
-                      <th className="px-3 py-3 text-left">Payment</th>
-                      <th className="px-3 py-3 text-left">Payment No</th>
-                      <th className="px-3 py-3 text-left">Time</th>
-                      <th className="px-3 py-3 text-left">Txn</th>
-                      <th className="px-3 py-3 text-left">Status</th>
-                      <th className="px-3 py-3 text-left">Actions</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {scopedRows.map(r => (
-                      <tr key={r.registration_no} className="border-t border-slate-100">
-                        <td className="px-3 py-3 font-mono">{r.sl_no}</td>
-                        <td className="px-3 py-3">{r.student_photo ? <img src={r.student_photo} alt="" className="w-9 h-9 rounded-lg object-cover" /> : '—'}</td>
-                        <td className="px-3 py-3 font-mono font-bold">{r.registration_no}</td>
-                        <td className="px-3 py-3 font-semibold">{r.full_name}</td>
-                        <td className="px-3 py-3">{r.gender}</td>
-                        <td className="px-3 py-3">{r.class_roll}</td>
-                        <td className="px-3 py-3">{r.academic_section}</td>
-                        <td className="px-3 py-3">{r.send_method}</td>
-                        <td className="px-3 py-3">{r.sender_mobile_no}</td>
-                        <td className="px-3 py-3">{r.payment_time}</td>
-                        <td className="px-3 py-3">{r.transaction_id || '—'}</td>
-                        <td className="px-3 py-3 font-bold">{r.status}</td>
-                        <td className="px-3 py-3">
-                          <div className="flex items-center gap-2">
-                            <button onClick={() => handleApprove(r.registration_no)} disabled={r.status === 'approved'} title="Approve" className="p-2 rounded-lg bg-emerald-50 text-emerald-700 disabled:opacity-40">
+        {/* 3. CONTROLS: STATUS FILTERS & SEARCH */}
+        <div className="px-5 py-3 border-b border-slate-200 bg-white flex flex-wrap items-center justify-between gap-3 shrink-0">
+          <div className="flex items-center gap-1.5 overflow-x-auto">
+            {(['all', 'pending', 'approved', 'rejected'] as const).map(tab => {
+              const active = statusFilter === tab;
+              const count = tab === 'all' ? stats.total : stats[tab];
+              return (
+                <button
+                  key={tab}
+                  onClick={() => setStatusFilter(tab)}
+                  className={`px-3 py-1.5 rounded-xl text-xs font-bold capitalize transition-colors flex items-center gap-1.5 cursor-pointer ${
+                    active
+                      ? 'bg-slate-900 text-white shadow-xs'
+                      : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
+                  }`}
+                >
+                  <span>{tab}</span>
+                  <span className={`px-1.5 py-0.2 rounded-full text-[10px] font-mono ${active ? 'bg-white/25 text-white' : 'bg-slate-200 text-slate-700'}`}>
+                    {count}
+                  </span>
+                </button>
+              );
+            })}
+          </div>
+
+          <div className="relative min-w-56 sm:w-72">
+            <Search className="w-3.5 h-3.5 absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
+            <input
+              type="text"
+              value={searchTerm}
+              onChange={e => setSearchTerm(e.target.value)}
+              placeholder="Search reg no, name, roll, txn…"
+              className="w-full pl-8 pr-3 py-1.5 rounded-xl border border-slate-200 bg-slate-50 text-xs focus:bg-white focus:border-indigo-600 outline-none transition-colors"
+            />
+            {searchTerm && (
+              <button
+                onClick={() => setSearchTerm('')}
+                className="absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600"
+              >
+                <X className="w-3.5 h-3.5" />
+              </button>
+            )}
+          </div>
+        </div>
+
+        {/* 4. REGISTRATION TABLE / LIST */}
+        <div className="flex-1 overflow-auto bg-slate-50/30">
+          {isLoadingRegistrations ? (
+            <div className="h-64 flex flex-col items-center justify-center gap-2 text-slate-400">
+              <RefreshCw className="w-6 h-6 animate-spin text-indigo-600" />
+              <span className="text-xs font-semibold">Loading {panelTitle} records from Supabase…</span>
+            </div>
+          ) : registrationLoadError ? (
+            <div className="p-8 text-center max-w-md mx-auto my-12 bg-white rounded-3xl border border-rose-200 shadow-sm">
+              <AlertCircle className="w-8 h-8 text-rose-600 mx-auto mb-2" />
+              <h3 className="text-sm font-bold text-slate-900">Database Connection Issue</h3>
+              <p className="text-xs text-rose-600 mt-1">{registrationLoadError}</p>
+              <button
+                onClick={loadAdminRegistrations}
+                className="mt-4 px-4 py-2 rounded-xl bg-slate-900 text-white text-xs font-bold hover:bg-slate-800"
+              >
+                Retry Query
+              </button>
+            </div>
+          ) : filteredRegistrations.length === 0 ? (
+            <div className="h-64 flex flex-col items-center justify-center gap-2 text-slate-400">
+              <User className="w-8 h-8 text-slate-300" />
+              <span className="text-xs font-semibold">No {statusFilter !== 'all' ? statusFilter : ''} registrations found.</span>
+              {searchTerm && <span className="text-[11px] text-slate-400">Try clearing your search query.</span>}
+            </div>
+          ) : (
+            <div className="min-w-full inline-block align-middle">
+              <table className="min-w-full text-left text-xs divide-y divide-slate-200">
+                <thead className="bg-slate-100/90 text-slate-700 font-bold sticky top-0 z-10 backdrop-blur-xs">
+                  <tr>
+                    <th className="px-3.5 py-3 whitespace-nowrap">SL</th>
+                    <th className="px-3 py-3 whitespace-nowrap">Photo</th>
+                    <th className="px-3.5 py-3 whitespace-nowrap">Reg No</th>
+                    <th className="px-3.5 py-3 whitespace-nowrap">Student Name</th>
+                    <th className="px-3 py-3 whitespace-nowrap">Roll / Section</th>
+                    <th className="px-3 py-3 whitespace-nowrap">College ID</th>
+                    <th className="px-3.5 py-3 whitespace-nowrap">Jersey</th>
+                    <th className="px-3.5 py-3 whitespace-nowrap">Payment</th>
+                    <th className="px-3 py-3 whitespace-nowrap">Status</th>
+                    <th className="px-3.5 py-3 text-right whitespace-nowrap">Actions</th>
+                  </tr>
+                </thead>
+                <tbody className="bg-white divide-y divide-slate-100">
+                  {filteredRegistrations.map(r => {
+                    const isApproved = r.status === 'approved';
+                    const isRejected = r.status === 'rejected';
+                    const isPending = r.status === 'pending';
+
+                    return (
+                      <tr
+                        key={r.registration_no}
+                        className="hover:bg-slate-50/80 transition-colors cursor-pointer group"
+                        onClick={() => setSelectedRecord(r)}
+                      >
+                        {/* SL No */}
+                        <td className="px-3.5 py-3 font-mono text-slate-500 font-bold">
+                          {r.sl_no ?? '—'}
+                        </td>
+
+                        {/* Student Photo */}
+                        <td className="px-3 py-2.5">
+                          {r.student_photo ? (
+                            <img
+                              src={r.student_photo}
+                              alt={r.full_name}
+                              className="w-9 h-9 rounded-xl object-cover border border-slate-200 shadow-2xs"
+                              loading="lazy"
+                            />
+                          ) : (
+                            <div className="w-9 h-9 rounded-xl bg-slate-100 text-slate-400 grid place-items-center font-bold text-[10px]">
+                              N/A
+                            </div>
+                          )}
+                        </td>
+
+                        {/* Registration Number */}
+                        <td className="px-3.5 py-3 font-mono font-black text-indigo-600 text-xs whitespace-nowrap">
+                          {r.registration_no}
+                        </td>
+
+                        {/* Student Name & Contact */}
+                        <td className="px-3.5 py-3">
+                          <div className="font-bold text-slate-900 group-hover:text-indigo-600 transition-colors">
+                            {r.full_name}
+                          </div>
+                          <div className="text-[11px] text-slate-400 font-mono">
+                            {r.contact_mobile_number || '—'}
+                          </div>
+                        </td>
+
+                        {/* Roll, Group & Section */}
+                        <td className="px-3 py-3 whitespace-nowrap">
+                          <div className="font-bold text-slate-800">Roll: {r.class_roll}</div>
+                          <div className="text-[11px] text-slate-500">
+                            {r.academic_group} · <span className="font-bold text-slate-700">{r.academic_section}</span>
+                          </div>
+                        </td>
+
+                        {/* Student ID */}
+                        <td className="px-3 py-3 font-mono text-slate-600 whitespace-nowrap">
+                          {r.student_id}
+                        </td>
+
+                        {/* Jersey Info */}
+                        <td className="px-3.5 py-3 whitespace-nowrap">
+                          <div className="font-extrabold text-slate-800 flex items-center gap-1.5">
+                            <span className="font-mono text-indigo-600">#{r.jersey_number}</span>
+                            <span>{r.jersey_back_name}</span>
+                          </div>
+                          <div className="text-[11px] text-slate-500">
+                            Size: <strong className="text-slate-700">{r.jersey_size}</strong>
+                          </div>
+                        </td>
+
+                        {/* Payment Info */}
+                        <td className="px-3.5 py-3 whitespace-nowrap">
+                          <div className="font-bold text-slate-800 capitalize flex items-center gap-1">
+                            <span className={r.send_method === 'bkash' ? 'text-pink-600 font-black' : 'text-orange-600 font-black'}>
+                              {r.send_method}
+                            </span>
+                            <span className="text-[11px] text-slate-400">({r.payment_time})</span>
+                          </div>
+                          <div className="text-[11px] font-mono text-slate-500">
+                            {r.sender_mobile_no}
+                          </div>
+                          {r.transaction_id && (
+                            <div className="text-[10px] font-mono text-indigo-600 truncate max-w-28" title={r.transaction_id}>
+                              Txn: {r.transaction_id}
+                            </div>
+                          )}
+                        </td>
+
+                        {/* Status */}
+                        <td className="px-3 py-3 whitespace-nowrap">
+                          {isApproved && (
+                            <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[11px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-200">
+                              <CheckCircle2 className="w-3 h-3" />
+                              Approved
+                            </span>
+                          )}
+                          {isRejected && (
+                            <div>
+                              <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[11px] font-bold bg-rose-50 text-rose-700 border border-rose-200">
+                                <XCircle className="w-3 h-3" />
+                                Rejected
+                              </span>
+                              {r.reject_reason && (
+                                <p className="text-[10px] text-rose-600 font-medium max-w-36 truncate mt-0.5" title={r.reject_reason}>
+                                  {r.reject_reason}
+                                </p>
+                              )}
+                            </div>
+                          )}
+                          {isPending && (
+                            <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[11px] font-bold bg-amber-50 text-amber-700 border border-amber-200">
+                              <Clock className="w-3 h-3" />
+                              Pending
+                            </span>
+                          )}
+                        </td>
+
+                        {/* Row Actions */}
+                        <td className="px-3.5 py-3 text-right whitespace-nowrap" onClick={e => e.stopPropagation()}>
+                          <div className="flex items-center justify-end gap-1.5">
+                            {/* Approve Button */}
+                            <button
+                              onClick={() => handleApprove(r.registration_no)}
+                              disabled={isApproved || approvingRegNo === r.registration_no}
+                              title="Approve Registration"
+                              className={`p-2 rounded-xl transition-all cursor-pointer ${
+                                isApproved
+                                  ? 'bg-slate-100 text-slate-400 cursor-not-allowed opacity-50'
+                                  : 'bg-emerald-50 text-emerald-700 hover:bg-emerald-600 hover:text-white border border-emerald-200 shadow-2xs'
+                              }`}
+                            >
                               <Check className="w-4 h-4" />
                             </button>
-                            <button onClick={() => openRejectModal(r.registration_no)} disabled={r.status === 'rejected'} title="Reject" className="p-2 rounded-lg bg-rose-50 text-rose-700 disabled:opacity-40">
+
+                            {/* Reject Button */}
+                            <button
+                              onClick={() => openRejectModal(r)}
+                              disabled={isRejected}
+                              title="Reject Registration (Reason Required)"
+                              className={`p-2 rounded-xl transition-all cursor-pointer ${
+                                isRejected
+                                  ? 'bg-slate-100 text-slate-400 cursor-not-allowed opacity-50'
+                                  : 'bg-rose-50 text-rose-700 hover:bg-rose-600 hover:text-white border border-rose-200 shadow-2xs'
+                              }`}
+                            >
                               <XCircle className="w-4 h-4" />
                             </button>
-                            <button onClick={() => handleDelete(r.registration_no)} disabled={deletingRegNo === r.registration_no} title="Remove from web" className="p-2 rounded-lg bg-slate-100 text-slate-700 disabled:opacity-40">
+
+                            {/* Hide / Delete Button (Web-only soft delete) */}
+                            <button
+                              onClick={() => handleHide(r.registration_no)}
+                              disabled={hidingRegNo === r.registration_no}
+                              title="Delete from Web View (Kept in Database)"
+                              className="p-2 rounded-xl bg-slate-100 text-slate-600 hover:bg-slate-800 hover:text-white transition-all cursor-pointer border border-slate-200"
+                            >
                               <Trash2 className="w-4 h-4" />
                             </button>
                           </div>
                         </td>
                       </tr>
-                    ))}
-                  </tbody>
-                </table>
-              )}
+                    );
+                  })}
+                </tbody>
+              </table>
             </div>
-          </>
-        )}
+          )}
+        </div>
 
-        {rejecting && (
-          <div className="fixed inset-0 z-[320] bg-black/50 backdrop-blur-sm flex items-center justify-center p-4">
-            <div className="w-full max-w-md bg-white rounded-3xl shadow-2xl p-6">
-              <h3 className="text-lg font-black mb-2">Reject Registration</h3>
-              <p className="text-xs text-slate-500 mb-4">Registration No: <span className="font-mono font-bold">{rejecting}</span></p>
-              <textarea value={rejectReason} onChange={e => setRejectReason(e.target.value)} className="w-full min-h-32 px-4 py-3 rounded-xl border border-slate-200" placeholder="Enter rejection reason" />
-              <div className="flex justify-end gap-2 mt-4">
-                <button onClick={() => { setRejecting(null); setRejectReason(''); }} className="px-4 py-2 rounded-xl bg-slate-100 text-xs font-bold">Cancel</button>
-                <button onClick={confirmReject} className="px-4 py-2 rounded-xl bg-rose-600 text-white text-xs font-bold">Reject</button>
+        {/* 5. FOOTER STATUS BAR */}
+        <footer className="px-5 py-3 border-t border-slate-200 bg-slate-50 text-[11px] text-slate-500 flex flex-wrap items-center justify-between gap-2 shrink-0">
+          <div>
+            Showing <strong className="text-slate-800">{filteredRegistrations.length}</strong> of <strong className="text-slate-800">{adminRegistrations.length}</strong> {isMaleAdmin ? 'male' : 'female'} registrations
+          </div>
+          <div className="flex items-center gap-3">
+            <span className="inline-flex items-center gap-1.5">
+              <span className="w-2 h-2 rounded-full bg-emerald-500"></span>
+              Database source of truth
+            </span>
+            <span>·</span>
+            <span className="font-mono text-slate-400">xulkacnjqjnluhmbqbcu.supabase.co</span>
+          </div>
+        </footer>
+
+      </div>
+
+      {/* ---------------------------------------------------------------------- */}
+      {/* MODAL: REJECT REGISTRATION WITH REASON (Required) */}
+      {/* ---------------------------------------------------------------------- */}
+      {rejectingRecord && (
+        <div className="fixed inset-0 z-[320] bg-black/60 backdrop-blur-sm flex items-center justify-center p-4">
+          <div className="w-full max-w-md bg-white rounded-3xl shadow-2xl p-6 border border-slate-200 animate-scaleUp">
+            <div className="flex items-center justify-between mb-4">
+              <div className="flex items-center gap-2.5">
+                <div className="w-10 h-10 rounded-2xl bg-rose-50 text-rose-600 grid place-items-center">
+                  <XCircle className="w-5 h-5" />
+                </div>
+                <div>
+                  <h3 className="text-base font-black text-slate-900">Reject Registration</h3>
+                  <p className="text-xs text-slate-500 font-mono">
+                    {rejectingRecord.registration_no} · {rejectingRecord.full_name}
+                  </p>
+                </div>
               </div>
+              <button
+                onClick={() => { setRejectingRecord(null); setRejectReason(''); }}
+                className="p-1.5 rounded-xl text-slate-400 hover:text-slate-600"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+
+            <div className="mb-4">
+              <label className="block text-xs font-bold uppercase tracking-wider text-slate-700 mb-1.5">
+                Rejection Reason <span className="text-rose-600">*</span>
+              </label>
+              <textarea
+                value={rejectReason}
+                onChange={e => setRejectReason(e.target.value)}
+                placeholder="State clearly why this registration is rejected (e.g. Transaction ID mismatch, incomplete payment, invalid student ID)..."
+                rows={4}
+                className="w-full px-3.5 py-3 rounded-xl border border-slate-300 text-xs font-sans leading-relaxed outline-none focus:border-rose-600 focus:ring-2 focus:ring-rose-100 transition-all placeholder:text-slate-400"
+                autoFocus
+                required
+              />
+              <p className="text-[11px] text-slate-400 mt-1.5">
+                This reason will be recorded in Supabase and shown to the student on the official gate pass lookup page.
+              </p>
+            </div>
+
+            <div className="flex items-center justify-end gap-2.5">
+              <button
+                type="button"
+                onClick={() => { setRejectingRecord(null); setRejectReason(''); }}
+                className="px-4 py-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold transition-colors cursor-pointer"
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                onClick={handleConfirmReject}
+                disabled={isSubmittingReject || !rejectReason.trim()}
+                className="px-5 py-2.5 rounded-xl bg-rose-600 hover:bg-rose-700 text-white text-xs font-bold transition-all shadow-md shadow-rose-200 disabled:opacity-50 cursor-pointer inline-flex items-center gap-1.5"
+              >
+                {isSubmittingReject ? (
+                  <>
+                    <RefreshCw className="w-3.5 h-3.5 animate-spin" />
+                    <span>Recording in DB…</span>
+                  </>
+                ) : (
+                  <>
+                    <XCircle className="w-3.5 h-3.5" />
+                    <span>Confirm Rejection</span>
+                  </>
+                )}
+              </button>
             </div>
           </div>
-        )}
-      </div>
+        </div>
+      )}
+
+      {/* ---------------------------------------------------------------------- */}
+      {/* DRAWER: DETAILED REGISTRATION VIEW */}
+      {/* ---------------------------------------------------------------------- */}
+      {selectedRecord && (
+        <div className="fixed inset-0 z-[310] bg-black/50 backdrop-blur-xs flex items-center justify-end p-2 sm:p-4">
+          <div className="w-full max-w-lg h-full max-h-[92vh] bg-white rounded-3xl shadow-2xl border border-slate-200 flex flex-col overflow-hidden animate-slideLeft">
+            
+            <header className="px-5 py-4 border-b border-slate-200 bg-slate-50 flex items-center justify-between">
+              <div>
+                <span className="text-[10px] font-extrabold uppercase tracking-wider text-slate-400 block">Registration Details</span>
+                <div className="font-mono text-base font-black text-indigo-600">{selectedRecord.registration_no}</div>
+              </div>
+              <button
+                onClick={() => setSelectedRecord(null)}
+                className="p-2 rounded-xl text-slate-400 hover:text-slate-700 hover:bg-slate-200/60"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </header>
+
+            <div className="flex-1 overflow-auto p-5 space-y-5 text-xs">
+              {/* Photo & Identity Banner */}
+              <div className="flex items-center gap-4 p-4 rounded-2xl bg-slate-50 border border-slate-200">
+                {selectedRecord.student_photo ? (
+                  <img
+                    src={selectedRecord.student_photo}
+                    alt={selectedRecord.full_name}
+                    className="w-16 h-16 rounded-2xl object-cover border border-slate-300 shadow-sm"
+                  />
+                ) : (
+                  <div className="w-16 h-16 rounded-2xl bg-slate-200 text-slate-400 grid place-items-center font-bold text-xs">
+                    No Photo
+                  </div>
+                )}
+                <div className="min-w-0 flex-1">
+                  <h4 className="text-sm font-extrabold text-slate-900 truncate">{selectedRecord.full_name}</h4>
+                  <p className="text-slate-500 font-mono mt-0.5">SL: #{selectedRecord.sl_no} · ID: {selectedRecord.student_id}</p>
+                  <div className="mt-1.5 flex items-center gap-2">
+                    <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold ${
+                      selectedRecord.status === 'approved' ? 'bg-emerald-100 text-emerald-800' :
+                      selectedRecord.status === 'rejected' ? 'bg-rose-100 text-rose-800' :
+                      'bg-amber-100 text-amber-800'
+                    }`}>
+                      Status: {selectedRecord.status.toUpperCase()}
+                    </span>
+                    <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-slate-200 text-slate-700 uppercase">
+                      {selectedRecord.gender}
+                    </span>
+                  </div>
+                </div>
+              </div>
+
+              {/* Academic Information */}
+              <section className="space-y-2">
+                <h5 className="font-extrabold text-slate-900 uppercase text-[10px] tracking-wider text-slate-400">Academic Profile</h5>
+                <div className="grid grid-cols-2 gap-2.5">
+                  <div className="p-3 rounded-xl bg-slate-50 border border-slate-100">
+                    <span className="text-[10px] text-slate-400 block">Class Roll</span>
+                    <strong className="text-slate-800 font-mono">{selectedRecord.class_roll}</strong>
+                  </div>
+                  <div className="p-3 rounded-xl bg-slate-50 border border-slate-100">
+                    <span className="text-[10px] text-slate-400 block">College ID</span>
+                    <strong className="text-slate-800 font-mono">{selectedRecord.student_id}</strong>
+                  </div>
+                  <div className="p-3 rounded-xl bg-slate-50 border border-slate-100">
+                    <span className="text-[10px] text-slate-400 block">Academic Group</span>
+                    <strong className="text-slate-800">{selectedRecord.academic_group}</strong>
+                  </div>
+                  <div className="p-3 rounded-xl bg-slate-50 border border-slate-100">
+                    <span className="text-[10px] text-slate-400 block">Section</span>
+                    <strong className="text-slate-800">{selectedRecord.academic_section}</strong>
+                  </div>
+                </div>
+              </section>
+
+              {/* Jersey Customization */}
+              <section className="space-y-2">
+                <h5 className="font-extrabold text-slate-900 uppercase text-[10px] tracking-wider text-slate-400">Jersey Customization</h5>
+                <div className="p-3.5 rounded-2xl bg-indigo-50/50 border border-indigo-100 flex items-center justify-between">
+                  <div>
+                    <span className="text-[10px] text-indigo-400 block uppercase font-bold">Back Print</span>
+                    <div className="text-sm font-black text-indigo-900 flex items-center gap-2">
+                      <span className="font-mono text-base">#{selectedRecord.jersey_number}</span>
+                      <span>{selectedRecord.jersey_back_name}</span>
+                    </div>
+                  </div>
+                  <div className="text-right">
+                    <span className="text-[10px] text-indigo-400 block uppercase font-bold">Selected Size</span>
+                    <div className="text-base font-black text-indigo-900 font-mono">{selectedRecord.jersey_size}</div>
+                  </div>
+                </div>
+              </section>
+
+              {/* Payment Verification */}
+              <section className="space-y-2">
+                <h5 className="font-extrabold text-slate-900 uppercase text-[10px] tracking-wider text-slate-400">Payment Audit</h5>
+                <div className="space-y-2">
+                  <div className="p-3 rounded-xl bg-slate-50 border border-slate-100 flex items-center justify-between">
+                    <span className="text-slate-500">Method:</span>
+                    <strong className="capitalize font-black text-slate-800">{selectedRecord.send_method}</strong>
+                  </div>
+                  <div className="p-3 rounded-xl bg-slate-50 border border-slate-100 flex items-center justify-between">
+                    <span className="text-slate-500">Sender Mobile No:</span>
+                    <strong className="font-mono text-slate-800">{selectedRecord.sender_mobile_no}</strong>
+                  </div>
+                  <div className="p-3 rounded-xl bg-slate-50 border border-slate-100 flex items-center justify-between">
+                    <span className="text-slate-500">Payment Time:</span>
+                    <strong className="font-mono text-slate-800">{selectedRecord.payment_time}</strong>
+                  </div>
+                  <div className="p-3 rounded-xl bg-slate-50 border border-slate-100 flex items-center justify-between">
+                    <span className="text-slate-500">Transaction ID:</span>
+                    <strong className="font-mono text-indigo-600">{selectedRecord.transaction_id || 'Not Provided'}</strong>
+                  </div>
+                </div>
+              </section>
+
+              {/* Rejection / Approval Audit Records */}
+              {selectedRecord.reject_reason && (
+                <section className="p-3.5 rounded-2xl bg-rose-50 border border-rose-200">
+                  <span className="text-[10px] font-bold uppercase tracking-wider text-rose-700 block mb-1">
+                    Recorded Rejection Reason
+                  </span>
+                  <p className="text-rose-900 font-medium leading-relaxed">{selectedRecord.reject_reason}</p>
+                  {selectedRecord.rejected_at && (
+                    <span className="text-[10px] text-rose-500 font-mono block mt-1">
+                      Recorded at: {new Date(selectedRecord.rejected_at).toLocaleString()}
+                    </span>
+                  )}
+                </section>
+              )}
+
+              {selectedRecord.approved_at && (
+                <section className="p-3 rounded-xl bg-emerald-50 border border-emerald-200 text-emerald-800 text-[11px]">
+                  <strong>Approved at:</strong> {new Date(selectedRecord.approved_at).toLocaleString()}
+                </section>
+              )}
+
+              {/* Invitation Card Generator (Direct download for approved) */}
+              {selectedRecord.status === 'approved' && (
+                <div className="pt-2">
+                  <button
+                    onClick={() => generateInvitationCardPDF(selectedRecord, pdfSettings, websiteSettings)}
+                    className="w-full py-3 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs shadow-md transition-all flex items-center justify-center gap-2"
+                  >
+                    <Download className="w-4 h-4" />
+                    <span>Download Official Invitation Pass (PDF)</span>
+                  </button>
+                </div>
+              )}
+            </div>
+
+            {/* Drawer Actions */}
+            <footer className="p-4 border-t border-slate-200 bg-slate-50 flex items-center justify-between gap-2">
+              <button
+                onClick={() => handleHide(selectedRecord.registration_no)}
+                className="px-3.5 py-2.5 rounded-xl border border-slate-200 hover:bg-rose-50 hover:text-rose-700 hover:border-rose-200 text-slate-600 text-xs font-bold transition-colors inline-flex items-center gap-1.5"
+              >
+                <Trash2 className="w-3.5 h-3.5" />
+                <span>Remove From Web</span>
+              </button>
+
+              <div className="flex items-center gap-2">
+                {selectedRecord.status !== 'rejected' && (
+                  <button
+                    onClick={() => openRejectModal(selectedRecord)}
+                    className="px-4 py-2.5 rounded-xl bg-rose-50 hover:bg-rose-600 hover:text-white text-rose-700 border border-rose-200 text-xs font-bold transition-all"
+                  >
+                    Reject
+                  </button>
+                )}
+                {selectedRecord.status !== 'approved' && (
+                  <button
+                    onClick={() => handleApprove(selectedRecord.registration_no)}
+                    className="px-5 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold shadow-md transition-all inline-flex items-center gap-1.5"
+                  >
+                    <Check className="w-3.5 h-3.5" />
+                    <span>Approve</span>
+                  </button>
+                )}
+              </div>
+            </footer>
+
+          </div>
+        </div>
+      )}
+
     </div>
   );
 };
