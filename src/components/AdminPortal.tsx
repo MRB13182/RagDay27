@@ -369,57 +369,59 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
       <div className="w-full max-w-7xl h-[95vh] rounded-3xl bg-white shadow-2xl border border-slate-200 flex flex-col overflow-hidden animate-scaleUp">
 
         {/* 1. ADMIN HEADER */}
-        <header className="px-5 py-4 border-b border-slate-200 bg-white flex flex-wrap items-center justify-between gap-3 shrink-0">
-          <div className="flex items-center gap-3">
-            <div className={`w-11 h-11 rounded-2xl grid place-items-center font-black text-lg border ${roleBadgeColor}`}>
+        <header className="px-4 py-3 sm:px-5 sm:py-3.5 border-b border-slate-200 bg-white flex items-center justify-between gap-2.5 shrink-0">
+          <div className="flex items-center gap-2.5 min-w-0">
+            <div className={`w-9 h-9 sm:w-10 sm:h-10 rounded-xl grid place-items-center font-black text-base sm:text-lg border shrink-0 ${roleBadgeColor}`}>
               {isMaleAdmin ? '♂' : '♀'}
             </div>
-            <div>
+            <div className="min-w-0">
               <div className="flex items-center gap-2">
-                <h2 className="text-lg font-black text-slate-900 tracking-tight">{panelTitle}</h2>
-                <span className={`px-2.5 py-0.5 rounded-full text-[11px] font-extrabold border ${roleBadgeColor}`}>
+                <h2 className="text-base sm:text-lg font-bold font-sans text-slate-900 tracking-tight leading-tight truncate">
+                  {panelTitle}
+                </h2>
+                <span className={`px-2 py-0.5 rounded-full text-[10px] font-extrabold border shrink-0 ${roleBadgeColor}`}>
                   {admin.role}
                 </span>
               </div>
-              <p className="text-xs text-slate-500">
+              <p className="text-[11px] sm:text-xs text-slate-500 truncate leading-tight mt-0.5">
                 Logged in as <strong className="text-slate-700">{admin.full_name}</strong> · {genderSubtext}
               </p>
             </div>
           </div>
 
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-1.5 shrink-0">
             <button
               onClick={handleExportPDF}
               disabled={adminRegistrations.length === 0}
-              className="px-3.5 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold transition-colors inline-flex items-center gap-1.5 disabled:opacity-40 cursor-pointer"
+              className="p-2 sm:px-3 sm:py-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold transition-colors inline-flex items-center gap-1.5 disabled:opacity-40 cursor-pointer"
               title="Download registration ledger as PDF"
             >
               <FileSpreadsheet className="w-4 h-4 text-slate-600" />
-              <span className="hidden sm:inline">Export PDF</span>
+              <span className="hidden md:inline">Export PDF</span>
             </button>
 
             <button
               onClick={loadAdminRegistrations}
               disabled={isLoadingRegistrations}
-              className="px-3.5 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold transition-colors inline-flex items-center gap-1.5 cursor-pointer disabled:opacity-50"
+              className="p-2 sm:px-3 sm:py-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold transition-colors inline-flex items-center gap-1.5 cursor-pointer disabled:opacity-50"
               title="Refresh registrations from database"
             >
               <RefreshCw className={`w-4 h-4 ${isLoadingRegistrations ? 'animate-spin text-indigo-600' : 'text-slate-600'}`} />
-              <span className="hidden sm:inline">Refresh</span>
+              <span className="hidden md:inline">Refresh</span>
             </button>
 
             <button
               onClick={handleLogout}
-              className="px-3.5 py-2 rounded-xl bg-slate-900 hover:bg-rose-600 text-white text-xs font-bold transition-colors inline-flex items-center gap-1.5 cursor-pointer"
+              className="p-2 sm:px-3 sm:py-2 rounded-xl bg-slate-900 hover:bg-rose-600 text-white text-xs font-bold transition-colors inline-flex items-center gap-1.5 cursor-pointer"
               title="Sign out of admin session"
             >
               <LogOut className="w-4 h-4" />
-              <span className="hidden sm:inline">Logout</span>
+              <span className="hidden md:inline">Logout</span>
             </button>
 
             <button
               onClick={onClose}
-              className="p-2 rounded-xl text-slate-400 hover:text-slate-700 hover:bg-slate-100 transition-colors ml-1"
+              className="p-2 rounded-xl text-slate-400 hover:text-slate-700 hover:bg-slate-100 transition-colors ml-0.5"
               title="Close Admin Panel"
             >
               <X className="w-5 h-5" />
@@ -430,7 +432,7 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
         {/* Action toast/banner */}
         {actionMessage && (
           <div
-            className={`px-5 py-2.5 text-xs font-semibold flex items-center justify-between border-b ${
+            className={`px-4 py-2 text-xs font-semibold flex items-center justify-between border-b ${
               actionMessage.type === 'success'
                 ? 'bg-emerald-50 text-emerald-800 border-emerald-200'
                 : 'bg-rose-50 text-rose-800 border-rose-200'
@@ -446,23 +448,33 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
           </div>
         )}
 
-        {/* 2. REGISTRATION STATISTICS & SUMMARY */}
-        <section className="px-5 py-3.5 border-b border-slate-200 bg-slate-50/70 grid grid-cols-2 sm:grid-cols-4 gap-3 shrink-0">
-          <div className="p-3 rounded-2xl bg-white border border-slate-200/80 shadow-xs">
-            <span className="text-[10px] font-extrabold uppercase tracking-wider text-slate-400 block">Total {isMaleAdmin ? 'Male' : 'Female'}</span>
-            <div className="text-xl font-black text-slate-900 mt-0.5">{stats.total}</div>
-          </div>
-          <div className="p-3 rounded-2xl bg-white border border-amber-200/80 shadow-xs">
-            <span className="text-[10px] font-extrabold uppercase tracking-wider text-amber-600 block">Pending Review</span>
-            <div className="text-xl font-black text-amber-700 mt-0.5">{stats.pending}</div>
-          </div>
-          <div className="p-3 rounded-2xl bg-white border border-emerald-200/80 shadow-xs">
-            <span className="text-[10px] font-extrabold uppercase tracking-wider text-emerald-600 block">Approved</span>
-            <div className="text-xl font-black text-emerald-700 mt-0.5">{stats.approved}</div>
-          </div>
-          <div className="p-3 rounded-2xl bg-white border border-rose-200/80 shadow-xs">
-            <span className="text-[10px] font-extrabold uppercase tracking-wider text-rose-600 block">Rejected</span>
-            <div className="text-xl font-black text-rose-700 mt-0.5">{stats.rejected}</div>
+        {/* 2. REGISTRATION STATISTICS & SUMMARY - Compact Single Row */}
+        <section className="px-4 py-2 sm:px-5 sm:py-2.5 border-b border-slate-200 bg-slate-50/70 overflow-x-auto shrink-0">
+          <div className="grid grid-cols-4 min-w-[320px] gap-2 sm:gap-3">
+            <div className="p-2 sm:p-2.5 rounded-xl sm:rounded-2xl bg-white border border-slate-200/80 shadow-2xs">
+              <span className="text-[9px] sm:text-[10px] font-extrabold uppercase tracking-wider text-slate-400 block leading-tight truncate">
+                Total {isMaleAdmin ? 'Male' : 'Female'}
+              </span>
+              <div className="text-base sm:text-lg font-black text-slate-900 mt-0.5 leading-tight">{stats.total}</div>
+            </div>
+            <div className="p-2 sm:p-2.5 rounded-xl sm:rounded-2xl bg-white border border-amber-200/80 shadow-2xs">
+              <span className="text-[9px] sm:text-[10px] font-extrabold uppercase tracking-wider text-amber-600 block leading-tight truncate">
+                Pending Review
+              </span>
+              <div className="text-base sm:text-lg font-black text-amber-700 mt-0.5 leading-tight">{stats.pending}</div>
+            </div>
+            <div className="p-2 sm:p-2.5 rounded-xl sm:rounded-2xl bg-white border border-emerald-200/80 shadow-2xs">
+              <span className="text-[9px] sm:text-[10px] font-extrabold uppercase tracking-wider text-emerald-600 block leading-tight truncate">
+                Approved
+              </span>
+              <div className="text-base sm:text-lg font-black text-emerald-700 mt-0.5 leading-tight">{stats.approved}</div>
+            </div>
+            <div className="p-2 sm:p-2.5 rounded-xl sm:rounded-2xl bg-white border border-rose-200/80 shadow-2xs">
+              <span className="text-[9px] sm:text-[10px] font-extrabold uppercase tracking-wider text-rose-600 block leading-tight truncate">
+                Rejected
+              </span>
+              <div className="text-base sm:text-lg font-black text-rose-700 mt-0.5 leading-tight">{stats.rejected}</div>
+            </div>
           </div>
         </section>
 
@@ -724,17 +736,9 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
         </div>
 
         {/* 5. FOOTER STATUS BAR */}
-        <footer className="px-5 py-3 border-t border-slate-200 bg-slate-50 text-[11px] text-slate-500 flex flex-wrap items-center justify-between gap-2 shrink-0">
+        <footer className="px-5 py-2.5 border-t border-slate-200 bg-slate-50 text-[11px] text-slate-500 shrink-0">
           <div>
             Showing <strong className="text-slate-800">{filteredRegistrations.length}</strong> of <strong className="text-slate-800">{adminRegistrations.length}</strong> {isMaleAdmin ? 'male' : 'female'} registrations
-          </div>
-          <div className="flex items-center gap-3">
-            <span className="inline-flex items-center gap-1.5">
-              <span className="w-2 h-2 rounded-full bg-emerald-500"></span>
-              Database source of truth
-            </span>
-            <span>·</span>
-            <span className="font-mono text-slate-400">xulkacnjqjnluhmbqbcu.supabase.co</span>
           </div>
         </footer>
 

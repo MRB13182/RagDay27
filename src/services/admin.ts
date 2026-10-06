@@ -151,26 +151,3 @@ export async function deleteRegistration(registrationNo: string) {
     return { success: false, error, errorMessage: String(error?.message || 'Unable to hide registration from web.') };
   }
 }
-
-export async function deleteRegistrationPermanently(registrationNo: string) {
-  const passcode = getStoredAdminPasscode();
-  const regNo = cleanRegistrationNo(registrationNo);
-
-  if (!passcode) return { success: false, errorMessage: 'Admin passcode session is missing. Please sign in again.' };
-  if (!/^RD27-\d+$/i.test(regNo)) return { success: false, errorMessage: 'Invalid registration number.' };
-
-  try {
-    const result = await supabase.rpc('delete_registration_permanently', {
-      p_passcode: passcode,
-      p_registration_no: regNo,
-    });
-
-    if (result.error) {
-      return { success: false, error: result.error, errorMessage: String(result.error.message || 'Unable to permanently delete registration from database.') };
-    }
-
-    return { success: true };
-  } catch (error: any) {
-    return { success: false, error, errorMessage: String(error?.message || 'Unable to permanently delete registration.') };
-  }
-}
