@@ -119,12 +119,16 @@ function processFoundData(data: any, originalRegNo: string): {
   return { success: true, data: mapRowToInvitation(data) };
 }
 
-export async function searchPublicStudent(searchTerm: string) {
+export async function searchPublicStudent(searchTerm: string, studentName?: string) {
   const clean = searchTerm.trim();
   if (!clean) return { success: true, data: [] as InvitationRecord[] };
 
-  // Public lookup intentionally requires the exact registration number.
-  const result = await getPublicInvitation(clean);
+  if (!studentName?.trim()) {
+    return { success: false, data: [] as InvitationRecord[], errorMessage: 'Student name is required.' };
+  }
+
+  // Public lookup intentionally requires the exact registration number and student name.
+  const result = await getPublicInvitation(clean, studentName.trim());
   return result.success && result.data ? { success: true, data: [result.data] } : {
     success: false,
     data: [] as InvitationRecord[],

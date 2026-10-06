@@ -67,7 +67,12 @@ function cleanRegistrationNo(value: string): string {
   return short ? `${short[1]}${short[2].padStart(2, '0')}` : clean;
 }
 
-export async function approveRegistration(registrationNo: string) {
+export async function approveRegistration(registrationNo: string): Promise<{
+  success: boolean;
+  data?: InvitationRecord;
+  error?: any;
+  errorMessage?: string;
+}> {
   const passcode = getStoredAdminPasscode();
   const regNo = cleanRegistrationNo(registrationNo);
 
@@ -87,14 +92,38 @@ export async function approveRegistration(registrationNo: string) {
       });
     }
 
-    if (result.error) return { success: false, error: result.error, errorMessage: String(result.error.message || 'Unable to approve registration.') };
-    return { success: true, data: result.data ? mapRowToInvitation(result.data) : undefined };
+    if (result.error) {
+      return {
+        success: false,
+        error: result.error,
+        errorMessage: String(result.error.message || 'Unable to approve registration.')
+      };
+    }
+
+    if (!result.data) {
+      return {
+        success: false,
+        errorMessage: 'Database did not return the updated registration record.'
+      };
+    }
+
+    const row = Array.isArray(result.data) ? result.data[0] : result.data;
+    const mapped = mapRowToInvitation(row);
+    return { success: true, data: mapped };
   } catch (error: any) {
     return { success: false, error, errorMessage: String(error?.message || 'Unable to approve registration.') };
   }
 }
 
-export async function rejectRegistration(registrationNo: string, reason: string) {
+export async function rejectRegistration(
+  registrationNo: string,
+  reason: string
+): Promise<{
+  success: boolean;
+  data?: InvitationRecord;
+  error?: any;
+  errorMessage?: string;
+}> {
   const cleanReason = reason.trim();
   const passcode = getStoredAdminPasscode();
   const regNo = cleanRegistrationNo(registrationNo);
@@ -106,20 +135,36 @@ export async function rejectRegistration(registrationNo: string, reason: string)
   try {
     let result = await supabase.rpc('reject_registration', {
       p_passcode: passcode,
-      p_reason: cleanReason,
       p_registration_no: regNo,
+      p_reason: cleanReason,
     });
 
     if (result.error && result.error.code === 'PGRST202') {
       result = await supabase.rpc('reject_registration', {
-        p_registration_no: regNo,
-        p_reason: cleanReason,
         p_passcode: passcode,
+        p_reason: cleanReason,
+        p_registration_no: regNo,
       });
     }
 
-    if (result.error) return { success: false, error: result.error, errorMessage: String(result.error.message || 'Unable to reject registration.') };
-    return { success: true, data: result.data ? mapRowToInvitation(result.data) : undefined };
+    if (result.error) {
+      return {
+        success: false,
+        error: result.error,
+        errorMessage: String(result.error.message || 'Unable to reject registration.')
+      };
+    }
+
+    if (!result.data) {
+      return {
+        success: false,
+        errorMessage: 'Database did not return the updated registration record.'
+      };
+    }
+
+    const row = Array.isArray(result.data) ? result.data[0] : result.data;
+    const mapped = mapRowToInvitation(row);
+    return { success: true, data: mapped };
   } catch (error: any) {
     return { success: false, error, errorMessage: String(error?.message || 'Unable to reject registration.') };
   }
@@ -146,7 +191,8 @@ export async function deleteRegistration(registrationNo: string) {
     }
 
     if (result.error) return { success: false, error: result.error, errorMessage: String(result.error.message || 'Unable to hide registration from web.') };
-    return { success: true, data: result.data ? mapRowToInvitation(result.data) : undefined };
+    const row = Array.isArray(result.data) ? result.data[0] : result.data;
+    return { success: true, data: row ? mapRowToInvitation(row) : undefined };
   } catch (error: any) {
     return { success: false, error, errorMessage: String(error?.message || 'Unable to hide registration from web.') };
   }

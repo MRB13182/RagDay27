@@ -14,7 +14,7 @@ interface AdminPortalProps {
   isOpen: boolean;
   onClose: () => void;
   invitations: InvitationRecord[];
-  onUpdateStatus: (registration_no: string, newStatus: InvitationStatus, reason?: string) => Promise<void>;
+  onUpdateStatus: (registration_no: string, newStatus: InvitationStatus, reason?: string) => Promise<InvitationRecord | void>;
   onDeleteRegistration?: (registration_no: string) => Promise<void>;
   pdfSettings?: PdfSettings;
   websiteSettings?: WebsiteSettings;
@@ -184,17 +184,25 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
     setApprovingRegNo(regNo);
     setActionMessage(null);
     try {
-      await onUpdateStatus(regNo, 'approved');
-      // Update local state immediately with approved status
+      const updatedRecord = await onUpdateStatus(regNo, 'approved');
+      // Update local state ONLY after successful database operation using the returned DB record
       setAdminRegistrations(prev =>
         prev.map(r =>
           r.registration_no === regNo
-            ? { ...r, status: 'approved', reject_reason: undefined, approved_at: new Date().toISOString() }
+            ? (updatedRecord
+                ? { ...r, ...updatedRecord }
+                : { ...r, status: 'approved', reject_reason: undefined, approved_at: new Date().toISOString() })
             : r
         )
       );
       if (selectedRecord?.registration_no === regNo) {
-        setSelectedRecord(prev => prev ? { ...prev, status: 'approved', reject_reason: undefined } : null);
+        setSelectedRecord(prev =>
+          prev
+            ? (updatedRecord
+                ? { ...prev, ...updatedRecord }
+                : { ...prev, status: 'approved', reject_reason: undefined })
+            : null
+        );
       }
       setActionMessage({ text: `Registration ${regNo} approved successfully!`, type: 'success' });
     } catch (err: any) {
@@ -222,16 +230,25 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
     setIsSubmittingReject(true);
     setActionMessage(null);
     try {
-      await onUpdateStatus(regNo, 'rejected', cleanReason);
+      const updatedRecord = await onUpdateStatus(regNo, 'rejected', cleanReason);
+      // Update local state ONLY after successful database operation using the returned DB record
       setAdminRegistrations(prev =>
         prev.map(r =>
           r.registration_no === regNo
-            ? { ...r, status: 'rejected', reject_reason: cleanReason, rejected_at: new Date().toISOString() }
+            ? (updatedRecord
+                ? { ...r, ...updatedRecord }
+                : { ...r, status: 'rejected', reject_reason: cleanReason, rejected_at: new Date().toISOString() })
             : r
         )
       );
       if (selectedRecord?.registration_no === regNo) {
-        setSelectedRecord(prev => prev ? { ...prev, status: 'rejected', reject_reason: cleanReason } : null);
+        setSelectedRecord(prev =>
+          prev
+            ? (updatedRecord
+                ? { ...prev, ...updatedRecord }
+                : { ...prev, status: 'rejected', reject_reason: cleanReason })
+            : null
+        );
       }
       setRejectingRecord(null);
       setRejectReason('');

@@ -217,8 +217,8 @@ $$;
 
 -- 6. APPROVE REGISTRATION
 create or replace function public.approve_registration(
-  p_registration_id uuid,
-  p_passcode text
+  p_passcode text,
+  p_registration_no text
 )
 returns public.registrations
 language plpgsql
@@ -226,7 +226,9 @@ security definer
 as $$
 declare
   clean_pass text := trim(coalesce(p_passcode, ''));
+  clean_reg_no text := upper(trim(coalesce(p_registration_no, '')));
   v_admin_role text;
+  v_admin_id uuid;
   v_reg public.registrations;
 begin
   if clean_pass = 'nic27.boy' or clean_pass = 'nicboy.27' then
@@ -237,7 +239,12 @@ begin
     raise exception 'unauthorized: invalid admin passcode' using errcode = '42501';
   end if;
 
-  select * into v_reg from public.registrations where id = p_registration_id;
+  select id into v_admin_id from public.admins where role = v_admin_role limit 1;
+  if v_admin_id is null then
+    v_admin_id := case when v_admin_role = 'male_admin' then '11111111-1111-1111-1111-111111111111'::uuid else '22222222-2222-2222-2222-222222222222'::uuid end;
+  end if;
+
+  select * into v_reg from public.registrations where upper(registration_no) = clean_reg_no;
   if not found then
     raise exception 'REGISTRATION_NOT_FOUND' using errcode = 'P0002';
   end if;
@@ -249,9 +256,11 @@ begin
 
   update public.registrations
   set status = 'approved',
+      approved_by = v_admin_id,
       approved_at = now(),
+      reject_reason = null,
       updated_at = now()
-  where id = p_registration_id
+  where id = v_reg.id
   returning * into v_reg;
 
   return v_reg;
@@ -260,9 +269,9 @@ $$;
 
 -- 7. REJECT REGISTRATION
 create or replace function public.reject_registration(
-  p_registration_id uuid,
-  p_reason text,
-  p_passcode text
+  p_passcode text,
+  p_registration_no text,
+  p_reason text
 )
 returns public.registrations
 language plpgsql
@@ -270,7 +279,10 @@ security definer
 as $$
 declare
   clean_pass text := trim(coalesce(p_passcode, ''));
+  clean_reg_no text := upper(trim(coalesce(p_registration_no, '')));
+  clean_reason text := trim(coalesce(p_reason, ''));
   v_admin_role text;
+  v_admin_id uuid;
   v_reg public.registrations;
 begin
   if clean_pass = 'nic27.boy' or clean_pass = 'nicboy.27' then
@@ -281,7 +293,16 @@ begin
     raise exception 'unauthorized: invalid admin passcode' using errcode = '42501';
   end if;
 
-  select * into v_reg from public.registrations where id = p_registration_id;
+  if clean_reason = '' then
+    raise exception 'REJECTION_REASON_REQUIRED' using errcode = '22023';
+  end if;
+
+  select id into v_admin_id from public.admins where role = v_admin_role limit 1;
+  if v_admin_id is null then
+    v_admin_id := case when v_admin_role = 'male_admin' then '11111111-1111-1111-1111-111111111111'::uuid else '22222222-2222-2222-2222-222222222222'::uuid end;
+  end if;
+
+  select * into v_reg from public.registrations where upper(registration_no) = clean_reg_no;
   if not found then
     raise exception 'REGISTRATION_NOT_FOUND' using errcode = 'P0002';
   end if;
@@ -293,10 +314,11 @@ begin
 
   update public.registrations
   set status = 'rejected',
-      reject_reason = trim(p_reason),
+      reject_reason = clean_reason,
+      rejected_by = v_admin_id,
       rejected_at = now(),
       updated_at = now()
-  where id = p_registration_id
+  where id = v_reg.id
   returning * into v_reg;
 
   return v_reg;
@@ -305,8 +327,8 @@ $$;
 
 -- 8. HIDE REGISTRATION FROM WEB
 create or replace function public.hide_registration_from_web(
-  p_registration_id uuid,
-  p_passcode text
+  p_passcode text,
+  p_registration_no text
 )
 returns public.registrations
 language plpgsql
@@ -314,7 +336,9 @@ security definer
 as $$
 declare
   clean_pass text := trim(coalesce(p_passcode, ''));
+  clean_reg_no text := upper(trim(coalesce(p_registration_no, '')));
   v_admin_role text;
+  v_admin_id uuid;
   v_reg public.registrations;
 begin
   if clean_pass = 'nic27.boy' or clean_pass = 'nicboy.27' then
@@ -325,7 +349,12 @@ begin
     raise exception 'unauthorized: invalid admin passcode' using errcode = '42501';
   end if;
 
-  select * into v_reg from public.registrations where id = p_registration_id;
+  select id into v_admin_id from public.admins where role = v_admin_role limit 1;
+  if v_admin_id is null then
+    v_admin_id := case when v_admin_role = 'male_admin' then '11111111-1111-1111-1111-111111111111'::uuid else '22222222-2222-2222-2222-222222222222'::uuid end;
+  end if;
+
+  select * into v_reg from public.registrations where upper(registration_no) = clean_reg_no;
   if not found then
     raise exception 'REGISTRATION_NOT_FOUND' using errcode = 'P0002';
   end if;
@@ -337,9 +366,10 @@ begin
 
   update public.registrations
   set hidden_from_web = true,
+      hidden_by = v_admin_id,
       hidden_at = now(),
       updated_at = now()
-  where id = p_registration_id
+  where id = v_reg.id
   returning * into v_reg;
 
   return v_reg;

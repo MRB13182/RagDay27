@@ -217,14 +217,14 @@ export default function App() {
     registrationNo: string,
     newStatus: InvitationStatus,
     reason?: string
-  ) => {
+  ): Promise<InvitationRecord> => {
     if (!registrationNo.trim()) {
       showToast('Registration number is required.', 'error');
-      return;
+      throw new Error('Registration number is required.');
     }
     if (newStatus === 'rejected' && !reason?.trim()) {
       showToast('A rejection reason is strictly required.', 'error');
-      return;
+      throw new Error('A rejection reason is strictly required.');
     }
 
     try {
@@ -233,8 +233,9 @@ export default function App() {
         : await rejectRegistration(registrationNo, reason!.trim());
 
       if (!result.success || !result.data) {
-        showToast(result.errorMessage || `Unable to update registration ${registrationNo}.`, 'error');
-        return;
+        const errorMsg = result.errorMessage || `Unable to update registration ${registrationNo}.`;
+        showToast(errorMsg, 'error');
+        throw new Error(errorMsg);
       }
 
       const confirmed = result.data;
@@ -252,8 +253,10 @@ export default function App() {
           : `Registration ${confirmed.registration_no} rejected.`,
         'success'
       );
+      return confirmed;
     } catch (error: any) {
       showToast(error?.message || `Unable to update registration ${registrationNo}.`, 'error');
+      throw error;
     }
   };
 
@@ -266,14 +269,16 @@ export default function App() {
     try {
       const result = await deleteRegistration(registrationNo);
       if (!result.success) {
-        showToast(result.errorMessage || `Unable to delete registration ${registrationNo}.`, 'error');
-        return;
+        const errorMsg = result.errorMessage || `Unable to delete registration ${registrationNo}.`;
+        showToast(errorMsg, 'error');
+        throw new Error(errorMsg);
       }
 
       setInvitations(prev => prev.filter(r => r.registration_no !== registrationNo));
       showToast(`Registration ${registrationNo} removed from the admin web list.`, 'success');
     } catch (error: any) {
       showToast(error?.message || `Unable to remove registration ${registrationNo}.`, 'error');
+      throw error;
     }
   };
 
