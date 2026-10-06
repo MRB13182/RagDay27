@@ -43,10 +43,113 @@ interface RegistrationFormProps {
   existingRegistrations?: InvitationRecord[];
   initialRecord?: InvitationRecord | null;
   registrationOpen?: boolean;
+  registrationDeadline?: string;
   onResetReRegister?: () => void;
 }
 
 const JERSEY_SIZES: JerseySize[] = ['S', 'M', 'L', 'XL', '2XL', '3XL', '4XL'];
+
+function formatRegistrationClosingDate(dateStr: string): string {
+  try {
+    const d = new Date(dateStr);
+    if (!isNaN(d.getTime())) {
+      const day = d.getDate();
+      const month = d.toLocaleDateString('en-US', { month: 'long' });
+      const year = d.getFullYear();
+      let hours = d.getHours();
+      const minutes = String(d.getMinutes()).padStart(2, '0');
+      const ampm = hours >= 12 ? 'PM' : 'AM';
+      hours = hours % 12 || 12;
+      return `${day} ${month} ${year}, ${hours}:${minutes} ${ampm}`;
+    }
+  } catch {}
+  return dateStr;
+}
+
+const RegistrationCountdown: React.FC<{ deadline: string }> = ({ deadline }) => {
+  const [timeLeft, setTimeLeft] = useState<{
+    days: number;
+    hours: number;
+    minutes: number;
+    seconds: number;
+    isExpired: boolean;
+  }>(() => {
+    const target = new Date(deadline).getTime();
+    const diff = target - Date.now();
+    if (isNaN(target) || diff <= 0) {
+      return { days: 0, hours: 0, minutes: 0, seconds: 0, isExpired: true };
+    }
+    return {
+      days: Math.floor(diff / (1000 * 60 * 60 * 24)),
+      hours: Math.floor((diff / (1000 * 60 * 60)) % 24),
+      minutes: Math.floor((diff / (1000 * 60)) % 60),
+      seconds: Math.floor((diff / 1000) % 60),
+      isExpired: false,
+    };
+  });
+
+  useEffect(() => {
+    const updateCountdown = () => {
+      const target = new Date(deadline).getTime();
+      const diff = target - Date.now();
+      if (isNaN(target) || diff <= 0) {
+        setTimeLeft({ days: 0, hours: 0, minutes: 0, seconds: 0, isExpired: true });
+        return;
+      }
+      setTimeLeft({
+        days: Math.floor(diff / (1000 * 60 * 60 * 24)),
+        hours: Math.floor((diff / (1000 * 60 * 60)) % 24),
+        minutes: Math.floor((diff / (1000 * 60)) % 60),
+        seconds: Math.floor((diff / 1000) % 60),
+        isExpired: false,
+      });
+    };
+
+    updateCountdown();
+    const timer = setInterval(updateCountdown, 1000);
+    return () => clearInterval(timer);
+  }, [deadline]);
+
+  const formattedClosingDate = formatRegistrationClosingDate(deadline);
+
+  return (
+    <div className="mb-6 p-4 rounded-2xl bg-white/70 backdrop-blur-md border border-slate-200/80 shadow-xs text-center animate-fadeIn">
+      <div className="flex items-center justify-center gap-1.5 text-xs font-bold text-indigo-600 uppercase tracking-wider mb-2">
+        <Clock className="w-3.5 h-3.5" />
+        <span>{timeLeft.isExpired ? 'Registration Closed' : 'Registration Ends In'}</span>
+      </div>
+
+      {!timeLeft.isExpired ? (
+        <div className="flex items-center justify-center gap-1 sm:gap-2 font-mono font-bold text-slate-800 text-xs sm:text-sm flex-wrap">
+          <span className="px-2 py-1 rounded-lg bg-white/90 border border-slate-200/80 shadow-2xs">
+            {timeLeft.days} <span className="text-[10px] font-sans font-medium text-slate-500">Days</span>
+          </span>
+          <span className="text-slate-400 font-sans font-normal">:</span>
+          <span className="px-2 py-1 rounded-lg bg-white/90 border border-slate-200/80 shadow-2xs">
+            {String(timeLeft.hours).padStart(2, '0')} <span className="text-[10px] font-sans font-medium text-slate-500">Hours</span>
+          </span>
+          <span className="text-slate-400 font-sans font-normal">:</span>
+          <span className="px-2 py-1 rounded-lg bg-white/90 border border-slate-200/80 shadow-2xs">
+            {String(timeLeft.minutes).padStart(2, '0')} <span className="text-[10px] font-sans font-medium text-slate-500">Minutes</span>
+          </span>
+          <span className="text-slate-400 font-sans font-normal">:</span>
+          <span className="px-2 py-1 rounded-lg bg-white/90 border border-slate-200/80 shadow-2xs">
+            {String(timeLeft.seconds).padStart(2, '0')} <span className="text-[10px] font-sans font-medium text-slate-500">Seconds</span>
+          </span>
+        </div>
+      ) : (
+        <p className="text-xs font-bold text-rose-600 py-0.5">
+          The registration deadline has passed.
+        </p>
+      )}
+
+      <div className="text-[11px] text-slate-500 mt-2">
+        <span>Closing Date: </span>
+        <strong className="text-slate-700">{formattedClosingDate}</strong>
+      </div>
+    </div>
+  );
+};
 
 /**
  * Resolves registration sections from protected super-admin configuration.
@@ -64,6 +167,7 @@ export const RegistrationForm: React.FC<RegistrationFormProps> = ({
   existingRegistrations = [],
   initialRecord = null,
   registrationOpen = true,
+  registrationDeadline = '2026-11-01T23:59:59',
   onResetReRegister,
 }) => {
   const activeFee = paymentSettings?.registrationFee ?? 500;
@@ -504,7 +608,7 @@ export const RegistrationForm: React.FC<RegistrationFormProps> = ({
       {/* Main Registration Container (Adapts Theme to Selected Gender) */}
       <div className={`rounded-3xl p-4 sm:p-8 lg:p-10 transition-all duration-500 ease-out ${containerClasses}`}>
         {/* Title Header */}
-        <div className="mb-8 text-center sm:text-left">
+        <div className="mb-6 text-center sm:text-left">
           <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider mb-2 bg-white/20 backdrop-blur-sm">
             <Sparkles className="w-3.5 h-3.5 text-indigo-400" />
             <span>Official Batch 27 Enrollment</span>
@@ -520,6 +624,11 @@ export const RegistrationForm: React.FC<RegistrationFormProps> = ({
             Select your wing gender first to unlock the enrollment form and personalized jersey preview.
           </p>
         </div>
+
+        {/* Compact Registration Countdown */}
+        {registrationDeadline && (
+          <RegistrationCountdown deadline={registrationDeadline} />
+        )}
 
         <form onSubmit={handleSubmit} className="space-y-8">
           {/* ======================================================== */}
@@ -544,69 +653,43 @@ export const RegistrationForm: React.FC<RegistrationFormProps> = ({
               </span>
             </div>
 
-            <p className={`text-xs ${isMale ? 'text-slate-400' : isFemale ? 'text-pink-950/70' : 'text-slate-500'}`}>
-              Select your wing below. The registration form, payment gateway numbers, and jersey customization will unlock accordingly.
-            </p>
-
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5 pt-1">
+            <div className="grid grid-cols-2 gap-3 pt-1">
               {/* Male Option Card */}
               <button
                 type="button"
                 onClick={() => handleGenderSelect('male')}
-                className={`p-4 sm:p-5 rounded-2xl border-2 text-left transition-all duration-200 cursor-pointer flex items-center gap-4 ${
+                className={`py-3.5 px-4 rounded-2xl border-2 transition-all duration-200 cursor-pointer flex items-center justify-center gap-2.5 font-bold text-sm sm:text-base ${
                   isMale
-                    ? 'border-[#38BDF8] bg-slate-900/90 shadow-[0_0_25px_rgba(56,189,248,0.3)] ring-2 ring-[#38BDF8]/40 text-white'
-                    : 'border-slate-300/80 bg-white/70 hover:border-[#38BDF8]/60 hover:bg-slate-50/80 text-slate-800'
+                    ? 'border-[#38BDF8] bg-slate-900/95 shadow-md ring-2 ring-[#38BDF8]/40 text-white'
+                    : 'border-slate-300/80 bg-white/80 hover:border-[#38BDF8]/60 hover:bg-slate-50 text-slate-800 shadow-2xs'
                 }`}
               >
-                <div
-                  className={`w-12 h-12 rounded-2xl grid place-items-center font-black text-sm shrink-0 transition-transform ${
-                    isMale
-                      ? 'bg-gradient-to-tr from-[#0284C7] to-[#38BDF8] text-white shadow-md'
-                      : 'bg-slate-100 text-slate-600'
-                  }`}
-                >
+                <span className={`w-7 h-7 rounded-xl grid place-items-center font-black text-sm shrink-0 ${
+                  isMale ? 'bg-[#0284C7] text-white' : 'bg-slate-100 text-slate-600'
+                }`}>
                   ♂
-                </div>
-                <div className="min-w-0 flex-1">
-                  <div className="flex items-center justify-between">
-                    <h3 className="font-extrabold text-sm sm:text-base">Male (Boys Wing)</h3>
-                    {isMale && <Check className="w-4 h-4 text-[#38BDF8]" />}
-                  </div>
-                  <p className={`text-xs mt-0.5 ${isMale ? 'text-slate-300' : 'text-slate-500'}`}>
-                    Cyber Blue squad kit & Boys Wing payment accounts
-                  </p>
-                </div>
+                </span>
+                <span>Male</span>
+                {isMale && <Check className="w-4 h-4 text-[#38BDF8] ml-0.5" />}
               </button>
 
               {/* Female Option Card */}
               <button
                 type="button"
                 onClick={() => handleGenderSelect('female')}
-                className={`p-4 sm:p-5 rounded-2xl border-2 text-left transition-all duration-200 cursor-pointer flex items-center gap-4 ${
+                className={`py-3.5 px-4 rounded-2xl border-2 transition-all duration-200 cursor-pointer flex items-center justify-center gap-2.5 font-bold text-sm sm:text-base ${
                   isFemale
-                    ? 'border-[#EC4899] bg-white/95 shadow-[0_0_25px_rgba(236,72,153,0.25)] ring-2 ring-[#EC4899]/40 text-slate-900'
-                    : 'border-slate-300/80 bg-white/70 hover:border-[#EC4899]/60 hover:bg-pink-50/50 text-slate-800'
+                    ? 'border-[#EC4899] bg-pink-50/95 shadow-md ring-2 ring-[#EC4899]/40 text-pink-950'
+                    : 'border-slate-300/80 bg-white/80 hover:border-[#EC4899]/60 hover:bg-pink-50/40 text-slate-800 shadow-2xs'
                 }`}
               >
-                <div
-                  className={`w-12 h-12 rounded-2xl grid place-items-center font-black text-sm shrink-0 transition-transform ${
-                    isFemale
-                      ? 'bg-gradient-to-tr from-[#DB2777] to-[#F472B6] text-white shadow-md'
-                      : 'bg-slate-100 text-slate-600'
-                  }`}
-                >
+                <span className={`w-7 h-7 rounded-xl grid place-items-center font-black text-sm shrink-0 ${
+                  isFemale ? 'bg-[#DB2777] text-white' : 'bg-slate-100 text-slate-600'
+                }`}>
                   ♀
-                </div>
-                <div className="min-w-0 flex-1">
-                  <div className="flex items-center justify-between">
-                    <h3 className="font-extrabold text-sm sm:text-base">Female (Girls Wing)</h3>
-                    {isFemale && <Check className="w-4 h-4 text-[#EC4899]" />}
-                  </div>
-                  <p className={`text-xs mt-0.5 ${isFemale ? 'text-pink-900/80' : 'text-slate-500'}`}>
-                    Rose Blossom squad kit & Girls Wing payment accounts
-                  </p>
-                </div>
+                </span>
+                <span>Female</span>
+                {isFemale && <Check className="w-4 h-4 text-[#EC4899] ml-0.5" />}
               </button>
             </div>
             {formErrors.gender && (
@@ -621,13 +704,9 @@ export const RegistrationForm: React.FC<RegistrationFormProps> = ({
           {/* LOCKED STATE GATE NOTICE (Shown when Gender not chosen) */}
           {/* ======================================================== */}
           {!isGenderChosen && (
-            <div className="p-8 sm:p-12 rounded-3xl bg-white/80 border-2 border-dashed border-slate-300 text-center space-y-3 animate-fadeIn">
-              <div className="w-14 h-14 rounded-2xl bg-indigo-50 text-indigo-600 grid place-items-center mx-auto shadow-inner">
-                <Lock className="w-7 h-7" />
-              </div>
-              <h3 className="text-lg font-black text-slate-900">Registration Form Locked</h3>
-              <p className="text-xs sm:text-sm text-slate-500 max-w-md mx-auto leading-relaxed">
-                Please select your gender (<strong>Male</strong> or <strong>Female</strong>) above. The form, academic sections, payment details, and live jersey preview will unlock immediately.
+            <div className="py-6 px-4 rounded-2xl bg-white/60 border border-slate-200/80 text-center animate-fadeIn shadow-2xs">
+              <p className="text-sm text-slate-600 font-normal">
+                Please select your gender to register.
               </p>
             </div>
           )}

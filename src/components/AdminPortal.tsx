@@ -2,6 +2,7 @@ import React, { useEffect, useMemo, useState } from 'react';
 import type { InvitationRecord, InvitationStatus, AdminProfile, PdfSettings, WebsiteSettings } from '../types';
 import { signInAdmin, signOutAdmin, getCurrentAdmin } from '../lib/supabase';
 import { getRegistrationList } from '../services/admin';
+import { calculateRegistrationOpenState, setManualRegistrationOverride } from '../lib/superAdminConfig';
 import { generateRegistrationListPDF, generateInvitationCardPDF } from '../utils/pdfGenerator';
 import {
   X, Lock, LogIn, LogOut, Check, XCircle,
@@ -75,6 +76,25 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
 
   // Expanded details drawer/modal
   const [selectedRecord, setSelectedRecord] = useState<InvitationRecord | null>(null);
+
+  // Registration Auto / Manual state
+  const [regState, setRegState] = useState(calculateRegistrationOpenState);
+
+  const handleToggleRegistrationOpen = () => {
+    if (regState.isOpen) {
+      const confirmDisable = window.confirm("Manually DISABLE registration? Students will not be able to register until re-enabled.");
+      if (!confirmDisable) return;
+      setManualRegistrationOverride('disable');
+      setRegState(calculateRegistrationOpenState());
+      setActionMessage({ text: 'Registration manually DISABLED by admin.', type: 'success' });
+    } else {
+      const confirmEnable = window.confirm("Manually ENABLE registration? Students will be able to register immediately.");
+      if (!confirmEnable) return;
+      setManualRegistrationOverride('enable');
+      setRegState(calculateRegistrationOpenState());
+      setActionMessage({ text: 'Registration manually ENABLED by admin.', type: 'success' });
+    }
+  };
 
   // Restore active session on mount
   useEffect(() => {
@@ -407,6 +427,25 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
           </div>
 
           <div className="flex items-center gap-1.5 shrink-0">
+            {/* Registration Auto/Manual Status & Toggle */}
+            <button
+              onClick={handleToggleRegistrationOpen}
+              className={`p-2 sm:px-3 sm:py-2 rounded-xl text-xs font-bold transition-all inline-flex items-center gap-1.5 cursor-pointer border ${
+                regState.isOpen
+                  ? 'bg-emerald-50 text-emerald-700 border-emerald-200 hover:bg-rose-50 hover:text-rose-700 hover:border-rose-200'
+                  : 'bg-rose-50 text-rose-700 border-rose-200 hover:bg-emerald-50 hover:text-emerald-700 hover:border-emerald-200'
+              }`}
+              title={`Click to ${regState.isOpen ? 'manually DISABLE' : 'manually ENABLE'} registration. (Mode: ${regState.isAuto ? 'Automatic Schedule' : 'Manual Override'})`}
+            >
+              <span className={`w-2 h-2 rounded-full shrink-0 ${regState.isOpen ? 'bg-emerald-500 animate-pulse' : 'bg-rose-500'}`} />
+              <span className="hidden lg:inline">
+                Reg: {regState.isOpen ? 'Open' : 'Closed'} ({regState.isAuto ? 'Auto' : 'Manual'})
+              </span>
+              <span className="lg:hidden">
+                Reg: {regState.isOpen ? 'Open' : 'Closed'}
+              </span>
+            </button>
+
             <button
               onClick={handleExportPDF}
               disabled={adminRegistrations.length === 0}

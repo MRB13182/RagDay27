@@ -461,6 +461,7 @@ export default function App() {
                 existingRegistrations={invitations}
                 initialRecord={reRegisterRecord}
                 registrationOpen={registrationSettingsConfig.registrationOpen}
+                registrationDeadline={countdownSettingsConfig.registrationDeadline}
                 onResetReRegister={() => setReRegisterRecord(null)}
               />
             </div>

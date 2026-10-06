@@ -15,6 +15,7 @@ import defaultJerseyOne from '../assets/images/jersey-one.png';
 
 import eventJerseyPic from '../super-admin/02. event-settings/Pic/jersey.png';
 import { getSavedSuperAdminText, getSuperAdminImageUrl } from './superAdminTextSettings';
+import { safeStorage } from './safeStorage';
 
 // 01. Website Identity
 import websiteNameRaw from '../super-admin/01. website-identity/Text/web name.txt?raw';
@@ -360,16 +361,59 @@ export function getEventSettingsConfig() {
   };
 }
 
+export function calculateRegistrationOpenState(): {
+  isOpen: boolean;
+  isAuto: boolean;
+  reason: 'active' | 'before_start' | 'after_end' | 'manual_enabled' | 'manual_disabled';
+} {
+  const regToggle = getSavedSuperAdminText('03. reg-settings/Text/Enable Disable.txt', registrationToggleRaw.trim()).toLowerCase().trim();
+  const manualOverride = safeStorage.getItem('rd27_manual_reg_override');
+
+  // Manual admin control overrides automatic schedule
+  if (manualOverride === 'enable' || /^(manual_enable|force_enable|force_open)$/i.test(regToggle)) {
+    return { isOpen: true, isAuto: false, reason: 'manual_enabled' };
+  }
+  if (manualOverride === 'disable' || /^(disable|disabled|close|closed|manual_disable|force_disable)$/i.test(regToggle)) {
+    return { isOpen: false, isAuto: false, reason: 'manual_disabled' };
+  }
+
+  // Automatic schedule check
+  const deadlineStr = getSavedSuperAdminText(
+    '03. reg-settings/Text/Last registration date countdown.txt',
+    lastRegistrationDateRaw.trim()
+  ) || '2026-11-01T23:59:59';
+
+  const now = new Date();
+  const deadlineDate = new Date(deadlineStr);
+
+  if (!isNaN(deadlineDate.getTime())) {
+    if (now.getTime() > deadlineDate.getTime()) {
+      return { isOpen: false, isAuto: true, reason: 'after_end' };
+    }
+  }
+
+  return { isOpen: true, isAuto: true, reason: 'active' };
+}
+
+export function setManualRegistrationOverride(override: 'enable' | 'disable' | 'auto'): void {
+  if (override === 'auto') {
+    safeStorage.removeItem('rd27_manual_reg_override');
+  } else {
+    safeStorage.setItem('rd27_manual_reg_override', override);
+  }
+}
+
 export function getRegistrationSettingsConfig() {
   const paymentRaw = getSavedSuperAdminText('03. reg-settings/Text/Payment number.txt', paymentNumberRaw.trim());
-  const regToggle = getSavedSuperAdminText('03. reg-settings/Text/Enable Disable.txt', registrationToggleRaw.trim()).toLowerCase();
   const payments = parsePaymentNumberFile(paymentRaw);
-  const isRegistrationOpen = !/^(disable|disabled|close|closed)$/i.test(regToggle);
+  const openState = calculateRegistrationOpenState();
   const jersey = getSuperAdminImageUrl('02. event-settings/Pic/jersey.png', eventJerseyPic);
   const backJersey = getSuperAdminImageUrl('03. reg-settings/Pic/back jersey preview.png', defaultJerseyBg);
 
   return {
-    registrationOpen: isRegistrationOpen,
+    registrationOpen: openState.isOpen,
+    registrationOpenReason: openState.reason,
+    registrationIsAuto: openState.isAuto,
     registrationFee: '500 BDT',
     malePaymentNumber: payments.maleBkash,
     maleBkashNumber: payments.maleBkash,
