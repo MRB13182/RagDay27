@@ -144,11 +144,15 @@ Female Nagad: 01812-345678`,
 ];
 
 export function getSavedSuperAdminText(path: string, fallback: string): string {
+  // If the super-admin file content exists and is non-empty, it is the primary source of truth
+  if (fallback !== undefined && fallback !== null && fallback.trim() !== '') {
+    return fallback;
+  }
   if (typeof window !== 'undefined' && window.localStorage) {
     const val = window.localStorage.getItem(`super_admin_${path}`);
-    if (val !== null) return val;
+    if (val !== null && val.trim() !== '') return val;
   }
-  return fallback;
+  return fallback || '';
 }
 
 export async function saveEditableSuperAdminText(path: string, content: string): Promise<void> {
@@ -186,6 +190,7 @@ export async function saveEditableSuperAdminText(path: string, content: string):
 }
 
 export function getSuperAdminImageUrl(path: string, defaultFallback: string): string {
+  if (defaultFallback) return defaultFallback;
   const normalizedPath = path.replace(/^src\/super-admin\//, '').replace(/^\/+/, '');
   if (typeof window !== 'undefined' && window.localStorage) {
     const remote = window.localStorage.getItem(`super_admin_img_remote_${normalizedPath}`);

@@ -1,11 +1,12 @@
 import React, { useState } from 'react';
-import { Ticket, UserCheck, Menu, X } from 'lucide-react';
+import { Ticket, UserCheck, Menu, X, Bell } from 'lucide-react';
 
 interface NavbarProps {
   activeTab: 'home' | 'register' | 'invitation';
   onNavigate: (tab: 'home' | 'register' | 'invitation') => void;
   websiteLogo?: string;
   eventName?: string;
+  onOpenNotice?: () => void;
 }
 
 export const Navbar: React.FC<NavbarProps> = ({
@@ -13,6 +14,7 @@ export const Navbar: React.FC<NavbarProps> = ({
   onNavigate,
   websiteLogo,
   eventName = 'RD27 Rag Day 2027',
+  onOpenNotice,
 }) => {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
@@ -93,8 +95,35 @@ export const Navbar: React.FC<NavbarProps> = ({
           </button>
         </nav>
 
+        {/* Desktop Right Notice Trigger */}
+        {onOpenNotice && (
+          <div className="hidden md:flex items-center gap-2 z-10">
+            <button
+              type="button"
+              onClick={onOpenNotice}
+              className="px-3 py-1.5 rounded-xl bg-violet-50 hover:bg-violet-100/90 text-[#4F46E5] border border-violet-100 shadow-xs transition-all flex items-center gap-1.5 cursor-pointer text-xs font-bold"
+              title="Important Notice"
+            >
+              <Bell className="w-3.5 h-3.5 text-[#4F46E5]" />
+              <span>Notice</span>
+            </button>
+          </div>
+        )}
+
         {/* Mobile Right Controls */}
-        <div className="flex items-center gap-2 md:hidden">
+        <div className="flex items-center gap-1.5 md:hidden">
+          {onOpenNotice && (
+            <button
+              type="button"
+              onClick={onOpenNotice}
+              className="p-1.5 text-[#4F46E5] bg-violet-50 hover:bg-violet-100 rounded-lg transition-colors cursor-pointer"
+              title="Important Notice"
+              aria-label="Important Notice"
+            >
+              <Bell className="w-4 h-4" />
+            </button>
+          )}
+
           <button
             onClick={() => handleNavClick('register')}
             className="px-3 py-1.5 text-xs font-bold rounded-lg bg-gradient-to-r from-[#5B5FEF] to-[#7A6CFF] text-white shadow-sm flex items-center gap-1 cursor-pointer"

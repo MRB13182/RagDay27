@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { InvitationRecord, PdfSettings, WebsiteSettings } from '../types';
 import {
   Search,
@@ -9,9 +9,11 @@ import {
   Sparkles,
   ArrowRight,
   AlertTriangle,
+  Loader2,
 } from 'lucide-react';
-import { generateInvitationCardPDF } from '../utils/pdfGenerator';
+import { toPng } from 'html-to-image';
 import { getPublicInvitation } from '../services';
+import { InvitationCard } from './InvitationCard';
 
 interface InvitationCardPageProps {
   invitations: InvitationRecord[];
@@ -23,7 +25,6 @@ interface InvitationCardPageProps {
 }
 
 export const InvitationCardPage: React.FC<InvitationCardPageProps> = ({
-  invitations,
   initialSearchRegNo = '',
   initialSearchStudentName = '',
   onNavigateToRegister,
@@ -36,7 +37,12 @@ export const InvitationCardPage: React.FC<InvitationCardPageProps> = ({
   const [isSearching, setIsSearching] = useState(false);
   const [searchError, setSearchError] = useState<string | null>(null);
   const [matchedRecord, setMatchedRecord] = useState<InvitationRecord | null>(null);
+  const [isDownloading, setIsDownloading] = useState(false);
   const [downloadToast, setDownloadToast] = useState(false);
+  const [downloadError, setDownloadError] = useState<string | null>(null);
+
+  const exportCardRef = useRef<HTMLDivElement>(null);
+  const displayCardRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     if (initialSearchRegNo) {
@@ -55,6 +61,7 @@ export const InvitationCardPage: React.FC<InvitationCardPageProps> = ({
     const cleanedName = studentNameVal.trim();
     setSearched(true);
     setSearchError(null);
+    setDownloadError(null);
 
     if (!cleanedReg) {
       setMatchedRecord(null);
@@ -86,11 +93,81 @@ export const InvitationCardPage: React.FC<InvitationCardPageProps> = ({
     }
   };
 
-  const handleDownloadPDF = () => {
+  /**
+   * Direct high-resolution PNG export directly from the invitation card component.
+   * Preserves exact colors, typography, glassmorphism, gradients, and landscape ratio.
+   */
+  const handleDownloadPass = async () => {
     if (!matchedRecord || matchedRecord.status !== 'approved') return;
-    generateInvitationCardPDF(matchedRecord, pdfSettings, websiteSettings);
-    setDownloadToast(true);
-    setTimeout(() => setDownloadToast(false), 3500);
+
+    setIsDownloading(true);
+    setDownloadError(null);
+
+    try {
+      // Prioritize the fixed 1024px landscape render element for pristine pass proportions on any device
+      const targetElement = exportCardRef.current || displayCardRef.current;
+      if (!targetElement) {
+        throw new Error('Invitation card element not found in DOM.');
+      }
+
+      // Wait for fonts to finish loading in document
+      if (typeof document !== 'undefined' && document.fonts) {
+        await document.fonts.ready;
+      }
+
+      // Small pause to guarantee font rendering and layout paint
+      await new Promise(resolve => setTimeout(resolve, 150));
+
+      const dataUrl = await toPng(targetElement, {
+        pixelRatio: 2, // High resolution (2048px width)
+        cacheBust: true,
+        skipFonts: true, // Avoid SecurityError accessing cross-origin Google Fonts stylesheets
+      });
+
+      const cleanReg = (matchedRecord.registration_no || 'RD27').replace(/[^a-zA-Z0-9_-]/g, '_');
+      const filename = `${cleanReg}_Pass.png`;
+
+      const link = document.createElement('a');
+      link.download = filename;
+      link.href = dataUrl;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+
+      setDownloadToast(true);
+      setTimeout(() => setDownloadToast(false), 4000);
+    } catch (err: any) {
+      console.warn('Primary export attempt encountered an issue, trying display fallback:', err);
+      try {
+        const fallbackTarget = displayCardRef.current || exportCardRef.current;
+        if (fallbackTarget) {
+          const fallbackDataUrl = await toPng(fallbackTarget, {
+            pixelRatio: 2,
+            cacheBust: true,
+            skipFonts: true,
+          });
+
+          const cleanReg = (matchedRecord.registration_no || 'RD27').replace(/[^a-zA-Z0-9_-]/g, '_');
+          const filename = `${cleanReg}_Pass.png`;
+
+          const link = document.createElement('a');
+          link.download = filename;
+          link.href = fallbackDataUrl;
+          document.body.appendChild(link);
+          link.click();
+          document.body.removeChild(link);
+
+          setDownloadToast(true);
+          setTimeout(() => setDownloadToast(false), 4000);
+          return;
+        }
+      } catch (fallbackErr: any) {
+        console.error('Fallback export error:', fallbackErr);
+      }
+      setDownloadError('Unable to generate PNG pass image. Please try again.');
+    } finally {
+      setIsDownloading(false);
+    }
   };
 
   return (
@@ -98,7 +175,7 @@ export const InvitationCardPage: React.FC<InvitationCardPageProps> = ({
       {/* Header */}
       <div className="text-center max-w-2xl mx-auto mb-8">
         <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/90 border border-slate-200 shadow-sm backdrop-blur-md mb-3">
-          <Sparkles className="w-3.5 h-3.5 text-[#5B5FEF]" />
+          <Sparkles className="w-3.5 h-3.5 text-[#6D28D9]" />
           <span className="text-xs font-bold text-slate-800 tracking-wide uppercase">
             Official Gate Pass Portal
           </span>
@@ -113,7 +190,13 @@ export const InvitationCardPage: React.FC<InvitationCardPageProps> = ({
 
       {/* Search Layout (Form) */}
       <div className="p-6 sm:p-8 rounded-3xl bg-white/80 backdrop-blur-xl border border-white/90 shadow-[0_20px_45px_-15px_rgba(91,95,239,0.08)] mb-8">
-        <form onSubmit={e => { e.preventDefault(); void handleSearchWith(searchRegNo, searchStudentName); }} className="space-y-4">
+        <form
+          onSubmit={e => {
+            e.preventDefault();
+            void handleSearchWith(searchRegNo, searchStudentName);
+          }}
+          className="space-y-4"
+        >
           <div className="grid grid-cols-1 sm:grid-cols-12 gap-4">
             <div className="sm:col-span-6">
               <label className="block text-xs font-bold uppercase tracking-wider text-slate-700 mb-1.5">
@@ -124,7 +207,7 @@ export const InvitationCardPage: React.FC<InvitationCardPageProps> = ({
                 placeholder="e.g. RD27-01"
                 value={searchRegNo}
                 onChange={e => setSearchRegNo(e.target.value.toUpperCase())}
-                className="w-full px-4 py-3 rounded-xl text-sm font-mono font-bold bg-slate-50 border border-slate-200 text-slate-900 placeholder-slate-400 focus:bg-white focus:border-[#5B5FEF] focus:ring-2 focus:ring-[#5B5FEF]/20 outline-none transition-all"
+                className="w-full px-4 py-3 rounded-xl text-sm font-mono font-bold bg-slate-50 border border-slate-200 text-slate-900 placeholder-slate-400 focus:bg-white focus:border-[#6D28D9] focus:ring-2 focus:ring-[#6D28D9]/20 outline-none transition-all"
                 required
               />
             </div>
@@ -138,7 +221,7 @@ export const InvitationCardPage: React.FC<InvitationCardPageProps> = ({
                 placeholder="Enter student full name..."
                 value={searchStudentName}
                 onChange={e => setSearchStudentName(e.target.value)}
-                className="w-full px-4 py-3 rounded-xl text-sm font-medium bg-slate-50 border border-slate-200 text-slate-900 placeholder-slate-400 focus:bg-white focus:border-[#5B5FEF] focus:ring-2 focus:ring-[#5B5FEF]/20 outline-none transition-all"
+                className="w-full px-4 py-3 rounded-xl text-sm font-medium bg-slate-50 border border-slate-200 text-slate-900 placeholder-slate-400 focus:bg-white focus:border-[#6D28D9] focus:ring-2 focus:ring-[#6D28D9]/20 outline-none transition-all"
                 required
               />
             </div>
@@ -148,7 +231,7 @@ export const InvitationCardPage: React.FC<InvitationCardPageProps> = ({
             <button
               type="submit"
               disabled={isSearching}
-              className="py-3 px-6 rounded-xl bg-gradient-to-r from-[#5B5FEF] to-[#7A6CFF] text-white font-bold text-sm shadow-md shadow-[#5B5FEF]/25 hover:shadow-lg hover:shadow-[#5B5FEF]/35 transition-all flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50"
+              className="py-3 px-6 rounded-xl bg-gradient-to-r from-[#6D28D9] via-[#7C3AED] to-[#8B5CF6] text-white font-bold text-sm shadow-md shadow-[#6D28D9]/25 hover:shadow-lg hover:shadow-[#6D28D9]/35 transition-all flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50"
             >
               <Search className="w-4 h-4" />
               <span>{isSearching ? 'Verifying with Database…' : 'Verify & Search'}</span>
@@ -170,11 +253,11 @@ export const InvitationCardPage: React.FC<InvitationCardPageProps> = ({
                 No Record Found
               </h3>
               <p className="text-xs text-slate-500 max-w-md mx-auto mt-1 mb-4">
-                We could not find any registration matching "{searchRegNo}". Please verify your registration number.
+                {searchError || `We could not find any registration matching "${searchRegNo}". Please verify your registration number.`}
               </p>
               <button
                 onClick={() => onNavigateToRegister()}
-                className="px-5 py-2.5 rounded-xl bg-[#5B5FEF] text-white text-xs font-bold shadow hover:bg-[#4d51d4] transition-colors inline-flex items-center gap-2 cursor-pointer"
+                className="px-5 py-2.5 rounded-xl bg-[#6D28D9] text-white text-xs font-bold shadow hover:bg-[#5B21B6] transition-colors inline-flex items-center gap-2 cursor-pointer"
               >
                 <span>Go to Registration</span>
                 <ArrowRight className="w-3.5 h-3.5" />
@@ -213,13 +296,13 @@ export const InvitationCardPage: React.FC<InvitationCardPageProps> = ({
                 <div className="p-3.5 rounded-xl bg-white/80 border border-amber-200">
                   <span className="text-slate-500 font-semibold uppercase block">Roll & Student ID</span>
                   <span className="text-sm font-bold text-slate-900 mt-0.5 block">
-                    Roll {matchedRecord.class_roll} · {matchedRecord.id}
+                    Roll {matchedRecord.class_roll} · {matchedRecord.id || matchedRecord.student_id}
                   </span>
                 </div>
                 <div className="p-3.5 rounded-xl bg-white/80 border border-amber-200">
-                  <span className="text-slate-500 font-semibold uppercase block">Custom Jersey Order</span>
+                  <span className="text-slate-500 font-semibold uppercase block">Academic Details</span>
                   <span className="text-sm font-bold text-slate-900 mt-0.5 block">
-                    {matchedRecord.jersey_back_name} #{matchedRecord.jersey_number} ({matchedRecord.jersey_size})
+                    {matchedRecord.academic_group} · Section {matchedRecord.academic_section}
                   </span>
                 </div>
               </div>
@@ -227,7 +310,7 @@ export const InvitationCardPage: React.FC<InvitationCardPageProps> = ({
               <div className="p-4 rounded-2xl bg-amber-100/70 border border-amber-200 text-xs text-amber-900 leading-relaxed flex items-start gap-3">
                 <AlertTriangle className="w-5 h-5 shrink-0 text-amber-700 mt-0.5" />
                 <div>
-                  <strong>Verification in Progress:</strong> Your payment and student records are currently pending authorization by the Rag Day 27 Admin committee. Once approved, your invitation card preview and downloadable PDF pass will appear here automatically.
+                  <strong>Verification in Progress:</strong> Your payment and student records are currently pending authorization by the Rag Day 27 Admin committee. Once approved, your invitation card and official entry pass download will appear here automatically.
                 </div>
               </div>
             </div>
@@ -286,10 +369,46 @@ export const InvitationCardPage: React.FC<InvitationCardPageProps> = ({
             </div>
           )}
 
-          {/* STATE 4: APPROVED -> SHOW INVITATION CARD PREVIEW & DOWNLOAD PDF */}
+          {/* STATE 4: APPROVED -> STUDENT DETAILS -> STATUS: APPROVED -> [ Download Pass ] */}
           {matchedRecord && matchedRecord.status === 'approved' && (
             <div className="space-y-6">
-              {/* Status Header */}
+              {/* Student Details / Registration Information */}
+              <div className="p-6 sm:p-7 rounded-3xl bg-white/80 backdrop-blur-xl border border-slate-200/90 shadow-[0_15px_35px_-10px_rgba(91,95,239,0.08)] text-left">
+                <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 pb-4 border-b border-slate-100">
+                  <div>
+                    <span className="text-[11px] font-bold uppercase tracking-wider text-slate-500">
+                      Registration Information
+                    </span>
+                    <h3 className="font-display text-xl sm:text-2xl font-black text-slate-900">
+                      {matchedRecord.full_name}
+                    </h3>
+                  </div>
+                  <div className="px-3.5 py-1.5 rounded-xl bg-violet-100/80 border border-violet-200/80 text-[#6D28D9] text-xs font-mono font-bold tracking-wider">
+                    {matchedRecord.registration_no}
+                  </div>
+                </div>
+
+                <div className="pt-4 grid grid-cols-2 sm:grid-cols-4 gap-3 text-xs">
+                  <div className="p-3 rounded-xl bg-slate-50/80 border border-slate-200/70">
+                    <span className="text-slate-400 font-bold uppercase text-[10px] block">Class Roll</span>
+                    <span className="text-slate-900 font-extrabold text-sm mt-0.5 block">{matchedRecord.class_roll || '—'}</span>
+                  </div>
+                  <div className="p-3 rounded-xl bg-slate-50/80 border border-slate-200/70">
+                    <span className="text-slate-400 font-bold uppercase text-[10px] block">Student ID</span>
+                    <span className="text-slate-900 font-extrabold text-sm mt-0.5 block">{matchedRecord.student_id || matchedRecord.id || '—'}</span>
+                  </div>
+                  <div className="p-3 rounded-xl bg-slate-50/80 border border-slate-200/70">
+                    <span className="text-slate-400 font-bold uppercase text-[10px] block">Academic Group</span>
+                    <span className="text-slate-900 font-extrabold text-sm mt-0.5 block">{matchedRecord.academic_group || '—'}</span>
+                  </div>
+                  <div className="p-3 rounded-xl bg-slate-50/80 border border-slate-200/70">
+                    <span className="text-slate-400 font-bold uppercase text-[10px] block">Section</span>
+                    <span className="text-slate-900 font-extrabold text-sm mt-0.5 block">{matchedRecord.academic_section || '—'}</span>
+                  </div>
+                </div>
+              </div>
+
+              {/* Status: Approved Header with the single [ Download Pass ] button */}
               <div className="p-5 sm:p-6 rounded-3xl bg-emerald-50/90 backdrop-blur-xl border-2 border-emerald-300 shadow-[0_15px_35px_-10px_rgba(16,185,129,0.15)] flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
                 <div className="flex items-center gap-3.5">
                   <div className="w-12 h-12 rounded-2xl bg-emerald-500 text-white flex items-center justify-center shadow-md shadow-emerald-500/30">
@@ -305,83 +424,65 @@ export const InvitationCardPage: React.FC<InvitationCardPageProps> = ({
                   </div>
                 </div>
 
-                <div className="flex items-center gap-3 w-full sm:w-auto">
-                  <button
-                    onClick={handleDownloadPDF}
-                    className="w-full sm:w-auto px-6 py-3 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 text-white font-bold text-sm shadow-md shadow-emerald-600/30 transition-all flex items-center justify-center gap-2 cursor-pointer hover:-translate-y-0.5"
-                  >
+                {/* THE ONLY BUTTON */}
+                <button
+                  type="button"
+                  onClick={handleDownloadPass}
+                  disabled={isDownloading}
+                  className="w-full sm:w-auto px-7 py-3.5 rounded-xl bg-gradient-to-r from-[#6D28D9] via-[#7C3AED] to-[#8B5CF6] hover:from-[#5B21B6] hover:to-[#7C3AED] text-white font-extrabold text-sm shadow-lg shadow-[#7C3AED]/25 hover:shadow-xl hover:shadow-[#7C3AED]/35 transition-all flex items-center justify-center gap-2 cursor-pointer hover:-translate-y-0.5 active:translate-y-0 disabled:opacity-60"
+                >
+                  {isDownloading ? (
+                    <Loader2 className="w-4 h-4 animate-spin" />
+                  ) : (
                     <Download className="w-4 h-4" />
-                    <span>Download PDF</span>
-                  </button>
-                </div>
+                  )}
+                  <span>{isDownloading ? 'Generating Pass…' : 'Download Pass'}</span>
+                </button>
               </div>
 
-              {/* Toast */}
+              {/* Toast Feedback */}
               {downloadToast && (
-                <div className="p-3 rounded-xl bg-emerald-600 text-white text-xs font-bold text-center shadow-lg animate-fadeIn">
-                  ✓ Official PDF Invitation Card downloaded successfully!
+                <div className="p-3.5 rounded-2xl bg-emerald-600 text-white text-xs font-bold text-center shadow-lg animate-fadeIn flex items-center justify-center gap-2">
+                  <CheckCircle2 className="w-4 h-4" />
+                  <span>✓ Pass downloaded successfully as high-resolution PNG!</span>
                 </div>
               )}
 
-              {/* INVITATION CARD PREVIEW */}
-              <div className="invitation-card-shell w-full">
-                <div className="invitation-card relative w-full overflow-hidden">
-                  <div className="invitation-orb invitation-orb-left" />
-                  <div className="invitation-orb invitation-orb-right" />
-                  <div className="invitation-academic-cap cap-left">◆</div>
-                  <div className="invitation-academic-cap cap-top-right">◆</div>
+              {/* Error Feedback */}
+              {downloadError && (
+                <div className="p-3.5 rounded-2xl bg-rose-600 text-white text-xs font-bold text-center shadow-lg animate-fadeIn">
+                  {downloadError}
+                </div>
+              )}
 
-                  <div className="invitation-brand">
-                    <div className="invitation-logo-wrap">
-                      {pdfSettings.pdfLogo ? <img src={pdfSettings.pdfLogo} alt="National Ideal College" /> : <div className="invitation-logo-fallback">27</div>}
-                    </div>
-                    <div>
-                      <div className="invitation-college-name">National Ideal College</div>
-                      <div className="invitation-event-name">Rag Day of NIC 27</div>
-                    </div>
-                  </div>
+              {/* DISPLAYED INVITATION PASS */}
+              <div className="w-full" ref={displayCardRef}>
+                <InvitationCard
+                  record={matchedRecord}
+                  websiteSettings={websiteSettings}
+                  pdfSettings={pdfSettings}
+                />
+              </div>
 
-                  <div className="invitation-divider">
-                    <span />
-                    <b>◆</b>
-                    <span />
-                  </div>
-
-                  <div className="invitation-info-panel">
-                    {[
-                      ['person','Name:',matchedRecord.full_name],
-                      ['building','Section:',matchedRecord.academic_section || '—'],
-                      ['cap','Roll:',matchedRecord.class_roll || '—'],
-                      ['stack','Group:',matchedRecord.academic_group || '—'],
-                      ['id','Registration No:',matchedRecord.registration_no],
-                    ].map(([icon,label,value]) => (
-                      <div className="invitation-info-row" key={String(label)}>
-                        <span className="invitation-icon-glass" aria-hidden="true">{icon === 'person' ? '●' : icon === 'building' ? '▥' : icon === 'cap' ? '◆' : icon === 'stack' ? '▤' : '▣'}</span>
-                        <span className="invitation-label">{label}</span>
-                        <strong>{value}</strong>
-                      </div>
-                    ))}
-                  </div>
-
-                  <div className="invitation-photo-frame">
-                    {matchedRecord.student_photo ? (
-                      <img src={matchedRecord.student_photo} alt={matchedRecord.full_name} />
-                    ) : (
-                      <div className="invitation-photo-fallback">{matchedRecord.full_name.charAt(0).toUpperCase()}</div>
-                    )}
-                  </div>
-                  <div className="invitation-signature">{matchedRecord.full_name}</div>
-
-                  <div className="invitation-event-row">
-                    <div><span className="invitation-bottom-icon">▦</span><b>Event Date:</b> 15 December 2027</div>
-                    <div><span className="invitation-bottom-icon">●</span><b>Venue:</b> National Ideal College Campus</div>
-                  </div>
-
-                  <div className="invitation-footer-line">
-                    <span />
-                    <em>Official Entry Pass</em>
-                    <span />
-                  </div>
+              {/* Off-screen fixed 1024px landscape card used for generating pristine high-res PNG pass */}
+              <div
+                aria-hidden="true"
+                style={{
+                  position: 'fixed',
+                  left: '-9999px',
+                  top: 0,
+                  width: '1024px',
+                  pointerEvents: 'none',
+                  zIndex: -9999,
+                }}
+              >
+                <div ref={exportCardRef}>
+                  <InvitationCard
+                    record={matchedRecord}
+                    websiteSettings={websiteSettings}
+                    pdfSettings={pdfSettings}
+                    isExport={true}
+                  />
                 </div>
               </div>
             </div>

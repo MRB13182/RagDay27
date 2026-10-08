@@ -21,6 +21,8 @@ import { safeStorage } from './safeStorage';
 import websiteNameRaw from '../super-admin/01. website-identity/Text/web name.txt?raw';
 import websiteHeaderRaw from '../super-admin/01. website-identity/Text/web header.txt?raw';
 import footerTextRaw from '../super-admin/01. website-identity/Text/web footer.txt?raw';
+import websiteLogoPic from '../super-admin/01. website-identity/Pic/logo.png';
+import websiteFaviconPic from '../super-admin/01. website-identity/Pic/favicon.png';
 
 // 02. Event Settings
 import eventNameRaw from '../super-admin/02. event-settings/Text/Event name.txt?raw';
@@ -30,9 +32,14 @@ import venueRawText from '../super-admin/02. event-settings/Text/Venue.txt?raw';
 
 // 03. Registration Settings
 import sectionSettingsRaw from '../super-admin/03. reg-settings/Text/Section settings.txt?raw';
+import sectionSettingsDirectRaw from '../super-admin/03. reg-settings/Section settings.txt?raw';
 import paymentNumberRaw from '../super-admin/03. reg-settings/Text/Payment number.txt?raw';
+import paymentNumberDirectRaw from '../super-admin/03. reg-settings/Payment number.txt?raw';
 import lastRegistrationDateRaw from '../super-admin/03. reg-settings/Text/Last registration date countdown.txt?raw';
+import lastRegistrationDateDirectRaw from '../super-admin/03. reg-settings/Last registration date countdown.txt?raw';
 import registrationToggleRaw from '../super-admin/03. reg-settings/Text/Enable Disable.txt?raw';
+import registrationToggleDirectRaw from '../super-admin/03. reg-settings/Enable Disable.txt?raw';
+import backJerseyPic from '../super-admin/03. reg-settings/Pic/back jersey preview.png';
 
 // 04. Countdown Settings
 import countdownEventRaw from '../super-admin/04. countdown-settings/Text/Countdown of Event.txt?raw';
@@ -42,6 +49,12 @@ import countdownEnableDisableRaw from '../super-admin/04. countdown-settings/Tex
 import noticeBoardRaw from '../super-admin/05. important-notice/Text/Notice Board.txt?raw';
 import popupNoticeRaw from '../super-admin/05. important-notice/Text/Popup Notice.txt?raw';
 import noticeEnableDisableRaw from '../super-admin/05. important-notice/Text/Enable Disable.txt?raw';
+
+// 06. Logo Related
+import logoPic06 from '../super-admin/06. logo-related/Pic/logo.png';
+import faviconPic06 from '../super-admin/06. logo-related/Pic/favicon.png';
+import jerseyDesignPic06 from '../super-admin/06. logo-related/Pic/jersey-design.png';
+import jerseyDesignRaw from '../super-admin/06. logo-related/Text/jersey-design.txt?raw';
 
 // ============================================================================
 // 1. HELPERS & PARSERS
@@ -91,13 +104,33 @@ export function parseEventCardsContent(rawText: string): EventCard[] {
     if (currentTitle) {
       cardCount++;
       const colorIndex = (cardCount - 1) % colorPalette.length;
-      const iconIndex = (cardCount - 1) % iconPalette.length;
+
+      // Smart contextual icon matching
+      let icon = iconPalette[(cardCount - 1) % iconPalette.length];
+      const lower = (currentTitle + ' ' + currentDescLines.join(' ')).toLowerCase();
+      if (/fee|cost|payment|amount|price|taka|bdt|\$/i.test(lower)) {
+        icon = 'credit-card';
+      } else if (/start|date|deadline|schedule|calendar/i.test(lower)) {
+        icon = 'calendar';
+      } else if (/venue|location|place|campus|ground/i.test(lower)) {
+        icon = 'map-pin';
+      } else if (/jersey|kit|shirt|dress/i.test(lower)) {
+        icon = 'shirt';
+      } else if (/time|clock|hour/i.test(lower)) {
+        icon = 'clock';
+      } else if (/award|gift|prize|trophy/i.test(lower)) {
+        icon = 'award';
+      } else if (/music|concert|band|cultural/i.test(lower)) {
+        icon = 'music';
+      } else if (/batch|student|convener|users/i.test(lower)) {
+        icon = 'users';
+      }
 
       cards.push({
         id: `event-card-${cardCount}`,
         title: currentTitle,
         description: currentDescLines.join(' ').trim(),
-        icon: iconPalette[iconIndex],
+        icon,
         customColor: colorPalette[colorIndex],
         order: cardCount,
         visible: true,
@@ -130,7 +163,7 @@ export function parseEventCardsContent(rawText: string): EventCard[] {
 
 export function parseJerseyDesignContent(
   rawText: string,
-  imageGlob?: Record<string, any>
+  defaultImage: string = defaultJerseyOne
 ): JerseyDesignCard[] {
   if (!rawText || !rawText.trim()) {
     return [
@@ -138,8 +171,8 @@ export function parseJerseyDesignContent(
         id: 'jersey-design-card-1',
         title: 'Official Rag Day Jersey',
         description: 'Custom Squad Kit with Personalized Back Name & Number Print Included',
-        image: defaultJerseyOne,
-        imageFilename: 'jersey-one.png',
+        image: defaultImage,
+        imageFilename: 'jersey-design.png',
       },
     ];
   }
@@ -150,22 +183,20 @@ export function parseJerseyDesignContent(
   let currentDescLines: string[] = [];
   let currentImageFilename = '';
   let cardCount = 0;
-  let inCardBlock = false;
 
   const pushCurrentCard = () => {
-    if (inCardBlock && (currentTitle || currentDescLines.length > 0 || currentImageFilename)) {
+    if (currentTitle) {
       cardCount++;
       cards.push({
         id: `jersey-design-card-${cardCount}`,
-        title: currentTitle || 'Official Rag Day Jersey',
+        title: currentTitle,
         description: currentDescLines.join(' ').trim(),
-        image: defaultJerseyOne,
-        imageFilename: currentImageFilename || 'jersey-one.png',
+        image: defaultImage,
+        imageFilename: currentImageFilename || 'jersey-design.png',
       });
       currentTitle = '';
       currentDescLines = [];
       currentImageFilename = '';
-      inCardBlock = false;
     }
   };
 
@@ -173,9 +204,8 @@ export function parseJerseyDesignContent(
     const line = rawLine.trim();
     if (!line) continue;
 
-    if (/^card[:]?$/i.test(line)) {
+    if (/^(-e\s+)?card[:\s\d]*$/i.test(line) || /^[-=]{3,}$/.test(line)) {
       pushCurrentCard();
-      inCardBlock = true;
       continue;
     }
 
@@ -184,15 +214,13 @@ export function parseJerseyDesignContent(
     const imageMatch = line.match(/^image[:]\s*(.+)$/i);
 
     if (titleMatch) {
-      if (!inCardBlock) inCardBlock = true;
+      if (currentTitle) pushCurrentCard();
       currentTitle = titleMatch[1].trim();
     } else if (descMatch) {
-      if (!inCardBlock) inCardBlock = true;
       currentDescLines.push(descMatch[1].trim());
     } else if (imageMatch) {
-      if (!inCardBlock) inCardBlock = true;
       currentImageFilename = imageMatch[1].trim();
-    } else if (inCardBlock && currentTitle) {
+    } else if (currentTitle) {
       currentDescLines.push(line);
     }
   }
@@ -203,8 +231,8 @@ export function parseJerseyDesignContent(
       id: 'jersey-design-card-1',
       title: 'Official Rag Day Jersey',
       description: 'Custom Squad Kit with Personalized Back Name & Number Print Included',
-      image: defaultJerseyOne,
-      imageFilename: 'jersey-one.png',
+      image: defaultImage,
+      imageFilename: 'jersey-design.png',
     },
   ];
 }
@@ -226,11 +254,34 @@ export type RegistrationSectionConfig = Record<
   Record<string, Array<{ value: string; label: string; enabled?: boolean; sort_order?: number }>>
 >;
 
+function extractFeeFromEventCards(cardsText: string): string {
+  const lines = cardsText.split(/\r?\n/);
+  let isFeeCard = false;
+  for (const line of lines) {
+    const tMatch = line.match(/^title[:]\s*(.+)$/i);
+    if (tMatch) {
+      isFeeCard = /fee|cost|payment|amount|price/i.test(tMatch[1]);
+      continue;
+    }
+    if (isFeeCard) {
+      const dMatch = line.match(/^description[:]\s*(.+)$/i);
+      if (dMatch) {
+        const desc = dMatch[1].trim();
+        const m = desc.match(/(\d[\d,]*\s*(?:\$|BDT|TK|Taka)?|(?:\$|BDT|TK|Taka)\s*\d[\d,]*)/i);
+        if (m) return m[0].trim();
+        return desc;
+      }
+    }
+  }
+  return '500 BDT';
+}
+
 export function getConfiguredSections(gender: 'male' | 'female', group: string): string[] {
   try {
+    const fileContent = (sectionSettingsRaw || sectionSettingsDirectRaw || '').trim();
     const rawSetting = getSavedSuperAdminText(
       '03. reg-settings/Text/Section settings.txt',
-      sectionSettingsRaw.trim()
+      fileContent
     );
 
     // If setting is JSON formatted
@@ -290,18 +341,17 @@ export function getConfiguredSections(gender: 'male' | 'female', group: string):
   }
 
   if (gender === 'male') {
-    if (/science/i.test(group)) return ['ScB1', 'ScB2', 'ScB3', 'ScB4', 'ScB5'];
-    if (/business/i.test(group)) return ['BsB1', 'BsB2', 'BsB3', 'BsB4', 'BsB5'];
-    if (/humanities/i.test(group)) return ['HuB1', 'HuB2', 'HuB3', 'HuB4', 'HuB5'];
+    if (/science/i.test(group)) return ['ScB1', 'ScB2', 'ScB3'];
+    if (/business/i.test(group)) return ['BsB1', 'BsB2'];
+    if (/humanities/i.test(group)) return ['HuB1', 'HuB2'];
   } else {
-    if (/science/i.test(group)) return ['ScG1', 'ScG2', 'ScG3', 'ScG4', 'ScG5'];
-    if (/business/i.test(group)) return ['BsG1', 'BsG2', 'BsG3', 'BsG4', 'BsG5'];
-    if (/humanities/i.test(group)) return ['HuG1', 'HuG2', 'HuG3', 'HuG4', 'HuG5'];
+    if (/science/i.test(group)) return ['ScG1', 'ScG2', 'ScG3'];
+    if (/business/i.test(group)) return ['BsG1', 'BsG2'];
+    if (/humanities/i.test(group)) return ['HuG1', 'HuG2'];
   }
   return [];
 }
 
-// ============================================================================
 // ============================================================================
 // 3. EXPORTED CONFIGURATION OBJECTS WITH DYNAMIC RESOLUTION
 // ============================================================================
@@ -310,8 +360,8 @@ export function getWebsiteIdentityConfig() {
   const name = getSavedSuperAdminText('01. website-identity/Text/web name.txt', websiteNameRaw.trim()) || 'NIC 27';
   const subtitle = getSavedSuperAdminText('01. website-identity/Text/web header.txt', websiteHeaderRaw.trim()) || 'Annual Grand Farewell & Batch 27 Celebration';
   const footer = getSavedSuperAdminText('01. website-identity/Text/web footer.txt', footerTextRaw.trim()) || '© 2027 Rag Day 27 Committee. All Rights Reserved.';
-  const logo = getSuperAdminImageUrl('01. website-identity/Pic/logo.png', defaultLogo);
-  const favicon = getSuperAdminImageUrl('01. website-identity/Pic/favicon.png', defaultFavicon);
+  const logo = getSuperAdminImageUrl('01. website-identity/Pic/logo.png', websiteLogoPic || logoPic06 || defaultLogo);
+  const favicon = getSuperAdminImageUrl('01. website-identity/Pic/favicon.png', websiteFaviconPic || faviconPic06 || defaultFavicon);
 
   return {
     websiteName: name,
@@ -326,7 +376,7 @@ export function getEventSettingsConfig() {
   const name = getSavedSuperAdminText('02. event-settings/Text/Event name.txt', eventNameRaw.trim()) || 'RAG DAY of NIC 27';
   const cardRaw = getSavedSuperAdminText('02. event-settings/Text/Event card.txt', eventCardRaw.trim());
   const venue = getSavedSuperAdminText('02. event-settings/Text/Venue.txt', venueRawText.trim()) || 'Central Amphitheatre';
-  const jersey = getSuperAdminImageUrl('02. event-settings/Pic/jersey.png', eventJerseyPic);
+  const jersey = getSuperAdminImageUrl('02. event-settings/Pic/jersey.png', eventJerseyPic || jerseyDesignPic06 || defaultMaleJersey);
   const parsedCards = parseEventCardsContent(cardRaw);
 
   return {
@@ -366,7 +416,8 @@ export function calculateRegistrationOpenState(): {
   isAuto: boolean;
   reason: 'active' | 'before_start' | 'after_end' | 'manual_enabled' | 'manual_disabled';
 } {
-  const regToggle = getSavedSuperAdminText('03. reg-settings/Text/Enable Disable.txt', registrationToggleRaw.trim()).toLowerCase().trim();
+  const toggleContent = (registrationToggleRaw || registrationToggleDirectRaw || '').trim();
+  const regToggle = getSavedSuperAdminText('03. reg-settings/Text/Enable Disable.txt', toggleContent).toLowerCase().trim();
   const manualOverride = safeStorage.getItem('rd27_manual_reg_override');
 
   // Manual admin control overrides automatic schedule
@@ -378,9 +429,10 @@ export function calculateRegistrationOpenState(): {
   }
 
   // Automatic schedule check
+  const lastDateContent = (lastRegistrationDateRaw || lastRegistrationDateDirectRaw || '').trim();
   const deadlineStr = getSavedSuperAdminText(
     '03. reg-settings/Text/Last registration date countdown.txt',
-    lastRegistrationDateRaw.trim()
+    lastDateContent
   ) || '2026-11-01T23:59:59';
 
   const now = new Date();
@@ -404,17 +456,21 @@ export function setManualRegistrationOverride(override: 'enable' | 'disable' | '
 }
 
 export function getRegistrationSettingsConfig() {
-  const paymentRaw = getSavedSuperAdminText('03. reg-settings/Text/Payment number.txt', paymentNumberRaw.trim());
+  const payContent = (paymentNumberRaw || paymentNumberDirectRaw || '').trim();
+  const paymentRaw = getSavedSuperAdminText('03. reg-settings/Text/Payment number.txt', payContent);
   const payments = parsePaymentNumberFile(paymentRaw);
   const openState = calculateRegistrationOpenState();
-  const jersey = getSuperAdminImageUrl('02. event-settings/Pic/jersey.png', eventJerseyPic);
-  const backJersey = getSuperAdminImageUrl('03. reg-settings/Pic/back jersey preview.png', defaultJerseyBg);
+  const jersey = getSuperAdminImageUrl('02. event-settings/Pic/jersey.png', eventJerseyPic || jerseyDesignPic06 || defaultMaleJersey);
+  const backJersey = getSuperAdminImageUrl('03. reg-settings/Pic/back jersey preview.png', backJerseyPic || defaultJerseyBg);
+
+  const cardRaw = getSavedSuperAdminText('02. event-settings/Text/Event card.txt', eventCardRaw.trim());
+  const customFee = extractFeeFromEventCards(cardRaw);
 
   return {
     registrationOpen: openState.isOpen,
     registrationOpenReason: openState.reason,
     registrationIsAuto: openState.isAuto,
-    registrationFee: '500 BDT',
+    registrationFee: customFee || '500 BDT',
     malePaymentNumber: payments.maleBkash,
     maleBkashNumber: payments.maleBkash,
     maleNagadNumber: payments.maleNagad,
@@ -431,7 +487,8 @@ export function getRegistrationSettingsConfig() {
 
 export function getCountdownSettingsConfig() {
   const eventDate = getSavedSuperAdminText('04. countdown-settings/Text/Countdown of Event.txt', countdownEventRaw.trim() || eventDateRaw.trim()) || '2026-11-20T10:00:00';
-  const deadline = getSavedSuperAdminText('03. reg-settings/Text/Last registration date countdown.txt', lastRegistrationDateRaw.trim()) || '2026-11-01T23:59:59';
+  const lastDateContent = (lastRegistrationDateRaw || lastRegistrationDateDirectRaw || '').trim();
+  const deadline = getSavedSuperAdminText('03. reg-settings/Text/Last registration date countdown.txt', lastDateContent) || '2026-11-01T23:59:59';
   const enableRaw = getSavedSuperAdminText('04. countdown-settings/Text/Enable Disable.txt', countdownEnableDisableRaw.trim()).toLowerCase();
   const isCountdownEnabled = !/^(disable|disabled)$/i.test(enableRaw);
 
@@ -450,8 +507,8 @@ export function getImportantNoticeConfig() {
 
   return {
     noticeEnabled: isNoticeEnabled,
-    popupEnabled: false,
-    popupTitle: 'IMPORTANT NOTICE FOR RAG DAY 27',
+    popupEnabled: isNoticeEnabled && Boolean(popupNotice && popupNotice.trim()),
+    popupTitle: 'Important Notice',
     popupMessage: popupNotice,
     noticeContent: noticeBoard,
     closeButtonText: 'I Understand',
@@ -467,13 +524,16 @@ export const logoRelatedConfig = {
   get femaleJersey() { return defaultFemaleJersey; },
   get eventJersey() { return getEventSettingsConfig().eventJersey; },
   get jerseyDesignCards(): JerseyDesignCard[] {
-    const jerseyImg = getEventSettingsConfig().eventJersey;
+    const raw = getSavedSuperAdminText('06. logo-related/Text/jersey-design.txt', jerseyDesignRaw?.trim() || '');
+    const jerseyImg = jerseyDesignPic06 || getEventSettingsConfig().eventJersey || defaultJerseyOne;
+    const parsed = parseJerseyDesignContent(raw, jerseyImg);
+    if (parsed.length > 0) return parsed;
     return [
       {
         id: 'jersey-design-card-1',
         title: 'Official Rag Day Jersey',
         description: 'Custom Squad Kit with Personalized Back Name & Number Print Included',
-        image: jerseyImg || defaultJerseyOne,
+        image: jerseyImg,
         imageFilename: 'jersey.png',
       },
     ];

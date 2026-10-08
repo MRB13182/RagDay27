@@ -7,6 +7,7 @@ import { InvitationCardPage } from './components/InvitationCardPage';
 import { Footer } from './components/Footer';
 import { AdminPortal } from './components/AdminPortal';
 import { JerseyShowcaseSection } from './components/JerseyShowcaseSection';
+import { ImportantNoticeModal } from './components/ImportantNoticeModal';
 import {
   websiteIdentityConfig,
   eventSettingsConfig,
@@ -314,31 +315,13 @@ export default function App() {
         </aside>
       )}
 
-      {isNoticePopupOpen && (
-        <div className="fixed inset-0 z-[150] flex items-center justify-center p-4 bg-slate-950/60 backdrop-blur-sm animate-fadeIn">
-          <div className="w-full max-w-md bg-white rounded-3xl p-6 sm:p-7 shadow-2xl border border-slate-100 relative space-y-4">
-            <button
-              onClick={() => setIsNoticePopupOpen(false)}
-              className="absolute top-4 right-4 p-2 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-xl transition-colors cursor-pointer"
-            >
-              <X className="w-5 h-5" />
-            </button>
-            <div className="w-12 h-12 rounded-2xl bg-indigo-50 text-indigo-600 grid place-items-center">
-              <Bell className="w-6 h-6" />
-            </div>
-            <div>
-              <h3 className="text-lg font-black text-slate-900">{importantNoticeConfig.popupTitle}</h3>
-              <p className="text-xs text-slate-600 mt-2 leading-relaxed whitespace-pre-line">{importantNoticeConfig.popupMessage}</p>
-            </div>
-            <button
-              onClick={() => setIsNoticePopupOpen(false)}
-              className="w-full py-3 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs shadow-md shadow-indigo-200 transition-all cursor-pointer"
-            >
-              {importantNoticeConfig.closeButtonText || 'Close'}
-            </button>
-          </div>
-        </div>
-      )}
+      <ImportantNoticeModal
+        isOpen={isNoticePopupOpen}
+        onClose={() => setIsNoticePopupOpen(false)}
+        title={importantNoticeConfig.popupTitle || 'Important Notice'}
+        message={importantNoticeConfig.popupMessage}
+        buttonText={importantNoticeConfig.closeButtonText || 'I Understand'}
+      />
 
       {isRegClosedPopupOpen && (
         <div className="fixed inset-0 z-[160] flex items-center justify-center p-4 bg-slate-950/70 backdrop-blur-sm animate-fadeIn">
@@ -373,16 +356,20 @@ export default function App() {
         }}
         websiteLogo={brandingSettings.websiteLogo}
         eventName={websiteSettings.eventName}
+        onOpenNotice={importantNoticeConfig.popupEnabled ? () => setIsNoticePopupOpen(true) : undefined}
       />
 
       <div className="pt-16 sm:pt-18 flex-1 flex flex-col">
         {importantNoticeConfig.noticeEnabled && importantNoticeConfig.noticeContent && (
           <aside
             aria-label="Announcement"
-            className="w-full bg-gradient-to-r from-[#5B5FEF] to-[#7A6CFF] text-white px-4 py-2 text-xs font-semibold shadow-sm flex items-center justify-center gap-2"
+            onClick={() => setIsNoticePopupOpen(true)}
+            className="w-full bg-gradient-to-r from-[#5B5FEF] to-[#7A6CFF] text-white px-4 py-2 text-xs font-semibold shadow-sm flex items-center justify-center gap-2 cursor-pointer hover:brightness-105 transition-all select-none"
+            title="Click to view full Important Notice"
           >
             <Bell className="w-3.5 h-3.5 shrink-0" />
             <span className="truncate">{importantNoticeConfig.noticeContent}</span>
+            <span className="hidden sm:inline text-[10px] bg-white/20 px-2 py-0.5 rounded-full font-bold ml-1">View Details</span>
           </aside>
         )}
 

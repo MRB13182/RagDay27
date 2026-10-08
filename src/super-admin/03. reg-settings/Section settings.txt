@@ -5,5 +5,5 @@ Humanities: HUB (HuB1, HuB2)
 
 Female Sections:
 Science: SCG (ScG1, ScG2, ScG3)
-Business Studies: BSG (BsG1, BSG2)
+Business Studies: BSG (BsG1, BsG2)
 Humanities: HUG (HuG1, HuG2)
