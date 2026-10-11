@@ -609,9 +609,9 @@ export const RegistrationForm: React.FC<RegistrationFormProps> = ({
     <div className="py-6 sm:py-10 max-w-4xl mx-auto px-3 sm:px-6 lg:px-8">
       {/* Re-submission Banner if editing previously rejected record */}
       {editingRegNo && (
-        <div className="mb-6 p-4 rounded-2xl bg-amber-50 border-2 border-amber-300 text-amber-900 shadow-sm flex items-start justify-between gap-3 animate-fadeIn">
+        <div className="mb-6 p-4.5 rounded-2xl bg-amber-50/90 backdrop-blur-xl border border-amber-300/90 text-amber-900 shadow-[0_10px_30px_-10px_rgba(245,158,11,0.2),inset_0_1px_1px_rgba(255,255,255,0.8)] flex items-start justify-between gap-3 animate-fadeIn">
           <div className="flex items-start gap-3 flex-1 min-w-0">
-            <div className="w-9 h-9 rounded-xl bg-amber-500 text-white flex items-center justify-center font-bold shrink-0 mt-0.5">
+            <div className="w-9 h-9 rounded-xl bg-amber-500 text-white flex items-center justify-center font-bold shrink-0 mt-0.5 shadow-sm">
               <FileCheck className="w-5 h-5" />
             </div>
             <div className="space-y-2 flex-1 min-w-0">
@@ -625,7 +625,7 @@ export const RegistrationForm: React.FC<RegistrationFormProps> = ({
               </div>
 
               {rejectionReason && (
-                <div className="p-3 rounded-xl bg-white/90 border border-rose-200 text-xs">
+                <div className="p-3 rounded-xl bg-white/90 backdrop-blur-md border border-rose-200/90 text-xs shadow-2xs">
                   <span className="font-bold text-rose-800 uppercase block text-[10px] tracking-wider">
                     Rejection Reason:
                   </span>
