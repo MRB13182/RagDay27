@@ -285,30 +285,34 @@ export default function App() {
 
   return (
     <div className="min-h-screen flex flex-col bg-[#F8F9FC] text-[#111827] selection:bg-[#5B5FEF] selection:text-white relative">
+      {/* Background Soft Glow Orbs for Subtle Glass Reflection Depth */}
+      <div className="fixed -top-40 -left-40 w-96 h-96 bg-[#5B5FEF]/5 rounded-full blur-3xl pointer-events-none -z-10" />
+      <div className="fixed top-1/3 -right-40 w-96 h-96 bg-[#00D4FF]/5 rounded-full blur-3xl pointer-events-none -z-10" />
+
       {toast && (
         <aside
           aria-label="Notification"
-          className="fixed top-20 right-4 sm:right-6 z-[100] max-w-sm sm:max-w-md animate-slideDown shadow-2xl rounded-2xl p-4 border flex items-center gap-3 backdrop-blur-xl bg-white/95 text-slate-900 border-slate-200"
+          className="fixed top-20 right-4 sm:right-6 z-[100] max-w-sm sm:max-w-md animate-slideDown shadow-[0_20px_40px_-10px_rgba(0,0,0,0.15),inset_0_1.5px_2px_white] rounded-2xl p-4 border flex items-center gap-3 backdrop-blur-2xl bg-white/90 text-slate-900 border-white/95"
         >
           {toast.type === 'success' && (
-            <div className="w-8 h-8 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center shrink-0">
+            <div className="w-8 h-8 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center shrink-0 shadow-2xs border border-emerald-100">
               <CheckCircle2 className="w-5 h-5" />
             </div>
           )}
           {toast.type === 'error' && (
-            <div className="w-8 h-8 rounded-xl bg-rose-50 text-rose-600 flex items-center justify-center shrink-0">
+            <div className="w-8 h-8 rounded-xl bg-rose-50 text-rose-600 flex items-center justify-center shrink-0 shadow-2xs border border-rose-100">
               <AlertCircle className="w-5 h-5" />
             </div>
           )}
           {toast.type === 'info' && (
-            <div className="w-8 h-8 rounded-xl bg-indigo-50 text-indigo-600 flex items-center justify-center shrink-0">
+            <div className="w-8 h-8 rounded-xl bg-indigo-50 text-indigo-600 flex items-center justify-center shrink-0 shadow-2xs border border-indigo-100">
               <Info className="w-5 h-5" />
             </div>
           )}
           <div className="flex-1 text-xs sm:text-sm font-semibold text-slate-800 leading-snug">{toast.message}</div>
           <button
             onClick={() => setToast(null)}
-            className="p-1 rounded-lg text-slate-400 hover:text-slate-700 hover:bg-slate-100 transition-colors cursor-pointer"
+            className="p-1 rounded-lg text-slate-400 hover:text-slate-700 hover:bg-white/80 transition-colors cursor-pointer"
           >
             <X className="w-4 h-4" />
           </button>
@@ -325,8 +329,8 @@ export default function App() {
 
       {isRegClosedPopupOpen && (
         <div className="fixed inset-0 z-[160] flex items-center justify-center p-4 bg-slate-950/70 backdrop-blur-sm animate-fadeIn">
-          <div className="w-full max-w-md bg-white rounded-3xl p-6 sm:p-7 shadow-2xl border border-slate-100 text-slate-900 space-y-4 text-center">
-            <div className="w-14 h-14 rounded-2xl bg-amber-50 text-amber-600 grid place-items-center mx-auto">
+          <div className="w-full max-w-md bg-white/90 backdrop-blur-2xl rounded-3xl p-6 sm:p-7 shadow-[0_25px_60px_-15px_rgba(0,0,0,0.3),inset_0_1.5px_2px_white] border border-white/95 text-slate-900 space-y-4 text-center">
+            <div className="w-14 h-14 rounded-2xl bg-amber-50 text-amber-600 grid place-items-center mx-auto shadow-2xs border border-amber-100">
               <ShieldAlert className="w-7 h-7" />
             </div>
             <h3 className="text-xl font-black text-slate-900">Registration Closed</h3>
@@ -335,7 +339,7 @@ export default function App() {
               <button
                 type="button"
                 onClick={() => setIsRegClosedPopupOpen(false)}
-                className="w-full py-3 rounded-xl bg-slate-900 hover:bg-slate-800 text-white font-bold text-xs shadow-md cursor-pointer"
+                className="w-full py-3 rounded-xl bg-slate-900 hover:bg-slate-800 text-white font-bold text-xs shadow-md cursor-pointer transition-colors"
               >
                 Close
               </button>

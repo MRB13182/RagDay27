@@ -124,7 +124,7 @@ export const EventInformationSection: React.FC<EventInformationSectionProps> = (
     <section className="py-6 sm:py-8 relative">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="text-center max-w-xl mx-auto mb-6 sm:mb-8">
-          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/80 border border-slate-200 shadow-sm backdrop-blur-sm mb-2.5">
+          <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-white/80 border border-white/90 shadow-[0_4px_16px_rgba(91,95,239,0.06),inset_0_1px_1px_white] backdrop-blur-xl mb-2.5">
             <Sparkles className="w-3.5 h-3.5 text-[#5B5FEF]" />
             <span className="text-xs font-bold text-slate-800 uppercase tracking-wider">
               Essential Schedule & Key Details
@@ -148,11 +148,12 @@ export const EventInformationSection: React.FC<EventInformationSectionProps> = (
             return (
               <div
                 key={card.id}
-                className={`relative p-5 sm:p-6 rounded-2xl sm:rounded-3xl bg-white/75 backdrop-blur-xl border ${colors.cardBorder} shadow-sm transition-all duration-300 hover:-translate-y-1 ${colors.glow} flex flex-col justify-between`}
+                className={`relative p-5 sm:p-6 rounded-2xl sm:rounded-3xl bg-white/80 backdrop-blur-xl border ${colors.cardBorder} shadow-[0_8px_25px_-5px_rgba(0,0,0,0.04),inset_0_1.5px_1px_white] transition-all duration-300 hover:-translate-y-1 ${colors.glow} flex flex-col justify-between overflow-hidden`}
               >
-                <div>
+                <div className="absolute inset-x-0 top-0 h-1/2 bg-gradient-to-b from-white/50 to-transparent pointer-events-none rounded-t-2xl sm:rounded-t-3xl" />
+                <div className="relative z-10">
                   <div className="flex items-center justify-between mb-4">
-                    <div className={`w-11 h-11 rounded-2xl ${colors.badgeBg} flex items-center justify-center shadow-inner`}>
+                    <div className={`w-11 h-11 rounded-2xl ${colors.badgeBg} flex items-center justify-center shadow-xs border border-white/80 backdrop-blur-md`}>
                       {renderCardIcon(card.icon, 'w-5 h-5')}
                     </div>
                     <span className="text-[11px] font-bold uppercase tracking-wider text-slate-400 font-mono">
@@ -170,7 +171,7 @@ export const EventInformationSection: React.FC<EventInformationSectionProps> = (
                 </div>
 
                 {card.subDetail && (
-                  <div className="mt-4 pt-3 border-t border-slate-100 flex items-center text-xs text-slate-500 font-medium">
+                  <div className="relative z-10 mt-4 pt-3 border-t border-slate-100/90 flex items-center text-xs text-slate-500 font-medium">
                     <span>{card.subDetail}</span>
                   </div>
                 )}

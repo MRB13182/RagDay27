@@ -29,6 +29,7 @@ export async function uploadFileToStorage(
       .from(STORAGE_BUCKET)
       .upload(storagePath, file, {
         cacheControl: '3600',
+        upsert: true,
       });
 
     if (error) {
@@ -75,7 +76,12 @@ export async function uploadStudentPhoto(
   publicUrl: string;
   errorMessage?: string;
 }> {
-  const prefix = studentRollOrId ? `student_${studentRollOrId}` : undefined;
+  const timestamp = Date.now();
+  const randomSuffix = Math.random().toString(36).substring(2, 7);
+  const cleanId = (studentRollOrId || '').replace(/[^a-zA-Z0-9_-]/g, '_');
+  const prefix = cleanId
+    ? `student_${cleanId}_${timestamp}_${randomSuffix}`
+    : `student_${timestamp}_${randomSuffix}`;
   const res = await uploadFileToStorage(file, 'students', prefix);
   return {
     success: res.success,
@@ -83,4 +89,44 @@ export async function uploadStudentPhoto(
     publicUrl: res.publicUrl,
     errorMessage: res.errorMessage,
   };
+}
+
+/**
+ * Resolves a stored student photo (storage path, relative path, full URL, or data URI)
+ * to a full public URL ready to be displayed in <img> tags.
+ */
+export function resolveStudentPhotoUrl(photo: string | null | undefined): string | null {
+  if (!photo || typeof photo !== 'string') return null;
+  const trimmed = photo.trim();
+  if (!trimmed) return null;
+
+  // Already a full URL or data URI
+  if (
+    trimmed.startsWith('http://') ||
+    trimmed.startsWith('https://') ||
+    trimmed.startsWith('data:image/') ||
+    trimmed.startsWith('blob:')
+  ) {
+    return trimmed;
+  }
+
+  // Remove leading slashes
+  let cleanPath = trimmed.replace(/^\/+/, '');
+
+  // Strip bucket name prefix if present
+  if (cleanPath.startsWith(`${STORAGE_BUCKET}/`)) {
+    cleanPath = cleanPath.substring(STORAGE_BUCKET.length + 1);
+  }
+
+  // Default to students/ folder if it's a bare filename starting with student_
+  if (!cleanPath.includes('/') && cleanPath.startsWith('student_')) {
+    cleanPath = `students/${cleanPath}`;
+  }
+
+  try {
+    const { data } = supabase.storage.from(STORAGE_BUCKET).getPublicUrl(cleanPath);
+    return data?.publicUrl || null;
+  } catch {
+    return null;
+  }
 }

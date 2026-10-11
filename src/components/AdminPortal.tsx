@@ -2,6 +2,7 @@ import React, { useEffect, useMemo, useState } from 'react';
 import type { InvitationRecord, InvitationStatus, AdminProfile, PdfSettings, WebsiteSettings } from '../types';
 import { signInAdmin, signOutAdmin, getCurrentAdmin } from '../lib/supabase';
 import { getRegistrationList } from '../services/admin';
+import { resolveStudentPhotoUrl } from '../services/storage';
 import { calculateRegistrationOpenState, setManualRegistrationOverride } from '../lib/superAdminConfig';
 import { generateRegistrationListPDF, generateInvitationCardPDF } from '../utils/pdfGenerator';
 import {
@@ -20,6 +21,72 @@ interface AdminPortalProps {
   pdfSettings?: PdfSettings;
   websiteSettings?: WebsiteSettings;
 }
+
+const AdminStudentPhoto: React.FC<{
+  photo?: string | null;
+  name: string;
+  size?: 'sm' | 'lg';
+}> = ({ photo, name, size = 'sm' }) => {
+  const [loadError, setLoadError] = useState(false);
+  const resolvedUrl = resolveStudentPhotoUrl(photo);
+
+  useEffect(() => {
+    setLoadError(false);
+  }, [resolvedUrl]);
+
+  if (!resolvedUrl || loadError) {
+    if (size === 'lg') {
+      return (
+        <div className="w-16 h-16 rounded-2xl bg-slate-200 text-slate-400 grid place-items-center font-bold text-xs select-none">
+          No Photo
+        </div>
+      );
+    }
+    return (
+      <div className="w-9 h-9 rounded-xl bg-slate-100 text-slate-400 grid place-items-center font-bold text-[10px] select-none">
+        N/A
+      </div>
+    );
+  }
+
+  if (size === 'lg') {
+    return (
+      <img
+        src={resolvedUrl}
+        alt={name}
+        onError={() => setLoadError(true)}
+        className="w-16 h-16 rounded-2xl object-cover border border-slate-300 shadow-sm"
+      />
+    );
+  }
+
+  return (
+    <img
+      src={resolvedUrl}
+      alt={name}
+      onError={() => setLoadError(true)}
+      className="w-9 h-9 rounded-xl object-cover border border-slate-200 shadow-2xs"
+      loading="lazy"
+    />
+  );
+};
+
+const REJECTION_KEYWORD_CHIPS: { label: string; text: string }[] = [
+  { label: 'Full Name', text: 'Full Name is invalid or does not match college records.' },
+  { label: 'Class Roll', text: 'Class Roll is incorrect or not found.' },
+  { label: 'Student ID', text: 'Student ID does not match official college records.' },
+  { label: 'Contact Mobile Number', text: 'Contact Mobile Number is invalid or unreachable.' },
+  { label: 'Academic Group', text: 'Academic Group selection is incorrect.' },
+  { label: 'Academic Section', text: 'Academic Section selection is incorrect.' },
+  { label: 'Student Photo', text: 'Student Photo is invalid, blurry, or missing.' },
+  { label: 'Send Method', text: 'Send Method (bKash/Nagad) does not match transaction proof.' },
+  { label: 'Sender Mobile Number', text: 'Sender Mobile Number does not match payment statement.' },
+  { label: 'Payment Time', text: 'Payment Time does not match transaction timestamp.' },
+  { label: 'Transaction ID', text: 'Transaction ID is invalid, incomplete, or already used.' },
+  { label: 'Incomplete Payment', text: 'Incomplete Payment: Sent amount does not match required fee.' },
+  { label: 'Invalid Student Information', text: 'Invalid Student Information: Please verify name, roll, and student ID.' },
+  { label: 'Incorrect Payment Information', text: 'Incorrect Payment Information: Please verify payment method, number, and transaction ID.' },
+];
 
 export const AdminPortal: React.FC<AdminPortalProps> = ({
   isOpen,
@@ -238,6 +305,16 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
     setRejectReason(record.reject_reason || '');
   };
 
+  // Insert keyword rejection chip
+  const handleInsertRejectionChip = (chipText: string) => {
+    setRejectReason(prev => {
+      const trimmed = prev.trim();
+      if (!trimmed) return chipText;
+      if (trimmed.includes(chipText)) return prev;
+      return `${trimmed}\n${chipText}`;
+    });
+  };
+
   // Confirm rejection
   const handleConfirmReject = async () => {
     if (!rejectingRecord) return;
@@ -321,7 +398,7 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
   if (!admin) {
     return (
       <div className="fixed inset-0 z-[300] bg-black/75 backdrop-blur-md flex items-center justify-center p-4">
-        <div className="w-full max-w-md bg-white rounded-3xl shadow-2xl p-6 sm:p-8 relative border border-slate-100 animate-scaleUp">
+        <div className="w-full max-w-md bg-white/92 backdrop-blur-2xl rounded-3xl shadow-[0_30px_70px_-15px_rgba(0,0,0,0.4),inset_0_1.5px_2px_white] p-6 sm:p-8 relative border border-white/95 animate-scaleUp">
           <button
             onClick={onClose}
             className="absolute top-4 right-4 p-2 rounded-xl text-slate-400 hover:text-slate-700 hover:bg-slate-100 transition-colors"
@@ -349,7 +426,7 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
                 value={passcode}
                 onChange={e => setPasscode(e.target.value)}
                 placeholder="Enter Male or Female Admin passcode"
-                className="w-full px-4 py-3.5 rounded-xl border border-slate-200 bg-slate-50 text-sm font-mono font-medium focus:bg-white focus:border-indigo-600 focus:ring-2 focus:ring-indigo-100 outline-none transition-all placeholder:text-slate-400"
+                className="w-full px-4 py-3.5 rounded-xl border border-slate-200/90 bg-slate-50/80 backdrop-blur-md text-sm font-mono font-medium focus:bg-white focus:border-indigo-600 focus:ring-2 focus:ring-indigo-100 outline-none transition-all placeholder:text-slate-400"
                 autoFocus
                 required
               />
@@ -403,10 +480,10 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
 
   return (
     <div className="fixed inset-0 z-[300] bg-black/70 backdrop-blur-md flex items-center justify-center p-2 sm:p-4 md:p-6">
-      <div className="w-full max-w-7xl h-[95vh] rounded-3xl bg-white shadow-2xl border border-slate-200 flex flex-col overflow-hidden animate-scaleUp">
+      <div className="w-full max-w-7xl h-[95vh] rounded-3xl bg-white/95 backdrop-blur-2xl shadow-[0_30px_75px_-20px_rgba(0,0,0,0.35),inset_0_1.5px_2px_white] border border-white/95 flex flex-col overflow-hidden animate-scaleUp">
 
         {/* 1. ADMIN HEADER */}
-        <header className="px-4 py-3 sm:px-5 sm:py-3.5 border-b border-slate-200 bg-white flex items-center justify-between gap-2.5 shrink-0">
+        <header className="px-4 py-3 sm:px-5 sm:py-3.5 border-b border-slate-200/90 bg-white/80 backdrop-blur-md flex items-center justify-between gap-2.5 shrink-0">
           <div className="flex items-center gap-2.5 min-w-0">
             <div className={`w-9 h-9 sm:w-10 sm:h-10 rounded-xl grid place-items-center font-black text-base sm:text-lg border shrink-0 ${roleBadgeColor}`}>
               {isMaleAdmin ? '♂' : '♀'}
@@ -505,27 +582,27 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
         )}
 
         {/* 2. REGISTRATION STATISTICS & SUMMARY - Compact Single Row */}
-        <section className="px-4 py-2 sm:px-5 sm:py-2.5 border-b border-slate-200 bg-slate-50/70 overflow-x-auto shrink-0">
+        <section className="px-4 py-2 sm:px-5 sm:py-2.5 border-b border-slate-200/80 bg-slate-50/60 backdrop-blur-md overflow-x-auto shrink-0">
           <div className="grid grid-cols-4 min-w-[320px] gap-2 sm:gap-3">
-            <div className="p-2 sm:p-2.5 rounded-xl sm:rounded-2xl bg-white border border-slate-200/80 shadow-2xs">
+            <div className="p-2 sm:p-2.5 rounded-xl sm:rounded-2xl bg-white/80 backdrop-blur-md border border-slate-200/80 shadow-2xs">
               <span className="text-[9px] sm:text-[10px] font-extrabold uppercase tracking-wider text-slate-400 block leading-tight truncate">
                 Total {isMaleAdmin ? 'Male' : 'Female'}
               </span>
               <div className="text-base sm:text-lg font-black text-slate-900 mt-0.5 leading-tight">{stats.total}</div>
             </div>
-            <div className="p-2 sm:p-2.5 rounded-xl sm:rounded-2xl bg-white border border-amber-200/80 shadow-2xs">
+            <div className="p-2 sm:p-2.5 rounded-xl sm:rounded-2xl bg-white/80 backdrop-blur-md border border-amber-200/80 shadow-2xs">
               <span className="text-[9px] sm:text-[10px] font-extrabold uppercase tracking-wider text-amber-600 block leading-tight truncate">
                 Pending Review
               </span>
               <div className="text-base sm:text-lg font-black text-amber-700 mt-0.5 leading-tight">{stats.pending}</div>
             </div>
-            <div className="p-2 sm:p-2.5 rounded-xl sm:rounded-2xl bg-white border border-emerald-200/80 shadow-2xs">
+            <div className="p-2 sm:p-2.5 rounded-xl sm:rounded-2xl bg-white/80 backdrop-blur-md border border-emerald-200/80 shadow-2xs">
               <span className="text-[9px] sm:text-[10px] font-extrabold uppercase tracking-wider text-emerald-600 block leading-tight truncate">
                 Approved
               </span>
               <div className="text-base sm:text-lg font-black text-emerald-700 mt-0.5 leading-tight">{stats.approved}</div>
             </div>
-            <div className="p-2 sm:p-2.5 rounded-xl sm:rounded-2xl bg-white border border-rose-200/80 shadow-2xs">
+            <div className="p-2 sm:p-2.5 rounded-xl sm:rounded-2xl bg-white/80 backdrop-blur-md border border-rose-200/80 shadow-2xs">
               <span className="text-[9px] sm:text-[10px] font-extrabold uppercase tracking-wider text-rose-600 block leading-tight truncate">
                 Rejected
               </span>
@@ -535,7 +612,7 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
         </section>
 
         {/* 3. CONTROLS: STATUS FILTERS & SEARCH */}
-        <div className="px-5 py-3 border-b border-slate-200 bg-white flex flex-wrap items-center justify-between gap-3 shrink-0">
+        <div className="px-5 py-3 border-b border-slate-200/80 bg-white/70 backdrop-blur-md flex flex-wrap items-center justify-between gap-3 shrink-0">
           <div className="flex items-center gap-1.5 overflow-x-auto">
             {(['all', 'pending', 'approved', 'rejected'] as const).map(tab => {
               const active = statusFilter === tab;
@@ -566,7 +643,7 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
               value={searchTerm}
               onChange={e => setSearchTerm(e.target.value)}
               placeholder="Search reg no, name, roll, txn…"
-              className="w-full pl-8 pr-3 py-1.5 rounded-xl border border-slate-200 bg-slate-50 text-xs focus:bg-white focus:border-indigo-600 outline-none transition-colors"
+              className="w-full pl-8 pr-3 py-1.5 rounded-xl border border-slate-200/90 bg-slate-50/80 backdrop-blur-md text-xs focus:bg-white focus:border-indigo-600 outline-none transition-colors"
             />
             {searchTerm && (
               <button
@@ -640,18 +717,11 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
 
                         {/* Student Photo */}
                         <td className="px-3 py-2.5">
-                          {r.student_photo ? (
-                            <img
-                              src={r.student_photo}
-                              alt={r.full_name}
-                              className="w-9 h-9 rounded-xl object-cover border border-slate-200 shadow-2xs"
-                              loading="lazy"
-                            />
-                          ) : (
-                            <div className="w-9 h-9 rounded-xl bg-slate-100 text-slate-400 grid place-items-center font-bold text-[10px]">
-                              N/A
-                            </div>
-                          )}
+                          <AdminStudentPhoto
+                            photo={r.student_photo}
+                            name={r.full_name}
+                            size="sm"
+                          />
                         </td>
 
                         {/* Registration Number */}
@@ -804,8 +874,8 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
       {/* MODAL: REJECT REGISTRATION WITH REASON (Required) */}
       {/* ---------------------------------------------------------------------- */}
       {rejectingRecord && (
-        <div className="fixed inset-0 z-[320] bg-black/60 backdrop-blur-sm flex items-center justify-center p-4">
-          <div className="w-full max-w-md bg-white rounded-3xl shadow-2xl p-6 border border-slate-200 animate-scaleUp">
+        <div className="fixed inset-0 z-[320] bg-black/60 backdrop-blur-md flex items-center justify-center p-4">
+          <div className="w-full max-w-lg bg-white/92 backdrop-blur-2xl rounded-3xl shadow-[0_30px_70px_-15px_rgba(0,0,0,0.35),inset_0_1.5px_2px_white] p-6 border border-white/95 animate-scaleUp">
             <div className="flex items-center justify-between mb-4">
               <div className="flex items-center gap-2.5">
                 <div className="w-10 h-10 rounded-2xl bg-rose-50 text-rose-600 grid place-items-center">
@@ -820,7 +890,7 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
               </div>
               <button
                 onClick={() => { setRejectingRecord(null); setRejectReason(''); }}
-                className="p-1.5 rounded-xl text-slate-400 hover:text-slate-600"
+                className="p-1.5 rounded-xl text-slate-400 hover:text-slate-600 cursor-pointer"
               >
                 <X className="w-4 h-4" />
               </button>
@@ -834,17 +904,55 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
                 value={rejectReason}
                 onChange={e => setRejectReason(e.target.value)}
                 placeholder="State clearly why this registration is rejected (e.g. Transaction ID mismatch, incomplete payment, invalid student ID)..."
-                rows={4}
-                className="w-full px-3.5 py-3 rounded-xl border border-slate-300 text-xs font-sans leading-relaxed outline-none focus:border-rose-600 focus:ring-2 focus:ring-rose-100 transition-all placeholder:text-slate-400"
+                rows={3}
+                className="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 text-xs font-sans leading-relaxed outline-none focus:border-rose-600 focus:ring-2 focus:ring-rose-100 transition-all placeholder:text-slate-400"
                 autoFocus
                 required
               />
-              <p className="text-[11px] text-slate-400 mt-1.5">
+
+              {/* Compact, clickable keyword chips */}
+              <div className="mt-2.5 space-y-1.5">
+                <div className="flex items-center justify-between">
+                  <span className="text-[10px] font-bold uppercase tracking-wider text-slate-500">
+                    Common Rejection Reasons (Click to insert):
+                  </span>
+                  {rejectReason && (
+                    <button
+                      type="button"
+                      onClick={() => setRejectReason('')}
+                      className="text-[10px] font-semibold text-slate-400 hover:text-rose-600 transition-colors cursor-pointer"
+                    >
+                      Clear
+                    </button>
+                  )}
+                </div>
+                <div className="flex flex-wrap gap-1.5 max-h-36 overflow-y-auto pr-1 py-0.5">
+                  {REJECTION_KEYWORD_CHIPS.map(chip => {
+                    const isSelected = rejectReason.includes(chip.text) || rejectReason.includes(chip.label);
+                    return (
+                      <button
+                        key={chip.label}
+                        type="button"
+                        onClick={() => handleInsertRejectionChip(chip.text)}
+                        className={`px-2.5 py-1 rounded-lg text-[11px] border transition-all cursor-pointer ${
+                          isSelected
+                            ? 'bg-rose-50 border-rose-300 text-rose-700 font-bold shadow-2xs'
+                            : 'bg-slate-50 border-slate-200 text-slate-700 font-medium hover:bg-slate-100 hover:border-slate-300'
+                        }`}
+                      >
+                        {chip.label}
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+
+              <p className="text-[11px] text-slate-400 mt-2">
                 This reason will be recorded in Supabase and shown to the student on the official gate pass lookup page.
               </p>
             </div>
 
-            <div className="flex items-center justify-end gap-2.5">
+            <div className="flex items-center justify-end gap-2.5 pt-1 border-t border-slate-100">
               <button
                 type="button"
                 onClick={() => { setRejectingRecord(null); setRejectReason(''); }}
@@ -879,8 +987,8 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
       {/* DRAWER: DETAILED REGISTRATION VIEW */}
       {/* ---------------------------------------------------------------------- */}
       {selectedRecord && (
-        <div className="fixed inset-0 z-[310] bg-black/50 backdrop-blur-xs flex items-center justify-end p-2 sm:p-4">
-          <div className="w-full max-w-lg h-full max-h-[92vh] bg-white rounded-3xl shadow-2xl border border-slate-200 flex flex-col overflow-hidden animate-slideLeft">
+        <div className="fixed inset-0 z-[310] bg-black/50 backdrop-blur-sm flex items-center justify-end p-2 sm:p-4">
+          <div className="w-full max-w-lg h-full max-h-[92vh] bg-white/95 backdrop-blur-2xl rounded-3xl shadow-[0_30px_70px_-15px_rgba(0,0,0,0.35),inset_0_1.5px_2px_white] border border-white/95 flex flex-col overflow-hidden animate-slideLeft">
             
             <header className="px-5 py-4 border-b border-slate-200 bg-slate-50 flex items-center justify-between">
               <div>
@@ -898,17 +1006,11 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
             <div className="flex-1 overflow-auto p-5 space-y-5 text-xs">
               {/* Photo & Identity Banner */}
               <div className="flex items-center gap-4 p-4 rounded-2xl bg-slate-50 border border-slate-200">
-                {selectedRecord.student_photo ? (
-                  <img
-                    src={selectedRecord.student_photo}
-                    alt={selectedRecord.full_name}
-                    className="w-16 h-16 rounded-2xl object-cover border border-slate-300 shadow-sm"
-                  />
-                ) : (
-                  <div className="w-16 h-16 rounded-2xl bg-slate-200 text-slate-400 grid place-items-center font-bold text-xs">
-                    No Photo
-                  </div>
-                )}
+                <AdminStudentPhoto
+                  photo={selectedRecord.student_photo}
+                  name={selectedRecord.full_name}
+                  size="lg"
+                />
                 <div className="min-w-0 flex-1">
                   <h4 className="text-sm font-extrabold text-slate-900 truncate">{selectedRecord.full_name}</h4>
                   <p className="text-slate-500 font-mono mt-0.5">SL: #{selectedRecord.sl_no} · ID: {selectedRecord.student_id}</p>

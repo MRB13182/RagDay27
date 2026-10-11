@@ -46,7 +46,7 @@ export const ImportantNoticeModal: React.FC<ImportantNoticeModalProps> = ({
     >
       {/* Frosted Glass Card with Large Rounded Corners (26px) */}
       <div
-        className="w-[calc(100%-1rem)] max-w-[420px] sm:max-w-[450px] max-h-[85vh] sm:max-h-[480px] flex flex-col bg-white/95 backdrop-blur-2xl rounded-[26px] sm:rounded-[28px] p-6 sm:p-7 shadow-[0_25px_60px_-12px_rgba(20,15,50,0.35),0_0_0_1px_rgba(255,255,255,0.9)] border border-white/80 relative transition-transform duration-200"
+        className="w-[calc(100%-1rem)] max-w-[420px] sm:max-w-[450px] max-h-[85vh] sm:max-h-[480px] flex flex-col bg-white/90 backdrop-blur-2xl rounded-[26px] sm:rounded-[28px] p-6 sm:p-7 shadow-[0_30px_70px_-12px_rgba(20,15,50,0.35),inset_0_1.5px_2px_rgba(255,255,255,1)] border border-white/90 relative transition-transform duration-200"
       >
         {/* Fixed Header: Bell Icon, Italic Title, and Close Button */}
         <div className="flex items-center justify-between pb-3 sm:pb-4 shrink-0 relative">

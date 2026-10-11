@@ -13,6 +13,8 @@ import {
   createRegistration,
   uploadStudentPhoto,
   checkDuplicateRegistration,
+  toNullableUuid,
+  detectFlaggedFields,
 } from '../services';
 import { JerseyGraphic } from './JerseyGraphic';
 import { BkashLogo, NagadLogo } from './PaymentBrandLogos';
@@ -193,6 +195,7 @@ export const RegistrationForm: React.FC<RegistrationFormProps> = ({
   // Re-submission / editing state for rejected registrations
   const [editingRegNo, setEditingRegNo] = useState<string | null>(null);
   const [editingDbId, setEditingDbId] = useState<string | null>(null);
+  const [rejectionReason, setRejectionReason] = useState<string | null>(initialRecord?.reject_reason || null);
   const [recoveryProof, setRecoveryProof] = useState<{
     studentId: string;
     fullName: string;
@@ -235,6 +238,9 @@ export const RegistrationForm: React.FC<RegistrationFormProps> = ({
   // Pre-load data if initialRecord is provided (e.g. from Invitation Card "Register Again")
   useEffect(() => {
     if (initialRecord) {
+      const flagged = detectFlaggedFields(initialRecord.reject_reason);
+      const isPhotoFlagged = flagged.has('student_photo');
+
       setFormData({
         gender: initialRecord.gender || 'male',
         full_name: initialRecord.full_name || '',
@@ -243,7 +249,7 @@ export const RegistrationForm: React.FC<RegistrationFormProps> = ({
         contact_mobile_number: initialRecord.contact_mobile_number || initialRecord.sender_mobile_no || '',
         academic_group: initialRecord.academic_group || '',
         academic_section: initialRecord.academic_section || '',
-        student_photo: initialRecord.student_photo || null,
+        student_photo: isPhotoFlagged ? null : (initialRecord.student_photo || null),
         send_method: initialRecord.send_method || 'bkash',
         sender_mobile_no: initialRecord.sender_mobile_no || initialRecord.contact_mobile_number || '',
         payment_time: initialRecord.payment_time || '',
@@ -252,8 +258,9 @@ export const RegistrationForm: React.FC<RegistrationFormProps> = ({
         jersey_number: initialRecord.jersey_number || '27',
         jersey_size: (initialRecord.jersey_size as JerseySize) || 'L',
       });
+      setRejectionReason(initialRecord.reject_reason || null);
       setEditingRegNo(initialRecord.registration_no);
-      setEditingDbId(initialRecord.dbId || initialRecord.id || null);
+      setEditingDbId(toNullableUuid(initialRecord.dbId || initialRecord.id));
       setRecoveryProof({
         studentId: initialRecord.student_id || '',
         fullName: initialRecord.full_name || '',
@@ -270,6 +277,19 @@ export const RegistrationForm: React.FC<RegistrationFormProps> = ({
       setFormData(prev => ({ ...prev, amount: paymentSettings.registrationFee }));
     }
   }, [paymentSettings?.registrationFee]);
+
+  // Determine flagged fields from rejection reason
+  const flaggedFields = React.useMemo(() => {
+    return editingRegNo && rejectionReason ? detectFlaggedFields(rejectionReason) : new Set<string>();
+  }, [editingRegNo, rejectionReason]);
+
+  const isFlagged = (fieldName: string) => flaggedFields.has(fieldName);
+  const hasSpecificFlaggedFields = flaggedFields.size > 0;
+
+  const getFieldHighlightClass = (fieldName: string) => {
+    if (!isFlagged(fieldName)) return '';
+    return '!border-rose-500 !ring-2 !ring-rose-400/50 focus:!border-rose-600 focus:!ring-rose-500';
+  };
 
   const isGenderChosen = formData.gender === 'male' || formData.gender === 'female';
   const isMale = formData.gender === 'male';
@@ -295,16 +315,16 @@ export const RegistrationForm: React.FC<RegistrationFormProps> = ({
     : 'text-slate-700 font-semibold';
 
   const inputClasses = isMale
-    ? 'bg-slate-900/80 border-slate-700/90 text-white placeholder-slate-500 focus:border-[#38BDF8] focus:ring-2 focus:ring-[#38BDF8]/30'
+    ? 'bg-slate-900/85 backdrop-blur-md border-slate-700/90 text-white placeholder-slate-500 focus:border-[#38BDF8] focus:ring-2 focus:ring-[#38BDF8]/30 shadow-[inset_0_1.5px_2px_rgba(0,0,0,0.3)]'
     : isFemale
-    ? 'bg-white/90 border-pink-200 text-slate-900 placeholder-pink-300 focus:border-[#EC4899] focus:ring-2 focus:ring-[#EC4899]/25'
-    : 'bg-white border-slate-200 text-slate-900 placeholder-slate-400 focus:border-[#5B5FEF] focus:ring-2 focus:ring-[#5B5FEF]/20';
+    ? 'bg-white/85 backdrop-blur-md border-pink-200 text-slate-900 placeholder-pink-300 focus:border-[#EC4899] focus:ring-2 focus:ring-[#EC4899]/25 shadow-[inset_0_1px_2px_rgba(0,0,0,0.02)]'
+    : 'bg-white/85 backdrop-blur-md border-slate-200 text-slate-900 placeholder-slate-400 focus:border-[#5B5FEF] focus:ring-2 focus:ring-[#5B5FEF]/20 shadow-[inset_0_1px_2px_rgba(0,0,0,0.02)]';
 
   const subCardClasses = isMale
-    ? 'bg-slate-900/60 border border-slate-800 backdrop-blur-md'
+    ? 'bg-slate-900/70 border border-slate-800/90 backdrop-blur-xl shadow-inner'
     : isFemale
-    ? 'bg-white/80 border border-pink-200 backdrop-blur-md shadow-sm'
-    : 'bg-white/70 border border-slate-200/80 backdrop-blur-md shadow-sm';
+    ? 'bg-white/80 border border-pink-200/90 backdrop-blur-xl shadow-xs'
+    : 'bg-white/75 border border-white/90 backdrop-blur-xl shadow-xs';
 
   // Dynamic payment numbers based on gender
   const activeBkashNumber = isFemale
@@ -489,11 +509,14 @@ export const RegistrationForm: React.FC<RegistrationFormProps> = ({
       let displayPhotoUrl = formData.student_photo || '';
       if (formData.photoFile) {
         const uploadRes = await uploadStudentPhoto(formData.photoFile, formData.class_roll.trim());
-        if (!uploadRes.success) {
+        if (uploadRes.success) {
+          photoStoragePath = uploadRes.storagePath;
+          displayPhotoUrl = uploadRes.publicUrl;
+        } else if (displayPhotoUrl) {
+          console.warn('Storage upload failed, falling back to optimized photo:', uploadRes.errorMessage);
+        } else {
           throw new Error(uploadRes.errorMessage || 'Student photo upload failed.');
         }
-        photoStoragePath = uploadRes.storagePath;
-        displayPhotoUrl = uploadRes.publicUrl;
       }
 
       // 5. Submit or Re-submit registration
@@ -529,6 +552,7 @@ export const RegistrationForm: React.FC<RegistrationFormProps> = ({
       // Clear edit state if any
       setEditingRegNo(null);
       setEditingDbId(null);
+      setRejectionReason(null);
       setRecoveryProof(null);
       if (onResetReRegister) onResetReRegister();
     } catch (err: any) {
@@ -539,7 +563,18 @@ export const RegistrationForm: React.FC<RegistrationFormProps> = ({
     }
   };
 
+  const handleCancelReRegistration = () => {
+    setEditingRegNo(null);
+    setEditingDbId(null);
+    setRejectionReason(null);
+    setRecoveryProof(null);
+    if (onResetReRegister) onResetReRegister();
+  };
+
   const handleContinueRejectedRegistration = (record: InvitationRecord) => {
+    const flagged = detectFlaggedFields(record.reject_reason);
+    const isPhotoFlagged = flagged.has('student_photo');
+
     setFormData({
       gender: record.gender || 'male',
       full_name: record.full_name || '',
@@ -548,7 +583,7 @@ export const RegistrationForm: React.FC<RegistrationFormProps> = ({
       contact_mobile_number: record.contact_mobile_number || record.sender_mobile_no || '',
       academic_group: record.academic_group || '',
       academic_section: record.academic_section || '',
-      student_photo: record.student_photo || null,
+      student_photo: isPhotoFlagged ? null : (record.student_photo || null),
       send_method: record.send_method || 'bkash',
       sender_mobile_no: record.sender_mobile_no || record.contact_mobile_number || '',
       payment_time: record.payment_time || '',
@@ -557,8 +592,9 @@ export const RegistrationForm: React.FC<RegistrationFormProps> = ({
       jersey_number: record.jersey_number || '27',
       jersey_size: (record.jersey_size as JerseySize) || 'L',
     });
+    setRejectionReason(record.reject_reason || null);
     setEditingRegNo(record.registration_no);
-    setEditingDbId(record.dbId || record.id || null);
+    setEditingDbId(toNullableUuid(record.dbId || record.id));
     setRecoveryProof({
       studentId: record.student_id || '',
       fullName: record.full_name || '',
@@ -573,31 +609,48 @@ export const RegistrationForm: React.FC<RegistrationFormProps> = ({
     <div className="py-6 sm:py-10 max-w-4xl mx-auto px-3 sm:px-6 lg:px-8">
       {/* Re-submission Banner if editing previously rejected record */}
       {editingRegNo && (
-        <div className="mb-6 p-4 rounded-2xl bg-amber-50 border-2 border-amber-300 text-amber-900 shadow-sm flex items-center justify-between gap-3 animate-fadeIn">
-          <div className="flex items-center gap-3">
-            <div className="w-9 h-9 rounded-xl bg-amber-500 text-white flex items-center justify-center font-bold">
+        <div className="mb-6 p-4 rounded-2xl bg-amber-50 border-2 border-amber-300 text-amber-900 shadow-sm flex items-start justify-between gap-3 animate-fadeIn">
+          <div className="flex items-start gap-3 flex-1 min-w-0">
+            <div className="w-9 h-9 rounded-xl bg-amber-500 text-white flex items-center justify-center font-bold shrink-0 mt-0.5">
               <FileCheck className="w-5 h-5" />
             </div>
-            <div>
-              <div className="text-xs font-bold uppercase tracking-wider text-amber-700">
-                Re-Submitting Registration
+            <div className="space-y-2 flex-1 min-w-0">
+              <div>
+                <div className="text-xs font-bold uppercase tracking-wider text-amber-700">
+                  Re-Submitting Registration
+                </div>
+                <div className="text-sm font-extrabold">
+                  Registration No: <span className="font-mono text-indigo-700">{editingRegNo}</span>
+                </div>
               </div>
-              <div className="text-sm font-extrabold">
-                Registration No: <span className="font-mono text-indigo-700">{editingRegNo}</span>
-              </div>
-              <p className="text-xs text-amber-800 mt-0.5">
-                Update your student and payment information below. Your registration number remains permanent.
-              </p>
+
+              {rejectionReason && (
+                <div className="p-3 rounded-xl bg-white/90 border border-rose-200 text-xs">
+                  <span className="font-bold text-rose-800 uppercase block text-[10px] tracking-wider">
+                    Rejection Reason:
+                  </span>
+                  <p className="font-semibold text-rose-950 mt-0.5 whitespace-pre-wrap">{rejectionReason}</p>
+                </div>
+              )}
+
+              {!hasSpecificFlaggedFields && (
+                <p className="text-rose-600 text-xs font-bold flex items-center gap-1.5 pt-0.5">
+                  <AlertCircle className="w-4 h-4 shrink-0 text-rose-600" />
+                  <span>Previously, you made a mistake here. Please correct this.</span>
+                </p>
+              )}
+
+              {hasSpecificFlaggedFields && (
+                <p className="text-xs text-amber-800">
+                  Please review and correct the highlighted fields marked below. Your registration number remains permanent.
+                </p>
+              )}
             </div>
           </div>
           <button
             type="button"
-            onClick={() => {
-              setEditingRegNo(null);
-              setEditingDbId(null);
-              if (onResetReRegister) onResetReRegister();
-            }}
-            className="p-2 text-amber-700 hover:text-amber-900 rounded-lg hover:bg-amber-100 transition-colors"
+            onClick={handleCancelReRegistration}
+            className="p-2 text-amber-700 hover:text-amber-900 rounded-lg hover:bg-amber-100 transition-colors cursor-pointer shrink-0"
             title="Cancel re-submission"
           >
             <X className="w-4 h-4" />
@@ -660,8 +713,8 @@ export const RegistrationForm: React.FC<RegistrationFormProps> = ({
                 onClick={() => handleGenderSelect('male')}
                 className={`py-3.5 px-4 rounded-2xl border-2 transition-all duration-200 cursor-pointer flex items-center justify-center gap-2.5 font-bold text-sm sm:text-base ${
                   isMale
-                    ? 'border-[#38BDF8] bg-slate-900/95 shadow-md ring-2 ring-[#38BDF8]/40 text-white'
-                    : 'border-slate-300/80 bg-white/80 hover:border-[#38BDF8]/60 hover:bg-slate-50 text-slate-800 shadow-2xs'
+                    ? 'border-[#38BDF8] bg-slate-900/90 backdrop-blur-xl shadow-[0_8px_25px_rgba(56,189,248,0.25),inset_0_1px_1.5px_rgba(255,255,255,0.15)] ring-2 ring-[#38BDF8]/40 text-white'
+                    : 'border-slate-300/80 bg-white/70 backdrop-blur-md hover:border-[#38BDF8]/60 hover:bg-white/90 text-slate-800 shadow-2xs'
                 }`}
               >
                 <span className={`w-7 h-7 rounded-xl grid place-items-center font-black text-sm shrink-0 ${
@@ -679,8 +732,8 @@ export const RegistrationForm: React.FC<RegistrationFormProps> = ({
                 onClick={() => handleGenderSelect('female')}
                 className={`py-3.5 px-4 rounded-2xl border-2 transition-all duration-200 cursor-pointer flex items-center justify-center gap-2.5 font-bold text-sm sm:text-base ${
                   isFemale
-                    ? 'border-[#EC4899] bg-pink-50/95 shadow-md ring-2 ring-[#EC4899]/40 text-pink-950'
-                    : 'border-slate-300/80 bg-white/80 hover:border-[#EC4899]/60 hover:bg-pink-50/40 text-slate-800 shadow-2xs'
+                    ? 'border-[#EC4899] bg-pink-50/90 backdrop-blur-xl shadow-[0_8px_25px_rgba(236,72,153,0.25),inset_0_1px_1.5px_white] ring-2 ring-[#EC4899]/40 text-pink-950'
+                    : 'border-slate-300/80 bg-white/70 backdrop-blur-md hover:border-[#EC4899]/60 hover:bg-pink-50/40 text-slate-800 shadow-2xs'
                 }`}
               >
                 <span className={`w-7 h-7 rounded-xl grid place-items-center font-black text-sm shrink-0 ${
@@ -742,10 +795,16 @@ export const RegistrationForm: React.FC<RegistrationFormProps> = ({
                         setFormData({ ...formData, full_name: e.target.value });
                         if (formErrors.full_name) setFormErrors(prev => ({ ...prev, full_name: '' }));
                       }}
-                      className={`w-full px-4 py-3 rounded-xl text-sm font-medium transition-colors outline-none ${inputClasses}`}
+                      className={`w-full px-4 py-3 rounded-xl text-sm font-medium transition-colors outline-none ${inputClasses} ${getFieldHighlightClass('full_name')}`}
                     />
                     {formErrors.full_name && (
                       <p className="text-rose-500 text-xs mt-1 font-semibold">{formErrors.full_name}</p>
+                    )}
+                    {isFlagged('full_name') && (
+                      <p className="text-rose-600 text-xs mt-1.5 font-bold flex items-center gap-1">
+                        <AlertCircle className="w-3.5 h-3.5 shrink-0" />
+                        <span>Previously, you made a mistake here. Please correct this.</span>
+                      </p>
                     )}
                   </div>
 
@@ -762,10 +821,16 @@ export const RegistrationForm: React.FC<RegistrationFormProps> = ({
                         setFormData({ ...formData, class_roll: e.target.value });
                         if (formErrors.class_roll) setFormErrors(prev => ({ ...prev, class_roll: '' }));
                       }}
-                      className={`w-full px-4 py-3 rounded-xl text-sm font-medium transition-colors outline-none ${inputClasses}`}
+                      className={`w-full px-4 py-3 rounded-xl text-sm font-medium transition-colors outline-none ${inputClasses} ${getFieldHighlightClass('class_roll')}`}
                     />
                     {formErrors.class_roll && (
                       <p className="text-rose-500 text-xs mt-1 font-semibold">{formErrors.class_roll}</p>
+                    )}
+                    {isFlagged('class_roll') && (
+                      <p className="text-rose-600 text-xs mt-1.5 font-bold flex items-center gap-1">
+                        <AlertCircle className="w-3.5 h-3.5 shrink-0" />
+                        <span>Previously, you made a mistake here. Please correct this.</span>
+                      </p>
                     )}
                   </div>
 
@@ -782,10 +847,16 @@ export const RegistrationForm: React.FC<RegistrationFormProps> = ({
                         setFormData({ ...formData, student_id: e.target.value });
                         if (formErrors.student_id) setFormErrors(prev => ({ ...prev, student_id: '' }));
                       }}
-                      className={`w-full px-4 py-3 rounded-xl text-sm font-medium transition-colors outline-none ${inputClasses}`}
+                      className={`w-full px-4 py-3 rounded-xl text-sm font-medium transition-colors outline-none ${inputClasses} ${getFieldHighlightClass('student_id')}`}
                     />
                     {formErrors.student_id && (
                       <p className="text-rose-500 text-xs mt-1 font-semibold">{formErrors.student_id}</p>
+                    )}
+                    {isFlagged('student_id') && (
+                      <p className="text-rose-600 text-xs mt-1.5 font-bold flex items-center gap-1">
+                        <AlertCircle className="w-3.5 h-3.5 shrink-0" />
+                        <span>Previously, you made a mistake here. Please correct this.</span>
+                      </p>
                     )}
                   </div>
 
@@ -802,11 +873,17 @@ export const RegistrationForm: React.FC<RegistrationFormProps> = ({
                         setFormData({ ...formData, contact_mobile_number: e.target.value });
                         if (formErrors.contact_mobile_number) setFormErrors(prev => ({ ...prev, contact_mobile_number: '' }));
                       }}
-                      className={`w-full px-4 py-3 rounded-xl text-sm font-medium transition-colors outline-none ${inputClasses}`}
+                      className={`w-full px-4 py-3 rounded-xl text-sm font-medium transition-colors outline-none ${inputClasses} ${getFieldHighlightClass('contact_mobile_number')}`}
                     />
                     {(getMobileError(formData.contact_mobile_number) || formErrors.contact_mobile_number) && (
                       <p className="text-rose-500 text-xs mt-1 font-semibold">
                         {getMobileError(formData.contact_mobile_number) || formErrors.contact_mobile_number}
+                      </p>
+                    )}
+                    {isFlagged('contact_mobile_number') && (
+                      <p className="text-rose-600 text-xs mt-1.5 font-bold flex items-center gap-1">
+                        <AlertCircle className="w-3.5 h-3.5 shrink-0" />
+                        <span>Previously, you made a mistake here. Please correct this.</span>
                       </p>
                     )}
                   </div>
@@ -819,7 +896,7 @@ export const RegistrationForm: React.FC<RegistrationFormProps> = ({
                     <select
                       value={formData.academic_group}
                       onChange={handleGroupSelect}
-                      className={`w-full px-4 py-3 rounded-xl text-sm font-medium transition-colors outline-none cursor-pointer ${inputClasses}`}
+                      className={`w-full px-4 py-3 rounded-xl text-sm font-medium transition-colors outline-none cursor-pointer ${inputClasses} ${getFieldHighlightClass('academic_group')}`}
                     >
                       <option value="" className={isMale ? 'bg-slate-900 text-white' : 'bg-white text-slate-900'}>
                         Select Academic Group...
@@ -837,6 +914,12 @@ export const RegistrationForm: React.FC<RegistrationFormProps> = ({
                     {formErrors.academic_group && (
                       <p className="text-rose-500 text-xs mt-1 font-semibold">{formErrors.academic_group}</p>
                     )}
+                    {isFlagged('academic_group') && (
+                      <p className="text-rose-600 text-xs mt-1.5 font-bold flex items-center gap-1">
+                        <AlertCircle className="w-3.5 h-3.5 shrink-0" />
+                        <span>Previously, you made a mistake here. Please correct this.</span>
+                      </p>
+                    )}
                   </div>
 
                   {/* 6. Academic Section */}
@@ -851,7 +934,7 @@ export const RegistrationForm: React.FC<RegistrationFormProps> = ({
                         setFormData({ ...formData, academic_section: e.target.value });
                         if (formErrors.academic_section) setFormErrors(prev => ({ ...prev, academic_section: '' }));
                       }}
-                      className={`w-full px-4 py-3 rounded-xl text-sm font-medium transition-colors outline-none cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed ${inputClasses}`}
+                      className={`w-full px-4 py-3 rounded-xl text-sm font-medium transition-colors outline-none cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed ${inputClasses} ${getFieldHighlightClass('academic_section')}`}
                     >
                       <option value="" className={isMale ? 'bg-slate-900 text-white' : 'bg-white text-slate-900'}>
                         {formData.academic_group ? 'Choose Section...' : 'Select Group First'}
@@ -869,10 +952,16 @@ export const RegistrationForm: React.FC<RegistrationFormProps> = ({
                     {formErrors.academic_section && (
                       <p className="text-rose-500 text-xs mt-1 font-semibold">{formErrors.academic_section}</p>
                     )}
+                    {isFlagged('academic_section') && (
+                      <p className="text-rose-600 text-xs mt-1.5 font-bold flex items-center gap-1">
+                        <AlertCircle className="w-3.5 h-3.5 shrink-0" />
+                        <span>Previously, you made a mistake here. Please correct this.</span>
+                      </p>
+                    )}
                   </div>
 
                   {/* 7. Student Photo Upload (Optional, Max 3MB) */}
-                  <div className="sm:col-span-2 pt-1">
+                  <div className={`sm:col-span-2 pt-1 ${isFlagged('student_photo') ? 'p-3 rounded-2xl border-2 border-rose-400 bg-rose-50/20' : ''}`}>
                     <PhotoUploadField
                       student_photo={formData.student_photo}
                       photoUrl={formData.student_photo}
@@ -885,6 +974,12 @@ export const RegistrationForm: React.FC<RegistrationFormProps> = ({
                         setFormData(prev => ({ ...prev, student_photo: null, photoFile: null, photoBlob: null }));
                       }}
                     />
+                    {isFlagged('student_photo') && (
+                      <p className="text-rose-600 text-xs mt-2 font-bold flex items-center gap-1">
+                        <AlertCircle className="w-3.5 h-3.5 shrink-0" />
+                        <span>Previously, you made a mistake here. Please correct this.</span>
+                      </p>
+                    )}
                   </div>
                 </div>
               </div>
@@ -966,6 +1061,14 @@ export const RegistrationForm: React.FC<RegistrationFormProps> = ({
                     </div>
                   </div>
 
+                  {/* Highlight for Incomplete Payment if flagged */}
+                  {isFlagged('payment_amount') && (
+                    <div className="p-3 rounded-xl bg-rose-50 border border-rose-300 text-rose-700 text-xs font-bold flex items-center gap-2">
+                      <AlertCircle className="w-4 h-4 shrink-0" />
+                      <span>Previously, you made a mistake here. Please correct this.</span>
+                    </div>
+                  )}
+
                   {/* Payment Inputs: 8. Send Method, 9. Sender Mobile No, 10. Payment Time, 11. Transaction ID */}
                   <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 pt-2">
                     {/* 8. Send Method */}
@@ -976,7 +1079,7 @@ export const RegistrationForm: React.FC<RegistrationFormProps> = ({
                       <select
                         value={formData.send_method}
                         onChange={e => setFormData({ ...formData, send_method: e.target.value as 'bkash' | 'nagad' })}
-                        className={`w-full px-4 py-3 rounded-xl text-sm font-semibold transition-colors outline-none cursor-pointer ${inputClasses}`}
+                        className={`w-full px-4 py-3 rounded-xl text-sm font-semibold transition-colors outline-none cursor-pointer ${inputClasses} ${getFieldHighlightClass('send_method')}`}
                       >
                         <option value="bkash" className={isMale ? 'bg-slate-900 text-white' : 'bg-white text-slate-900'}>
                           bKash
@@ -985,6 +1088,12 @@ export const RegistrationForm: React.FC<RegistrationFormProps> = ({
                           Nagad
                         </option>
                       </select>
+                      {isFlagged('send_method') && (
+                        <p className="text-rose-600 text-xs mt-1.5 font-bold flex items-center gap-1">
+                          <AlertCircle className="w-3.5 h-3.5 shrink-0" />
+                          <span>Previously, you made a mistake here. Please correct this.</span>
+                        </p>
+                      )}
                     </div>
 
                     {/* 9. Sender Mobile No (Required) */}
@@ -1000,11 +1109,17 @@ export const RegistrationForm: React.FC<RegistrationFormProps> = ({
                           setFormData({ ...formData, sender_mobile_no: e.target.value });
                           if (formErrors.sender_mobile_no) setFormErrors(prev => ({ ...prev, sender_mobile_no: '' }));
                         }}
-                        className={`w-full px-4 py-3 rounded-xl text-sm font-medium transition-colors outline-none ${inputClasses}`}
+                        className={`w-full px-4 py-3 rounded-xl text-sm font-medium transition-colors outline-none ${inputClasses} ${getFieldHighlightClass('sender_mobile_no')}`}
                       />
                       {(getMobileError(formData.sender_mobile_no) || formErrors.sender_mobile_no) && (
                         <p className="text-rose-500 text-xs mt-1 font-semibold">
                           {getMobileError(formData.sender_mobile_no) || formErrors.sender_mobile_no}
+                        </p>
+                      )}
+                      {isFlagged('sender_mobile_no') && (
+                        <p className="text-rose-600 text-xs mt-1.5 font-bold flex items-center gap-1">
+                          <AlertCircle className="w-3.5 h-3.5 shrink-0" />
+                          <span>Previously, you made a mistake here. Please correct this.</span>
                         </p>
                       )}
                     </div>
@@ -1021,10 +1136,16 @@ export const RegistrationForm: React.FC<RegistrationFormProps> = ({
                           setFormData({ ...formData, payment_time: e.target.value });
                           if (formErrors.payment_time) setFormErrors(prev => ({ ...prev, payment_time: '' }));
                         }}
-                        className={`w-full px-4 py-3 rounded-xl text-sm font-medium transition-colors outline-none ${inputClasses}`}
+                        className={`w-full px-4 py-3 rounded-xl text-sm font-medium transition-colors outline-none ${inputClasses} ${getFieldHighlightClass('payment_time')}`}
                       />
                       {formErrors.payment_time && (
                         <p className="text-rose-500 text-xs mt-1 font-semibold">{formErrors.payment_time}</p>
+                      )}
+                      {isFlagged('payment_time') && (
+                        <p className="text-rose-600 text-xs mt-1.5 font-bold flex items-center gap-1">
+                          <AlertCircle className="w-3.5 h-3.5 shrink-0" />
+                          <span>Previously, you made a mistake here. Please correct this.</span>
+                        </p>
                       )}
                     </div>
 
@@ -1038,8 +1159,14 @@ export const RegistrationForm: React.FC<RegistrationFormProps> = ({
                         placeholder="e.g. 9J28DA10K"
                         value={formData.transaction_id}
                         onChange={e => setFormData({ ...formData, transaction_id: e.target.value })}
-                        className={`w-full px-4 py-3 rounded-xl text-sm font-medium transition-colors outline-none ${inputClasses}`}
+                        className={`w-full px-4 py-3 rounded-xl text-sm font-medium transition-colors outline-none ${inputClasses} ${getFieldHighlightClass('transaction_id')}`}
                       />
+                      {isFlagged('transaction_id') && (
+                        <p className="text-rose-600 text-xs mt-1.5 font-bold flex items-center gap-1">
+                          <AlertCircle className="w-3.5 h-3.5 shrink-0" />
+                          <span>Previously, you made a mistake here. Please correct this.</span>
+                        </p>
+                      )}
                     </div>
                   </div>
                 </div>
@@ -1220,7 +1347,7 @@ export const RegistrationForm: React.FC<RegistrationFormProps> = ({
       {/* ======================================================== */}
       {duplicateModal && (
         <div className="fixed inset-0 z-[250] flex items-center justify-center p-4 bg-slate-950/70 backdrop-blur-sm animate-fadeIn">
-          <div className="w-full max-w-md bg-white rounded-3xl p-6 sm:p-7 shadow-2xl border border-slate-100 text-slate-900 space-y-4">
+          <div className="w-full max-w-md bg-white/90 backdrop-blur-2xl rounded-3xl p-6 sm:p-7 shadow-[0_25px_60px_-15px_rgba(0,0,0,0.3),inset_0_1.5px_2px_white] border border-white/95 text-slate-900 space-y-4">
             {/* Modal Header */}
             <div className="flex items-start justify-between">
               <div className="flex items-center gap-3">
@@ -1360,7 +1487,7 @@ export const RegistrationForm: React.FC<RegistrationFormProps> = ({
       {/* ======================================================== */}
       {showClosedModal && (
         <div className="fixed inset-0 z-[250] flex items-center justify-center p-4 bg-slate-950/70 backdrop-blur-sm animate-fadeIn">
-          <div className="w-full max-w-md bg-white rounded-3xl p-6 sm:p-7 shadow-2xl border border-slate-100 text-slate-900 space-y-4 text-center">
+          <div className="w-full max-w-md bg-white/90 backdrop-blur-2xl rounded-3xl p-6 sm:p-7 shadow-[0_25px_60px_-15px_rgba(0,0,0,0.3),inset_0_1.5px_2px_white] border border-white/95 text-slate-900 space-y-4 text-center">
             <div className="w-14 h-14 rounded-2xl bg-amber-50 text-amber-600 grid place-items-center mx-auto">
               <ShieldAlert className="w-7 h-7" />
             </div>
@@ -1386,7 +1513,17 @@ export const RegistrationForm: React.FC<RegistrationFormProps> = ({
       {/* ======================================================== */}
       {successModalData && (
         <div className="fixed inset-0 z-[250] flex items-center justify-center p-4 bg-slate-950/75 backdrop-blur-md animate-fadeIn">
-          <div className="w-full max-w-md bg-white rounded-3xl p-6 sm:p-8 shadow-2xl border border-slate-100 text-slate-900 text-center space-y-5">
+          <div className="relative w-full max-w-md bg-white/92 backdrop-blur-2xl rounded-3xl p-6 sm:p-8 shadow-[0_25px_60px_-15px_rgba(0,0,0,0.3),inset_0_1.5px_2px_white] border border-white/95 text-slate-900 text-center space-y-5">
+            {/* Close Button at top-right */}
+            <button
+              type="button"
+              onClick={() => setSuccessModalData(null)}
+              className="absolute top-4 right-4 sm:top-5 sm:right-5 w-8 h-8 rounded-full bg-slate-100 hover:bg-slate-200 text-slate-500 hover:text-slate-800 flex items-center justify-center transition-colors cursor-pointer"
+              aria-label="Close"
+            >
+              <X className="w-4 h-4" />
+            </button>
+
             <div className="w-16 h-16 rounded-2xl bg-emerald-50 text-emerald-600 grid place-items-center mx-auto shadow-inner">
               <Check className="w-8 h-8 stroke-[3]" />
             </div>
@@ -1413,6 +1550,19 @@ export const RegistrationForm: React.FC<RegistrationFormProps> = ({
               <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-amber-50 border border-amber-200 text-amber-700 text-xs font-bold">
                 <Clock className="w-3.5 h-3.5" />
                 <span>Status: Pending Review</span>
+              </div>
+            </div>
+
+            {/* Red Notice */}
+            <div className="p-3 sm:p-3.5 rounded-2xl bg-rose-50 border border-rose-200 text-rose-700 text-xs font-medium text-left flex items-start gap-2.5">
+              <span className="text-base shrink-0 leading-none mt-0.5">⚠️</span>
+              <div className="leading-relaxed">
+                <span className="font-bold block">
+                  Please Note Your Registration Number and Full Name.
+                </span>
+                <span className="text-rose-600">
+                  You will need them to check your application status and download your invitation card.
+                </span>
               </div>
             </div>
 

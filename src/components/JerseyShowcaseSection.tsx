@@ -53,7 +53,7 @@ export const JerseyShowcaseSection: React.FC<JerseyShowcaseSectionProps> = ({
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         {/* Section Header */}
         <div className="text-center max-w-2xl mx-auto mb-8 sm:mb-12">
-          <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-white/80 border border-slate-200/80 shadow-xs backdrop-blur-md mb-3">
+          <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-white/80 border border-white/90 shadow-[0_4px_16px_rgba(91,95,239,0.06),inset_0_1px_1px_white] backdrop-blur-xl mb-3">
             <Shirt className="w-3.5 h-3.5 text-[#5B5FEF]" />
             <span className="text-xs font-bold uppercase tracking-wider text-slate-700">
               Official Merchandise
@@ -72,8 +72,9 @@ export const JerseyShowcaseSection: React.FC<JerseyShowcaseSectionProps> = ({
           {displayCards.map((card) => (
             <div
               key={card.id}
-              className="relative rounded-3xl p-4 sm:p-5 bg-white/80 backdrop-blur-2xl border border-white/90 shadow-[0_20px_50px_rgba(91,95,239,0.12)] transition-all duration-300 hover:shadow-[0_25px_60px_rgba(91,95,239,0.18)] hover:-translate-y-1 flex flex-col justify-between"
+              className="relative rounded-3xl p-4 sm:p-5 bg-white/80 backdrop-blur-2xl border border-white/95 shadow-[0_20px_50px_rgba(91,95,239,0.1),inset_0_1.5px_1px_white] transition-all duration-300 hover:shadow-[0_25px_60px_rgba(91,95,239,0.18),inset_0_2px_1.5px_white] hover:-translate-y-1 flex flex-col justify-between overflow-hidden group"
             >
+              <div className="absolute inset-x-0 top-0 h-1/2 bg-gradient-to-b from-white/40 to-transparent pointer-events-none rounded-t-3xl" />
               {/* Top: Large Image Area */}
               <div className="relative rounded-2xl overflow-hidden aspect-[4/3] bg-gradient-to-b from-slate-900 via-slate-900 to-slate-950 flex items-center justify-center shadow-inner group">
                 {card.image ? (
@@ -96,7 +97,7 @@ export const JerseyShowcaseSection: React.FC<JerseyShowcaseSectionProps> = ({
               </div>
 
               {/* Bottom: Title & Description */}
-              <div className="pt-4 space-y-1.5 px-1">
+              <div className="relative z-10 pt-4 space-y-1.5 px-1">
                 <h3 className="font-display text-base sm:text-lg font-extrabold text-slate-900 tracking-tight">
                   {card.title}
                 </h3>
@@ -114,7 +115,7 @@ export const JerseyShowcaseSection: React.FC<JerseyShowcaseSectionProps> = ({
             <button
               type="button"
               onClick={onRegisterClick}
-              className="inline-flex items-center gap-2 text-xs font-bold text-[#5B5FEF] hover:text-[#4a4ed4] hover:underline cursor-pointer"
+              className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-white/70 backdrop-blur-md border border-white/80 shadow-2xs hover:bg-white/90 text-xs font-bold text-[#5B5FEF] hover:text-[#4a4ed4] transition-all cursor-pointer"
             >
               <span>Customize your name & size on registration</span>
               <CheckCircle2 className="w-3.5 h-3.5" />

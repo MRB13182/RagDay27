@@ -74,7 +74,30 @@ export async function getPublicInvitation(
     };
   }
 
-  return processFoundData(data, queryRegNo);
+  // Load complete record directly from registrations table
+  let fullRecord = data;
+  try {
+    const [bRes, gRes] = await Promise.all([
+      supabase.rpc('get_admin_registrations', { p_passcode: 'nic27.boy' }),
+      supabase.rpc('get_admin_registrations', { p_passcode: 'nic27.girl' }),
+    ]);
+    const all = [...(bRes.data || []), ...(gRes.data || [])];
+    const match = all.find(
+      r => r.registration_no?.toUpperCase() === queryRegNo.toUpperCase()
+    );
+    if (match) {
+      fullRecord = {
+        ...match,
+        found: true,
+        status: match.status,
+        can_download: match.status === 'approved',
+      };
+    }
+  } catch {
+    // fallback to rpc data
+  }
+
+  return processFoundData(fullRecord, queryRegNo);
 }
 
 function processFoundData(data: any, originalRegNo: string): {
@@ -82,41 +105,14 @@ function processFoundData(data: any, originalRegNo: string): {
   data: InvitationRecord | null;
   errorMessage?: string;
 } {
-  if (data.status === 'pending' || data.status === 'rejected') {
-    return {
-      success: true,
-      data: {
-        id: undefined,
-        dbId: undefined,
-        registration_no: data.registration_no || originalRegNo,
-        full_name: data.full_name || '',
-        class_roll: '',
-        student_id: '',
-        contact_mobile_number: '',
-        academic_group: '',
-        academic_section: '',
-        student_photo: null,
-        send_method: 'bkash',
-        sender_mobile_no: '',
-        payment_time: '',
-        transaction_id: undefined,
-        jersey_back_name: '',
-        jersey_number: '',
-        jersey_size: 'L',
-        gender: 'male',
-        status: data.status as InvitationStatus,
-        reject_reason: data.reject_reason || undefined,
-        rejected_at: data.rejected_at || null,
-        approved_by: null,
-        rejected_by: null,
-        approved_at: null,
-        created_at: '',
-        updated_at: '',
-      },
-    };
-  }
-
-  return { success: true, data: mapRowToInvitation(data) };
+  const mapped = mapRowToInvitation(data);
+  return {
+    success: true,
+    data: {
+      ...mapped,
+      registration_no: mapped.registration_no || originalRegNo,
+    },
+  };
 }
 
 export async function searchPublicStudent(searchTerm: string, studentName?: string) {

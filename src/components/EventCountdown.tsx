@@ -246,41 +246,45 @@ export const EventCountdown: React.FC<EventCountdownProps> = ({
       {/* 4 Glassmorphism Cards: Days, Hours, Minutes, Seconds */}
       <div className="grid grid-cols-4 gap-2 sm:gap-3.5">
         {/* Days */}
-        <div className="group relative flex flex-col items-center justify-center p-3 sm:p-4 rounded-2xl bg-white/80 backdrop-blur-xl border border-white/90 shadow-[0_8px_25px_rgba(91,95,239,0.08)] hover:shadow-[0_12px_30px_rgba(91,95,239,0.16)] transition-all duration-300">
-          <div className="font-display text-2xl sm:text-3xl lg:text-4xl font-extrabold text-slate-900 tracking-tight tabular-nums">
+        <div className="group relative flex flex-col items-center justify-center p-3 sm:p-4 rounded-2xl bg-white/85 backdrop-blur-xl border border-white/95 shadow-[0_10px_28px_-6px_rgba(91,95,239,0.08),inset_0_1.5px_1.5px_rgba(255,255,255,1),inset_0_-1px_2px_rgba(91,95,239,0.03)] hover:shadow-[0_16px_36px_-6px_rgba(91,95,239,0.18),inset_0_1.5px_2px_white] hover:-translate-y-0.5 transition-all duration-300 overflow-hidden">
+          <div className="absolute inset-x-0 top-0 h-1/2 bg-gradient-to-b from-white/60 to-transparent pointer-events-none" />
+          <div className="relative font-display text-2xl sm:text-3xl lg:text-4xl font-extrabold text-slate-900 tracking-tight tabular-nums">
             {timeLeft.days < 10 ? `0${timeLeft.days}` : timeLeft.days}
           </div>
-          <div className="text-[10px] sm:text-xs font-bold uppercase tracking-wider text-slate-500 mt-1">
+          <div className="relative text-[10px] sm:text-xs font-bold uppercase tracking-wider text-slate-500 mt-1">
             Days
           </div>
         </div>
 
         {/* Hours */}
-        <div className="group relative flex flex-col items-center justify-center p-3 sm:p-4 rounded-2xl bg-white/80 backdrop-blur-xl border border-white/90 shadow-[0_8px_25px_rgba(91,95,239,0.08)] hover:shadow-[0_12px_30px_rgba(91,95,239,0.16)] transition-all duration-300">
-          <div className="font-display text-2xl sm:text-3xl lg:text-4xl font-extrabold text-slate-900 tracking-tight tabular-nums">
+        <div className="group relative flex flex-col items-center justify-center p-3 sm:p-4 rounded-2xl bg-white/85 backdrop-blur-xl border border-white/95 shadow-[0_10px_28px_-6px_rgba(91,95,239,0.08),inset_0_1.5px_1.5px_rgba(255,255,255,1),inset_0_-1px_2px_rgba(91,95,239,0.03)] hover:shadow-[0_16px_36px_-6px_rgba(91,95,239,0.18),inset_0_1.5px_2px_white] hover:-translate-y-0.5 transition-all duration-300 overflow-hidden">
+          <div className="absolute inset-x-0 top-0 h-1/2 bg-gradient-to-b from-white/60 to-transparent pointer-events-none" />
+          <div className="relative font-display text-2xl sm:text-3xl lg:text-4xl font-extrabold text-slate-900 tracking-tight tabular-nums">
             {String(timeLeft.hours).padStart(2, '0')}
           </div>
-          <div className="text-[10px] sm:text-xs font-bold uppercase tracking-wider text-slate-500 mt-1">
+          <div className="relative text-[10px] sm:text-xs font-bold uppercase tracking-wider text-slate-500 mt-1">
             Hours
           </div>
         </div>
 
         {/* Minutes */}
-        <div className="group relative flex flex-col items-center justify-center p-3 sm:p-4 rounded-2xl bg-white/80 backdrop-blur-xl border border-white/90 shadow-[0_8px_25px_rgba(91,95,239,0.08)] hover:shadow-[0_12px_30px_rgba(91,95,239,0.16)] transition-all duration-300">
-          <div className="font-display text-2xl sm:text-3xl lg:text-4xl font-extrabold text-slate-900 tracking-tight tabular-nums">
+        <div className="group relative flex flex-col items-center justify-center p-3 sm:p-4 rounded-2xl bg-white/85 backdrop-blur-xl border border-white/95 shadow-[0_10px_28px_-6px_rgba(91,95,239,0.08),inset_0_1.5px_1.5px_rgba(255,255,255,1),inset_0_-1px_2px_rgba(91,95,239,0.03)] hover:shadow-[0_16px_36px_-6px_rgba(91,95,239,0.18),inset_0_1.5px_2px_white] hover:-translate-y-0.5 transition-all duration-300 overflow-hidden">
+          <div className="absolute inset-x-0 top-0 h-1/2 bg-gradient-to-b from-white/60 to-transparent pointer-events-none" />
+          <div className="relative font-display text-2xl sm:text-3xl lg:text-4xl font-extrabold text-slate-900 tracking-tight tabular-nums">
             {String(timeLeft.minutes).padStart(2, '0')}
           </div>
-          <div className="text-[10px] sm:text-xs font-bold uppercase tracking-wider text-slate-500 mt-1">
+          <div className="relative text-[10px] sm:text-xs font-bold uppercase tracking-wider text-slate-500 mt-1">
             Minutes
           </div>
         </div>
 
         {/* Seconds */}
-        <div className="group relative flex flex-col items-center justify-center p-3 sm:p-4 rounded-2xl bg-white/80 backdrop-blur-xl border border-white/90 shadow-[0_8px_25px_rgba(91,95,239,0.08)] hover:shadow-[0_12px_30px_rgba(91,95,239,0.16)] transition-all duration-300">
-          <div className="font-display text-2xl sm:text-3xl lg:text-4xl font-extrabold text-[#5B5FEF] tracking-tight tabular-nums">
+        <div className="group relative flex flex-col items-center justify-center p-3 sm:p-4 rounded-2xl bg-white/85 backdrop-blur-xl border border-white/95 shadow-[0_10px_28px_-6px_rgba(91,95,239,0.08),inset_0_1.5px_1.5px_rgba(255,255,255,1),inset_0_-1px_2px_rgba(91,95,239,0.03)] hover:shadow-[0_16px_36px_-6px_rgba(91,95,239,0.18),inset_0_1.5px_2px_white] hover:-translate-y-0.5 transition-all duration-300 overflow-hidden">
+          <div className="absolute inset-x-0 top-0 h-1/2 bg-gradient-to-b from-white/60 to-transparent pointer-events-none" />
+          <div className="relative font-display text-2xl sm:text-3xl lg:text-4xl font-extrabold text-[#5B5FEF] tracking-tight tabular-nums">
             {String(timeLeft.seconds).padStart(2, '0')}
           </div>
-          <div className="text-[10px] sm:text-xs font-bold uppercase tracking-wider text-[#5B5FEF] mt-1">
+          <div className="relative text-[10px] sm:text-xs font-bold uppercase tracking-wider text-[#5B5FEF] mt-1">
             Seconds
           </div>
         </div>

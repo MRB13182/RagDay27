@@ -1,5 +1,6 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { InvitationRecord, WebsiteSettings, PdfSettings } from '../types';
+import { resolveStudentPhotoUrl } from '../services/storage';
 import {
   Sparkles,
   ShieldCheck,
@@ -71,6 +72,8 @@ export const InvitationCard: React.FC<InvitationCardProps> = ({
   collegeLogo,
   isExport = false,
 }) => {
+  const [photoError, setPhotoError] = useState(false);
+  const resolvedPhotoUrl = resolveStudentPhotoUrl(record.student_photo);
   const safeCollegeName = 'National Ideal College';
   const safeEventBranding = 'Rag Day of NIC 27';
   const safeEventDate = websiteSettings.eventDate || '15 December 2027';
@@ -246,11 +249,12 @@ export const InvitationCard: React.FC<InvitationCardProps> = ({
               <div className="p-2.5 sm:p-3 rounded-[28px] bg-white/80 backdrop-blur-xl border-2 border-white shadow-[0_20px_40px_-10px_rgba(109,40,217,0.22),0_0_0_1px_rgba(196,181,253,0.3)] relative group">
                 {/* Photo Viewport */}
                 <div className="aspect-[3/4] w-full rounded-[20px] overflow-hidden bg-gradient-to-br from-[#EDE9FE] via-[#F5F3FF] to-[#DDD6FE] relative shadow-inner">
-                  {record.student_photo ? (
+                  {resolvedPhotoUrl && !photoError ? (
                     <img
-                      src={record.student_photo}
+                      src={resolvedPhotoUrl}
                       alt={studentName}
                       crossOrigin="anonymous"
+                      onError={() => setPhotoError(true)}
                       className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
                     />
                   ) : (

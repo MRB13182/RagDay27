@@ -33,7 +33,7 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="max-w-4xl mx-auto flex flex-col items-start text-left">
           {/* Event Logo & Category Badge */}
-          <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-white/90 border border-slate-200 shadow-sm backdrop-blur-md mb-5">
+          <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-white/80 border border-white/90 shadow-[0_4px_16px_rgba(91,95,239,0.06),inset_0_1px_1px_rgba(255,255,255,1)] backdrop-blur-xl mb-5">
             {brandingSettings.websiteLogo ? (
               <img
                 src={brandingSettings.websiteLogo}
@@ -73,16 +73,16 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
           </p>
 
           {/* Quick Meta Badges */}
-          <div className="flex flex-wrap items-center gap-2 mb-6">
-            <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-white/80 border border-slate-200 text-xs font-semibold text-slate-700 shadow-sm">
+          <div className="flex flex-wrap items-center gap-2.5 mb-6">
+            <span className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl bg-white/80 backdrop-blur-xl border border-white/90 text-xs font-semibold text-slate-700 shadow-[0_4px_16px_rgba(0,0,0,0.03),inset_0_1px_1px_white]">
               <span className="w-2 h-2 rounded-full bg-[#5B5FEF]" />
               {websiteSettings.eventDate}
             </span>
-            <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-white/80 border border-slate-200 text-xs font-semibold text-slate-700 shadow-sm">
+            <span className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl bg-white/80 backdrop-blur-xl border border-white/90 text-xs font-semibold text-slate-700 shadow-[0_4px_16px_rgba(0,0,0,0.03),inset_0_1px_1px_white]">
               <span className="w-2 h-2 rounded-full bg-[#00D4FF]" />
               {websiteSettings.venue}
             </span>
-            <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-[#5B5FEF]/10 border border-[#5B5FEF]/20 text-xs font-bold text-[#5B5FEF] shadow-sm">
+            <span className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl bg-[#5B5FEF]/10 backdrop-blur-xl border border-[#5B5FEF]/20 text-xs font-bold text-[#5B5FEF] shadow-xs">
               Fee: {websiteSettings.registrationFee}
             </span>
           </div>
@@ -111,7 +111,7 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
 
             <button
               onClick={onInvitationClick}
-              className="w-full sm:w-auto px-6 py-3.5 rounded-xl bg-white text-slate-700 font-semibold text-sm sm:text-base border border-slate-200/90 shadow-sm hover:bg-slate-50 hover:text-slate-900 transition-all duration-200 flex items-center justify-center gap-2 cursor-pointer"
+              className="w-full sm:w-auto px-6 py-3.5 rounded-xl bg-white/80 backdrop-blur-xl text-slate-700 hover:text-slate-900 font-semibold text-sm sm:text-base border border-white/90 shadow-[0_4px_16px_rgba(0,0,0,0.04),inset_0_1px_1px_white] hover:bg-white hover:shadow-[0_8px_24px_rgba(0,0,0,0.06)] hover:-translate-y-0.5 active:translate-y-0 transition-all duration-200 flex items-center justify-center gap-2 cursor-pointer"
             >
               <Ticket className="w-4 h-4 text-[#5B5FEF]" />
               <span>Check Invitation Card</span>
@@ -119,14 +119,14 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
           </div>
 
           {/* Quick Inclusions Note */}
-          <div className="mt-6 flex flex-wrap items-center gap-4 text-xs text-slate-500">
-            <span className="flex items-center gap-1.5">
+          <div className="mt-6 flex flex-wrap items-center gap-2.5 text-xs text-slate-600">
+            <span className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-white/70 backdrop-blur-md border border-white/80 shadow-2xs">
               <CheckCircle2 className="w-3.5 h-3.5 text-emerald-500" /> Custom Printed Jersey
             </span>
-            <span className="flex items-center gap-1.5">
+            <span className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-white/70 backdrop-blur-md border border-white/80 shadow-2xs">
               <CheckCircle2 className="w-3.5 h-3.5 text-emerald-500" /> Grand Gala Feast
             </span>
-            <span className="flex items-center gap-1.5">
+            <span className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-white/70 backdrop-blur-md border border-white/80 shadow-2xs">
               <ShieldCheck className="w-3.5 h-3.5 text-[#5B5FEF]" /> Gate Entry Pass
             </span>
           </div>

@@ -23,36 +23,101 @@
 
 /* Glassmorphism helpers */
 .glass-panel {
-  background: rgba(255, 255, 255, 0.78);
+  background: rgba(255, 255, 255, 0.82);
   backdrop-filter: blur(20px);
   -webkit-backdrop-filter: blur(20px);
-  border: 1px solid rgba(255, 255, 255, 0.85);
-  box-shadow: 0 20px 40px -15px rgba(91, 95, 239, 0.07), 0 0 1px 1px rgba(255, 255, 255, 0.8) inset;
+  border: 1px solid rgba(255, 255, 255, 0.9);
+  box-shadow: 0 20px 45px -15px rgba(91, 95, 239, 0.08), inset 0 1px 1.5px 0 rgba(255, 255, 255, 0.95), inset 0 -1px 2px 0 rgba(91, 95, 239, 0.02);
 }
 
 .glass-pill {
-  background: rgba(255, 255, 255, 0.65);
+  background: rgba(255, 255, 255, 0.72);
   backdrop-filter: blur(16px);
   -webkit-backdrop-filter: blur(16px);
+  border: 1px solid rgba(255, 255, 255, 0.85);
+  box-shadow: inset 0 1px 1px rgba(255, 255, 255, 0.9), 0 2px 8px -2px rgba(0, 0, 0, 0.04);
+}
+
+.glass-surface {
+  background: rgba(255, 255, 255, 0.84);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid rgba(255, 255, 255, 0.9);
+  box-shadow: 0 12px 32px -10px rgba(91, 95, 239, 0.07), inset 0 1px 1.5px 0 rgba(255, 255, 255, 0.95);
+}
+
+.glass-surface-subtle {
+  background: rgba(255, 255, 255, 0.68);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
   border: 1px solid rgba(255, 255, 255, 0.8);
+  box-shadow: inset 0 1px 1px 0 rgba(255, 255, 255, 0.85);
+}
+
+.glass-surface-interactive {
+  background: rgba(255, 255, 255, 0.82);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid rgba(255, 255, 255, 0.9);
+  box-shadow: 0 10px 28px -10px rgba(91, 95, 239, 0.08), inset 0 1px 1.5px rgba(255, 255, 255, 0.95);
+  transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.glass-surface-interactive:hover {
+  background: rgba(255, 255, 255, 0.94);
+  border-color: rgba(255, 255, 255, 1);
+  box-shadow: 0 18px 40px -12px rgba(91, 95, 239, 0.16), inset 0 1.5px 2px rgba(255, 255, 255, 1);
+  transform: translateY(-2px);
+}
+
+.glass-input {
+  background: rgba(255, 255, 255, 0.85);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(226, 232, 240, 0.85);
+  box-shadow: inset 0 1.5px 2px rgba(0, 0, 0, 0.02), inset 0 1px 1px rgba(255, 255, 255, 0.9);
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.glass-input:focus {
+  background: rgba(255, 255, 255, 0.98);
+  border-color: #5B5FEF;
+  box-shadow: 0 0 0 3px rgba(91, 95, 239, 0.18), inset 0 1px 1px rgba(255, 255, 255, 1);
 }
 
 /* Male Dark Navy Theme helpers */
 .glass-male {
-  background: linear-gradient(135deg, rgba(15, 23, 42, 0.95) 0%, rgba(30, 58, 138, 0.92) 50%, rgba(15, 23, 42, 0.96) 100%);
+  background: linear-gradient(135deg, rgba(15, 23, 42, 0.94) 0%, rgba(30, 58, 138, 0.90) 50%, rgba(15, 23, 42, 0.96) 100%);
   backdrop-filter: blur(24px);
   -webkit-backdrop-filter: blur(24px);
-  border: 1px solid rgba(56, 189, 248, 0.25);
-  box-shadow: 0 25px 60px -15px rgba(15, 23, 42, 0.5), 0 0 30px -5px rgba(56, 189, 248, 0.2);
+  border: 1px solid rgba(56, 189, 248, 0.3);
+  box-shadow: 0 25px 60px -15px rgba(15, 23, 42, 0.55), 0 0 30px -5px rgba(56, 189, 248, 0.22), inset 0 1.5px 2px rgba(255, 255, 255, 0.12);
 }
 
 /* Female Soft Pink Theme helpers */
 .glass-female {
-  background: linear-gradient(135deg, rgba(255, 241, 245, 0.95) 0%, rgba(251, 207, 232, 0.85) 45%, rgba(255, 255, 255, 0.95) 100%);
+  background: linear-gradient(135deg, rgba(255, 241, 245, 0.95) 0%, rgba(251, 207, 232, 0.88) 45%, rgba(255, 255, 255, 0.95) 100%);
   backdrop-filter: blur(24px);
   -webkit-backdrop-filter: blur(24px);
-  border: 1px solid rgba(244, 114, 182, 0.35);
-  box-shadow: 0 25px 60px -15px rgba(236, 72, 153, 0.18), 0 0 30px -5px rgba(244, 114, 182, 0.25);
+  border: 1px solid rgba(244, 114, 182, 0.38);
+  box-shadow: 0 25px 60px -15px rgba(236, 72, 153, 0.2), 0 0 30px -5px rgba(244, 114, 182, 0.28), inset 0 1.5px 2px rgba(255, 255, 255, 0.9);
+}
+
+/* Graceful Fallback for browsers that do not support backdrop-filter */
+@supports not (backdrop-filter: blur(10px)) {
+  .glass-panel,
+  .glass-surface,
+  .glass-surface-subtle,
+  .glass-surface-interactive,
+  .glass-pill {
+    background: #FFFFFF !important;
+  }
+  .glass-male {
+    background: #0F172A !important;
+  }
+  .glass-female {
+    background: #FFF1F5 !important;
+  }
 }
 
 /* Floating animation */

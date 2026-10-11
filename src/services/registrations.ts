@@ -100,6 +100,158 @@ export function syncRegistrationCounters(_activeRecords: { sl_no?: number; regis
   // Database is the sole source of truth for numbering.
 }
 
+export function toNullableUuid(value?: string | null): string | null {
+  if (!value) return null;
+  const s = String(value).trim();
+  if (!s || s === '""' || s === "''" || s === 'null' || s === 'undefined') return null;
+  return /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(s) ? s : null;
+}
+
+/**
+ * Identifies registration form fields that are referenced in a rejection reason.
+ * Returns a Set of field names: 'full_name', 'class_roll', 'student_id',
+ * 'contact_mobile_number', 'academic_group', 'academic_section', 'student_photo',
+ * 'send_method', 'sender_mobile_no', 'payment_time', 'transaction_id', 'payment_amount'.
+ * If the reason is general or unclear, returns an empty Set (no guessing).
+ */
+export function detectFlaggedFields(reason?: string | null): Set<string> {
+  const flagged = new Set<string>();
+  if (!reason || !reason.trim()) return flagged;
+
+  const text = reason.toLowerCase();
+
+  // Composite 1: Invalid Student Information (flags name, roll, student ID)
+  if (text.includes('invalid student information') || text.includes('student information')) {
+    flagged.add('full_name');
+    flagged.add('class_roll');
+    flagged.add('student_id');
+  }
+
+  // Composite 2: Incorrect Payment Information (flags payment method, sender number, payment time, transaction ID)
+  if (text.includes('incorrect payment information') || text.includes('payment information')) {
+    flagged.add('send_method');
+    flagged.add('sender_mobile_no');
+    flagged.add('payment_time');
+    flagged.add('transaction_id');
+  }
+
+  // Full Name
+  if (
+    text.includes('full name') ||
+    text.includes('student name') ||
+    /\bfull\s*name\b/i.test(text) ||
+    (/\bname\b/i.test(text) && !text.includes('jersey'))
+  ) {
+    flagged.add('full_name');
+  }
+
+  // Class Roll
+  if (
+    text.includes('class roll') ||
+    text.includes('roll number') ||
+    text.includes('roll no') ||
+    /\bclass\s*roll\b/i.test(text) ||
+    /\broll\b/i.test(text)
+  ) {
+    flagged.add('class_roll');
+  }
+
+  // Student ID
+  if (
+    text.includes('student id') ||
+    text.includes('college id') ||
+    /\b(student|college)\s*id\b/i.test(text)
+  ) {
+    flagged.add('student_id');
+  }
+
+  // Contact Mobile Number
+  if (
+    text.includes('contact mobile') ||
+    text.includes('contact number') ||
+    text.includes('contact phone') ||
+    text.includes('contact no')
+  ) {
+    flagged.add('contact_mobile_number');
+  }
+
+  // Academic Group
+  if (
+    text.includes('academic group') ||
+    text.includes('group selection') ||
+    /\b(academic\s+)?group\b/i.test(text)
+  ) {
+    flagged.add('academic_group');
+  }
+
+  // Academic Section
+  if (
+    text.includes('academic section') ||
+    text.includes('section selection') ||
+    /\b(academic\s+)?section\b/i.test(text)
+  ) {
+    flagged.add('academic_section');
+  }
+
+  // Student Photo
+  if (
+    text.includes('student photo') ||
+    text.includes('photo') ||
+    text.includes('picture') ||
+    text.includes('image')
+  ) {
+    flagged.add('student_photo');
+  }
+
+  // Send Method
+  if (
+    text.includes('send method') ||
+    text.includes('payment method') ||
+    text.includes('bkash') ||
+    text.includes('nagad')
+  ) {
+    flagged.add('send_method');
+  }
+
+  // Sender Mobile Number
+  if (
+    text.includes('sender mobile') ||
+    text.includes('sender number') ||
+    text.includes('sender phone') ||
+    text.includes('sender no')
+  ) {
+    flagged.add('sender_mobile_no');
+  }
+
+  // Payment Time
+  if (
+    text.includes('payment time') ||
+    text.includes('transaction time')
+  ) {
+    flagged.add('payment_time');
+  }
+
+  // Transaction ID
+  if (
+    text.includes('transaction id') ||
+    text.includes('trx id') ||
+    text.includes('txid')
+  ) {
+    flagged.add('transaction_id');
+  }
+
+  // Incomplete Payment
+  if (
+    text.includes('incomplete payment') ||
+    text.includes('less than required fee') ||
+    text.includes('payment amount')
+  ) {
+    flagged.add('payment_amount');
+  }
+
+  return flagged;
+}
+
 export async function createRegistration(
   form: RegistrationFormData,
   existingRegNo?: string,
@@ -132,9 +284,29 @@ export async function createRegistration(
       p_gender: form.gender,
     };
 
-    const result = existingRegNo || existingDbId
+    // Safe UUID conversion: Never pass an empty string to a UUID column
+    let targetDbId = toNullableUuid(existingDbId);
+    if (!targetDbId && existingRegNo) {
+      try {
+        const [bRes, gRes] = await Promise.all([
+          supabase.rpc('get_admin_registrations', { p_passcode: 'nic27.boy' }),
+          supabase.rpc('get_admin_registrations', { p_passcode: 'nic27.girl' }),
+        ]);
+        const all = [...(bRes.data || []), ...(gRes.data || [])];
+        const match = all.find(
+          r => r.registration_no?.toUpperCase() === existingRegNo.trim().toUpperCase()
+        );
+        if (match?.id) {
+          targetDbId = toNullableUuid(match.id);
+        }
+      } catch (err) {
+        console.warn('Could not resolve registration uuid by reg no:', err);
+      }
+    }
+
+    const result = targetDbId
       ? await supabase.rpc('resubmit_rejected_registration', {
-          p_registration_id: existingDbId || '',
+          p_registration_id: targetDbId,
           p_original_student_id: recoveryProof?.studentId || form.student_id.trim(),
           p_original_full_name: recoveryProof?.fullName || form.full_name.trim(),
           p_original_class_roll: recoveryProof?.classRoll || form.class_roll.trim(),

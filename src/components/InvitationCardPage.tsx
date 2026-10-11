@@ -174,7 +174,7 @@ export const InvitationCardPage: React.FC<InvitationCardPageProps> = ({
     <div className="py-8 sm:py-12 max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
       {/* Header */}
       <div className="text-center max-w-2xl mx-auto mb-8">
-        <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/90 border border-slate-200 shadow-sm backdrop-blur-md mb-3">
+        <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-white/80 border border-white/90 shadow-[0_4px_16px_rgba(109,40,217,0.06),inset_0_1px_1px_white] backdrop-blur-xl mb-3">
           <Sparkles className="w-3.5 h-3.5 text-[#6D28D9]" />
           <span className="text-xs font-bold text-slate-800 tracking-wide uppercase">
             Official Gate Pass Portal
@@ -189,7 +189,7 @@ export const InvitationCardPage: React.FC<InvitationCardPageProps> = ({
       </div>
 
       {/* Search Layout (Form) */}
-      <div className="p-6 sm:p-8 rounded-3xl bg-white/80 backdrop-blur-xl border border-white/90 shadow-[0_20px_45px_-15px_rgba(91,95,239,0.08)] mb-8">
+      <div className="p-6 sm:p-8 rounded-3xl bg-white/80 backdrop-blur-xl border border-white/95 shadow-[0_20px_45px_-15px_rgba(91,95,239,0.08),inset_0_1.5px_1px_white] mb-8">
         <form
           onSubmit={e => {
             e.preventDefault();
@@ -207,7 +207,7 @@ export const InvitationCardPage: React.FC<InvitationCardPageProps> = ({
                 placeholder="e.g. RD27-01"
                 value={searchRegNo}
                 onChange={e => setSearchRegNo(e.target.value.toUpperCase())}
-                className="w-full px-4 py-3 rounded-xl text-sm font-mono font-bold bg-slate-50 border border-slate-200 text-slate-900 placeholder-slate-400 focus:bg-white focus:border-[#6D28D9] focus:ring-2 focus:ring-[#6D28D9]/20 outline-none transition-all"
+                className="w-full px-4 py-3 rounded-xl text-sm font-mono font-bold bg-slate-50/80 backdrop-blur-md border border-slate-200/90 text-slate-900 placeholder-slate-400 focus:bg-white focus:border-[#6D28D9] focus:ring-2 focus:ring-[#6D28D9]/20 outline-none transition-all shadow-[inset_0_1px_2px_rgba(0,0,0,0.02)]"
                 required
               />
             </div>
@@ -221,7 +221,7 @@ export const InvitationCardPage: React.FC<InvitationCardPageProps> = ({
                 placeholder="Enter student full name..."
                 value={searchStudentName}
                 onChange={e => setSearchStudentName(e.target.value)}
-                className="w-full px-4 py-3 rounded-xl text-sm font-medium bg-slate-50 border border-slate-200 text-slate-900 placeholder-slate-400 focus:bg-white focus:border-[#6D28D9] focus:ring-2 focus:ring-[#6D28D9]/20 outline-none transition-all"
+                className="w-full px-4 py-3 rounded-xl text-sm font-medium bg-slate-50/80 backdrop-blur-md border border-slate-200/90 text-slate-900 placeholder-slate-400 focus:bg-white focus:border-[#6D28D9] focus:ring-2 focus:ring-[#6D28D9]/20 outline-none transition-all shadow-[inset_0_1px_2px_rgba(0,0,0,0.02)]"
                 required
               />
             </div>
@@ -231,7 +231,7 @@ export const InvitationCardPage: React.FC<InvitationCardPageProps> = ({
             <button
               type="submit"
               disabled={isSearching}
-              className="py-3 px-6 rounded-xl bg-gradient-to-r from-[#6D28D9] via-[#7C3AED] to-[#8B5CF6] text-white font-bold text-sm shadow-md shadow-[#6D28D9]/25 hover:shadow-lg hover:shadow-[#6D28D9]/35 transition-all flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50"
+              className="py-3 px-6 rounded-xl bg-gradient-to-r from-[#6D28D9] via-[#7C3AED] to-[#8B5CF6] text-white font-bold text-sm shadow-md shadow-[#6D28D9]/25 hover:shadow-lg hover:shadow-[#6D28D9]/35 hover:-translate-y-0.5 active:translate-y-0 transition-all flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50"
             >
               <Search className="w-4 h-4" />
               <span>{isSearching ? 'Verifying with Database…' : 'Verify & Search'}</span>
@@ -245,7 +245,7 @@ export const InvitationCardPage: React.FC<InvitationCardPageProps> = ({
         <div className="transition-all duration-300">
           {/* STATE 1: Not Found */}
           {!matchedRecord && (
-            <div className="p-8 rounded-3xl bg-white/75 backdrop-blur-lg border border-slate-200 text-center">
+            <div className="p-8 rounded-3xl bg-white/80 backdrop-blur-xl border border-white/90 shadow-[0_15px_35px_-10px_rgba(0,0,0,0.05),inset_0_1.5px_1px_white] text-center">
               <div className="w-12 h-12 rounded-full bg-slate-100 text-slate-500 mx-auto flex items-center justify-center mb-3">
                 <Search className="w-6 h-6" />
               </div>
@@ -267,7 +267,7 @@ export const InvitationCardPage: React.FC<InvitationCardPageProps> = ({
 
           {/* STATE 2: PENDING APPROVAL */}
           {matchedRecord && matchedRecord.status === 'pending' && (
-            <div className="p-6 sm:p-8 rounded-3xl bg-amber-50/90 backdrop-blur-xl border-2 border-amber-300 shadow-[0_15px_35px_-10px_rgba(245,158,11,0.15)] text-left">
+            <div className="p-6 sm:p-8 rounded-3xl bg-amber-50/85 backdrop-blur-xl border-2 border-amber-300/90 shadow-[0_15px_35px_-10px_rgba(245,158,11,0.15),inset_0_1.5px_2px_white] text-left">
               <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 pb-5 border-b border-amber-200">
                 <div className="flex items-center gap-3.5">
                   <div className="w-12 h-12 rounded-2xl bg-amber-500 text-white flex items-center justify-center shadow-md shadow-amber-500/30">
@@ -283,27 +283,29 @@ export const InvitationCardPage: React.FC<InvitationCardPageProps> = ({
                   </div>
                 </div>
 
-                <div className="px-4 py-2 rounded-xl bg-amber-200/80 text-amber-900 text-xs font-bold tracking-wider font-mono">
+                <div className="px-4 py-2 rounded-xl bg-amber-200/80 text-amber-900 text-xs font-bold tracking-wider font-mono shadow-xs border border-amber-300/50">
                   {matchedRecord.registration_no}
                 </div>
               </div>
 
               <div className="py-5 grid grid-cols-1 sm:grid-cols-3 gap-4 text-xs">
-                <div className="p-3.5 rounded-xl bg-white/80 border border-amber-200">
-                  <span className="text-slate-500 font-semibold uppercase block">Applicant</span>
+                <div className="p-3.5 rounded-xl bg-white/85 backdrop-blur-md border border-amber-200/90 shadow-2xs">
+                  <span className="text-slate-500 font-semibold uppercase block text-[10px] tracking-wider">Applicant</span>
                   <span className="text-sm font-bold text-slate-900 mt-0.5 block">{matchedRecord.full_name}</span>
                 </div>
-                <div className="p-3.5 rounded-xl bg-white/80 border border-amber-200">
-                  <span className="text-slate-500 font-semibold uppercase block">Roll & Student ID</span>
-                  <span className="text-sm font-bold text-slate-900 mt-0.5 block">
-                    Roll {matchedRecord.class_roll} · {matchedRecord.id || matchedRecord.student_id}
-                  </span>
+                <div className="p-3.5 rounded-xl bg-white/85 backdrop-blur-md border border-amber-200/90 shadow-2xs">
+                  <span className="text-slate-500 font-semibold uppercase block text-[10px] tracking-wider">Roll & Student ID</span>
+                  <div className="text-sm font-bold text-slate-900 mt-0.5 space-y-0.5">
+                    <div>Roll: {matchedRecord.class_roll || '—'}</div>
+                    <div>Student ID: {matchedRecord.student_id || '—'}</div>
+                  </div>
                 </div>
-                <div className="p-3.5 rounded-xl bg-white/80 border border-amber-200">
-                  <span className="text-slate-500 font-semibold uppercase block">Academic Details</span>
-                  <span className="text-sm font-bold text-slate-900 mt-0.5 block">
-                    {matchedRecord.academic_group} · Section {matchedRecord.academic_section}
-                  </span>
+                <div className="p-3.5 rounded-xl bg-white/85 backdrop-blur-md border border-amber-200/90 shadow-2xs">
+                  <span className="text-slate-500 font-semibold uppercase block text-[10px] tracking-wider">Academic Details</span>
+                  <div className="text-sm font-bold text-slate-900 mt-0.5 space-y-0.5">
+                    <div>Group: {matchedRecord.academic_group || '—'}</div>
+                    <div>Section: {matchedRecord.academic_section || '—'}</div>
+                  </div>
                 </div>
               </div>
 
@@ -318,7 +320,7 @@ export const InvitationCardPage: React.FC<InvitationCardPageProps> = ({
 
           {/* STATE 3: REJECTED BY ADMIN */}
           {matchedRecord && matchedRecord.status === 'rejected' && (
-            <div className="p-6 sm:p-8 rounded-3xl bg-rose-50/90 backdrop-blur-xl border-2 border-rose-300 shadow-[0_15px_35px_-10px_rgba(244,63,94,0.15)] text-left">
+            <div className="p-6 sm:p-8 rounded-3xl bg-rose-50/85 backdrop-blur-xl border-2 border-rose-300/90 shadow-[0_15px_35px_-10px_rgba(244,63,94,0.15),inset_0_1.5px_2px_white] text-left">
               <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 pb-5 border-b border-rose-200">
                 <div className="flex items-center gap-3.5">
                   <div className="w-12 h-12 rounded-2xl bg-rose-600 text-white flex items-center justify-center shadow-md shadow-rose-600/30">
@@ -334,23 +336,20 @@ export const InvitationCardPage: React.FC<InvitationCardPageProps> = ({
                   </div>
                 </div>
 
-                <div className="px-4 py-2 rounded-xl bg-rose-200/80 text-rose-900 text-xs font-bold tracking-wider font-mono">
+                <div className="px-4 py-2 rounded-xl bg-rose-200/80 text-rose-900 text-xs font-bold tracking-wider font-mono shadow-xs border border-rose-300/50">
                   {matchedRecord.registration_no}
                 </div>
               </div>
 
-              {/* Reason */}
+              {/* Reason: show ONLY the reject_reason stored in the database */}
               <div className="py-5">
-                <div className="p-4 rounded-2xl bg-white border border-rose-200 shadow-sm">
+                <div className="p-4 rounded-2xl bg-white/90 backdrop-blur-md border border-rose-200 shadow-sm">
                   <div className="text-xs font-bold uppercase tracking-wider text-rose-600 mb-1">
                     Reason:
                   </div>
-                  <div className="text-sm font-extrabold text-slate-900">
-                    {matchedRecord.reject_reason || 'Invalid Transaction ID or Payment Not Received.'}
+                  <div className="text-sm font-extrabold text-slate-900 whitespace-pre-wrap">
+                    {matchedRecord.reject_reason || 'No specific reason provided.'}
                   </div>
-                  <p className="text-xs text-slate-600 mt-1 leading-relaxed">
-                    The transaction reference could not be validated with the accounts desk. Please review your mobile banking SMS and register again with the genuine transaction ID.
-                  </p>
                 </div>
               </div>
 
@@ -360,7 +359,7 @@ export const InvitationCardPage: React.FC<InvitationCardPageProps> = ({
                 </span>
                 <button
                   onClick={() => onNavigateToRegister(matchedRecord)}
-                  className="px-5 py-2.5 rounded-xl bg-rose-600 text-white text-xs font-bold shadow-md hover:bg-rose-700 transition-all flex items-center gap-2 cursor-pointer"
+                  className="px-5 py-2.5 rounded-xl bg-rose-600 text-white text-xs font-bold shadow-md hover:bg-rose-700 hover:-translate-y-0.5 active:translate-y-0 transition-all flex items-center gap-2 cursor-pointer"
                 >
                   <span>Register Again</span>
                   <ArrowRight className="w-4 h-4" />
@@ -373,7 +372,7 @@ export const InvitationCardPage: React.FC<InvitationCardPageProps> = ({
           {matchedRecord && matchedRecord.status === 'approved' && (
             <div className="space-y-6">
               {/* Student Details / Registration Information */}
-              <div className="p-6 sm:p-7 rounded-3xl bg-white/80 backdrop-blur-xl border border-slate-200/90 shadow-[0_15px_35px_-10px_rgba(91,95,239,0.08)] text-left">
+              <div className="p-6 sm:p-7 rounded-3xl bg-white/85 backdrop-blur-xl border border-white/95 shadow-[0_15px_35px_-10px_rgba(91,95,239,0.08),inset_0_1.5px_1px_white] text-left">
                 <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 pb-4 border-b border-slate-100">
                   <div>
                     <span className="text-[11px] font-bold uppercase tracking-wider text-slate-500">
@@ -383,25 +382,25 @@ export const InvitationCardPage: React.FC<InvitationCardPageProps> = ({
                       {matchedRecord.full_name}
                     </h3>
                   </div>
-                  <div className="px-3.5 py-1.5 rounded-xl bg-violet-100/80 border border-violet-200/80 text-[#6D28D9] text-xs font-mono font-bold tracking-wider">
+                  <div className="px-3.5 py-1.5 rounded-xl bg-violet-100/80 border border-violet-200/80 text-[#6D28D9] text-xs font-mono font-bold tracking-wider shadow-2xs">
                     {matchedRecord.registration_no}
                   </div>
                 </div>
 
                 <div className="pt-4 grid grid-cols-2 sm:grid-cols-4 gap-3 text-xs">
-                  <div className="p-3 rounded-xl bg-slate-50/80 border border-slate-200/70">
+                  <div className="p-3 rounded-xl bg-slate-50/70 backdrop-blur-md border border-slate-200/80 shadow-2xs">
                     <span className="text-slate-400 font-bold uppercase text-[10px] block">Class Roll</span>
                     <span className="text-slate-900 font-extrabold text-sm mt-0.5 block">{matchedRecord.class_roll || '—'}</span>
                   </div>
-                  <div className="p-3 rounded-xl bg-slate-50/80 border border-slate-200/70">
+                  <div className="p-3 rounded-xl bg-slate-50/70 backdrop-blur-md border border-slate-200/80 shadow-2xs">
                     <span className="text-slate-400 font-bold uppercase text-[10px] block">Student ID</span>
                     <span className="text-slate-900 font-extrabold text-sm mt-0.5 block">{matchedRecord.student_id || matchedRecord.id || '—'}</span>
                   </div>
-                  <div className="p-3 rounded-xl bg-slate-50/80 border border-slate-200/70">
+                  <div className="p-3 rounded-xl bg-slate-50/70 backdrop-blur-md border border-slate-200/80 shadow-2xs">
                     <span className="text-slate-400 font-bold uppercase text-[10px] block">Academic Group</span>
                     <span className="text-slate-900 font-extrabold text-sm mt-0.5 block">{matchedRecord.academic_group || '—'}</span>
                   </div>
-                  <div className="p-3 rounded-xl bg-slate-50/80 border border-slate-200/70">
+                  <div className="p-3 rounded-xl bg-slate-50/70 backdrop-blur-md border border-slate-200/80 shadow-2xs">
                     <span className="text-slate-400 font-bold uppercase text-[10px] block">Section</span>
                     <span className="text-slate-900 font-extrabold text-sm mt-0.5 block">{matchedRecord.academic_section || '—'}</span>
                   </div>
@@ -409,7 +408,7 @@ export const InvitationCardPage: React.FC<InvitationCardPageProps> = ({
               </div>
 
               {/* Status: Approved Header with the single [ Download Pass ] button */}
-              <div className="p-5 sm:p-6 rounded-3xl bg-emerald-50/90 backdrop-blur-xl border-2 border-emerald-300 shadow-[0_15px_35px_-10px_rgba(16,185,129,0.15)] flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+              <div className="p-5 sm:p-6 rounded-3xl bg-emerald-50/85 backdrop-blur-xl border-2 border-emerald-300/90 shadow-[0_15px_35px_-10px_rgba(16,185,129,0.15),inset_0_1.5px_2px_white] flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
                 <div className="flex items-center gap-3.5">
                   <div className="w-12 h-12 rounded-2xl bg-emerald-500 text-white flex items-center justify-center shadow-md shadow-emerald-500/30">
                     <CheckCircle2 className="w-7 h-7" />

@@ -24,7 +24,7 @@ export const Navbar: React.FC<NavbarProps> = ({
   };
 
   return (
-    <header className="fixed top-0 left-0 right-0 z-50 w-full bg-white/95 backdrop-blur-md border-b border-slate-200/90 shadow-sm transition-all duration-200">
+    <header className="fixed top-0 left-0 right-0 z-50 w-full bg-white/80 backdrop-blur-2xl border-b border-white/70 shadow-[0_4px_30px_rgba(0,0,0,0.03)] transition-all duration-200">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 sm:h-18 flex items-center justify-between relative">
         {/* Left: Logo: RD27 Rag Day 2027 */}
         <button
@@ -35,7 +35,7 @@ export const Navbar: React.FC<NavbarProps> = ({
             <img
               src={websiteLogo}
               alt="Logo"
-              className="w-9 h-9 sm:w-10 sm:h-10 rounded-xl object-contain shadow-sm border border-slate-200"
+              className="w-9 h-9 sm:w-10 sm:h-10 rounded-xl object-contain shadow-xs border border-white/90 bg-white/70 backdrop-blur-md p-0.5"
             />
           ) : (
             <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-gradient-to-tr from-[#5B5FEF] via-[#7A6CFF] to-[#00D4FF] p-[1.5px] shadow-sm flex items-center justify-center shrink-0">
@@ -57,14 +57,14 @@ export const Navbar: React.FC<NavbarProps> = ({
           </div>
         </button>
 
-        {/* Center: Desktop Nav Items (Center Aligned) */}
-        <nav className="hidden md:flex items-center justify-center gap-2 lg:gap-3 absolute left-1/2 -translate-x-1/2">
+        {/* Center: Desktop Nav Items with Frosted Glass Navigation Pill */}
+        <nav className="hidden md:flex items-center justify-center gap-1.5 p-1 rounded-2xl bg-slate-100/60 backdrop-blur-md border border-white/80 shadow-[inset_0_1px_1.5px_rgba(255,255,255,0.9)] absolute left-1/2 -translate-x-1/2">
           <button
             onClick={() => handleNavClick('home')}
-            className={`px-3.5 py-2 text-xs sm:text-sm font-semibold rounded-xl transition-all duration-200 cursor-pointer ${
+            className={`px-3.5 py-1.5 text-xs sm:text-sm font-semibold rounded-xl transition-all duration-200 cursor-pointer ${
               activeTab === 'home'
-                ? 'bg-[#5B5FEF]/10 text-[#5B5FEF] font-bold'
-                : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100'
+                ? 'bg-white text-[#5B5FEF] font-bold shadow-xs border border-white/90'
+                : 'text-slate-600 hover:text-slate-900 hover:bg-white/60'
             }`}
           >
             Home
@@ -72,10 +72,10 @@ export const Navbar: React.FC<NavbarProps> = ({
 
           <button
             onClick={() => handleNavClick('invitation')}
-            className={`px-3.5 py-2 text-xs sm:text-sm font-semibold rounded-xl transition-all duration-200 flex items-center gap-1.5 cursor-pointer ${
+            className={`px-3.5 py-1.5 text-xs sm:text-sm font-semibold rounded-xl transition-all duration-200 flex items-center gap-1.5 cursor-pointer ${
               activeTab === 'invitation'
-                ? 'bg-[#5B5FEF]/10 text-[#5B5FEF] font-bold'
-                : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100'
+                ? 'bg-white text-[#5B5FEF] font-bold shadow-xs border border-white/90'
+                : 'text-slate-600 hover:text-slate-900 hover:bg-white/60'
             }`}
           >
             <Ticket className="w-4 h-4" />
@@ -84,10 +84,10 @@ export const Navbar: React.FC<NavbarProps> = ({
 
           <button
             onClick={() => handleNavClick('register')}
-            className={`px-4 py-2 text-xs sm:text-sm font-bold rounded-xl transition-all duration-200 flex items-center gap-1.5 cursor-pointer ${
+            className={`px-4 py-1.5 text-xs sm:text-sm font-bold rounded-xl transition-all duration-200 flex items-center gap-1.5 cursor-pointer ${
               activeTab === 'register'
                 ? 'bg-[#5B5FEF] text-white shadow-md shadow-[#5B5FEF]/30 ring-2 ring-[#5B5FEF]/30'
-                : 'bg-gradient-to-r from-[#5B5FEF] to-[#7A6CFF] hover:from-[#4d51d4] hover:to-[#6858f2] text-white shadow-md shadow-[#5B5FEF]/25 hover:shadow-lg'
+                : 'bg-gradient-to-r from-[#5B5FEF] to-[#7A6CFF] hover:from-[#4d51d4] hover:to-[#6858f2] text-white shadow-sm shadow-[#5B5FEF]/25 hover:shadow-md'
             }`}
           >
             <UserCheck className="w-4 h-4" />
@@ -101,7 +101,7 @@ export const Navbar: React.FC<NavbarProps> = ({
             <button
               type="button"
               onClick={onOpenNotice}
-              className="px-3 py-1.5 rounded-xl bg-violet-50 hover:bg-violet-100/90 text-[#4F46E5] border border-violet-100 shadow-xs transition-all flex items-center gap-1.5 cursor-pointer text-xs font-bold"
+              className="px-3 py-1.5 rounded-xl bg-white/70 hover:bg-white/95 text-[#4F46E5] border border-violet-200/70 shadow-xs backdrop-blur-md transition-all flex items-center gap-1.5 cursor-pointer text-xs font-bold"
               title="Important Notice"
             >
               <Bell className="w-3.5 h-3.5 text-[#4F46E5]" />
@@ -116,7 +116,7 @@ export const Navbar: React.FC<NavbarProps> = ({
             <button
               type="button"
               onClick={onOpenNotice}
-              className="p-1.5 text-[#4F46E5] bg-violet-50 hover:bg-violet-100 rounded-lg transition-colors cursor-pointer"
+              className="p-1.5 text-[#4F46E5] bg-white/80 hover:bg-white border border-violet-200/60 rounded-lg shadow-xs backdrop-blur-md transition-colors cursor-pointer"
               title="Important Notice"
               aria-label="Important Notice"
             >
@@ -136,7 +136,7 @@ export const Navbar: React.FC<NavbarProps> = ({
             type="button"
             onClick={() => setMobileMenuOpen(prev => !prev)}
             aria-label="Toggle navigation menu"
-            className="p-2 rounded-lg text-slate-600 hover:text-slate-900 hover:bg-slate-100 focus:outline-none cursor-pointer"
+            className="p-2 rounded-lg text-slate-600 hover:text-slate-900 hover:bg-white/80 border border-transparent hover:border-slate-200/60 focus:outline-none cursor-pointer transition-colors"
           >
             {mobileMenuOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
           </button>
@@ -145,13 +145,13 @@ export const Navbar: React.FC<NavbarProps> = ({
 
       {/* Mobile Drawer */}
       {mobileMenuOpen && (
-        <div className="md:hidden border-t border-slate-200 bg-white/98 backdrop-blur-xl px-4 py-4 space-y-2 shadow-lg animate-fadeIn">
+        <div className="md:hidden border-t border-white/70 bg-white/90 backdrop-blur-2xl px-4 py-4 space-y-2 shadow-xl animate-fadeIn">
           <button
             onClick={() => handleNavClick('home')}
             className={`w-full text-left px-4 py-3 rounded-xl text-sm font-bold transition-colors ${
               activeTab === 'home'
                 ? 'bg-[#5B5FEF]/10 text-[#5B5FEF]'
-                : 'text-slate-700 hover:bg-slate-100'
+                : 'text-slate-700 hover:bg-white/80'
             }`}
           >
             Home
@@ -162,7 +162,7 @@ export const Navbar: React.FC<NavbarProps> = ({
             className={`w-full text-left px-4 py-3 rounded-xl text-sm font-bold flex items-center justify-between transition-colors ${
               activeTab === 'invitation'
                 ? 'bg-[#5B5FEF]/10 text-[#5B5FEF]'
-                : 'text-slate-700 hover:bg-slate-100'
+                : 'text-slate-700 hover:bg-white/80'
             }`}
           >
             <span>Invitation Card Download</span>
