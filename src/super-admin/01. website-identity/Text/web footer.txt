@@ -2,4 +2,4 @@
 <span class="footer-divider">•</span>
 Crafted with ❤️ by
 <a href="https://moshiurr.ai.studio/" target="_blank" rel="noopener noreferrer">MD. Moshiur Rahman</a>
-for Batch 27
+for NIC 27
