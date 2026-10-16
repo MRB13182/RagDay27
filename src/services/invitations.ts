@@ -74,30 +74,7 @@ export async function getPublicInvitation(
     };
   }
 
-  // Load complete record directly from registrations table
-  let fullRecord = data;
-  try {
-    const [bRes, gRes] = await Promise.all([
-      supabase.rpc('get_admin_registrations', { p_passcode: 'nic27.boy' }),
-      supabase.rpc('get_admin_registrations', { p_passcode: 'nic27.girl' }),
-    ]);
-    const all = [...(bRes.data || []), ...(gRes.data || [])];
-    const match = all.find(
-      r => r.registration_no?.toUpperCase() === queryRegNo.toUpperCase()
-    );
-    if (match) {
-      fullRecord = {
-        ...match,
-        found: true,
-        status: match.status,
-        can_download: match.status === 'approved',
-      };
-    }
-  } catch {
-    // fallback to rpc data
-  }
-
-  return processFoundData(fullRecord, queryRegNo);
+  return processFoundData(data, queryRegNo);
 }
 
 function processFoundData(data: any, originalRegNo: string): {

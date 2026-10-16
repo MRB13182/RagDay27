@@ -266,11 +266,32 @@ export async function createRegistration(
   _currentActiveRecords: { sl_no?: number; registration_no?: string }[] = []
 ): Promise<{success:boolean; data?:InvitationRecord; error?:any; errorMessage?:string}> {
   try {
+    const rollTrim = form.class_roll.trim();
+    if (!/^\d+$/.test(rollTrim) || /^0+$/.test(rollTrim)) {
+      return { success: false, errorMessage: 'Class roll must contain only valid numeric digits greater than 0.' };
+    }
+    const studentIdTrim = form.student_id.trim();
+    if (!/^\d+$/.test(studentIdTrim)) {
+      return { success: false, errorMessage: 'Student ID must contain only numeric digits.' };
+    }
+    const contactTrim = form.contact_mobile_number.trim();
+    if (!/^\d{11}$/.test(contactTrim)) {
+      return { success: false, errorMessage: 'Contact mobile number must contain exactly 11 digits.' };
+    }
+    const senderTrim = form.sender_mobile_no.trim();
+    if (!/^\d{11}$/.test(senderTrim)) {
+      return { success: false, errorMessage: 'Sender mobile number must contain exactly 11 digits.' };
+    }
+    const jerseyNumTrim = form.jersey_number.trim();
+    if (!/^\d{1,2}$/.test(jerseyNumTrim)) {
+      return { success: false, errorMessage: 'Jersey number must be 1 to 2 digits (00–99).' };
+    }
+
     const payload = {
       p_full_name: form.full_name.trim(),
-      p_class_roll: form.class_roll.trim(),
-      p_student_id: form.student_id.trim(),
-      p_contact_mobile_number: form.contact_mobile_number.trim(),
+      p_class_roll: rollTrim,
+      p_student_id: studentIdTrim,
+      p_contact_mobile_number: contactTrim,
       p_academic_group: form.academic_group.trim(),
       p_academic_section: form.academic_section.trim(),
       p_student_photo: form.student_photo || null,
@@ -288,16 +309,12 @@ export async function createRegistration(
     let targetDbId = toNullableUuid(existingDbId);
     if (!targetDbId && existingRegNo) {
       try {
-        const [bRes, gRes] = await Promise.all([
-          supabase.rpc('get_admin_registrations', { p_passcode: 'nic27.boy' }),
-          supabase.rpc('get_admin_registrations', { p_passcode: 'nic27.girl' }),
-        ]);
-        const all = [...(bRes.data || []), ...(gRes.data || [])];
-        const match = all.find(
-          r => r.registration_no?.toUpperCase() === existingRegNo.trim().toUpperCase()
-        );
-        if (match?.id) {
-          targetDbId = toNullableUuid(match.id);
+        const { data: invData } = await supabase.rpc('lookup_invitation_card', {
+          p_registration_no: existingRegNo.trim(),
+          p_student_name: form.full_name.trim(),
+        });
+        if (invData?.id) {
+          targetDbId = toNullableUuid(invData.id);
         }
       } catch (err) {
         console.warn('Could not resolve registration uuid by reg no:', err);

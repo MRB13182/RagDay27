@@ -44,18 +44,25 @@ export const STORAGE_BUCKET = 'uploads';
 
 export type AdminRole = 'male_admin' | 'female_admin';
 
-export async function getCurrentAdmin(): Promise<AdminProfile | null> {
-  const storedRole = safeStorage.getItem('rd27_admin_role');
-  const storedPasscode = safeStorage.getItem('rd27_admin_passcode');
+// In-memory active session credentials only (NEVER persisted to localStorage or sessionStorage)
+let activeSessionRole: AdminRole | null = null;
+let activeSessionPasscode: string | null = null;
 
-  if (storedRole !== 'male_admin' && storedRole !== 'female_admin') return null;
-  if (!storedPasscode) return null;
+export async function getCurrentAdmin(): Promise<AdminProfile | null> {
+  // Never auto-authenticate from persistent storage without active session credentials
+  if (!activeSessionRole || !activeSessionPasscode) {
+    return null;
+  }
 
   try {
     const { data, error } = await supabase.rpc('verify_admin_passcode', {
-      p_passcode: storedPasscode,
+      p_passcode: activeSessionPasscode,
     });
-    if (error || !data || data.role !== storedRole) return null;
+    if (error || !data || data.role !== activeSessionRole) {
+      activeSessionRole = null;
+      activeSessionPasscode = null;
+      return null;
+    }
 
     return {
       id: data.admin_id || `passcode:${data.role}`,
@@ -68,6 +75,8 @@ export async function getCurrentAdmin(): Promise<AdminProfile | null> {
       updated_at: new Date().toISOString(),
     };
   } catch {
+    activeSessionRole = null;
+    activeSessionPasscode = null;
     return null;
   }
 }
@@ -76,6 +85,7 @@ export async function signInAdmin(passcode: string): Promise<AdminProfile> {
   const cleanPasscode = passcode.trim();
   if (!cleanPasscode) throw new Error('Admin passcode is required.');
 
+  // Enforce server-side authentication via database RPC
   const { data, error } = await supabase.rpc('verify_admin_passcode', {
     p_passcode: cleanPasscode,
   });
@@ -99,13 +109,20 @@ export async function signInAdmin(passcode: string): Promise<AdminProfile> {
     updated_at: new Date().toISOString(),
   };
 
-  safeStorage.setItem('rd27_admin_role', data.role);
-  safeStorage.setItem('rd27_admin_passcode', cleanPasscode);
+  // Keep in memory for this active session only
+  activeSessionRole = data.role as AdminRole;
+  activeSessionPasscode = cleanPasscode;
+
+  // Clear any persistent storage to prevent leakage across browser restarts or other users
+  safeStorage.removeItem('rd27_admin_role');
+  safeStorage.removeItem('rd27_admin_passcode');
 
   return profile;
 }
 
 export async function signOutAdmin(): Promise<void> {
+  activeSessionRole = null;
+  activeSessionPasscode = null;
   safeStorage.removeItem('rd27_admin_role');
   safeStorage.removeItem('rd27_admin_passcode');
   try {
@@ -116,11 +133,9 @@ export async function signOutAdmin(): Promise<void> {
 }
 
 export function getStoredAdminRole(): AdminRole | null {
-  const role = safeStorage.getItem('rd27_admin_role');
-  if (role === 'male_admin' || role === 'female_admin') return role;
-  return null;
+  return activeSessionRole;
 }
 
 export function getStoredAdminPasscode(): string | null {
-  return safeStorage.getItem('rd27_admin_passcode');
+  return activeSessionPasscode;
 }

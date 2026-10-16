@@ -249,17 +249,17 @@ export const generateInvitationCardPDF = (
       }
     }
 
-    // Base: white + very light lavender/violet atmosphere.
-    doc.setFillColor(251, 250, 255);
+    // Base: white + subtle elegant silver atmosphere.
+    doc.setFillColor(255, 255, 255);
     doc.rect(0, 0, pdfWidth, pdfHeight, 'F');
 
     doc.saveGraphicsState();
     // @ts-ignore jsPDF 4 exposes GState at runtime.
     if (doc.setGState) {
       // @ts-ignore
-      doc.setGState(new doc.GState({ opacity: 0.15 }));
+      doc.setGState(new doc.GState({ opacity: 0.12 }));
     }
-    doc.setFillColor(139, 92, 246);
+    doc.setFillColor(192, 192, 192);
     doc.circle(18, 10, 26, 'F');
     doc.circle(150, 24, 25, 'F');
     doc.circle(102, 93, 30, 'F');
@@ -268,7 +268,7 @@ export const generateInvitationCardPDF = (
     // Soft glass main information surface.
     doc.setFillColor(255, 255, 255);
     doc.roundedRect(8, 17, 145, 59, 5, 5, 'F');
-    doc.setDrawColor(233, 227, 247);
+    doc.setDrawColor(192, 192, 192);
     doc.setLineWidth(0.7);
     doc.roundedRect(8, 17, 145, 59, 5, 5, 'S');
 
@@ -284,28 +284,28 @@ export const generateInvitationCardPDF = (
     drawTextFit('Rag Day of NIC 27', 28, 14.3, 59, 7.8, 'normal');
 
     // Academic decorative divider.
-    doc.setDrawColor(147, 136, 175);
+    doc.setDrawColor(192, 192, 192);
     doc.setLineWidth(0.35);
     doc.line(69, 10.6, 92, 10.6);
     doc.line(96, 10.6, 119, 10.6);
-    doc.setFillColor(111, 76, 154);
+    doc.setFillColor(11, 31, 58);
     doc.lines([[1.5, -1.5], [1.5, 1.5], [-1.5, 1.5], [-1.5, -1.5]], 93.5, 10.6, [1, 1], 'F', true);
 
-    const purple = [109, 40, 217] as [number, number, number];
-    const dark = [31, 23, 48] as [number, number, number];
-    const grey = [58, 57, 66] as [number, number, number];
-    const lightPurple = [245, 240, 255] as [number, number, number];
+    const navy = [11, 31, 58] as [number, number, number];
+    const dark = [11, 31, 58] as [number, number, number];
+    const grey = [100, 116, 139] as [number, number, number];
+    const lightSilver = [245, 247, 250] as [number, number, number];
 
     const drawGlassIcon = (x: number, y: number, kind: 'person' | 'building' | 'cap' | 'stack' | 'id' | 'calendar' | 'pin') => {
-      doc.setFillColor(...lightPurple);
+      doc.setFillColor(...lightSilver);
       doc.roundedRect(x, y, 8, 8, 2.2, 2.2, 'F');
-      doc.setDrawColor(220, 204, 244);
+      doc.setDrawColor(192, 192, 192);
       doc.setLineWidth(0.35);
       doc.roundedRect(x, y, 8, 8, 2.2, 2.2, 'S');
       doc.saveGraphicsState();
       // @ts-ignore
-      if (doc.setGState) doc.setGState(new doc.GState({ opacity: 0.75 }));
-      doc.setFillColor(...purple);
+      if (doc.setGState) doc.setGState(new doc.GState({ opacity: 0.85 }));
+      doc.setFillColor(...navy);
 
       if (kind === 'person') {
         doc.circle(x + 4, y + 2.8, 1.55, 'F');
@@ -320,13 +320,13 @@ export const generateInvitationCardPDF = (
         doc.rect(x + 3.6, y + 6.0, 0.8, 0.8, 'F');
       } else if (kind === 'cap') {
         doc.lines([[4,-2],[4,2],[-4,2],[-4,-2]], x + 4, y + 3.2, [1,1], 'F', true);
-        doc.setFillColor(...purple);
+        doc.setFillColor(...navy);
         doc.rect(x + 2.6, y + 4.1, 2.8, 1.9, 'F');
         doc.line(x + 6.2, y + 3.8, x + 6.2, y + 6.9);
         doc.circle(x + 6.2, y + 7, 0.45, 'F');
       } else if (kind === 'stack') {
         doc.setLineWidth(0.65);
-        doc.setDrawColor(...purple);
+        doc.setDrawColor(...navy);
         doc.lines([[5,-1.8],[-5,1.8],[5,1.8],[5,3.2],[-5,-1.8]], x + 4, y + 2.1, [1,1], 'S', true);
         doc.lines([[5,-1.8],[-5,1.8],[5,1.8]], x + 4, y + 4.2, [1,1], 'S', true);
         doc.lines([[5,-1.8],[-5,1.8],[5,1.8]], x + 4, y + 6.1, [1,1], 'S', true);
@@ -337,16 +337,16 @@ export const generateInvitationCardPDF = (
         doc.roundedRect(x + 3.65, y + 2.5, 2.0, 0.55, 0.2, 0.2, 'F');
         doc.roundedRect(x + 3.65, y + 3.7, 1.5, 0.55, 0.2, 0.2, 'F');
       } else if (kind === 'calendar') {
-        doc.setFillColor(...purple);
+        doc.setFillColor(...navy);
         doc.roundedRect(x + 1.3, y + 1.6, 5.4, 5.6, 0.7, 0.7, 'F');
         doc.setFillColor(255, 255, 255);
         doc.rect(x + 2.0, y + 3.2, 4.0, 3.2, 'F');
-        doc.setDrawColor(...purple);
+        doc.setDrawColor(...navy);
         doc.setLineWidth(0.35);
         doc.line(x + 3.0, y + 1.2, x + 3.0, y + 2.5);
         doc.line(x + 5.0, y + 1.2, x + 5.0, y + 2.5);
       } else if (kind === 'pin') {
-        doc.setFillColor(...purple);
+        doc.setFillColor(...navy);
         doc.circle(x + 4, y + 3.4, 2.35, 'F');
         doc.setFillColor(255, 255, 255);
         doc.circle(x + 4, y + 3.4, 0.85, 'F');
@@ -379,7 +379,7 @@ export const generateInvitationCardPDF = (
     const photoX = 101.8, photoY = 18.7, photoW = 44.0, photoH = 49.4;
     doc.setFillColor(255, 255, 255);
     doc.roundedRect(photoX - 1.8, photoY - 1.8, photoW + 3.6, photoH + 3.6, 4.3, 4.3, 'F');
-    doc.setDrawColor(227, 221, 241);
+    doc.setDrawColor(192, 192, 192);
     doc.setLineWidth(0.7);
     doc.roundedRect(photoX - 1.8, photoY - 1.8, photoW + 3.6, photoH + 3.6, 4.3, 4.3, 'S');
 
@@ -388,13 +388,13 @@ export const generateInvitationCardPDF = (
         doc.addImage(photoDataUrl, 'JPEG', photoX, photoY, photoW, photoH, undefined, 'MEDIUM');
       } catch (error) {
         console.warn('Invitation photo draw failed:', error);
-        doc.setFillColor(245, 240, 252);
+        doc.setFillColor(241, 245, 249);
         doc.roundedRect(photoX, photoY, photoW, photoH, 3.5, 3.5, 'F');
       }
     } else {
-      doc.setFillColor(245, 240, 252);
+      doc.setFillColor(241, 245, 249);
       doc.roundedRect(photoX, photoY, photoW, photoH, 3.5, 3.5, 'F');
-      doc.setTextColor(...purple);
+      doc.setTextColor(...navy);
       doc.setFontSize(12);
       doc.setFont('helvetica', 'bold');
       doc.text(name.charAt(0).toUpperCase(), photoX + photoW / 2, photoY + photoH / 2 + 4, { align: 'center' });
@@ -402,7 +402,7 @@ export const generateInvitationCardPDF = (
 
     // Signature rendered from student name, directly beneath photo.
     const signature = name;
-    doc.setTextColor(58, 22, 86);
+    doc.setTextColor(...navy);
     drawTextFit(signature, 123.8, 74.5, 47, 10.4, 'italic');
 
     // Bottom event information.
@@ -420,20 +420,20 @@ export const generateInvitationCardPDF = (
     drawTextFit(safeVenue, 112.0, eventY, 39, 7.7, 'normal');
 
     // Footer label + lines.
-    doc.setDrawColor(168, 157, 193);
+    doc.setDrawColor(192, 192, 192);
     doc.setLineWidth(0.3);
     doc.line(14, 96.1, 63, 96.1);
     doc.line(97, 96.1, 146, 96.1);
-    doc.setTextColor(68, 61, 79);
+    doc.setTextColor(...navy);
     doc.setFont('helvetica', 'normal');
     doc.setFontSize(7.4);
     doc.text('Official Entry Pass', 80, 96.8, { align: 'center' });
 
-    // Violet corner ribbon/academic accents.
-    doc.setFillColor(108, 46, 205);
+    // Navy & silver corner accents.
+    doc.setFillColor(11, 31, 58);
     doc.saveGraphicsState();
     // @ts-ignore
-    if (doc.setGState) doc.setGState(new doc.GState({ opacity: 0.9 }));
+    if (doc.setGState) doc.setGState(new doc.GState({ opacity: 0.85 }));
     doc.circle(-1, 94, 10, 'F');
     doc.circle(-1, 101, 10, 'F');
     doc.circle(163, 2, 9, 'F');

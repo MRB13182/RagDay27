@@ -80,6 +80,40 @@ export default function App() {
     return () => window.removeEventListener('superadmin-config-updated', handleConfigUpdate);
   }, []);
 
+  // Guard against direct URL/hash navigation attempts to bypass admin authentication
+  useEffect(() => {
+    const handleAdminUrlProtection = () => {
+      const hash = window.location.hash.toLowerCase();
+      const search = window.location.search.toLowerCase();
+      const path = window.location.pathname.toLowerCase();
+      const hasAdminAttempt = hash.includes('admin') || search.includes('admin') || path.includes('/admin');
+
+      if (hasAdminAttempt) {
+        // Clean URL without page reload
+        if (hash.includes('admin')) {
+          history.replaceState(null, '', window.location.pathname + window.location.search);
+        }
+        if (search.includes('admin')) {
+          const params = new URLSearchParams(window.location.search);
+          params.delete('admin');
+          params.delete('panel');
+          const cleanQuery = params.toString() ? `?${params.toString()}` : '';
+          history.replaceState(null, '', window.location.pathname + cleanQuery);
+        }
+        // Direct URL access opens strictly the login screen, never granting panel access
+        setIsAdminOpen(true);
+      }
+    };
+
+    handleAdminUrlProtection();
+    window.addEventListener('hashchange', handleAdminUrlProtection);
+    window.addEventListener('popstate', handleAdminUrlProtection);
+    return () => {
+      window.removeEventListener('hashchange', handleAdminUrlProtection);
+      window.removeEventListener('popstate', handleAdminUrlProtection);
+    };
+  }, []);
+
   useEffect(() => {
     if (websiteIdentityConfig.websiteName) {
       document.title = websiteIdentityConfig.websiteName;

@@ -429,13 +429,52 @@ export const RegistrationForm: React.FC<RegistrationFormProps> = ({
     return false;
   };
 
+  const handleNumericKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (
+      [
+        'Backspace',
+        'Delete',
+        'Tab',
+        'Escape',
+        'Enter',
+        'ArrowLeft',
+        'ArrowRight',
+        'ArrowUp',
+        'ArrowDown',
+        'Home',
+        'End',
+      ].includes(e.key) ||
+      e.ctrlKey ||
+      e.metaKey
+    ) {
+      return;
+    }
+    if (!/^[0-9]$/.test(e.key)) {
+      e.preventDefault();
+    }
+  };
+
   const validateForm = () => {
     const errors: { [key: string]: string } = {};
 
     if (!isGenderChosen) errors.gender = 'Please select your gender (Male / Female).';
     if (!formData.full_name.trim()) errors.full_name = 'Full name is required.';
-    if (!formData.class_roll.trim()) errors.class_roll = 'Roll number is required.';
-    if (!formData.student_id.trim()) errors.student_id = 'Student ID is required.';
+
+    const rollTrim = formData.class_roll.trim();
+    if (!rollTrim) {
+      errors.class_roll = 'Roll number is required.';
+    } else if (!/^\d+$/.test(rollTrim)) {
+      errors.class_roll = 'Roll number must contain digits only.';
+    } else if (/^0+$/.test(rollTrim)) {
+      errors.class_roll = 'Roll number must be greater than 0.';
+    }
+
+    const studentIdTrim = formData.student_id.trim();
+    if (!studentIdTrim) {
+      errors.student_id = 'Student ID is required.';
+    } else if (!/^\d+$/.test(studentIdTrim)) {
+      errors.student_id = 'Student ID must contain digits only.';
+    }
     
     const contactErr = getMobileError(formData.contact_mobile_number);
     if (!formData.contact_mobile_number.trim()) {
@@ -815,10 +854,20 @@ export const RegistrationForm: React.FC<RegistrationFormProps> = ({
                     </label>
                     <input
                       type="text"
+                      inputMode="numeric"
+                      pattern="[0-9]*"
                       placeholder="e.g. 101"
                       value={formData.class_roll}
+                      onKeyDown={handleNumericKeyDown}
+                      onPaste={e => {
+                        e.preventDefault();
+                        const val = e.clipboardData.getData('text').replace(/\D/g, '');
+                        setFormData(prev => ({ ...prev, class_roll: val }));
+                        if (formErrors.class_roll) setFormErrors(prev => ({ ...prev, class_roll: '' }));
+                      }}
                       onChange={e => {
-                        setFormData({ ...formData, class_roll: e.target.value });
+                        const val = e.target.value.replace(/\D/g, '');
+                        setFormData(prev => ({ ...prev, class_roll: val }));
                         if (formErrors.class_roll) setFormErrors(prev => ({ ...prev, class_roll: '' }));
                       }}
                       className={`w-full px-4 py-3 rounded-xl text-sm font-medium transition-colors outline-none ${inputClasses} ${getFieldHighlightClass('class_roll')}`}
@@ -841,10 +890,20 @@ export const RegistrationForm: React.FC<RegistrationFormProps> = ({
                     </label>
                     <input
                       type="text"
+                      inputMode="numeric"
+                      pattern="[0-9]*"
                       placeholder="e.g. 270101"
                       value={formData.student_id}
+                      onKeyDown={handleNumericKeyDown}
+                      onPaste={e => {
+                        e.preventDefault();
+                        const val = e.clipboardData.getData('text').replace(/\D/g, '');
+                        setFormData(prev => ({ ...prev, student_id: val }));
+                        if (formErrors.student_id) setFormErrors(prev => ({ ...prev, student_id: '' }));
+                      }}
                       onChange={e => {
-                        setFormData({ ...formData, student_id: e.target.value });
+                        const val = e.target.value.replace(/\D/g, '');
+                        setFormData(prev => ({ ...prev, student_id: val }));
                         if (formErrors.student_id) setFormErrors(prev => ({ ...prev, student_id: '' }));
                       }}
                       className={`w-full px-4 py-3 rounded-xl text-sm font-medium transition-colors outline-none ${inputClasses} ${getFieldHighlightClass('student_id')}`}
@@ -867,10 +926,21 @@ export const RegistrationForm: React.FC<RegistrationFormProps> = ({
                     </label>
                     <input
                       type="tel"
+                      inputMode="numeric"
+                      pattern="[0-9]*"
+                      maxLength={11}
                       placeholder="e.g. 017XXXXXXXX"
                       value={formData.contact_mobile_number}
+                      onKeyDown={handleNumericKeyDown}
+                      onPaste={e => {
+                        e.preventDefault();
+                        const val = e.clipboardData.getData('text').replace(/\D/g, '').slice(0, 11);
+                        setFormData(prev => ({ ...prev, contact_mobile_number: val }));
+                        if (formErrors.contact_mobile_number) setFormErrors(prev => ({ ...prev, contact_mobile_number: '' }));
+                      }}
                       onChange={e => {
-                        setFormData({ ...formData, contact_mobile_number: e.target.value });
+                        const val = e.target.value.replace(/\D/g, '').slice(0, 11);
+                        setFormData(prev => ({ ...prev, contact_mobile_number: val }));
                         if (formErrors.contact_mobile_number) setFormErrors(prev => ({ ...prev, contact_mobile_number: '' }));
                       }}
                       className={`w-full px-4 py-3 rounded-xl text-sm font-medium transition-colors outline-none ${inputClasses} ${getFieldHighlightClass('contact_mobile_number')}`}
@@ -1103,10 +1173,21 @@ export const RegistrationForm: React.FC<RegistrationFormProps> = ({
                       </label>
                       <input
                         type="tel"
+                        inputMode="numeric"
+                        pattern="[0-9]*"
+                        maxLength={11}
                         placeholder="e.g. 01XXXXXXXXX"
                         value={formData.sender_mobile_no}
+                        onKeyDown={handleNumericKeyDown}
+                        onPaste={e => {
+                          e.preventDefault();
+                          const val = e.clipboardData.getData('text').replace(/\D/g, '').slice(0, 11);
+                          setFormData(prev => ({ ...prev, sender_mobile_no: val }));
+                          if (formErrors.sender_mobile_no) setFormErrors(prev => ({ ...prev, sender_mobile_no: '' }));
+                        }}
                         onChange={e => {
-                          setFormData({ ...formData, sender_mobile_no: e.target.value });
+                          const val = e.target.value.replace(/\D/g, '').slice(0, 11);
+                          setFormData(prev => ({ ...prev, sender_mobile_no: val }));
                           if (formErrors.sender_mobile_no) setFormErrors(prev => ({ ...prev, sender_mobile_no: '' }));
                         }}
                         className={`w-full px-4 py-3 rounded-xl text-sm font-medium transition-colors outline-none ${inputClasses} ${getFieldHighlightClass('sender_mobile_no')}`}
@@ -1239,12 +1320,21 @@ export const RegistrationForm: React.FC<RegistrationFormProps> = ({
                         </div>
                         <input
                           type="text"
+                          inputMode="numeric"
+                          pattern="[0-9]*"
                           maxLength={2}
                           placeholder="27"
                           value={formData.jersey_number}
+                          onKeyDown={handleNumericKeyDown}
+                          onPaste={e => {
+                            e.preventDefault();
+                            const val = e.clipboardData.getData('text').replace(/\D/g, '').slice(0, 2);
+                            setFormData(prev => ({ ...prev, jersey_number: val }));
+                            if (formErrors.jersey_number) setFormErrors(prev => ({ ...prev, jersey_number: '' }));
+                          }}
                           onChange={e => {
-                            const val = e.target.value.replace(/\D/g, '');
-                            setFormData({ ...formData, jersey_number: val });
+                            const val = e.target.value.replace(/\D/g, '').slice(0, 2);
+                            setFormData(prev => ({ ...prev, jersey_number: val }));
                             if (formErrors.jersey_number) setFormErrors(prev => ({ ...prev, jersey_number: '' }));
                           }}
                           className={`w-full px-4 py-3 rounded-xl text-sm font-mono font-black transition-colors outline-none text-center ${inputClasses}`}

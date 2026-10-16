@@ -163,20 +163,17 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
     }
   };
 
-  // Restore active session on mount
+  // Ensure login screen is ALWAYS shown when opening the admin portal
   useEffect(() => {
-    setLoginError('');
-    void (async () => {
-      try {
-        const profile = await getCurrentAdmin();
-        if (profile) {
-          setAdmin(profile);
-        }
-      } catch {
-        setAdmin(null);
-      }
-    })();
-  }, []);
+    if (isOpen) {
+      setAdmin(null);
+      setPasscode('');
+      setLoginError('');
+      setAdminRegistrations([]);
+      setSelectedRecord(null);
+      setRejectingRecord(null);
+    }
+  }, [isOpen]);
 
   // Fetch registrations from database whenever admin logs in
   const loadAdminRegistrations = async () => {
@@ -223,6 +220,19 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
     }
   };
 
+  // Secure close handler (ensures credentials and sensitive data are wiped)
+  const handleClose = async () => {
+    await signOutAdmin();
+    setAdmin(null);
+    setAdminRegistrations([]);
+    setRegistrationLoadError('');
+    setPasscode('');
+    setLoginError('');
+    setSelectedRecord(null);
+    setRejectingRecord(null);
+    onClose();
+  };
+
   // Logout handler
   const handleLogout = async () => {
     await signOutAdmin();
@@ -230,6 +240,7 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
     setAdminRegistrations([]);
     setRegistrationLoadError('');
     setPasscode('');
+    setLoginError('');
     setSelectedRecord(null);
     setRejectingRecord(null);
   };
@@ -400,7 +411,7 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
       <div className="fixed inset-0 z-[300] bg-black/75 backdrop-blur-md flex items-center justify-center p-4">
         <div className="w-full max-w-md bg-white/92 backdrop-blur-2xl rounded-3xl shadow-[0_30px_70px_-15px_rgba(0,0,0,0.4),inset_0_1.5px_2px_white] p-6 sm:p-8 relative border border-white/95 animate-scaleUp">
           <button
-            onClick={onClose}
+            onClick={handleClose}
             className="absolute top-4 right-4 p-2 rounded-xl text-slate-400 hover:text-slate-700 hover:bg-slate-100 transition-colors"
           >
             <X className="w-5 h-5" />
@@ -553,7 +564,7 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
             </button>
 
             <button
-              onClick={onClose}
+              onClick={handleClose}
               className="p-2 rounded-xl text-slate-400 hover:text-slate-700 hover:bg-slate-100 transition-colors ml-0.5"
               title="Close Admin Panel"
             >
