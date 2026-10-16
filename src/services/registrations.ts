@@ -74,16 +74,101 @@ export async function checkDuplicateRegistration(
   academicGroup: string,
   academicSection: string
 ): Promise<InvitationRecord | null> {
-  const { data, error } = await supabase.rpc('find_registration_duplicate', {
-    p_student_id: studentId.trim(),
-    p_full_name: fullName.trim(),
-    p_class_roll: classRoll.trim(),
-    p_academic_group: academicGroup.trim(),
-    p_academic_section: academicSection.trim(),
-  });
-  if (error) throw error;
-  const row = Array.isArray(data) ? data[0] : data;
-  return row ? mapRowToInvitation(row) : null;
+  const cleanStudentId = studentId.trim();
+  const cleanFullName = fullName.trim();
+  const cleanRoll = classRoll.trim();
+  const cleanGroup = academicGroup.trim();
+  const cleanSection = academicSection.trim();
+
+  // 1. Query authoritative RPC
+  try {
+    const { data, error } = await supabase.rpc('find_registration_duplicate', {
+      p_student_id: cleanStudentId,
+      p_full_name: cleanFullName,
+      p_class_roll: cleanRoll,
+      p_academic_group: cleanGroup,
+      p_academic_section: cleanSection,
+    });
+    if (!error && data) {
+      const row = Array.isArray(data) ? data[0] : data;
+      if (row) return mapRowToInvitation(row);
+    }
+  } catch (rpcErr) {
+    console.warn('find_registration_duplicate RPC failed, attempting fallback query:', rpcErr);
+  }
+
+  // 2. Fallback direct table query if RPC is temporarily unavailable
+  try {
+    if (cleanStudentId) {
+      const { data, error } = await supabase
+        .from('registrations')
+        .select('*')
+        .eq('student_id', cleanStudentId)
+        .eq('hidden_from_web', false)
+        .limit(1)
+        .maybeSingle();
+      if (!error && data) {
+        return mapRowToInvitation(data);
+      }
+    }
+
+    if (cleanRoll && cleanGroup && cleanSection) {
+      const { data, error } = await supabase
+        .from('registrations')
+        .select('*')
+        .eq('class_roll', cleanRoll)
+        .eq('academic_group', cleanGroup)
+        .eq('academic_section', cleanSection)
+        .eq('hidden_from_web', false)
+        .limit(1)
+        .maybeSingle();
+      if (!error && data) {
+        return mapRowToInvitation(data);
+      }
+    }
+  } catch (fallbackErr) {
+    console.warn('Fallback direct duplicate check encountered an issue:', fallbackErr);
+  }
+
+  return null;
+}
+
+/**
+ * Authoritative registration record lookup by Student ID or Registration Number.
+ * Queries database directly to ensure freshest status without relying on client-cached state.
+ */
+export async function fetchAuthoritativeRegistration(
+  studentId?: string,
+  registrationNo?: string
+): Promise<InvitationRecord | null> {
+  const cleanId = (studentId || '').trim();
+  const cleanReg = (registrationNo || '').trim().toUpperCase();
+
+  if (!cleanId && !cleanReg) return null;
+
+  try {
+    if (cleanId) {
+      const match = await checkDuplicateRegistration(cleanId, '', '', '', '');
+      if (match) return match;
+    }
+
+    if (cleanReg) {
+      const { data, error } = await supabase
+        .from('registrations')
+        .select('*')
+        .eq('registration_no', cleanReg)
+        .eq('hidden_from_web', false)
+        .limit(1)
+        .maybeSingle();
+      if (!error && data) {
+        return mapRowToInvitation(data);
+      }
+    }
+  } catch (err) {
+    console.warn('fetchAuthoritativeRegistration failed:', err);
+  }
+
+  return null;
 }
 
 // Database is the sole authority for registration numbering.

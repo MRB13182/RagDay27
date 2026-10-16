@@ -19,6 +19,7 @@ import {
 import { JerseyGraphic } from './JerseyGraphic';
 import { BkashLogo, NagadLogo } from './PaymentBrandLogos';
 import { PhotoUploadField } from './PhotoUploadField';
+import { DuplicateRegistrationModal } from './DuplicateRegistrationModal';
 import {
   User,
   Copy,
@@ -215,8 +216,9 @@ export const RegistrationForm: React.FC<RegistrationFormProps> = ({
 
   // Duplicate detection popup state
   const [duplicateModal, setDuplicateModal] = useState<{
-    type: 'approved' | 'pending' | 'rejected';
     record: InvitationRecord;
+    isLoading?: boolean;
+    error?: string | null;
   } | null>(null);
 
   // Registration closed popup state
@@ -412,21 +414,26 @@ export const RegistrationForm: React.FC<RegistrationFormProps> = ({
         return false;
       }
 
-      if (match.status === 'approved') {
-        setDuplicateModal({ type: 'approved', record: match });
-        return true;
-      }
-      if (match.status === 'pending') {
-        setDuplicateModal({ type: 'pending', record: match });
-        return true;
-      }
-      if (match.status === 'rejected') {
-        setDuplicateModal({ type: 'rejected', record: match });
-        return true;
-      }
+      setDuplicateModal({ record: match });
+      return true;
     }
 
     return false;
+  };
+
+  const handleStudentIdBlur = async () => {
+    const sId = formData.student_id.trim();
+    if (!sId || sId.length < 4) return;
+    if (editingRegNo && sId === recoveryProof?.studentId) return;
+
+    try {
+      const match = await checkDuplicateRegistration(sId, '', '', '', '');
+      if (match && (!editingRegNo || match.registration_no !== editingRegNo)) {
+        setDuplicateModal({ record: match });
+      }
+    } catch {
+      // ignore blur errors, submission will validate
+    }
   };
 
   const handleNumericKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
@@ -906,6 +913,7 @@ export const RegistrationForm: React.FC<RegistrationFormProps> = ({
                         setFormData(prev => ({ ...prev, student_id: val }));
                         if (formErrors.student_id) setFormErrors(prev => ({ ...prev, student_id: '' }));
                       }}
+                      onBlur={handleStudentIdBlur}
                       className={`w-full px-4 py-3 rounded-xl text-sm font-medium transition-colors outline-none ${inputClasses} ${getFieldHighlightClass('student_id')}`}
                     />
                     {formErrors.student_id && (
@@ -1435,142 +1443,14 @@ export const RegistrationForm: React.FC<RegistrationFormProps> = ({
       {/* ======================================================== */}
       {/* DUPLICATE DETECTION MODAL                                */}
       {/* ======================================================== */}
-      {duplicateModal && (
-        <div className="fixed inset-0 z-[250] flex items-center justify-center p-4 bg-slate-950/70 backdrop-blur-sm animate-fadeIn">
-          <div className="w-full max-w-md bg-white/90 backdrop-blur-2xl rounded-3xl p-6 sm:p-7 shadow-[0_25px_60px_-15px_rgba(0,0,0,0.3),inset_0_1.5px_2px_white] border border-white/95 text-slate-900 space-y-4">
-            {/* Modal Header */}
-            <div className="flex items-start justify-between">
-              <div className="flex items-center gap-3">
-                {duplicateModal.type === 'approved' && (
-                  <div className="w-12 h-12 rounded-2xl bg-emerald-50 text-emerald-600 grid place-items-center">
-                    <ShieldCheck className="w-6 h-6" />
-                  </div>
-                )}
-                {duplicateModal.type === 'pending' && (
-                  <div className="w-12 h-12 rounded-2xl bg-amber-50 text-amber-600 grid place-items-center">
-                    <Clock className="w-6 h-6" />
-                  </div>
-                )}
-                {duplicateModal.type === 'rejected' && (
-                  <div className="w-12 h-12 rounded-2xl bg-rose-50 text-rose-600 grid place-items-center">
-                    <AlertTriangle className="w-6 h-6" />
-                  </div>
-                )}
-                <div>
-                  <h3 className="text-base sm:text-lg font-black">
-                    {duplicateModal.type === 'approved' && 'Approved Registration'}
-                    {duplicateModal.type === 'pending' && 'Registration Pending'}
-                    {duplicateModal.type === 'rejected' && 'Previous registration found.'}
-                  </h3>
-                  <span className="font-mono text-xs font-bold text-indigo-600">
-                    {duplicateModal.record.registration_no}
-                  </span>
-                </div>
-              </div>
-              <button
-                type="button"
-                onClick={() => setDuplicateModal(null)}
-                className="p-1 text-slate-400 hover:text-slate-600 rounded-lg hover:bg-slate-100"
-              >
-                <X className="w-5 h-5" />
-              </button>
-            </div>
-
-            {/* Modal Body */}
-            {duplicateModal.type === 'approved' && (
-              <div className="space-y-3 text-xs sm:text-sm text-slate-600">
-                <div className="p-3.5 rounded-xl bg-emerald-50 border border-emerald-200 text-emerald-900 font-bold">
-                  You already have an approved registration.
-                </div>
-                <div className="space-y-1 text-xs">
-                  <div><strong>Student:</strong> {duplicateModal.record.full_name} (Roll: {duplicateModal.record.class_roll})</div>
-                  <div><strong>Student ID:</strong> {duplicateModal.record.student_id}</div>
-                  <div><strong>Registration Number:</strong> <span className="font-mono font-bold text-indigo-700">{duplicateModal.record.registration_no}</span></div>
-                </div>
-                <div className="pt-2 flex justify-end gap-2">
-                  <button
-                    type="button"
-                    onClick={() => {
-                      const regNo = duplicateModal.record.registration_no;
-                      const name = duplicateModal.record.full_name;
-                      setDuplicateModal(null);
-                      onGoToInvitation(regNo, name);
-                    }}
-                    className="w-full py-3 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs shadow-md"
-                  >
-                    View Invitation Card
-                  </button>
-                </div>
-              </div>
-            )}
-
-            {duplicateModal.type === 'pending' && (
-              <div className="space-y-3 text-xs sm:text-sm text-slate-600">
-                <div className="p-3.5 rounded-xl bg-amber-50 border border-amber-200 text-amber-900 font-bold">
-                  Your registration is currently pending review.
-                </div>
-                <div className="space-y-1 text-xs">
-                  <div><strong>Student:</strong> {duplicateModal.record.full_name} (Roll: {duplicateModal.record.class_roll})</div>
-                  <div><strong>Student ID:</strong> {duplicateModal.record.student_id}</div>
-                  <div><strong>Registration Number:</strong> <span className="font-mono font-bold text-indigo-700">{duplicateModal.record.registration_no}</span></div>
-                </div>
-                <div className="pt-2 flex justify-end gap-2">
-                  <button
-                    type="button"
-                    onClick={() => {
-                      const regNo = duplicateModal.record.registration_no;
-                      const name = duplicateModal.record.full_name;
-                      setDuplicateModal(null);
-                      onGoToInvitation(regNo, name);
-                    }}
-                    className="w-full py-3 rounded-xl bg-amber-600 hover:bg-amber-700 text-white font-bold text-xs shadow-md"
-                  >
-                    Check Status
-                  </button>
-                </div>
-              </div>
-            )}
-
-            {duplicateModal.type === 'rejected' && (
-              <div className="space-y-3 text-xs sm:text-sm text-slate-600">
-                <div className="space-y-2 p-3.5 rounded-2xl bg-rose-50 border border-rose-200 text-xs">
-                  <div>
-                    <span className="font-bold text-rose-800 uppercase block text-[10px]">Registration Number:</span>
-                    <span className="font-mono font-black text-rose-900 text-sm">{duplicateModal.record.registration_no}</span>
-                  </div>
-                  <div>
-                    <span className="font-bold text-rose-800 uppercase block text-[10px]">Current Status:</span>
-                    <span className="font-bold text-rose-700 uppercase">Rejected</span>
-                  </div>
-                  <div>
-                    <span className="font-bold text-rose-800 uppercase block text-[10px]">Reject Reason:</span>
-                    <span className="font-medium text-rose-900">{duplicateModal.record.reject_reason || 'No specific reason provided.'}</span>
-                  </div>
-                </div>
-                <p className="text-xs text-slate-500">
-                  You can continue with your existing registration number, update your information, and re-submit for approval.
-                </p>
-                <div className="pt-2 flex items-center justify-end gap-2">
-                  <button
-                    type="button"
-                    onClick={() => setDuplicateModal(null)}
-                    className="px-4 py-2.5 rounded-xl border border-slate-200 text-xs font-bold text-slate-600 hover:bg-slate-50 cursor-pointer"
-                  >
-                    Cancel
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => handleContinueRejectedRegistration(duplicateModal.record)}
-                    className="px-5 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs shadow-md shadow-indigo-200 cursor-pointer"
-                  >
-                    Continue Registration
-                  </button>
-                </div>
-              </div>
-            )}
-          </div>
-        </div>
-      )}
+      <DuplicateRegistrationModal
+        isOpen={Boolean(duplicateModal)}
+        record={duplicateModal?.record || null}
+        isLoading={duplicateModal?.isLoading}
+        error={duplicateModal?.error}
+        onClose={() => setDuplicateModal(null)}
+        onReRegister={record => handleContinueRejectedRegistration(record)}
+      />
 
       {/* ======================================================== */}
       {/* REGISTRATION CLOSED MODAL                                */}

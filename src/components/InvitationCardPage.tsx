@@ -233,7 +233,11 @@ export const InvitationCardPage: React.FC<InvitationCardPageProps> = ({
               disabled={isSearching}
               className="py-3 px-6 rounded-xl bg-gradient-to-r from-[#6D28D9] via-[#7C3AED] to-[#8B5CF6] text-white font-bold text-sm shadow-md shadow-[#6D28D9]/25 hover:shadow-lg hover:shadow-[#6D28D9]/35 hover:-translate-y-0.5 active:translate-y-0 transition-all flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50"
             >
-              <Search className="w-4 h-4" />
+              {isSearching ? (
+                <Loader2 className="w-4 h-4 animate-spin" />
+              ) : (
+                <Search className="w-4 h-4" />
+              )}
               <span>{isSearching ? 'Verifying...' : 'Verify & Search'}</span>
             </button>
           </div>
