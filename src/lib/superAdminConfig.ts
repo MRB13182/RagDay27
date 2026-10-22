@@ -530,10 +530,13 @@ export const logoRelatedConfig = {
 // 02. Event Settings — sole source of public jersey showcase cards.
 export function getJerseyShowcaseCards(): JerseyDesignCard[] {
   const eventJersey = getEventSettingsConfig().eventJersey || defaultJerseyOne;
-  const raw = getSavedSuperAdminText('02. event-settings/Text/Jersey design.txt', jerseyDesignRaw02?.trim() || '');
+  const raw = getSavedSuperAdminText(
+    '02. event-settings/Text/Jersey design.txt',
+    jerseyDesignRaw02?.trim() || ''
+  );
   return parseJerseyDesignContent(raw, eventJersey).map(card => ({
     ...card,
-    image: getSuperAdminImageUrl('02. event-settings/Pic/jersey.png', eventJersey),
+    image: eventJersey,
   }));
 }
 
