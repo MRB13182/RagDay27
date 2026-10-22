@@ -530,19 +530,25 @@ export const logoRelatedConfig = {
 
 // 02. Event Settings — sole source of public jersey showcase cards.
 export function getJerseyShowcaseCards(): JerseyDesignCard[] {
-  const eventJersey = getSuperAdminImageUrl(
-    '02. event-settings/Pic/jersey-design.png',
-    eventJerseyDesignPic02 || eventJerseyPic02 || getEventSettingsConfig().eventJersey || defaultJerseyOne
-  );
   const raw = getSavedSuperAdminText(
     '02. event-settings/Text/Jersey design.txt',
     jerseyDesignRaw02?.trim() || ''
   );
+  const fallbackImage = eventJerseyDesignPic02 || eventJerseyPic02 || getEventSettingsConfig().eventJersey || defaultJerseyOne;
+  const cards = parseJerseyDesignContent(raw, fallbackImage);
 
-  return parseJerseyDesignContent(raw, eventJersey).map(card => ({
-    ...card,
-    image: eventJersey,
-  }));
+  return cards.map(card => {
+    // Each card uses the named image asset from Section 02 when configured.
+    const filename = (card.imageFilename || 'jersey-design.png').split('/').pop() || 'jersey-design.png';
+    const knownSection02Assets: Record<string, string> = {
+      'jersey-design.png': eventJerseyDesignPic02,
+      'jersey.png': eventJerseyPic02,
+    };
+    return {
+      ...card,
+      image: knownSection02Assets[filename] || fallbackImage,
+    };
+  });
 }
 
 // 01. Website Identity
