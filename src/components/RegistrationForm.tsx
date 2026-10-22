@@ -247,41 +247,42 @@ export const RegistrationForm: React.FC<RegistrationFormProps> = ({
     gender: GenderType;
   } | null>(null);
 
-  // Pre-load data if initialRecord is provided (e.g. from Invitation Card "Register Again")
+  // Pre-load complete database record when recovering a rejected registration.
   useEffect(() => {
-    if (initialRecord) {
-      onGenderChange?.(initialRecord.gender || 'male');
-      const flagged = detectFlaggedFields(initialRecord.reject_reason);
-      const isPhotoFlagged = flagged.has('student_photo');
+    if (!initialRecord) return;
 
-      setFormData({
-        gender: initialRecord.gender || 'male',
-        full_name: initialRecord.full_name || '',
-        class_roll: initialRecord.class_roll || '',
-        student_id: initialRecord.student_id || '',
-        contact_mobile_number: initialRecord.contact_mobile_number || initialRecord.sender_mobile_no || '',
-        academic_group: initialRecord.academic_group || '',
-        academic_section: initialRecord.academic_section || '',
-        student_photo: isPhotoFlagged ? null : (initialRecord.student_photo || null),
-        send_method: initialRecord.send_method || 'bkash',
-        sender_mobile_no: initialRecord.sender_mobile_no || initialRecord.contact_mobile_number || '',
-        payment_time: initialRecord.payment_time || '',
-        transaction_id: initialRecord.transaction_id || '',
-        jersey_back_name: initialRecord.jersey_back_name || 'STRIKER',
-        jersey_number: initialRecord.jersey_number || '27',
-        jersey_size: (initialRecord.jersey_size as JerseySize) || 'L',
-      });
-      setRejectionReason(initialRecord.reject_reason || null);
-      setEditingRegNo(initialRecord.registration_no);
-      setEditingDbId(toNullableUuid(initialRecord.dbId || initialRecord.id));
-      setRecoveryProof({
-        studentId: initialRecord.student_id || '',
-        fullName: initialRecord.full_name || '',
-        classRoll: initialRecord.class_roll || '',
-        academicGroup: initialRecord.academic_group || '',
-        academicSection: initialRecord.academic_section || '',
-      });
-    }
+    onGenderChange?.(initialRecord.gender || 'male');
+    const flagged = detectFlaggedFields(initialRecord.reject_reason);
+    const isPhotoFlagged = flagged.has('student_photo');
+
+    setFormData(prev => ({
+      ...prev,
+      gender: initialRecord.gender || 'male',
+      full_name: initialRecord.full_name ?? prev.full_name,
+      class_roll: initialRecord.class_roll ?? prev.class_roll,
+      student_id: initialRecord.student_id ?? prev.student_id,
+      contact_mobile_number: initialRecord.contact_mobile_number || initialRecord.sender_mobile_no || prev.contact_mobile_number,
+      academic_group: initialRecord.academic_group ?? prev.academic_group,
+      academic_section: initialRecord.academic_section ?? prev.academic_section,
+      student_photo: isPhotoFlagged ? null : (initialRecord.student_photo ?? prev.student_photo),
+      send_method: initialRecord.send_method || prev.send_method || 'bkash',
+      sender_mobile_no: initialRecord.sender_mobile_no || initialRecord.contact_mobile_number || prev.sender_mobile_no,
+      payment_time: initialRecord.payment_time ?? prev.payment_time,
+      transaction_id: initialRecord.transaction_id ?? prev.transaction_id,
+      jersey_back_name: initialRecord.jersey_back_name || prev.jersey_back_name || 'STRIKER',
+      jersey_number: initialRecord.jersey_number ?? prev.jersey_number ?? '27',
+      jersey_size: (initialRecord.jersey_size as JerseySize) || prev.jersey_size || 'L',
+    }));
+    setRejectionReason(initialRecord.status === 'rejected' ? (initialRecord.reject_reason || null) : null);
+    setEditingRegNo(initialRecord.status === 'rejected' ? initialRecord.registration_no : null);
+    setEditingDbId(initialRecord.status === 'rejected' ? toNullableUuid(initialRecord.dbId || initialRecord.id) : null);
+    setRecoveryProof(initialRecord.status === 'rejected' ? {
+      studentId: initialRecord.student_id || '',
+      fullName: initialRecord.full_name || '',
+      classRoll: initialRecord.class_roll || '',
+      academicGroup: initialRecord.academic_group || '',
+      academicSection: initialRecord.academic_section || '',
+    } : null);
   }, [initialRecord, onGenderChange]);
 
   // Keep fee in sync
