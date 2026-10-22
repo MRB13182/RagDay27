@@ -64,7 +64,9 @@ export async function getPublicInvitation(
     };
   }
 
-  // Database verification: Name must match exactly (case-insensitive)
+  // Database verification: name must match exactly (case-insensitive).
+  // For rejected records the database RPC returns only the original registration
+  // fields needed for resubmission; pending records remain intentionally minimal.
   const recordName = String(data.full_name || '').trim().toLowerCase();
   if (recordName !== cleanName.toLowerCase()) {
     return {
