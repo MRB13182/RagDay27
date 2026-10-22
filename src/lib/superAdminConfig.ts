@@ -55,7 +55,6 @@ import noticeEnableDisableRaw from '../super-admin/05. important-notice/Text/Ena
 import logoPic06 from '../super-admin/06. logo-related/Pic/logo.png';
 import faviconPic06 from '../super-admin/06. logo-related/Pic/favicon.png';
 // 02. Event Settings — jersey showcase content.
-import eventJerseyPic02 from '../super-admin/02. event-settings/Pic/jersey.png';
 import eventJerseyDesignPic02 from '../super-admin/02. event-settings/Pic/jersey-design.png';
 import jerseyDesignRaw02 from '../super-admin/02. event-settings/Text/Jersey design.txt?raw';
 
@@ -379,7 +378,7 @@ export function getEventSettingsConfig() {
   const name = getSavedSuperAdminText('02. event-settings/Text/Event name.txt', eventNameRaw.trim()) || 'RAG DAY of NIC 27';
   const cardRaw = getSavedSuperAdminText('02. event-settings/Text/Event card.txt', eventCardRaw.trim());
   const venue = getSavedSuperAdminText('02. event-settings/Text/Venue.txt', venueRawText.trim()) || 'Central Amphitheatre';
-  const jersey = getSuperAdminImageUrl('02. event-settings/Pic/jersey.png', eventJerseyPic02 || defaultMaleJersey);
+  const jersey = getSuperAdminImageUrl('02. event-settings/Pic/jersey-design.png', eventJerseyDesignPic02 || defaultMaleJersey);
   const parsedCards = parseEventCardsContent(cardRaw);
 
   return {
@@ -463,7 +462,7 @@ export function getRegistrationSettingsConfig() {
   const paymentRaw = getSavedSuperAdminText('03. reg-settings/Text/Payment number.txt', payContent);
   const payments = parsePaymentNumberFile(paymentRaw);
   const openState = calculateRegistrationOpenState();
-  const jersey = getSuperAdminImageUrl('02. event-settings/Pic/jersey.png', eventJerseyPic02 || defaultMaleJersey);
+  const jersey = getSuperAdminImageUrl('02. event-settings/Pic/jersey-design.png', eventJerseyDesignPic02 || defaultMaleJersey);
   const backJersey = getSuperAdminImageUrl('03. reg-settings/Pic/back jersey preview.png', backJerseyPic || defaultJerseyBg);
 
   const cardRaw = getSavedSuperAdminText('02. event-settings/Text/Event card.txt', eventCardRaw.trim());
@@ -534,7 +533,7 @@ export function getJerseyShowcaseCards(): JerseyDesignCard[] {
     '02. event-settings/Text/Jersey design.txt',
     jerseyDesignRaw02?.trim() || ''
   );
-  const fallbackImage = eventJerseyDesignPic02 || eventJerseyPic02 || getEventSettingsConfig().eventJersey || defaultJerseyOne;
+  const fallbackImage = eventJerseyDesignPic02 || getEventSettingsConfig().eventJersey || defaultJerseyOne;
   const cards = parseJerseyDesignContent(raw, fallbackImage);
 
   return cards.map(card => {
@@ -546,8 +545,8 @@ export function getJerseyShowcaseCards(): JerseyDesignCard[] {
         eventJerseyDesignPic02
       ),
       'jersey.png': getSuperAdminImageUrl(
-        '02. event-settings/Pic/jersey.png',
-        eventJerseyPic02
+        '02. event-settings/Pic/jersey-design.png',
+        eventJerseyDesignPic02
       ),
     };
     return {
