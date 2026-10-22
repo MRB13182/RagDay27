@@ -210,11 +210,11 @@ export async function saveEditableSuperAdminText(path: string, content: string):
 export function getSuperAdminImageUrl(path: string, defaultFallback: string): string {
   const normalizedPath = path.replace(/^src\/super-admin\//, '').replace(/^\/+/, '');
   if (typeof window !== 'undefined' && window.localStorage) {
-    // Admin uploads take precedence over bundled defaults so website previews update immediately.
-    const local = window.localStorage.getItem(`super_admin_img_${normalizedPath}`);
-    if (local) return local;
+    // Prefer the uploaded public URL for cross-device consistency, then the local preview.
     const remote = window.localStorage.getItem(`super_admin_img_remote_${normalizedPath}`);
     if (remote) return remote;
+    const local = window.localStorage.getItem(`super_admin_img_${normalizedPath}`);
+    if (local) return local;
   }
   return defaultFallback;
 }
