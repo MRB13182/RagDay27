@@ -525,7 +525,7 @@ export default function App() {
         onOpenAdmin={() => setIsAdminOpen(true)}
         websiteSettings={websiteSettings}
         brandingSettings={brandingSettings}
-        themeGender={activeTab === 'register' ? registrationGender : undefined}
+        themeGender={undefined}
       />
 
       {isAdminOpen && (
