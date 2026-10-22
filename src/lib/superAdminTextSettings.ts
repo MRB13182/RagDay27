@@ -57,7 +57,6 @@ export const EDITABLE_SUPER_ADMIN_TEXT_FILES: EditableSuperAdminTextFile[] = [
     defaultValue: '2026-11-20T10:00:00',
   },
   {
-  {
     id: 'jersey-design',
     category: '02. Event Settings',
     label: 'Jersey showcase design (Jersey design.txt)',
