@@ -15,6 +15,7 @@ import {
   countdownSettingsConfig,
   importantNoticeConfig,
   logoRelatedConfig,
+  getJerseyShowcaseCards,
 } from './config/eventConfig';
 import type {
   InvitationRecord,
@@ -214,7 +215,7 @@ export default function App() {
   const jerseyShowcaseSettings: JerseyShowcaseSettings = {
     enabled: true,
     sectionOrder: 'showcase_first',
-    designCards: logoRelatedConfig.jerseyDesignCards,
+    designCards: getJerseyShowcaseCards(),
     jerseys: [
       {
         id: 'jersey-batch27',
@@ -432,7 +433,7 @@ export default function App() {
                 <>
                   {jerseyShowcaseSettings.enabled && (
                     <JerseyShowcaseSection
-                      cards={logoRelatedConfig.jerseyDesignCards}
+                      cards={getJerseyShowcaseCards()}
                       settings={jerseyShowcaseSettings}
                       onRegisterClick={handleOpenRegistration}
                     />
