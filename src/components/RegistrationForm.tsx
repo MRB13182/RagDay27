@@ -1420,6 +1420,7 @@ export const RegistrationForm: React.FC<RegistrationFormProps> = ({
               {/* ======================================================== */}
               <div className={`pt-3 border-t ${isMale ? 'border-cyan-300/25' : isFemale ? 'border-fuchsia-200/90' : 'border-slate-200/70'}`}>
                 <label className="flex items-center gap-3 cursor-pointer select-none text-xs sm:text-sm font-medium py-2">
+                  <span className={`registration-field-icon !min-h-10 !flex-none !w-10 ${isMale ? 'text-cyan-300' : isFemale ? 'text-fuchsia-700' : 'text-indigo-500'}`}><ShieldCheck className="w-5 h-5" /></span>
                   <input
                     type="checkbox"
                     checked={declarationChecked}
