@@ -117,12 +117,18 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  flex: 0 0 3rem;
-  min-height: 3rem;
-  border-radius: 0.75rem;
+  flex: 0 0 2.65rem;
+  width: 2.65rem;
+  min-height: 2.65rem;
+  border-radius: 0.7rem;
   border: 1px solid;
-  backdrop-filter: blur(16px);
-  -webkit-backdrop-filter: blur(16px);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+}
+.registration-field-icon svg {
+  width: 1.1rem;
+  height: 1.1rem;
+  stroke-width: 2;
 }
 .registration-theme:not(.glass-male):not(.glass-female) .registration-field-icon {
   color: #5B5FEF;
