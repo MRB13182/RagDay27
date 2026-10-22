@@ -301,31 +301,31 @@ export const RegistrationForm: React.FC<RegistrationFormProps> = ({
   const containerClasses = isMale
     ? 'glass-male text-white border-[#38BDF8]/40 shadow-[0_20px_60px_-15px_rgba(15,23,42,0.9),0_0_35px_-5px_rgba(56,189,248,0.25)]'
     : isFemale
-    ? 'glass-female text-slate-900 border-[#F472B6]/50 shadow-[0_20px_60px_-15px_rgba(236,72,153,0.2),0_0_35px_-5px_rgba(244,114,182,0.25)]'
+    ? 'glass-female text-slate-900 border-[#C084FC]/60 shadow-[0_20px_60px_-15px_rgba(126,34,206,0.18),0_0_35px_-5px_rgba(244,114,182,0.22)]'
     : 'glass-panel text-slate-900 border-white/90 shadow-[0_20px_50px_-15px_rgba(91,95,239,0.1)]';
 
   const sectionHeaderClasses = isMale
     ? 'text-[#38BDF8] border-b border-slate-800'
     : isFemale
-    ? 'text-[#EC4899] border-b border-pink-200'
+    ? 'text-[#A21CAF] border-b border-fuchsia-200/90'
     : 'text-[#5B5FEF] border-b border-slate-200';
 
   const labelClasses = isMale
     ? 'text-slate-300'
     : isFemale
-    ? 'text-pink-950 font-semibold'
+    ? 'text-[#4A174C] font-semibold'
     : 'text-slate-700 font-semibold';
 
   const inputClasses = isMale
     ? 'bg-slate-900/85 backdrop-blur-md border-slate-700/90 text-white placeholder-slate-500 focus:border-[#38BDF8] focus:ring-2 focus:ring-[#38BDF8]/30 shadow-[inset_0_1.5px_2px_rgba(0,0,0,0.3)]'
     : isFemale
-    ? 'bg-white/85 backdrop-blur-md border-pink-200 text-slate-900 placeholder-pink-300 focus:border-[#EC4899] focus:ring-2 focus:ring-[#EC4899]/25 shadow-[inset_0_1px_2px_rgba(0,0,0,0.02)]'
+    ? 'bg-white/90 backdrop-blur-md border-fuchsia-200 text-slate-900 placeholder-fuchsia-300 focus:border-[#D946A6] focus:ring-2 focus:ring-[#D946A6]/25 shadow-[inset_0_1px_2px_rgba(76,29,72,0.04)]'
     : 'bg-white/85 backdrop-blur-md border-slate-200 text-slate-900 placeholder-slate-400 focus:border-[#5B5FEF] focus:ring-2 focus:ring-[#5B5FEF]/20 shadow-[inset_0_1px_2px_rgba(0,0,0,0.02)]';
 
   const subCardClasses = isMale
     ? 'bg-slate-900/70 border border-slate-800/90 backdrop-blur-xl shadow-inner'
     : isFemale
-    ? 'bg-white/80 border border-pink-200/90 backdrop-blur-xl shadow-xs'
+    ? 'bg-white/82 border border-fuchsia-200/90 backdrop-blur-xl shadow-[0_8px_24px_-16px_rgba(126,34,206,0.22)]'
     : 'bg-white/75 border border-white/90 backdrop-blur-xl shadow-xs';
 
   // Dynamic payment numbers based on gender
@@ -511,8 +511,8 @@ export const RegistrationForm: React.FC<RegistrationFormProps> = ({
     const jerseyNumStr = formData.jersey_number.trim();
     if (!jerseyNumStr) {
       errors.jersey_number = 'Jersey number is required.';
-    } else if (!/^\d{1,2}$/.test(jerseyNumStr)) {
-      errors.jersey_number = 'Jersey number must be 00–99.';
+    } else if (!/^\d{1,3}$/.test(jerseyNumStr) || Number(jerseyNumStr) > 999) {
+      errors.jersey_number = 'Enter a whole jersey number from 0 to 999.';
     }
 
     // Declaration Checkbox Validation
@@ -778,12 +778,12 @@ export const RegistrationForm: React.FC<RegistrationFormProps> = ({
                 onClick={() => handleGenderSelect('female')}
                 className={`py-3.5 px-4 rounded-2xl border-2 transition-all duration-200 cursor-pointer flex items-center justify-center gap-2.5 font-bold text-sm sm:text-base ${
                   isFemale
-                    ? 'border-[#EC4899] bg-pink-50/90 backdrop-blur-xl shadow-[0_8px_25px_rgba(236,72,153,0.25),inset_0_1px_1.5px_white] ring-2 ring-[#EC4899]/40 text-pink-950'
-                    : 'border-slate-300/80 bg-white/70 backdrop-blur-md hover:border-[#EC4899]/60 hover:bg-pink-50/40 text-slate-800 shadow-2xs'
+                    ? 'border-[#D946A6] bg-gradient-to-br from-fuchsia-100 via-rose-50 to-white backdrop-blur-xl shadow-[0_8px_25px_rgba(217,70,166,0.22),inset_0_1px_1.5px_white] ring-2 ring-[#D946A6]/30 text-[#4A174C]'
+                    : 'border-fuchsia-200/90 bg-white/75 backdrop-blur-md hover:border-[#D946A6]/60 hover:bg-rose-50/70 text-slate-800 shadow-2xs'
                 }`}
               >
                 <span className={`w-7 h-7 rounded-xl grid place-items-center font-black text-sm shrink-0 ${
-                  isFemale ? 'bg-[#DB2777] text-white' : 'bg-slate-100 text-slate-600'
+                  isFemale ? 'bg-gradient-to-br from-[#C026D3] to-[#EC4899] text-white shadow-md shadow-fuchsia-500/20' : 'bg-slate-100 text-slate-600'
                 }`}>
                   ♀
                 </span>
@@ -1324,29 +1324,39 @@ export const RegistrationForm: React.FC<RegistrationFormProps> = ({
                           <label className={`block text-xs font-bold uppercase tracking-wider ${labelClasses}`}>
                             Jersey Number <span className="text-rose-500">*</span>
                           </label>
-                          <span className="text-[10px] font-mono opacity-70">00–99</span>
+                          <span className="text-[10px] font-mono opacity-70">0–999</span>
                         </div>
                         <input
                           type="text"
                           inputMode="numeric"
                           pattern="[0-9]*"
-                          maxLength={2}
+                          maxLength={3}
                           placeholder="27"
+                          aria-label="Jersey number, 0 to 999"
                           value={formData.jersey_number}
                           onKeyDown={handleNumericKeyDown}
                           onPaste={e => {
                             e.preventDefault();
-                            const val = e.clipboardData.getData('text').replace(/\D/g, '').slice(0, 2);
-                            setFormData(prev => ({ ...prev, jersey_number: val }));
+                            const pasted = e.clipboardData.getData('text');
+                            if (!/^\d{1,3}$/.test(pasted) || Number(pasted) > 999) {
+                              setFormErrors(prev => ({ ...prev, jersey_number: 'Enter a whole jersey number from 0 to 999.' }));
+                              return;
+                            }
+                            setFormData(prev => ({ ...prev, jersey_number: pasted }));
                             if (formErrors.jersey_number) setFormErrors(prev => ({ ...prev, jersey_number: '' }));
                           }}
                           onChange={e => {
-                            const val = e.target.value.replace(/\D/g, '').slice(0, 2);
+                            const val = e.target.value;
                             setFormData(prev => ({ ...prev, jersey_number: val }));
-                            if (formErrors.jersey_number) setFormErrors(prev => ({ ...prev, jersey_number: '' }));
+                            if (!val || (/^\d{1,3}$/.test(val) && Number(val) <= 999)) {
+                              if (formErrors.jersey_number) setFormErrors(prev => ({ ...prev, jersey_number: '' }));
+                            } else {
+                              setFormErrors(prev => ({ ...prev, jersey_number: 'Enter a whole jersey number from 0 to 999.' }));
+                            }
                           }}
                           className={`w-full px-4 py-3 rounded-xl text-sm font-mono font-black transition-colors outline-none text-center ${inputClasses}`}
                         />
+                        <p className={`text-[10px] mt-1 ${isMale ? 'text-cyan-200/75' : isFemale ? 'text-fuchsia-800/75' : 'text-slate-500'}`}>Number: 0–999 · Leading zeros are preserved</p>
                         {formErrors.jersey_number && (
                           <p className="text-rose-500 text-xs mt-1 font-semibold">{formErrors.jersey_number}</p>
                         )}
