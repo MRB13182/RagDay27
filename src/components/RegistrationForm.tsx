@@ -1328,7 +1328,7 @@ export const RegistrationForm: React.FC<RegistrationFormProps> = ({
                         </span>
                       </div>
                       <div className="registration-field-row">
-                      <span className="registration-field-icon"><User className="w-5 h-5" /></span>
+                      <span className="registration-field-icon"><User className="w-[18px] h-[18px]" /></span>
                       <input
                         type="text"
                         maxLength={14}
@@ -1358,7 +1358,7 @@ export const RegistrationForm: React.FC<RegistrationFormProps> = ({
                           <span className="text-[10px] font-mono opacity-70">0–999</span>
                         </div>
                         <div className="registration-field-row">
-                        <span className="registration-field-icon"><Hash className="w-5 h-5" /></span>
+                        <span className="registration-field-icon"><Hash className="w-[18px] h-[18px]" /></span>
                         <input
                           type="text"
                           inputMode="numeric"
@@ -1404,7 +1404,7 @@ export const RegistrationForm: React.FC<RegistrationFormProps> = ({
                           <Shirt className="w-3.5 h-3.5 shrink-0" /> Jersey Size <span className="text-rose-500">*</span>
                         </label>
                         <div className="registration-field-row">
-                        <span className="registration-field-icon"><Shirt className="w-5 h-5" /></span>
+                        <span className="registration-field-icon"><Shirt className="w-[18px] h-[18px]" /></span>
                         <select
                           value={formData.jersey_size}
                           onChange={e => setFormData({ ...formData, jersey_size: e.target.value as JerseySize })}
