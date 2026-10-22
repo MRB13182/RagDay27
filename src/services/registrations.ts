@@ -165,7 +165,7 @@ export async function getRejectedRegistrationForResubmission(
     });
 
     if (error) {
-      return { success: false, data: null, error, errorMessage: String(error.message || 'Unable to verify rejected registration recovery.') };
+      return { success: false, data: null, errorMessage: String(error.message || 'Unable to verify rejected registration recovery.') };
     }
     if (!data?.found || data.status !== 'rejected') {
       return { success: false, data: null, errorMessage: 'Recovery details did not match a rejected registration. Check the Registration Number, Student Name, and Student ID.' };
