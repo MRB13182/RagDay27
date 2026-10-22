@@ -56,6 +56,7 @@ import logoPic06 from '../super-admin/06. logo-related/Pic/logo.png';
 import faviconPic06 from '../super-admin/06. logo-related/Pic/favicon.png';
 // 02. Event Settings — jersey showcase content.
 import eventJerseyPic02 from '../super-admin/02. event-settings/Pic/jersey.png';
+import eventJerseyDesignPic02 from '../super-admin/02. event-settings/Pic/jersey-design.png';
 import jerseyDesignRaw02 from '../super-admin/02. event-settings/Text/Jersey design.txt?raw';
 
 // ============================================================================
@@ -531,7 +532,7 @@ export const logoRelatedConfig = {
 export function getJerseyShowcaseCards(): JerseyDesignCard[] {
   const eventJersey = getSuperAdminImageUrl(
     '02. event-settings/Pic/jersey-design.png',
-    eventJerseyPic02 || getEventSettingsConfig().eventJersey || defaultJerseyOne
+    eventJerseyDesignPic02 || eventJerseyPic02 || getEventSettingsConfig().eventJersey || defaultJerseyOne
   );
   const raw = getSavedSuperAdminText(
     '02. event-settings/Text/Jersey design.txt',
