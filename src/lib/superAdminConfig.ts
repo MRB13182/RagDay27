@@ -51,13 +51,12 @@ import noticeBoardRaw from '../super-admin/05. important-notice/Text/Notice Boar
 import popupNoticeRaw from '../super-admin/05. important-notice/Text/Popup Notice.txt?raw';
 import noticeEnableDisableRaw from '../super-admin/05. important-notice/Text/Enable Disable.txt?raw';
 
-// 06. Logo Related
+// 06. Logo Related — branding only; jersey showcase is managed in Section 02.
 import logoPic06 from '../super-admin/06. logo-related/Pic/logo.png';
 import faviconPic06 from '../super-admin/06. logo-related/Pic/favicon.png';
-// Use an existing repository asset as the jersey-design fallback; do not import
-// jersey-design.png from the protected Super Admin Pic folder because it is not present.
-import jerseyDesignPic06 from '../assets/images/male-jersey.png';
-import jerseyDesignRaw from '../super-admin/06. logo-related/Text/jersey-design.txt?raw';
+// 02. Event Settings — jersey showcase content.
+import eventJerseyPic02 from '../super-admin/02. event-settings/Pic/jersey.png';
+import jerseyDesignRaw02 from '../super-admin/02. event-settings/Text/Jersey design.txt?raw';
 
 // ============================================================================
 // 1. HELPERS & PARSERS
@@ -379,7 +378,7 @@ export function getEventSettingsConfig() {
   const name = getSavedSuperAdminText('02. event-settings/Text/Event name.txt', eventNameRaw.trim()) || 'RAG DAY of NIC 27';
   const cardRaw = getSavedSuperAdminText('02. event-settings/Text/Event card.txt', eventCardRaw.trim());
   const venue = getSavedSuperAdminText('02. event-settings/Text/Venue.txt', venueRawText.trim()) || 'Central Amphitheatre';
-  const jersey = getSuperAdminImageUrl('02. event-settings/Pic/jersey.png', jerseyDesignPic06 || defaultMaleJersey);
+  const jersey = getSuperAdminImageUrl('02. event-settings/Pic/jersey.png', eventJerseyPic02 || defaultMaleJersey);
   const parsedCards = parseEventCardsContent(cardRaw);
 
   return {
@@ -463,7 +462,7 @@ export function getRegistrationSettingsConfig() {
   const paymentRaw = getSavedSuperAdminText('03. reg-settings/Text/Payment number.txt', payContent);
   const payments = parsePaymentNumberFile(paymentRaw);
   const openState = calculateRegistrationOpenState();
-  const jersey = getSuperAdminImageUrl('02. event-settings/Pic/jersey.png', jerseyDesignPic06 || defaultMaleJersey);
+  const jersey = getSuperAdminImageUrl('02. event-settings/Pic/jersey.png', eventJerseyPic02 || defaultMaleJersey);
   const backJersey = getSuperAdminImageUrl('03. reg-settings/Pic/back jersey preview.png', backJerseyPic || defaultJerseyBg);
 
   const cardRaw = getSavedSuperAdminText('02. event-settings/Text/Event card.txt', eventCardRaw.trim());
@@ -518,7 +517,7 @@ export function getImportantNoticeConfig() {
   };
 }
 
-// 06. Logo Related & Jersey Design
+// 06. Logo Related — retain existing logo/favicon settings only.
 export const logoRelatedConfig = {
   get websiteLogo() { return getWebsiteIdentityConfig().websiteLogo; },
   get favicon() { return getWebsiteIdentityConfig().favicon; },
@@ -526,22 +525,17 @@ export const logoRelatedConfig = {
   get maleJersey() { return getRegistrationSettingsConfig().maleJerseyDesign; },
   get femaleJersey() { return defaultFemaleJersey; },
   get eventJersey() { return getEventSettingsConfig().eventJersey; },
-  get jerseyDesignCards(): JerseyDesignCard[] {
-    const raw = getSavedSuperAdminText('06. logo-related/Text/jersey-design.txt', jerseyDesignRaw?.trim() || '');
-    const jerseyImg = jerseyDesignPic06 || getEventSettingsConfig().eventJersey || defaultJerseyOne;
-    const parsed = parseJerseyDesignContent(raw, jerseyImg);
-    if (parsed.length > 0) return parsed;
-    return [
-      {
-        id: 'jersey-design-card-1',
-        title: 'Official Rag Day Jersey',
-        description: 'Custom Squad Kit with Personalized Back Name & Number Print Included',
-        image: jerseyImg,
-        imageFilename: 'jersey.png',
-      },
-    ];
-  },
 };
+
+// 02. Event Settings — sole source of public jersey showcase cards.
+export function getJerseyShowcaseCards(): JerseyDesignCard[] {
+  const eventJersey = getEventSettingsConfig().eventJersey || defaultJerseyOne;
+  const raw = getSavedSuperAdminText('02. event-settings/Text/Jersey design.txt', jerseyDesignRaw02?.trim() || '');
+  return parseJerseyDesignContent(raw, eventJersey).map(card => ({
+    ...card,
+    image: eventJersey,
+  }));
+}
 
 // 01. Website Identity
 export const websiteIdentityConfig = {
