@@ -368,8 +368,8 @@ export async function createRegistration(
       return { success: false, errorMessage: 'Sender mobile number must contain exactly 11 digits.' };
     }
     const jerseyNumTrim = form.jersey_number.trim();
-    if (!/^\d{1,2}$/.test(jerseyNumTrim)) {
-      return { success: false, errorMessage: 'Jersey number must be 1 to 2 digits (00–99).' };
+    if (!/^\d{1,3}$/.test(jerseyNumTrim) || Number(jerseyNumTrim) > 999) {
+      return { success: false, errorMessage: 'Jersey number must be a whole number from 0 to 999.' };
     }
 
     const payload = {
