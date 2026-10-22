@@ -830,7 +830,7 @@ export const RegistrationForm: React.FC<RegistrationFormProps> = ({
               <div className="space-y-4">
                 <div className={`pb-2.5 font-display text-base sm:text-lg font-bold flex items-center justify-between ${sectionHeaderClasses}`}>
                   <span className="flex items-center gap-2">
-                    <User className="w-4 h-4" />
+                    <IdCard className="w-4 h-4" />
                     2. Personal Information
                   </span>
                   <span className="text-xs font-normal opacity-75">Required fields *</span>
