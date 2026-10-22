@@ -26,9 +26,9 @@ export const Navbar: React.FC<NavbarProps> = ({
     setMobileMenuOpen(false);
   };
 
-  const isRegisterPage = activeTab === 'register';
-  const isMaleTheme = isRegisterPage && (themeGender === 'male' || themeGender === 'choose_one');
-  const isFemaleTheme = isRegisterPage && themeGender === 'female';
+  // Global navigation always keeps the standard white/purple brand theme.
+  const isMaleTheme = false;
+  const isFemaleTheme = false;
 
   const headerBgClass = isFemaleTheme
     ? 'bg-[#15051B]/90 backdrop-blur-2xl border-b border-[#4A195E]/70 shadow-[0_4px_30px_rgba(0,0,0,0.4)] text-white'
