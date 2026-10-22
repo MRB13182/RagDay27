@@ -80,7 +80,9 @@ export async function checkDuplicateRegistration(
   const cleanGroup = academicGroup.trim();
   const cleanSection = academicSection.trim();
 
-  // 1. Query authoritative RPC
+  // 1. Query authoritative RPC. Prefer a non-rejected matching record over a
+  // rejected one so a student's own rejected record can be excluded by the UI
+  // when it is being edited, while genuine active duplicates still block.
   try {
     const { data, error } = await supabase.rpc('find_registration_duplicate', {
       p_student_id: cleanStudentId,
@@ -90,7 +92,9 @@ export async function checkDuplicateRegistration(
       p_academic_section: cleanSection,
     });
     if (!error && data) {
-      const row = Array.isArray(data) ? data[0] : data;
+      const rows = (Array.isArray(data) ? data : [data]).filter(Boolean);
+      const active = rows.find((row: any) => String(row.status || '').toLowerCase() !== 'rejected');
+      const row = active || rows[0];
       if (row) return mapRowToInvitation(row);
     }
   } catch (rpcErr) {
