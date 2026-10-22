@@ -744,17 +744,11 @@ export const RegistrationForm: React.FC<RegistrationFormProps> = ({
                 <User className="w-4 h-4" />
                 Step 1: Select Your Gender
               </span>
-              <span className="text-xs font-semibold uppercase tracking-wider">
-                {isGenderChosen ? (
-                  <span className="text-emerald-500 flex items-center gap-1">
-                    <Check className="w-3.5 h-3.5" /> Unlocked
-                  </span>
-                ) : (
-                  <span className="text-amber-500 flex items-center gap-1">
-                    <Lock className="w-3.5 h-3.5" /> Required to Unlock
-                  </span>
-                )}
-              </span>
+              {!isGenderChosen && (
+                <span className="text-xs font-semibold uppercase tracking-wider text-amber-500 flex items-center gap-1">
+                  <Lock className="w-3.5 h-3.5 shrink-0" /> Required to Unlock
+                </span>
+              )}
             </div>
 
             <div className="grid grid-cols-2 gap-3 pt-1">
@@ -835,8 +829,8 @@ export const RegistrationForm: React.FC<RegistrationFormProps> = ({
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   {/* 1. Full Name */}
                   <div className="sm:col-span-2">
-                    <label className={`block text-xs font-bold uppercase tracking-wider mb-1.5 ${labelClasses}`}>
-                      Full Name <span className="text-rose-500">*</span>
+                    <label className={`flex items-center gap-1.5 block text-xs font-bold uppercase tracking-wider mb-1.5 ${labelClasses}`}>
+                      <User className="w-3.5 h-3.5 shrink-0" /> Full Name <span className="text-rose-500">*</span>
                     </label>
                     <input
                       type="text"
@@ -861,8 +855,8 @@ export const RegistrationForm: React.FC<RegistrationFormProps> = ({
 
                   {/* 2. Class Roll */}
                   <div>
-                    <label className={`block text-xs font-bold uppercase tracking-wider mb-1.5 ${labelClasses}`}>
-                      Class Roll <span className="text-rose-500">*</span>
+                    <label className={`flex items-center gap-1.5 block text-xs font-bold uppercase tracking-wider mb-1.5 ${labelClasses}`}>
+                      <Hash className="w-3.5 h-3.5 shrink-0" /> Class Roll <span className="text-rose-500">*</span>
                     </label>
                     <input
                       type="text"
@@ -897,8 +891,8 @@ export const RegistrationForm: React.FC<RegistrationFormProps> = ({
 
                   {/* 3. Student ID */}
                   <div>
-                    <label className={`block text-xs font-bold uppercase tracking-wider mb-1.5 ${labelClasses}`}>
-                      Student ID <span className="text-rose-500">*</span>
+                    <label className={`flex items-center gap-1.5 block text-xs font-bold uppercase tracking-wider mb-1.5 ${labelClasses}`}>
+                      <IdCard className="w-3.5 h-3.5 shrink-0" /> Student ID <span className="text-rose-500">*</span>
                     </label>
                     <input
                       type="text"
@@ -1371,8 +1365,8 @@ export const RegistrationForm: React.FC<RegistrationFormProps> = ({
 
                       {/* 14. Jersey Size */}
                       <div>
-                        <label className={`block text-xs font-bold uppercase tracking-wider mb-1.5 ${labelClasses}`}>
-                          Jersey Size <span className="text-rose-500">*</span>
+                        <label className={`flex items-center gap-1.5 block text-xs font-bold uppercase tracking-wider mb-1.5 ${labelClasses}`}>
+                          <Shirt className="w-3.5 h-3.5 shrink-0" /> Jersey Size <span className="text-rose-500">*</span>
                         </label>
                         <select
                           value={formData.jersey_size}
