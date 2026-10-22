@@ -939,6 +939,8 @@ export const RegistrationForm: React.FC<RegistrationFormProps> = ({
                     <label className={`block text-xs font-bold uppercase tracking-wider mb-1.5 ${labelClasses}`}>
                       Contact Mobile Number <span className="text-rose-500">*</span>
                     </label>
+                    <div className="registration-field-row">
+                    <span className="registration-field-icon"><Phone className="w-5 h-5" /></span>
                     <input
                       type="tel"
                       inputMode="numeric"
@@ -958,8 +960,9 @@ export const RegistrationForm: React.FC<RegistrationFormProps> = ({
                         setFormData(prev => ({ ...prev, contact_mobile_number: val }));
                         if (formErrors.contact_mobile_number) setFormErrors(prev => ({ ...prev, contact_mobile_number: '' }));
                       }}
-                      className={`w-full px-4 py-3 rounded-xl text-sm font-medium transition-colors outline-none ${inputClasses} ${getFieldHighlightClass('contact_mobile_number')}`}
+                      className={`min-w-0 flex-1 px-4 py-3 rounded-xl text-sm font-medium transition-colors outline-none ${inputClasses} ${getFieldHighlightClass('contact_mobile_number')}`}
                     />
+                    </div>
                     {(getMobileError(formData.contact_mobile_number) || formErrors.contact_mobile_number) && (
                       <p className="text-rose-500 text-xs mt-1 font-semibold">
                         {getMobileError(formData.contact_mobile_number) || formErrors.contact_mobile_number}
@@ -978,10 +981,12 @@ export const RegistrationForm: React.FC<RegistrationFormProps> = ({
                     <label className={`block text-xs font-bold uppercase tracking-wider mb-1.5 ${labelClasses}`}>
                       Academic Group <span className="text-rose-500">*</span>
                     </label>
+                    <div className="registration-field-row">
+                    <span className="registration-field-icon"><GraduationCap className="w-5 h-5" /></span>
                     <select
                       value={formData.academic_group}
                       onChange={handleGroupSelect}
-                      className={`w-full px-4 py-3 rounded-xl text-sm font-medium transition-colors outline-none cursor-pointer ${inputClasses} ${getFieldHighlightClass('academic_group')}`}
+                      className={`min-w-0 flex-1 px-4 py-3 rounded-xl text-sm font-medium transition-colors outline-none cursor-pointer ${inputClasses} ${getFieldHighlightClass('academic_group')}`}
                     >
                       <option value="" className={isMale ? 'bg-slate-900 text-white' : 'bg-white text-slate-900'}>
                         Select Academic Group...
@@ -996,6 +1001,7 @@ export const RegistrationForm: React.FC<RegistrationFormProps> = ({
                         Humanities
                       </option>
                     </select>
+                    </div>
                     {formErrors.academic_group && (
                       <p className="text-rose-500 text-xs mt-1 font-semibold">{formErrors.academic_group}</p>
                     )}
@@ -1012,6 +1018,8 @@ export const RegistrationForm: React.FC<RegistrationFormProps> = ({
                     <label className={`block text-xs font-bold uppercase tracking-wider mb-1.5 ${labelClasses}`}>
                       Academic Section <span className="text-rose-500">*</span>
                     </label>
+                    <div className="registration-field-row">
+                    <span className="registration-field-icon"><Layers className="w-5 h-5" /></span>
                     <select
                       disabled={!formData.academic_group}
                       value={formData.academic_section}
@@ -1019,7 +1027,7 @@ export const RegistrationForm: React.FC<RegistrationFormProps> = ({
                         setFormData({ ...formData, academic_section: e.target.value });
                         if (formErrors.academic_section) setFormErrors(prev => ({ ...prev, academic_section: '' }));
                       }}
-                      className={`w-full px-4 py-3 rounded-xl text-sm font-medium transition-colors outline-none cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed ${inputClasses} ${getFieldHighlightClass('academic_section')}`}
+                      className={`min-w-0 flex-1 px-4 py-3 rounded-xl text-sm font-medium transition-colors outline-none cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed ${inputClasses} ${getFieldHighlightClass('academic_section')}`}
                     >
                       <option value="" className={isMale ? 'bg-slate-900 text-white' : 'bg-white text-slate-900'}>
                         {formData.academic_group ? 'Choose Section...' : 'Select Group First'}
@@ -1034,6 +1042,7 @@ export const RegistrationForm: React.FC<RegistrationFormProps> = ({
                         </option>
                       ))}
                     </select>
+                    </div>
                     {formErrors.academic_section && (
                       <p className="text-rose-500 text-xs mt-1 font-semibold">{formErrors.academic_section}</p>
                     )}
