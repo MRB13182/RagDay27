@@ -17,7 +17,7 @@ export const Navbar: React.FC<NavbarProps> = ({
   websiteLogo,
   eventName = 'RD27 Rag Day 2027',
   onOpenNotice,
-  themeGender = 'male',
+  themeGender: _themeGender,
 }) => {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
