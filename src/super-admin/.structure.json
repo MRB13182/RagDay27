@@ -6,7 +6,6 @@
     "01. website-identity/Text",
     "02. event-settings/Pic",
     "02. event-settings/Pic/event-card-images",
-    "02. event-settings/Pic/jersey-design.png",
     "02. event-settings/Text",
     "03. reg-settings/Pic",
     "03. reg-settings/Pic/male-jersey",
@@ -31,6 +30,7 @@
     "02. event-settings/Text/Event date.txt",
     "02. event-settings/Text/Venue.txt",
     "02. event-settings/Text/Jersey design.txt",
+    "02. event-settings/Pic/jersey-design.png",
     "03. reg-settings/Pic/back-jersey-preview/background.png",
     "03. reg-settings/Text/Section settings.txt",
     "03. reg-settings/Text/payment-number/male.txt",
@@ -45,6 +45,6 @@
     "05. important-notice/Text/enable-disable.txt",
     "05. important-notice/Text/popup-enable-disable.txt",
     "06. logo-related/Pic/logo.png",
-    "06. logo-related/Pic/favicon.png",
+    "06. logo-related/Pic/favicon.png"
   ]
 }
