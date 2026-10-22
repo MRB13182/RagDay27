@@ -28,7 +28,7 @@ export function translateBackendError(error: any): string {
   if (/DUPLICATE_REGISTRATION/i.test(message) || code === '23505') return 'A registration already exists for this Student ID or Name + Class Roll.';
   if (/REQUIRED_FIELD_MISSING/i.test(message)) return 'Please complete all required registration fields.';
   if (/INVALID_PAYMENT_METHOD/i.test(message)) return 'Payment method must be bKash or Nagad.';
-  if (/INVALID_JERSEY_NUMBER/i.test(message)) return 'Jersey number must be exactly two digits (00–99).';
+  if (/INVALID_JERSEY_NUMBER/i.test(message)) return 'Jersey number must be a whole number from 0 to 999.';
   if (/INVALID_JERSEY_NAME/i.test(message)) return 'Jersey back name must be 1–14 characters.';
   if (/INVALID_JERSEY_SIZE/i.test(message)) return 'Invalid jersey size.';
   if (/REJECTED_REGISTRATION_NOT_FOUND/i.test(message)) return 'The previous rejected registration could not be recovered.';
@@ -368,7 +368,7 @@ export async function createRegistration(
       return { success: false, errorMessage: 'Sender mobile number must contain exactly 11 digits.' };
     }
     const jerseyNumTrim = form.jersey_number.trim();
-    if (!/^\d{1,3}$/.test(jerseyNumTrim) || Number(jerseyNumTrim) > 999) {
+    if (!/^\d{1,3}$/.test(jerseyNumTrim) || Number(jerseyNumTrim) < 0 || Number(jerseyNumTrim) > 999) {
       return { success: false, errorMessage: 'Jersey number must be a whole number from 0 to 999.' };
     }
 
