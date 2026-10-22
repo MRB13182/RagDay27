@@ -1429,18 +1429,14 @@ export const RegistrationForm: React.FC<RegistrationFormProps> = ({
                     I confirm that all provided information is correct. I understand that incorrect information may cause rejection.
                   </span>
                 </label>
-                {false && <span>
-                    checked={declarationChecked}
-                    onChange={e => {
-                      setDeclarationChecked(e.target.checked);
-                      if (formErrors.declaration) setFormErrors(prev => ({ ...prev, declaration: '' }));
-                    }}
-                    className="w-4 h-4 rounded border-slate-300 text-indigo-600 focus:ring-indigo-500 cursor-pointer shrink-0"
-                  />
-                  <span className="leading-tight">
-                    I confirm that all provided information is correct. I understand that incorrect information may cause rejection.
-                  </span>
-                </label>
+                {formErrors.declaration && (
+                  <p className="text-rose-500 text-xs mt-1 font-semibold flex items-center gap-1">
+                    <AlertCircle className="w-3.5 h-3.5" />
+                    <span>{formErrors.declaration}</span>
+                  </p>
+                )}
+              </div>
+
                 {formErrors.declaration && (
                   <p className="text-rose-500 text-xs mt-1 font-semibold flex items-center gap-1">
                     <AlertCircle className="w-3.5 h-3.5" />
