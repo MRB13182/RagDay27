@@ -1269,7 +1269,7 @@ export const RegistrationForm: React.FC<RegistrationFormProps> = ({
                         Transaction ID <span className="text-slate-400 font-normal">(Optional)</span>
                       </label>
                       <div className="registration-field-row">
-                      <span className="registration-field-icon"><FileCheck className="w-5 h-5" /></span>
+                      <span className="registration-field-icon"><FileCheck className="w-[18px] h-[18px]" /></span>
                       <input
                         type="text"
                         placeholder="e.g. 9J28DA10K"
