@@ -138,10 +138,6 @@ export async function checkDuplicateRegistration(
 }
 
 /**
- * Authoritative registration record lookup by Student ID or Registration Number.
- * Queries database directly to ensure freshest status without relying on client-cached state.
- */
-/**
  * Verify a rejected student's recovery proof and return only the record
  * fields needed to prefill their resubmission form.
  */
