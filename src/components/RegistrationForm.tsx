@@ -412,7 +412,8 @@ export const RegistrationForm: React.FC<RegistrationFormProps> = ({
 
   // Perform Duplicate Detection Check
   const runDuplicateCheck = async (): Promise<boolean> => {
-    // If user is currently editing their own rejected registration, bypass duplicate check for their own regNo
+    // Re-submission updates the same rejected record. Duplicate protection still
+    // checks for conflicting records, but exempts only the exact record being edited.
     const match = await checkDuplicateRegistration(
       formData.student_id,
       formData.full_name,
@@ -422,11 +423,7 @@ export const RegistrationForm: React.FC<RegistrationFormProps> = ({
     );
 
     if (match) {
-      // If the match is the exact record being edited, allow continue
-      if (editingRegNo && match.registration_no === editingRegNo) {
-        return false;
-      }
-
+      if (editingRegNo && match.registration_no === editingRegNo) return false;
       setDuplicateModal({ record: match });
       return true;
     }
