@@ -1335,6 +1335,7 @@ export const RegistrationForm: React.FC<RegistrationFormProps> = ({
                           inputMode="numeric"
                           pattern="[0-9]*"
                           maxLength={3}
+                          required
                           placeholder="27"
                           aria-label="Jersey number, 0 to 999"
                           value={formData.jersey_number}
