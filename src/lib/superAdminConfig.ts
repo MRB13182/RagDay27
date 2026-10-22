@@ -13,7 +13,8 @@ import defaultFemaleJersey from '../assets/images/female-jersey.png';
 import defaultJerseyBg from '../assets/images/jersey-background.png';
 import defaultJerseyOne from '../assets/images/jersey-one.png';
 
-import eventJerseyPic from '../super-admin/02. event-settings/Pic/jersey.png';
+// The optional event jersey image is loaded from admin settings at runtime.
+// Use a bundled asset as the build-safe fallback when that Pic file is absent.
 import { getSavedSuperAdminText, getSuperAdminImageUrl } from './superAdminTextSettings';
 import { safeStorage } from './safeStorage';
 
@@ -378,7 +379,7 @@ export function getEventSettingsConfig() {
   const name = getSavedSuperAdminText('02. event-settings/Text/Event name.txt', eventNameRaw.trim()) || 'RAG DAY of NIC 27';
   const cardRaw = getSavedSuperAdminText('02. event-settings/Text/Event card.txt', eventCardRaw.trim());
   const venue = getSavedSuperAdminText('02. event-settings/Text/Venue.txt', venueRawText.trim()) || 'Central Amphitheatre';
-  const jersey = getSuperAdminImageUrl('02. event-settings/Pic/jersey.png', eventJerseyPic || jerseyDesignPic06 || defaultMaleJersey);
+  const jersey = getSuperAdminImageUrl('02. event-settings/Pic/jersey.png', jerseyDesignPic06 || defaultMaleJersey);
   const parsedCards = parseEventCardsContent(cardRaw);
 
   return {
