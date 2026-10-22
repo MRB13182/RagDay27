@@ -12,7 +12,7 @@ import {
   Loader2,
 } from 'lucide-react';
 import { toPng } from 'html-to-image';
-import { getPublicInvitation } from '../services';
+import { getPublicInvitation, getRejectedRegistrationForResubmission } from '../services';
 import { InvitationCard } from './InvitationCard';
 
 interface InvitationCardPageProps {
@@ -40,6 +40,10 @@ export const InvitationCardPage: React.FC<InvitationCardPageProps> = ({
   const [isDownloading, setIsDownloading] = useState(false);
   const [downloadToast, setDownloadToast] = useState(false);
   const [downloadError, setDownloadError] = useState<string | null>(null);
+  const [isRecoveringRejected, setIsRecoveringRejected] = useState(false);
+  const [recoveryError, setRecoveryError] = useState<string | null>(null);
+  const [showRecoveryDialog, setShowRecoveryDialog] = useState(false);
+  const [recoveryStudentId, setRecoveryStudentId] = useState('');
 
   const exportCardRef = useRef<HTMLDivElement>(null);
   const displayCardRef = useRef<HTMLDivElement>(null);
@@ -362,10 +366,16 @@ export const InvitationCardPage: React.FC<InvitationCardPageProps> = ({
                   Questions? Inquire directly with the Committee Admin.
                 </span>
                 <button
-                  onClick={() => onNavigateToRegister(matchedRecord)}
-                  className="px-5 py-2.5 rounded-xl bg-rose-600 text-white text-xs font-bold shadow-md hover:bg-rose-700 hover:-translate-y-0.5 active:translate-y-0 transition-all flex items-center gap-2 cursor-pointer"
+                  type="button"
+                  onClick={() => {
+                    setRecoveryStudentId('');
+                    setRecoveryError(null);
+                    setShowRecoveryDialog(true);
+                  }}
+                  className="px-5 py-2.5 rounded-xl bg-rose-600 text-white text-xs font-bold shadow-md hover:bg-rose-700 hover:-translate-y-0.5 active:translate-y-0 transition-all flex items-center gap-2 cursor-pointer disabled:opacity-60"
+                  disabled={isRecoveringRejected}
                 >
-                  <span>Register Again</span>
+                  <span>{isRecoveringRejected ? 'Verifying...' : 'Re-Submit Registration'}</span>
                   <ArrowRight className="w-4 h-4" />
                 </button>
               </div>
@@ -492,6 +502,59 @@ export const InvitationCardPage: React.FC<InvitationCardPageProps> = ({
           )}
         </div>
       )}
+      {showRecoveryDialog && matchedRecord?.status === 'rejected' && (
+        <div className="fixed inset-0 z-[260] flex items-center justify-center bg-slate-950/60 backdrop-blur-sm p-4">
+          <form
+            className="w-full max-w-md rounded-2xl bg-white p-5 sm:p-6 shadow-2xl border border-rose-100 space-y-4"
+            onSubmit={async e => {
+              e.preventDefault();
+              setRecoveryError(null);
+              setIsRecoveringRejected(true);
+              try {
+                const result = await getRejectedRegistrationForResubmission(
+                  matchedRecord.registration_no,
+                  searchStudentName,
+                  recoveryStudentId
+                );
+                if (!result.success || !result.data) {
+                  setRecoveryError(result.errorMessage || 'Unable to verify the rejected registration.');
+                  return;
+                }
+                onNavigateToRegister(result.data);
+                setShowRecoveryDialog(false);
+              } catch (error: any) {
+                setRecoveryError(error?.message || 'Unable to verify the rejected registration.');
+              } finally {
+                setIsRecoveringRejected(false);
+              }
+            }}
+          >
+            <div>
+              <h3 className="text-lg font-extrabold text-rose-800">Recover Rejected Registration</h3>
+              <p className="mt-1 text-sm text-slate-600">Enter the Student ID from the original registration to verify your record and restore its saved details.</p>
+            </div>
+            <label className="block text-xs font-bold uppercase tracking-wide text-slate-700">
+              Original Student ID
+              <input
+                autoComplete="off"
+                inputMode="numeric"
+                value={recoveryStudentId}
+                onChange={e => setRecoveryStudentId(e.target.value.replace(/\D/g, ''))}
+                className="mt-1.5 w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-900 outline-none focus:border-rose-500 focus:ring-2 focus:ring-rose-200"
+                placeholder="Enter your original Student ID"
+                required
+                disabled={isRecoveringRejected}
+              />
+            </label>
+            {recoveryError && <p className="rounded-xl border border-rose-200 bg-rose-50 p-3 text-sm font-bold text-rose-700" role="alert">{recoveryError}</p>}
+            <div className="flex gap-3">
+              <button type="button" onClick={() => setShowRecoveryDialog(false)} className="flex-1 rounded-xl border border-slate-200 px-4 py-3 text-sm font-bold text-slate-700" disabled={isRecoveringRejected}>Cancel</button>
+              <button type="submit" className="flex-1 rounded-xl bg-rose-600 px-4 py-3 text-sm font-bold text-white disabled:opacity-60" disabled={isRecoveringRejected || !recoveryStudentId.trim()}>{isRecoveringRejected ? 'Verifying...' : 'Verify & Continue'}</button>
+            </div>
+          </form>
+        </div>
+      )}
+
     </div>
   );
 };
