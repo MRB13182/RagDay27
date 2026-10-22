@@ -829,10 +829,10 @@ export const RegistrationForm: React.FC<RegistrationFormProps> = ({
                   {/* 1. Full Name */}
                   <div className="sm:col-span-2">
                     <label className={`flex items-center gap-1.5 block text-xs font-bold uppercase tracking-wider mb-1.5 ${labelClasses}`}>
-                      <User className="w-3.5 h-3.5 shrink-0" /> Full Name <span className="text-rose-500">*</span>
+                      Full Name <span className="text-rose-500">*</span>
                     </label>
                     <div className="flex items-stretch gap-2">
-                      <span className={`flex w-12 shrink-0 items-center justify-center rounded-xl border backdrop-blur-xl ${isMale ? 'border-cyan-300/40 bg-gradient-to-br from-cyan-500/25 to-blue-600/25 text-cyan-300 shadow-md shadow-cyan-900/10' : isFemale ? 'border-fuchsia-300/70 bg-gradient-to-br from-fuchsia-500/25 to-pink-600/25 text-fuchsia-700 shadow-md shadow-pink-900/10' : 'border-slate-200 bg-white/75 text-indigo-500'}`}><User className="w-5 h-5" /></span>
+                      <span className={`flex w-12 shrink-0 items-center justify-center rounded-xl border backdrop-blur-xl ${isMale ? 'border-cyan-300/40 bg-gradient-to-br from-cyan-500/25 to-blue-600/25 text-cyan-300 shadow-md shadow-cyan-900/10' : isFemale ? 'border-fuchsia-300/70 bg-gradient-to-br from-fuchsia-500/25 to-pink-600/25 text-fuchsia-700 shadow-md shadow-pink-900/10' : 'border-slate-200 bg-white/75 text-indigo-500'}`}><User className="w-[18px] h-[18px]" /></span>
                       <input
                       type="text"
                       placeholder="e.g. John Doe"
@@ -858,10 +858,10 @@ export const RegistrationForm: React.FC<RegistrationFormProps> = ({
                   {/* 2. Class Roll */}
                   <div>
                     <label className={`flex items-center gap-1.5 block text-xs font-bold uppercase tracking-wider mb-1.5 ${labelClasses}`}>
-                      <Hash className="w-3.5 h-3.5 shrink-0" /> Class Roll <span className="text-rose-500">*</span>
+                      Class Roll <span className="text-rose-500">*</span>
                     </label>
                     <div className="flex items-stretch gap-2">
-                    <span className={`flex w-12 shrink-0 items-center justify-center rounded-xl border backdrop-blur-xl ${isMale ? 'border-cyan-300/40 bg-gradient-to-br from-cyan-500/25 to-blue-600/25 text-cyan-300' : isFemale ? 'border-fuchsia-300/70 bg-gradient-to-br from-fuchsia-500/25 to-pink-600/25 text-fuchsia-700' : 'border-slate-200 bg-white/75 text-indigo-500'}`}><Hash className="w-5 h-5" /></span>
+                    <span className={`flex w-12 shrink-0 items-center justify-center rounded-xl border backdrop-blur-xl ${isMale ? 'border-cyan-300/40 bg-gradient-to-br from-cyan-500/25 to-blue-600/25 text-cyan-300' : isFemale ? 'border-fuchsia-300/70 bg-gradient-to-br from-fuchsia-500/25 to-pink-600/25 text-fuchsia-700' : 'border-slate-200 bg-white/75 text-indigo-500'}`}><Hash className="w-[18px] h-[18px]" /></span>
                     <input
                       type="text"
                       inputMode="numeric"
@@ -897,10 +897,10 @@ export const RegistrationForm: React.FC<RegistrationFormProps> = ({
                   {/* 3. Student ID */}
                   <div>
                     <label className={`flex items-center gap-1.5 block text-xs font-bold uppercase tracking-wider mb-1.5 ${labelClasses}`}>
-                      <IdCard className="w-3.5 h-3.5 shrink-0" /> Student ID <span className="text-rose-500">*</span>
+                      Student ID <span className="text-rose-500">*</span>
                     </label>
                     <div className="flex items-stretch gap-2">
-                    <span className={`flex w-12 shrink-0 items-center justify-center rounded-xl border backdrop-blur-xl ${isMale ? 'border-cyan-300/40 bg-gradient-to-br from-cyan-500/25 to-blue-600/25 text-cyan-300' : isFemale ? 'border-fuchsia-300/70 bg-gradient-to-br from-fuchsia-500/25 to-pink-600/25 text-fuchsia-700' : 'border-slate-200 bg-white/75 text-indigo-500'}`}><IdCard className="w-5 h-5" /></span>
+                    <span className={`flex w-12 shrink-0 items-center justify-center rounded-xl border backdrop-blur-xl ${isMale ? 'border-cyan-300/40 bg-gradient-to-br from-cyan-500/25 to-blue-600/25 text-cyan-300' : isFemale ? 'border-fuchsia-300/70 bg-gradient-to-br from-fuchsia-500/25 to-pink-600/25 text-fuchsia-700' : 'border-slate-200 bg-white/75 text-indigo-500'}`}><IdCard className="w-[18px] h-[18px]" /></span>
                     <input
                       type="text"
                       inputMode="numeric"
@@ -937,10 +937,10 @@ export const RegistrationForm: React.FC<RegistrationFormProps> = ({
                   {/* 4. Contact Mobile Number */}
                   <div className="sm:col-span-2">
                     <label className={`flex items-center gap-1.5 block text-xs font-bold uppercase tracking-wider mb-1.5 ${labelClasses}`}>
-                      <Phone className="w-3.5 h-3.5 shrink-0" /> Contact Mobile Number <span className="text-rose-500">*</span>
+                      Contact Mobile Number <span className="text-rose-500">*</span>
                     </label>
                     <div className="registration-field-row">
-                    <span className="registration-field-icon"><Phone className="w-5 h-5" /></span>
+                    <span className="registration-field-icon"><Phone className="w-[18px] h-[18px]" /></span>
                     <input
                       type="tel"
                       inputMode="numeric"
@@ -979,10 +979,10 @@ export const RegistrationForm: React.FC<RegistrationFormProps> = ({
                   {/* 5. Academic Group */}
                   <div>
                     <label className={`flex items-center gap-1.5 block text-xs font-bold uppercase tracking-wider mb-1.5 ${labelClasses}`}>
-                      <GraduationCap className="w-3.5 h-3.5 shrink-0" /> Academic Group <span className="text-rose-500">*</span>
+                      Academic Group <span className="text-rose-500">*</span>
                     </label>
                     <div className="registration-field-row">
-                    <span className="registration-field-icon"><GraduationCap className="w-5 h-5" /></span>
+                    <span className="registration-field-icon"><GraduationCap className="w-[18px] h-[18px]" /></span>
                     <select
                       value={formData.academic_group}
                       onChange={handleGroupSelect}
@@ -1016,10 +1016,10 @@ export const RegistrationForm: React.FC<RegistrationFormProps> = ({
                   {/* 6. Academic Section */}
                   <div>
                     <label className={`flex items-center gap-1.5 block text-xs font-bold uppercase tracking-wider mb-1.5 ${labelClasses}`}>
-                      <Layers className="w-3.5 h-3.5 shrink-0" /> Academic Section <span className="text-rose-500">*</span>
+                      Academic Section <span className="text-rose-500">*</span>
                     </label>
                     <div className="registration-field-row">
-                    <span className="registration-field-icon"><Layers className="w-5 h-5" /></span>
+                    <span className="registration-field-icon"><Layers className="w-[18px] h-[18px]" /></span>
                     <select
                       disabled={!formData.academic_group}
                       value={formData.academic_section}
