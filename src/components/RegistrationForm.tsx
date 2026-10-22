@@ -631,26 +631,32 @@ export const RegistrationForm: React.FC<RegistrationFormProps> = ({
   };
 
   const handleContinueRejectedRegistration = (record: InvitationRecord) => {
+    // Only a database-confirmed rejected record may enter recovery mode.
+    if (record.status !== 'rejected') {
+      setDuplicateModal({ record });
+      return;
+    }
+
     const flagged = detectFlaggedFields(record.reject_reason);
     const isPhotoFlagged = flagged.has('student_photo');
-
-    setFormData({
+    setFormData(prev => ({
+      ...prev,
       gender: record.gender || 'male',
-      full_name: record.full_name || '',
-      class_roll: record.class_roll || '',
-      student_id: record.student_id || '',
-      contact_mobile_number: record.contact_mobile_number || record.sender_mobile_no || '',
-      academic_group: record.academic_group || '',
-      academic_section: record.academic_section || '',
-      student_photo: isPhotoFlagged ? null : (record.student_photo || null),
-      send_method: record.send_method || 'bkash',
-      sender_mobile_no: record.sender_mobile_no || record.contact_mobile_number || '',
-      payment_time: record.payment_time || '',
-      transaction_id: record.transaction_id || '',
-      jersey_back_name: record.jersey_back_name || 'STRIKER',
-      jersey_number: record.jersey_number || '27',
-      jersey_size: (record.jersey_size as JerseySize) || 'L',
-    });
+      full_name: record.full_name ?? prev.full_name,
+      class_roll: record.class_roll ?? prev.class_roll,
+      student_id: record.student_id ?? prev.student_id,
+      contact_mobile_number: record.contact_mobile_number || record.sender_mobile_no || prev.contact_mobile_number,
+      academic_group: record.academic_group ?? prev.academic_group,
+      academic_section: record.academic_section ?? prev.academic_section,
+      student_photo: isPhotoFlagged ? null : (record.student_photo ?? prev.student_photo),
+      send_method: record.send_method || prev.send_method || 'bkash',
+      sender_mobile_no: record.sender_mobile_no || record.contact_mobile_number || prev.sender_mobile_no,
+      payment_time: record.payment_time ?? prev.payment_time,
+      transaction_id: record.transaction_id ?? prev.transaction_id,
+      jersey_back_name: record.jersey_back_name || prev.jersey_back_name || 'STRIKER',
+      jersey_number: record.jersey_number ?? prev.jersey_number ?? '27',
+      jersey_size: (record.jersey_size as JerseySize) || prev.jersey_size || 'L',
+    }));
     setRejectionReason(record.reject_reason || null);
     setEditingRegNo(record.registration_no);
     setEditingDbId(toNullableUuid(record.dbId || record.id));
@@ -661,6 +667,8 @@ export const RegistrationForm: React.FC<RegistrationFormProps> = ({
       academicGroup: record.academic_group || '',
       academicSection: record.academic_section || '',
     });
+    setSubmitErrorMessage(null);
+    setFormErrors({});
     setDuplicateModal(null);
   };
 
