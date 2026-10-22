@@ -551,7 +551,8 @@ create or replace function public.get_rejected_registration_for_resubmission(
 returns json
 language plpgsql
 security definer
-as $
+set search_path to 'public', 'pg_temp'
+as $ 
 declare
   r public.registrations;
   clean_reg text := upper(trim(coalesce(p_registration_no, '')));
