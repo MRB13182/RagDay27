@@ -312,31 +312,31 @@ export const RegistrationForm: React.FC<RegistrationFormProps> = ({
   const containerClasses = isMale
     ? 'glass-male text-white border-[#38BDF8]/40 shadow-[0_20px_60px_-15px_rgba(15,23,42,0.9),0_0_35px_-5px_rgba(56,189,248,0.25)]'
     : isFemale
-    ? 'glass-female text-slate-900 border-[#C084FC]/60 shadow-[0_20px_60px_-15px_rgba(126,34,206,0.18),0_0_35px_-5px_rgba(244,114,182,0.22)]'
+    ? 'glass-female text-slate-900 border-[#DB2777]/55 shadow-[0_20px_60px_-15px_rgba(157,23,77,0.25),0_0_35px_-5px_rgba(219,39,119,0.3)]'
     : 'glass-panel text-slate-900 border-white/90 shadow-[0_20px_50px_-15px_rgba(91,95,239,0.1)]';
 
   const sectionHeaderClasses = isMale
     ? 'text-[#38BDF8] border-b border-slate-800'
     : isFemale
-    ? 'text-[#A21CAF] border-b border-fuchsia-200/90'
+    ? 'text-[#9D174D] border-b border-pink-300/80'
     : 'text-[#5B5FEF] border-b border-slate-200';
 
   const labelClasses = isMale
     ? 'text-slate-300'
     : isFemale
-    ? 'text-[#4A174C] font-semibold'
+    ? 'text-[#6B1748] font-semibold'
     : 'text-slate-700 font-semibold';
 
   const inputClasses = isMale
     ? 'bg-slate-900/85 backdrop-blur-md border-slate-700/90 text-white placeholder-slate-500 focus:border-[#38BDF8] focus:ring-2 focus:ring-[#38BDF8]/30 shadow-[inset_0_1.5px_2px_rgba(0,0,0,0.3)]'
     : isFemale
-    ? 'bg-white/90 backdrop-blur-md border-fuchsia-200 text-slate-900 placeholder-fuchsia-300 focus:border-[#D946A6] focus:ring-2 focus:ring-[#D946A6]/25 shadow-[inset_0_1px_2px_rgba(76,29,72,0.04)]'
+    ? 'bg-white/92 backdrop-blur-md border-pink-300/90 text-slate-900 placeholder-pink-400 focus:border-[#DB2777] focus:ring-2 focus:ring-[#DB2777]/25 shadow-[inset_0_1px_2px_rgba(76,29,72,0.05)]'
     : 'bg-white/85 backdrop-blur-md border-slate-200 text-slate-900 placeholder-slate-400 focus:border-[#5B5FEF] focus:ring-2 focus:ring-[#5B5FEF]/20 shadow-[inset_0_1px_2px_rgba(0,0,0,0.02)]';
 
   const subCardClasses = isMale
     ? 'bg-slate-900/70 border border-slate-800/90 backdrop-blur-xl shadow-inner'
     : isFemale
-    ? 'bg-white/82 border border-fuchsia-200/90 backdrop-blur-xl shadow-[0_8px_24px_-16px_rgba(126,34,206,0.22)]'
+    ? 'bg-gradient-to-br from-pink-100/75 via-fuchsia-50/80 to-rose-100/75 border border-pink-300/80 backdrop-blur-xl shadow-[0_8px_24px_-16px_rgba(157,23,77,0.32)]'
     : 'bg-white/75 border border-white/90 backdrop-blur-xl shadow-xs';
 
   // Dynamic payment numbers based on gender
