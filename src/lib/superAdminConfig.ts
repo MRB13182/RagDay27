@@ -541,8 +541,14 @@ export function getJerseyShowcaseCards(): JerseyDesignCard[] {
     // Each card uses the named image asset from Section 02 when configured.
     const filename = (card.imageFilename || 'jersey-design.png').split('/').pop() || 'jersey-design.png';
     const knownSection02Assets: Record<string, string> = {
-      'jersey-design.png': eventJerseyDesignPic02,
-      'jersey.png': eventJerseyPic02,
+      'jersey-design.png': getSuperAdminImageUrl(
+        '02. event-settings/Pic/jersey-design.png',
+        eventJerseyDesignPic02
+      ),
+      'jersey.png': getSuperAdminImageUrl(
+        '02. event-settings/Pic/jersey.png',
+        eventJerseyPic02
+      ),
     };
     return {
       ...card,
