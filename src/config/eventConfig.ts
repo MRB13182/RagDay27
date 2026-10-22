@@ -9,6 +9,7 @@ export {
   countdownSettingsConfig,
   importantNoticeConfig,
   logoRelatedConfig,
+  getJerseyShowcaseCards,
   getWebsiteIdentityConfig,
   getEventSettingsConfig,
   getRegistrationSettingsConfig,
