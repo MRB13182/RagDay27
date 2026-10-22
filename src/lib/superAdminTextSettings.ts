@@ -33,13 +33,7 @@ export const EDITABLE_SUPER_ADMIN_TEXT_FILES: EditableSuperAdminTextFile[] = [
   },
 
   // 02. Event Settings
-  {
-    id: 'jersey-design',
-    category: '02. Event Settings',
-    label: 'Jersey showcase design (Jersey design.txt)',
-    path: '02. event-settings/Text/Jersey design.txt',
-    defaultValue: 'Title: Official Rag Day Jersey\nDescription: Custom Squad Kit with Personalized Back Name & Number Print Included\nImage: jersey.png',
-  },
+
   {
     id: 'jersey-design',
     category: '02. Event Settings',
@@ -67,6 +61,14 @@ export const EDITABLE_SUPER_ADMIN_TEXT_FILES: EditableSuperAdminTextFile[] = [
     label: 'Event date (Event date.txt)',
     path: '02. event-settings/Text/Event date.txt',
     defaultValue: '2026-11-20T10:00:00',
+  },
+  {
+  {
+    id: 'jersey-design',
+    category: '02. Event Settings',
+    label: 'Jersey showcase design (Jersey design.txt)',
+    path: '02. event-settings/Text/Jersey design.txt',
+    defaultValue: 'Title: Official Rag Day Jersey\nDescription: Custom Squad Kit with Personalized Back Name & Number Print Included\nImage: jersey.png',
   },
   {
     id: 'venue',
