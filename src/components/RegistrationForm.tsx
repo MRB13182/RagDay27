@@ -1170,10 +1170,12 @@ export const RegistrationForm: React.FC<RegistrationFormProps> = ({
                       <label className={`block text-xs font-bold uppercase tracking-wider mb-1.5 ${labelClasses}`}>
                         Send Method <span className="text-rose-500">*</span>
                       </label>
+                      <div className="registration-field-row">
+                      <span className="registration-field-icon"><CreditCard className="w-5 h-5" /></span>
                       <select
                         value={formData.send_method}
                         onChange={e => setFormData({ ...formData, send_method: e.target.value as 'bkash' | 'nagad' })}
-                        className={`w-full px-4 py-3 rounded-xl text-sm font-semibold transition-colors outline-none cursor-pointer ${inputClasses} ${getFieldHighlightClass('send_method')}`}
+                        className={`min-w-0 flex-1 px-4 py-3 rounded-xl text-sm font-semibold transition-colors outline-none cursor-pointer ${inputClasses} ${getFieldHighlightClass('send_method')}`}
                       >
                         <option value="bkash" className={isMale ? 'bg-slate-900 text-white' : 'bg-white text-slate-900'}>
                           bKash
@@ -1182,6 +1184,7 @@ export const RegistrationForm: React.FC<RegistrationFormProps> = ({
                           Nagad
                         </option>
                       </select>
+                      </div>
                       {isFlagged('send_method') && (
                         <p className="text-rose-600 text-xs mt-1.5 font-bold flex items-center gap-1">
                           <AlertCircle className="w-3.5 h-3.5 shrink-0" />
@@ -1195,6 +1198,8 @@ export const RegistrationForm: React.FC<RegistrationFormProps> = ({
                       <label className={`block text-xs font-bold uppercase tracking-wider mb-1.5 ${labelClasses}`}>
                         Sender Mobile No <span className="text-rose-500">*</span>
                       </label>
+                      <div className="registration-field-row">
+                      <span className="registration-field-icon"><Phone className="w-5 h-5" /></span>
                       <input
                         type="tel"
                         inputMode="numeric"
@@ -1214,8 +1219,9 @@ export const RegistrationForm: React.FC<RegistrationFormProps> = ({
                           setFormData(prev => ({ ...prev, sender_mobile_no: val }));
                           if (formErrors.sender_mobile_no) setFormErrors(prev => ({ ...prev, sender_mobile_no: '' }));
                         }}
-                        className={`w-full px-4 py-3 rounded-xl text-sm font-medium transition-colors outline-none ${inputClasses} ${getFieldHighlightClass('sender_mobile_no')}`}
+                        className={`min-w-0 flex-1 px-4 py-3 rounded-xl text-sm font-medium transition-colors outline-none ${inputClasses} ${getFieldHighlightClass('sender_mobile_no')}`}
                       />
+                      </div>
                       {(getMobileError(formData.sender_mobile_no) || formErrors.sender_mobile_no) && (
                         <p className="text-rose-500 text-xs mt-1 font-semibold">
                           {getMobileError(formData.sender_mobile_no) || formErrors.sender_mobile_no}
@@ -1234,6 +1240,8 @@ export const RegistrationForm: React.FC<RegistrationFormProps> = ({
                       <label className={`block text-xs font-bold uppercase tracking-wider mb-1.5 ${labelClasses}`}>
                         Payment Time <span className="text-rose-500">*</span>
                       </label>
+                      <div className="registration-field-row">
+                      <span className="registration-field-icon"><Clock className="w-5 h-5" /></span>
                       <input
                         type="time"
                         value={formData.payment_time}
@@ -1241,8 +1249,9 @@ export const RegistrationForm: React.FC<RegistrationFormProps> = ({
                           setFormData({ ...formData, payment_time: e.target.value });
                           if (formErrors.payment_time) setFormErrors(prev => ({ ...prev, payment_time: '' }));
                         }}
-                        className={`w-full px-4 py-3 rounded-xl text-sm font-medium transition-colors outline-none ${inputClasses} ${getFieldHighlightClass('payment_time')}`}
+                        className={`min-w-0 flex-1 px-4 py-3 rounded-xl text-sm font-medium transition-colors outline-none ${inputClasses} ${getFieldHighlightClass('payment_time')}`}
                       />
+                      </div>
                       {formErrors.payment_time && (
                         <p className="text-rose-500 text-xs mt-1 font-semibold">{formErrors.payment_time}</p>
                       )}
@@ -1259,13 +1268,16 @@ export const RegistrationForm: React.FC<RegistrationFormProps> = ({
                       <label className={`block text-xs font-bold uppercase tracking-wider mb-1.5 ${labelClasses}`}>
                         Transaction ID <span className="text-slate-400 font-normal">(Optional)</span>
                       </label>
+                      <div className="registration-field-row">
+                      <span className="registration-field-icon"><FileCheck className="w-5 h-5" /></span>
                       <input
                         type="text"
                         placeholder="e.g. 9J28DA10K"
                         value={formData.transaction_id}
                         onChange={e => setFormData({ ...formData, transaction_id: e.target.value })}
-                        className={`w-full px-4 py-3 rounded-xl text-sm font-medium transition-colors outline-none ${inputClasses} ${getFieldHighlightClass('transaction_id')}`}
+                        className={`min-w-0 flex-1 px-4 py-3 rounded-xl text-sm font-medium transition-colors outline-none ${inputClasses} ${getFieldHighlightClass('transaction_id')}`}
                       />
+                      </div>
                       {isFlagged('transaction_id') && (
                         <p className="text-rose-600 text-xs mt-1.5 font-bold flex items-center gap-1">
                           <AlertCircle className="w-3.5 h-3.5 shrink-0" />
