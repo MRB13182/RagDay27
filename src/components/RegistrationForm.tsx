@@ -936,8 +936,8 @@ export const RegistrationForm: React.FC<RegistrationFormProps> = ({
 
                   {/* 4. Contact Mobile Number */}
                   <div className="sm:col-span-2">
-                    <label className={`block text-xs font-bold uppercase tracking-wider mb-1.5 ${labelClasses}`}>
-                      Contact Mobile Number <span className="text-rose-500">*</span>
+                    <label className={`flex items-center gap-1.5 block text-xs font-bold uppercase tracking-wider mb-1.5 ${labelClasses}`}>
+                      <Phone className="w-3.5 h-3.5 shrink-0" /> Contact Mobile Number <span className="text-rose-500">*</span>
                     </label>
                     <div className="registration-field-row">
                     <span className="registration-field-icon"><Phone className="w-5 h-5" /></span>
@@ -978,8 +978,8 @@ export const RegistrationForm: React.FC<RegistrationFormProps> = ({
 
                   {/* 5. Academic Group */}
                   <div>
-                    <label className={`block text-xs font-bold uppercase tracking-wider mb-1.5 ${labelClasses}`}>
-                      Academic Group <span className="text-rose-500">*</span>
+                    <label className={`flex items-center gap-1.5 block text-xs font-bold uppercase tracking-wider mb-1.5 ${labelClasses}`}>
+                      <GraduationCap className="w-3.5 h-3.5 shrink-0" /> Academic Group <span className="text-rose-500">*</span>
                     </label>
                     <div className="registration-field-row">
                     <span className="registration-field-icon"><GraduationCap className="w-5 h-5" /></span>
@@ -1015,8 +1015,8 @@ export const RegistrationForm: React.FC<RegistrationFormProps> = ({
 
                   {/* 6. Academic Section */}
                   <div>
-                    <label className={`block text-xs font-bold uppercase tracking-wider mb-1.5 ${labelClasses}`}>
-                      Academic Section <span className="text-rose-500">*</span>
+                    <label className={`flex items-center gap-1.5 block text-xs font-bold uppercase tracking-wider mb-1.5 ${labelClasses}`}>
+                      <Layers className="w-3.5 h-3.5 shrink-0" /> Academic Section <span className="text-rose-500">*</span>
                     </label>
                     <div className="registration-field-row">
                     <span className="registration-field-icon"><Layers className="w-5 h-5" /></span>
