@@ -1338,7 +1338,7 @@ export const RegistrationForm: React.FC<RegistrationFormProps> = ({
                           onPaste={e => {
                             e.preventDefault();
                             const pasted = e.clipboardData.getData('text');
-                            if (!/^\d{1,3}$/.test(pasted) || Number(pasted) > 999) {
+                            if (pasted.length > 3 || (pasted.length > 0 && !/^\d+$/.test(pasted)) || Number(pasted) > 999) {
                               setFormErrors(prev => ({ ...prev, jersey_number: 'Enter a whole jersey number from 0 to 999.' }));
                               return;
                             }
