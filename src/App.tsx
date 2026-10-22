@@ -25,6 +25,7 @@ import type {
   PdfSettings,
   PaymentSettings,
   JerseyShowcaseSettings,
+  GenderType,
 } from './types';
 import {
   approveRegistration,
@@ -43,6 +44,7 @@ export default function App() {
   const [isNoticePopupOpen, setIsNoticePopupOpen] = useState<boolean>(importantNoticeConfig.popupEnabled);
   const [isRegClosedPopupOpen, setIsRegClosedPopupOpen] = useState<boolean>(false);
   const [invitations, setInvitations] = useState<InvitationRecord[]>([]);
+  const [registrationGender, setRegistrationGender] = useState<GenderType>('male');
 
   const handleOpenRegistration = () => {
     if (!registrationSettingsConfig.registrationOpen) {
@@ -395,6 +397,7 @@ export default function App() {
         websiteLogo={brandingSettings.websiteLogo}
         eventName={websiteSettings.eventName}
         onOpenNotice={importantNoticeConfig.popupEnabled ? () => setIsNoticePopupOpen(true) : undefined}
+        themeGender={activeTab === 'register' ? registrationGender : undefined}
       />
 
       <div className="pt-16 sm:pt-18 flex-1 flex flex-col">
@@ -478,7 +481,13 @@ export default function App() {
           )}
 
           {activeTab === 'register' && (
-            <div className="animate-fadeIn">
+            <div
+              className={`animate-fadeIn min-h-[calc(100vh-4.5rem)] transition-colors duration-300 ${
+                registrationGender === 'female'
+                  ? 'bg-gradient-to-b from-[#15051B] via-[#1E0927] to-[#15051B]'
+                  : 'bg-gradient-to-b from-[#070F1E] via-[#0A172D] to-[#070F1E]'
+              }`}
+            >
               <RegistrationForm
                 onSuccessSubmit={handleSuccessSubmit}
                 onGoToInvitation={handleGoToInvitation}
@@ -488,6 +497,7 @@ export default function App() {
                 registrationOpen={registrationSettingsConfig.registrationOpen}
                 registrationDeadline={countdownSettingsConfig.registrationDeadline}
                 onResetReRegister={() => setReRegisterRecord(null)}
+                onGenderChange={setRegistrationGender}
               />
             </div>
           )}
@@ -519,6 +529,7 @@ export default function App() {
         onOpenAdmin={() => setIsAdminOpen(true)}
         websiteSettings={websiteSettings}
         brandingSettings={brandingSettings}
+        themeGender={activeTab === 'register' ? registrationGender : undefined}
       />
 
       {isAdminOpen && (

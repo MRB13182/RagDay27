@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { Ticket, UserCheck, Menu, X, Bell } from 'lucide-react';
+import { GenderType } from '../types';
 
 interface NavbarProps {
   activeTab: 'home' | 'register' | 'invitation';
@@ -7,6 +8,7 @@ interface NavbarProps {
   websiteLogo?: string;
   eventName?: string;
   onOpenNotice?: () => void;
+  themeGender?: GenderType;
 }
 
 export const Navbar: React.FC<NavbarProps> = ({
@@ -15,6 +17,7 @@ export const Navbar: React.FC<NavbarProps> = ({
   websiteLogo,
   eventName = 'RD27 Rag Day 2027',
   onOpenNotice,
+  themeGender = 'male',
 }) => {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
@@ -23,8 +26,18 @@ export const Navbar: React.FC<NavbarProps> = ({
     setMobileMenuOpen(false);
   };
 
+  const isRegisterPage = activeTab === 'register';
+  const isMaleTheme = isRegisterPage && (themeGender === 'male' || themeGender === 'choose_one');
+  const isFemaleTheme = isRegisterPage && themeGender === 'female';
+
+  const headerBgClass = isFemaleTheme
+    ? 'bg-[#15051B]/90 backdrop-blur-2xl border-b border-[#4A195E]/70 shadow-[0_4px_30px_rgba(0,0,0,0.4)] text-white'
+    : isMaleTheme
+    ? 'bg-[#070F1E]/90 backdrop-blur-2xl border-b border-[#1E3A5F]/70 shadow-[0_4px_30px_rgba(0,0,0,0.4)] text-white'
+    : 'bg-white/80 backdrop-blur-2xl border-b border-white/70 shadow-[0_4px_30px_rgba(0,0,0,0.03)] text-slate-900';
+
   return (
-    <header className="fixed top-0 left-0 right-0 z-50 w-full bg-white/80 backdrop-blur-2xl border-b border-white/70 shadow-[0_4px_30px_rgba(0,0,0,0.03)] transition-all duration-200">
+    <header className={`fixed top-0 left-0 right-0 z-50 w-full transition-all duration-300 ${headerBgClass}`}>
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 sm:h-18 flex items-center justify-between relative">
         {/* Left: Logo: RD27 Rag Day 2027 */}
         <button
@@ -47,10 +60,14 @@ export const Navbar: React.FC<NavbarProps> = ({
             </div>
           )}
           <div className="flex flex-col min-w-0">
-            <span className="font-display text-xs sm:text-base font-extrabold tracking-tight text-slate-900 leading-tight group-hover:text-[#5B5FEF] transition-colors truncate max-w-[120px] xs:max-w-[190px] sm:max-w-xs md:max-w-none">
+            <span className={`font-display text-xs sm:text-base font-extrabold tracking-tight leading-tight transition-colors truncate max-w-[120px] xs:max-w-[190px] sm:max-w-xs md:max-w-none ${
+              isFemaleTheme ? 'text-white group-hover:text-[#EC4899]' : isMaleTheme ? 'text-white group-hover:text-[#38BDF8]' : 'text-slate-900 group-hover:text-[#5B5FEF]'
+            }`}>
               {eventName}
             </span>
-            <span className="text-[10px] text-slate-500 font-medium tracking-wide flex items-center gap-1">
+            <span className={`text-[10px] font-medium tracking-wide flex items-center gap-1 ${
+              isFemaleTheme ? 'text-pink-300/70' : isMaleTheme ? 'text-slate-400' : 'text-slate-500'
+            }`}>
               <span className="inline-block w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
               Batch 2027 Portal
             </span>
@@ -58,12 +75,26 @@ export const Navbar: React.FC<NavbarProps> = ({
         </button>
 
         {/* Center: Desktop Nav Items with Frosted Glass Navigation Pill */}
-        <nav className="hidden md:flex items-center justify-center gap-1.5 p-1 rounded-2xl bg-slate-100/60 backdrop-blur-md border border-white/80 shadow-[inset_0_1px_1.5px_rgba(255,255,255,0.9)] absolute left-1/2 -translate-x-1/2">
+        <nav className={`hidden md:flex items-center justify-center gap-1.5 p-1 rounded-2xl backdrop-blur-md absolute left-1/2 -translate-x-1/2 transition-colors ${
+          isFemaleTheme
+            ? 'bg-[#240A30]/85 border border-[#4A195E]/80 shadow-[inset_0_1px_1.5px_rgba(255,255,255,0.1)]'
+            : isMaleTheme
+            ? 'bg-[#0B1A35]/85 border border-[#1E3A5F]/80 shadow-[inset_0_1px_1.5px_rgba(255,255,255,0.1)]'
+            : 'bg-slate-100/60 border border-white/80 shadow-[inset_0_1px_1.5px_rgba(255,255,255,0.9)]'
+        }`}>
           <button
             onClick={() => handleNavClick('home')}
             className={`px-3.5 py-1.5 text-xs sm:text-sm font-semibold rounded-xl transition-all duration-200 cursor-pointer ${
               activeTab === 'home'
-                ? 'bg-white text-[#5B5FEF] font-bold shadow-xs border border-white/90'
+                ? isFemaleTheme
+                  ? 'bg-white text-[#EC4899] font-bold shadow-xs'
+                  : isMaleTheme
+                  ? 'bg-white text-[#0284C7] font-bold shadow-xs'
+                  : 'bg-white text-[#5B5FEF] font-bold shadow-xs border border-white/90'
+                : isFemaleTheme
+                ? 'text-pink-200/80 hover:text-white hover:bg-white/10'
+                : isMaleTheme
+                ? 'text-slate-300 hover:text-white hover:bg-white/10'
                 : 'text-slate-600 hover:text-slate-900 hover:bg-white/60'
             }`}
           >
@@ -74,7 +105,15 @@ export const Navbar: React.FC<NavbarProps> = ({
             onClick={() => handleNavClick('invitation')}
             className={`px-3.5 py-1.5 text-xs sm:text-sm font-semibold rounded-xl transition-all duration-200 flex items-center gap-1.5 cursor-pointer ${
               activeTab === 'invitation'
-                ? 'bg-white text-[#5B5FEF] font-bold shadow-xs border border-white/90'
+                ? isFemaleTheme
+                  ? 'bg-white text-[#EC4899] font-bold shadow-xs'
+                  : isMaleTheme
+                  ? 'bg-white text-[#0284C7] font-bold shadow-xs'
+                  : 'bg-white text-[#5B5FEF] font-bold shadow-xs border border-white/90'
+                : isFemaleTheme
+                ? 'text-pink-200/80 hover:text-white hover:bg-white/10'
+                : isMaleTheme
+                ? 'text-slate-300 hover:text-white hover:bg-white/10'
                 : 'text-slate-600 hover:text-slate-900 hover:bg-white/60'
             }`}
           >
@@ -85,9 +124,13 @@ export const Navbar: React.FC<NavbarProps> = ({
           <button
             onClick={() => handleNavClick('register')}
             className={`px-4 py-1.5 text-xs sm:text-sm font-bold rounded-xl transition-all duration-200 flex items-center gap-1.5 cursor-pointer ${
-              activeTab === 'register'
+              isFemaleTheme
+                ? 'bg-gradient-to-r from-[#D91B74] to-[#EC4899] text-white shadow-md shadow-pink-500/30'
+                : isMaleTheme
+                ? 'bg-gradient-to-r from-[#0070F3] to-[#00D2FF] text-white shadow-md shadow-cyan-500/30'
+                : activeTab === 'register'
                 ? 'bg-[#5B5FEF] text-white shadow-md shadow-[#5B5FEF]/30 ring-2 ring-[#5B5FEF]/30'
-                : 'bg-gradient-to-r from-[#5B5FEF] to-[#7A6CFF] hover:from-[#4d51d4] hover:to-[#6858f2] text-white shadow-sm shadow-[#5B5FEF]/25 hover:shadow-md'
+                : 'bg-gradient-to-r from-[#5B5FEF] to-[#7A6CFF] text-white shadow-sm'
             }`}
           >
             <UserCheck className="w-4 h-4" />
@@ -101,10 +144,16 @@ export const Navbar: React.FC<NavbarProps> = ({
             <button
               type="button"
               onClick={onOpenNotice}
-              className="px-3 py-1.5 rounded-xl bg-white/70 hover:bg-white/95 text-[#4F46E5] border border-violet-200/70 shadow-xs backdrop-blur-md transition-all flex items-center gap-1.5 cursor-pointer text-xs font-bold"
+              className={`px-3 py-1.5 rounded-xl border shadow-xs backdrop-blur-md transition-all flex items-center gap-1.5 cursor-pointer text-xs font-bold ${
+                isFemaleTheme
+                  ? 'bg-[#240A30]/80 hover:bg-[#240A30] text-pink-300 border-[#4A195E]'
+                  : isMaleTheme
+                  ? 'bg-[#0B1A35]/80 hover:bg-[#0B1A35] text-sky-300 border-[#1E3A5F]'
+                  : 'bg-white/70 hover:bg-white/95 text-[#4F46E5] border-violet-200/70'
+              }`}
               title="Important Notice"
             >
-              <Bell className="w-3.5 h-3.5 text-[#4F46E5]" />
+              <Bell className="w-3.5 h-3.5" />
               <span>Notice</span>
             </button>
           </div>
@@ -116,7 +165,13 @@ export const Navbar: React.FC<NavbarProps> = ({
             <button
               type="button"
               onClick={onOpenNotice}
-              className="p-1.5 text-[#4F46E5] bg-white/80 hover:bg-white border border-violet-200/60 rounded-lg shadow-xs backdrop-blur-md transition-colors cursor-pointer"
+              className={`p-1.5 border rounded-lg shadow-xs backdrop-blur-md transition-colors cursor-pointer ${
+                isFemaleTheme
+                  ? 'text-pink-300 bg-[#240A30]/80 border-[#4A195E]'
+                  : isMaleTheme
+                  ? 'text-sky-300 bg-[#0B1A35]/80 border-[#1E3A5F]'
+                  : 'text-[#4F46E5] bg-white/80 border-violet-200/60'
+              }`}
               title="Important Notice"
               aria-label="Important Notice"
             >
@@ -126,7 +181,13 @@ export const Navbar: React.FC<NavbarProps> = ({
 
           <button
             onClick={() => handleNavClick('register')}
-            className="px-3 py-1.5 text-xs font-bold rounded-lg bg-gradient-to-r from-[#5B5FEF] to-[#7A6CFF] text-white shadow-sm flex items-center gap-1 cursor-pointer"
+            className={`px-3 py-1.5 text-xs font-bold rounded-lg shadow-sm flex items-center gap-1 cursor-pointer ${
+              isFemaleTheme
+                ? 'bg-gradient-to-r from-[#D91B74] to-[#EC4899] text-white shadow-pink-500/25'
+                : isMaleTheme
+                ? 'bg-gradient-to-r from-[#0070F3] to-[#00D2FF] text-white shadow-cyan-500/25'
+                : 'bg-gradient-to-r from-[#5B5FEF] to-[#7A6CFF] text-white'
+            }`}
           >
             <UserCheck className="w-3.5 h-3.5" />
             <span>Register</span>
@@ -136,7 +197,13 @@ export const Navbar: React.FC<NavbarProps> = ({
             type="button"
             onClick={() => setMobileMenuOpen(prev => !prev)}
             aria-label="Toggle navigation menu"
-            className="p-2 rounded-lg text-slate-600 hover:text-slate-900 hover:bg-white/80 border border-transparent hover:border-slate-200/60 focus:outline-none cursor-pointer transition-colors"
+            className={`p-2 rounded-lg border border-transparent focus:outline-none cursor-pointer transition-colors ${
+              isFemaleTheme
+                ? 'text-pink-200 hover:text-white hover:bg-white/10'
+                : isMaleTheme
+                ? 'text-slate-300 hover:text-white hover:bg-white/10'
+                : 'text-slate-600 hover:text-slate-900 hover:bg-white/80'
+            }`}
           >
             {mobileMenuOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
           </button>
@@ -145,13 +212,19 @@ export const Navbar: React.FC<NavbarProps> = ({
 
       {/* Mobile Drawer */}
       {mobileMenuOpen && (
-        <div className="md:hidden border-t border-white/70 bg-white/90 backdrop-blur-2xl px-4 py-4 space-y-2 shadow-xl animate-fadeIn">
+        <div className={`md:hidden border-t px-4 py-4 space-y-2 shadow-xl animate-fadeIn ${
+          isFemaleTheme
+            ? 'border-[#4A195E]/80 bg-[#15051B]/95 backdrop-blur-2xl text-white'
+            : isMaleTheme
+            ? 'border-[#1E3A5F]/80 bg-[#070F1E]/95 backdrop-blur-2xl text-white'
+            : 'border-white/70 bg-white/90 backdrop-blur-2xl text-slate-900'
+        }`}>
           <button
             onClick={() => handleNavClick('home')}
             className={`w-full text-left px-4 py-3 rounded-xl text-sm font-bold transition-colors ${
               activeTab === 'home'
-                ? 'bg-[#5B5FEF]/10 text-[#5B5FEF]'
-                : 'text-slate-700 hover:bg-white/80'
+                ? isFemaleTheme ? 'bg-pink-500/20 text-[#EC4899]' : isMaleTheme ? 'bg-sky-500/20 text-[#38BDF8]' : 'bg-[#5B5FEF]/10 text-[#5B5FEF]'
+                : isFemaleTheme ? 'text-pink-100 hover:bg-white/10' : isMaleTheme ? 'text-slate-200 hover:bg-white/10' : 'text-slate-700 hover:bg-white/80'
             }`}
           >
             Home
@@ -161,17 +234,23 @@ export const Navbar: React.FC<NavbarProps> = ({
             onClick={() => handleNavClick('invitation')}
             className={`w-full text-left px-4 py-3 rounded-xl text-sm font-bold flex items-center justify-between transition-colors ${
               activeTab === 'invitation'
-                ? 'bg-[#5B5FEF]/10 text-[#5B5FEF]'
-                : 'text-slate-700 hover:bg-white/80'
+                ? isFemaleTheme ? 'bg-pink-500/20 text-[#EC4899]' : isMaleTheme ? 'bg-sky-500/20 text-[#38BDF8]' : 'bg-[#5B5FEF]/10 text-[#5B5FEF]'
+                : isFemaleTheme ? 'text-pink-100 hover:bg-white/10' : isMaleTheme ? 'text-slate-200 hover:bg-white/10' : 'text-slate-700 hover:bg-white/80'
             }`}
           >
             <span>Invitation Card Download</span>
-            <Ticket className="w-4 h-4 text-[#5B5FEF]" />
+            <Ticket className="w-4 h-4" />
           </button>
 
           <button
             onClick={() => handleNavClick('register')}
-            className="w-full text-center px-4 py-3 rounded-xl text-sm font-bold bg-gradient-to-r from-[#5B5FEF] to-[#7A6CFF] text-white shadow-md flex items-center justify-center gap-2"
+            className={`w-full text-center px-4 py-3 rounded-xl text-sm font-bold shadow-md flex items-center justify-center gap-2 ${
+              isFemaleTheme
+                ? 'bg-gradient-to-r from-[#D91B74] to-[#EC4899] text-white shadow-pink-500/30'
+                : isMaleTheme
+                ? 'bg-gradient-to-r from-[#0070F3] to-[#00D2FF] text-white shadow-cyan-500/30'
+                : 'bg-gradient-to-r from-[#5B5FEF] to-[#7A6CFF] text-white'
+            }`}
           >
             <UserCheck className="w-4 h-4" />
             <span>Register Now</span>

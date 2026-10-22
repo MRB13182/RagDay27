@@ -79,40 +79,40 @@ export const JerseyGraphic: React.FC<JerseyGraphicProps> = ({
           {/* FEMALE THEME SHADERS & GRADIENTS */}
           {/* ======================================================== */}
           <linearGradient id="female-body-grad" x1="0%" y1="0%" x2="100%" y2="100%">
-            <stop offset="0%" stopColor="#ffffff" />
-            <stop offset="40%" stopColor="#fff5f8" />
-            <stop offset="75%" stopColor="#ffe4ee" />
-            <stop offset="100%" stopColor="#fbcfe8" />
+            <stop offset="0%" stopColor="#190624" />
+            <stop offset="35%" stopColor="#2e0d3f" />
+            <stop offset="70%" stopColor="#22082f" />
+            <stop offset="100%" stopColor="#12031a" />
           </linearGradient>
 
           <linearGradient id="female-sleeve-left" x1="0%" y1="0%" x2="100%" y2="100%">
-            <stop offset="0%" stopColor="#ffffff" />
-            <stop offset="100%" stopColor="#fce7f3" />
+            <stop offset="0%" stopColor="#3b0f52" />
+            <stop offset="100%" stopColor="#170422" />
           </linearGradient>
 
           <linearGradient id="female-sleeve-right" x1="100%" y1="0%" x2="0%" y2="100%">
-            <stop offset="0%" stopColor="#ffffff" />
-            <stop offset="100%" stopColor="#fce7f3" />
+            <stop offset="0%" stopColor="#3b0f52" />
+            <stop offset="100%" stopColor="#170422" />
           </linearGradient>
 
           <linearGradient id="female-wave-pink" x1="0%" y1="0%" x2="100%" y2="100%">
             <stop offset="0%" stopColor="#f43f5e" />
-            <stop offset="50%" stopColor="#db2777" />
+            <stop offset="50%" stopColor="#ec4899" />
             <stop offset="100%" stopColor="#be185d" />
           </linearGradient>
 
           <linearGradient id="female-wave-light" x1="0%" y1="0%" x2="100%" y2="100%">
-            <stop offset="0%" stopColor="#fbcfe8" />
-            <stop offset="60%" stopColor="#f472b6" />
-            <stop offset="100%" stopColor="#db2777" />
+            <stop offset="0%" stopColor="#f472b6" />
+            <stop offset="60%" stopColor="#ec4899" />
+            <stop offset="100%" stopColor="#be185d" />
           </linearGradient>
 
           {/* 3D Metallic Number for Female */}
           <linearGradient id="female-num-metal" x1="0%" y1="0%" x2="0%" y2="100%">
-            <stop offset="0%" stopColor="#9d174d" />
-            <stop offset="40%" stopColor="#831843" />
-            <stop offset="70%" stopColor="#701a75" />
-            <stop offset="100%" stopColor="#500724" />
+            <stop offset="0%" stopColor="#ffffff" />
+            <stop offset="45%" stopColor="#fdf2f8" />
+            <stop offset="65%" stopColor="#fbcfe8" />
+            <stop offset="100%" stopColor="#cbd5e1" />
           </linearGradient>
 
           {/* Filter for Drop Shadows */}
@@ -417,12 +417,12 @@ export const JerseyGraphic: React.FC<JerseyGraphicProps> = ({
             fontSize={nameFontSize}
             fontWeight="900"
             letterSpacing="3.5"
-            fill={isFemale ? '#831843' : '#ffffff'}
+            fill="#ffffff"
             style={{
               fontFamily: "'Syne', 'Impact', sans-serif",
               textTransform: 'uppercase',
               filter: isFemale
-                ? 'drop-shadow(0 2px 4px rgba(131,24,67,0.3))'
+                ? 'drop-shadow(0 2px 4px rgba(0,0,0,0.8))'
                 : 'drop-shadow(0 2px 5px rgba(0,0,0,0.7))',
             }}
           >
@@ -442,8 +442,8 @@ export const JerseyGraphic: React.FC<JerseyGraphicProps> = ({
             fontSize="148"
             fontWeight="900"
             letterSpacing="1"
-            fill={isFemale ? 'rgba(80,7,36,0.35)' : 'rgba(0,0,0,0.75)'}
-            stroke={isFemale ? '#ffffff' : '#030712'}
+            fill={isFemale ? 'rgba(0,0,0,0.85)' : 'rgba(0,0,0,0.75)'}
+            stroke={isFemale ? '#12031a' : '#030712'}
             strokeWidth="12"
             strokeLinejoin="round"
             style={{
@@ -461,8 +461,8 @@ export const JerseyGraphic: React.FC<JerseyGraphicProps> = ({
             fontSize="148"
             fontWeight="900"
             letterSpacing="1"
-            fill={isFemale ? '#ffffff' : '#040d1f'}
-            stroke={isFemale ? '#db2777' : '#00f0ff'}
+            fill={isFemale ? '#1a0524' : '#040d1f'}
+            stroke={isFemale ? '#ec4899' : '#00f0ff'}
             strokeWidth="6"
             strokeLinejoin="round"
             style={{
