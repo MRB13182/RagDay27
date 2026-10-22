@@ -533,7 +533,7 @@ export function getJerseyShowcaseCards(): JerseyDesignCard[] {
   const raw = getSavedSuperAdminText('02. event-settings/Text/Jersey design.txt', jerseyDesignRaw02?.trim() || '');
   return parseJerseyDesignContent(raw, eventJersey).map(card => ({
     ...card,
-    image: eventJersey,
+    image: getSuperAdminImageUrl('02. event-settings/Pic/jersey.png', eventJersey),
   }));
 }
 
