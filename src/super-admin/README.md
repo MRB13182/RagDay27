@@ -19,6 +19,7 @@ The following configuration files are intended to be editable from the protected
 
 ### 02. Event Settings
 - `02. event-settings/Pic/jersey.png`
+- `02. event-settings/Text/Jersey design.txt`
 - `02. event-settings/Text/Event name.txt`
 - `02. event-settings/Text/Event card.txt`
 - `02. event-settings/Text/Event date.txt`
