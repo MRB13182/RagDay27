@@ -37,6 +37,11 @@ import {
   ShieldAlert,
   X,
   FileCheck,
+  Mars,
+  Venus,
+  IdCard,
+  Hash,
+  ClipboardCheck,
 } from 'lucide-react';
 
 interface RegistrationFormProps {
@@ -709,7 +714,7 @@ export const RegistrationForm: React.FC<RegistrationFormProps> = ({
       )}
 
       {/* Main Registration Container (Adapts Theme to Selected Gender) */}
-      <div className={`registration-theme rounded-3xl p-4 sm:p-8 lg:p-10 transition-all duration-500 ease-out ${containerClasses}`}>
+      <div className={`registration-theme rounded-3xl p-4 sm:p-8 lg:p-10 transition-all duration-500 ease-out ${isGenderChosen ? containerClasses : 'glass-panel text-slate-900 border-white/90 shadow-[0_20px_50px_-15px_rgba(91,95,239,0.1)]'}`}>
         {/* Title Header */}
         <div className="mb-6 text-center sm:text-left">
           <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider mb-2 bg-white/20 backdrop-blur-sm">
@@ -733,7 +738,7 @@ export const RegistrationForm: React.FC<RegistrationFormProps> = ({
           <RegistrationCountdown deadline={registrationDeadline} />
         )}
 
-        <form onSubmit={handleSubmit} className="space-y-8">
+        <form onSubmit={handleSubmit} className={`space-y-8 ${isGenderChosen ? 'registration-form-gendered' : 'registration-form-default'}`}>
           {/* ======================================================== */}
           {/* STEP 1: GENDER SELECTION (Gating Gate)                  */}
           {/* ======================================================== */}
@@ -770,7 +775,7 @@ export const RegistrationForm: React.FC<RegistrationFormProps> = ({
                 <span className={`w-7 h-7 rounded-xl grid place-items-center font-black text-sm shrink-0 ${
                   isMale ? 'bg-[#0284C7] text-white' : 'bg-slate-100 text-slate-600'
                 }`}>
-                  ♂
+                  <Mars className="w-4 h-4" />
                 </span>
                 <span>Male</span>
                 {isMale && <Check className="w-4 h-4 text-[#38BDF8] ml-0.5" />}
@@ -789,7 +794,7 @@ export const RegistrationForm: React.FC<RegistrationFormProps> = ({
                 <span className={`w-7 h-7 rounded-xl grid place-items-center font-black text-sm shrink-0 ${
                   isFemale ? 'bg-gradient-to-br from-[#C026D3] to-[#EC4899] text-white shadow-md shadow-fuchsia-500/20' : 'bg-slate-100 text-slate-600'
                 }`}>
-                  ♀
+                  <Venus className="w-4 h-4" />
                 </span>
                 <span>Female</span>
                 {isFemale && <Check className="w-4 h-4 text-[#EC4899] ml-0.5" />}
