@@ -53,8 +53,9 @@ import noticeEnableDisableRaw from '../super-admin/05. important-notice/Text/Ena
 // 06. Logo Related
 import logoPic06 from '../super-admin/06. logo-related/Pic/logo.png';
 import faviconPic06 from '../super-admin/06. logo-related/Pic/favicon.png';
-// The protected logo-related Pic folder currently contains only logo.png and favicon.png.
-import jerseyDesignPic06 from '../assets/images/male-jersey.png';
+// Use an existing repository asset as the jersey-design fallback; do not import
+// jersey-design.png from the protected Super Admin Pic folder because it is not present.
+import jerseyDesignPic06 from '../assets/images/jersey-one.png';
 import jerseyDesignRaw from '../super-admin/06. logo-related/Text/jersey-design.txt?raw';
 
 // ============================================================================
