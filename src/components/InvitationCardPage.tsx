@@ -351,7 +351,7 @@ export const InvitationCardPage: React.FC<InvitationCardPageProps> = ({
                   <div className="text-xs font-bold uppercase tracking-wider text-rose-600 mb-1">
                     Reason:
                   </div>
-                  <div className="text-sm font-extrabold text-slate-900 whitespace-pre-wrap">
+                  <div className="text-sm font-extrabold text-rose-700 whitespace-pre-wrap">
                     {matchedRecord.reject_reason || 'No specific reason provided.'}
                   </div>
                 </div>
