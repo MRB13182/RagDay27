@@ -42,6 +42,9 @@ import {
   IdCard,
   Hash,
   ClipboardCheck,
+  Phone,
+  GraduationCap,
+  Layers,
 } from 'lucide-react';
 
 interface RegistrationFormProps {
@@ -744,11 +747,7 @@ export const RegistrationForm: React.FC<RegistrationFormProps> = ({
                 <User className="w-4 h-4" />
                 Step 1: Select Your Gender
               </span>
-              {!isGenderChosen && (
-                <span className="text-xs font-semibold uppercase tracking-wider text-amber-500 flex items-center gap-1">
-                  <Lock className="w-3.5 h-3.5 shrink-0" /> Required to Unlock
-                </span>
-              )}
+
             </div>
 
             <div className="grid grid-cols-2 gap-3 pt-1">
@@ -832,7 +831,9 @@ export const RegistrationForm: React.FC<RegistrationFormProps> = ({
                     <label className={`flex items-center gap-1.5 block text-xs font-bold uppercase tracking-wider mb-1.5 ${labelClasses}`}>
                       <User className="w-3.5 h-3.5 shrink-0" /> Full Name <span className="text-rose-500">*</span>
                     </label>
-                    <input
+                    <div className="flex items-stretch gap-2">
+                      <span className={`flex w-12 shrink-0 items-center justify-center rounded-xl border backdrop-blur-xl ${isMale ? 'border-cyan-300/40 bg-gradient-to-br from-cyan-500/25 to-blue-600/25 text-cyan-300 shadow-md shadow-cyan-900/10' : isFemale ? 'border-fuchsia-300/70 bg-gradient-to-br from-fuchsia-500/25 to-pink-600/25 text-fuchsia-700 shadow-md shadow-pink-900/10' : 'border-slate-200 bg-white/75 text-indigo-500'}`}><User className="w-5 h-5" /></span>
+                      <input
                       type="text"
                       placeholder="e.g. John Doe"
                       value={formData.full_name}
@@ -840,8 +841,9 @@ export const RegistrationForm: React.FC<RegistrationFormProps> = ({
                         setFormData({ ...formData, full_name: e.target.value });
                         if (formErrors.full_name) setFormErrors(prev => ({ ...prev, full_name: '' }));
                       }}
-                      className={`w-full px-4 py-3 rounded-xl text-sm font-medium transition-colors outline-none ${inputClasses} ${getFieldHighlightClass('full_name')}`}
+                      className={`min-w-0 flex-1 px-4 py-3 rounded-xl text-sm font-medium transition-colors outline-none ${inputClasses} ${getFieldHighlightClass('full_name')}`}
                     />
+                    </div>
                     {formErrors.full_name && (
                       <p className="text-rose-500 text-xs mt-1 font-semibold">{formErrors.full_name}</p>
                     )}
@@ -858,6 +860,8 @@ export const RegistrationForm: React.FC<RegistrationFormProps> = ({
                     <label className={`flex items-center gap-1.5 block text-xs font-bold uppercase tracking-wider mb-1.5 ${labelClasses}`}>
                       <Hash className="w-3.5 h-3.5 shrink-0" /> Class Roll <span className="text-rose-500">*</span>
                     </label>
+                    <div className="flex items-stretch gap-2">
+                    <span className={`flex w-12 shrink-0 items-center justify-center rounded-xl border backdrop-blur-xl ${isMale ? 'border-cyan-300/40 bg-gradient-to-br from-cyan-500/25 to-blue-600/25 text-cyan-300' : isFemale ? 'border-fuchsia-300/70 bg-gradient-to-br from-fuchsia-500/25 to-pink-600/25 text-fuchsia-700' : 'border-slate-200 bg-white/75 text-indigo-500'}`}><Hash className="w-5 h-5" /></span>
                     <input
                       type="text"
                       inputMode="numeric"
@@ -876,8 +880,9 @@ export const RegistrationForm: React.FC<RegistrationFormProps> = ({
                         setFormData(prev => ({ ...prev, class_roll: val }));
                         if (formErrors.class_roll) setFormErrors(prev => ({ ...prev, class_roll: '' }));
                       }}
-                      className={`w-full px-4 py-3 rounded-xl text-sm font-medium transition-colors outline-none ${inputClasses} ${getFieldHighlightClass('class_roll')}`}
+                      className={`min-w-0 flex-1 px-4 py-3 rounded-xl text-sm font-medium transition-colors outline-none ${inputClasses} ${getFieldHighlightClass('class_roll')}`}
                     />
+                    </div>
                     {formErrors.class_roll && (
                       <p className="text-rose-500 text-xs mt-1 font-semibold">{formErrors.class_roll}</p>
                     )}
@@ -894,6 +899,8 @@ export const RegistrationForm: React.FC<RegistrationFormProps> = ({
                     <label className={`flex items-center gap-1.5 block text-xs font-bold uppercase tracking-wider mb-1.5 ${labelClasses}`}>
                       <IdCard className="w-3.5 h-3.5 shrink-0" /> Student ID <span className="text-rose-500">*</span>
                     </label>
+                    <div className="flex items-stretch gap-2">
+                    <span className={`flex w-12 shrink-0 items-center justify-center rounded-xl border backdrop-blur-xl ${isMale ? 'border-cyan-300/40 bg-gradient-to-br from-cyan-500/25 to-blue-600/25 text-cyan-300' : isFemale ? 'border-fuchsia-300/70 bg-gradient-to-br from-fuchsia-500/25 to-pink-600/25 text-fuchsia-700' : 'border-slate-200 bg-white/75 text-indigo-500'}`}><IdCard className="w-5 h-5" /></span>
                     <input
                       type="text"
                       inputMode="numeric"
@@ -913,8 +920,9 @@ export const RegistrationForm: React.FC<RegistrationFormProps> = ({
                         if (formErrors.student_id) setFormErrors(prev => ({ ...prev, student_id: '' }));
                       }}
                       onBlur={handleStudentIdBlur}
-                      className={`w-full px-4 py-3 rounded-xl text-sm font-medium transition-colors outline-none ${inputClasses} ${getFieldHighlightClass('student_id')}`}
+                      className={`min-w-0 flex-1 px-4 py-3 rounded-xl text-sm font-medium transition-colors outline-none ${inputClasses} ${getFieldHighlightClass('student_id')}`}
                     />
+                    </div>
                     {formErrors.student_id && (
                       <p className="text-rose-500 text-xs mt-1 font-semibold">{formErrors.student_id}</p>
                     )}
