@@ -445,7 +445,7 @@ export default function App() {
                   <EventInformationSection cards={eventCards} layout={eventSettingsConfig.eventCardLayout} />
                   {jerseyShowcaseSettings.enabled && (
                     <JerseyShowcaseSection
-                      cards={logoRelatedConfig.jerseyDesignCards}
+                      cards={getJerseyShowcaseCards()}
                       settings={jerseyShowcaseSettings}
                       onRegisterClick={handleOpenRegistration}
                     />
