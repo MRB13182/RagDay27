@@ -505,9 +505,10 @@ export default function App() {
                 initialSearchRegNo={invitationSearchTarget}
                 initialSearchStudentName={invitationStudentNameTarget}
                 onNavigateToRegister={(record?: InvitationRecord) => {
-                  if (record) {
+                  if (record?.status === 'rejected') {
                     setReRegisterRecord(record);
                   } else {
+                    // Pending/approved records must not enter rejected recovery mode.
                     setReRegisterRecord(null);
                   }
                   setActiveTab('register');
