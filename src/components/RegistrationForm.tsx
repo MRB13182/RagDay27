@@ -705,7 +705,7 @@ export const RegistrationForm: React.FC<RegistrationFormProps> = ({
       )}
 
       {/* Main Registration Container (Adapts Theme to Selected Gender) */}
-      <div className={`rounded-3xl p-4 sm:p-8 lg:p-10 transition-all duration-500 ease-out ${containerClasses}`}>
+      <div className={`registration-theme rounded-3xl p-4 sm:p-8 lg:p-10 transition-all duration-500 ease-out ${containerClasses}`}>
         {/* Title Header */}
         <div className="mb-6 text-center sm:text-left">
           <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider mb-2 bg-white/20 backdrop-blur-sm">
@@ -757,7 +757,7 @@ export const RegistrationForm: React.FC<RegistrationFormProps> = ({
               <button
                 type="button"
                 onClick={() => handleGenderSelect('male')}
-                className={`py-3.5 px-4 rounded-2xl border-2 transition-all duration-200 cursor-pointer flex items-center justify-center gap-2.5 font-bold text-sm sm:text-base ${
+                className={`gender-choice py-3.5 px-4 rounded-2xl border-2 transition-all duration-200 cursor-pointer flex items-center justify-center gap-2.5 font-bold text-sm sm:text-base ${
                   isMale
                     ? 'border-[#38BDF8] bg-slate-900/90 backdrop-blur-xl shadow-[0_8px_25px_rgba(56,189,248,0.25),inset_0_1px_1.5px_rgba(255,255,255,0.15)] ring-2 ring-[#38BDF8]/40 text-white'
                     : 'border-slate-300/80 bg-white/70 backdrop-blur-md hover:border-[#38BDF8]/60 hover:bg-white/90 text-slate-800 shadow-2xs'
@@ -1354,7 +1354,8 @@ export const RegistrationForm: React.FC<RegistrationFormProps> = ({
                               setFormErrors(prev => ({ ...prev, jersey_number: 'Enter a whole jersey number from 0 to 999.' }));
                             }
                           }}
-                          className={`w-full px-4 py-3 rounded-xl text-sm font-mono font-black transition-colors outline-none text-center ${inputClasses}`}
+                          className={`jersey-number-input w-full px-4 py-3 rounded-xl text-sm font-mono font-black transition-colors outline-none text-center ${inputClasses}`}
+                          aria-invalid={Boolean(formErrors.jersey_number)}
                         />
                         <p className={`text-[10px] mt-1 ${isMale ? 'text-cyan-200/75' : isFemale ? 'text-fuchsia-800/75' : 'text-slate-500'}`}>Number: 0–999 · Leading zeros are preserved</p>
                         {formErrors.jersey_number && (
