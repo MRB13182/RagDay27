@@ -1422,6 +1422,11 @@ export const RegistrationForm: React.FC<RegistrationFormProps> = ({
                 <label className="flex items-center gap-3 cursor-pointer select-none text-xs sm:text-sm font-medium py-2">
                   <input
                     type="checkbox"
+                    checked={declarationChecked}
+                    onChange={e => {
+                      setDeclarationChecked(e.target.checked);
+                      if (formErrors.declaration) setFormErrors(prev => ({ ...prev, declaration: '' }));
+                    }}
                     className="w-4 h-4 rounded border-slate-300 text-indigo-600 focus:ring-indigo-500 cursor-pointer shrink-0"
                   />
                   <span className={`inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border backdrop-blur-xl ${isMale ? 'border-cyan-300/40 bg-cyan-500/20 text-cyan-300' : isFemale ? 'border-pink-300/70 bg-pink-500/20 text-pink-700' : 'border-slate-200 bg-white/75 text-indigo-500'}`}><ShieldCheck className="w-5 h-5" /></span>
@@ -1429,14 +1434,6 @@ export const RegistrationForm: React.FC<RegistrationFormProps> = ({
                     I confirm that all provided information is correct. I understand that incorrect information may cause rejection.
                   </span>
                 </label>
-                {formErrors.declaration && (
-                  <p className="text-rose-500 text-xs mt-1 font-semibold flex items-center gap-1">
-                    <AlertCircle className="w-3.5 h-3.5" />
-                    <span>{formErrors.declaration}</span>
-                  </p>
-                )}
-              </div>
-
                 {formErrors.declaration && (
                   <p className="text-rose-500 text-xs mt-1 font-semibold flex items-center gap-1">
                     <AlertCircle className="w-3.5 h-3.5" />
