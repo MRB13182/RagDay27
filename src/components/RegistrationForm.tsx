@@ -1171,7 +1171,7 @@ export const RegistrationForm: React.FC<RegistrationFormProps> = ({
                         Send Method <span className="text-rose-500">*</span>
                       </label>
                       <div className="registration-field-row">
-                      <span className="registration-field-icon"><CreditCard className="w-5 h-5" /></span>
+                      <span className="registration-field-icon"><CreditCard className="w-[18px] h-[18px]" /></span>
                       <select
                         value={formData.send_method}
                         onChange={e => setFormData({ ...formData, send_method: e.target.value as 'bkash' | 'nagad' })}
@@ -1199,7 +1199,7 @@ export const RegistrationForm: React.FC<RegistrationFormProps> = ({
                         Sender Mobile No <span className="text-rose-500">*</span>
                       </label>
                       <div className="registration-field-row">
-                      <span className="registration-field-icon"><Phone className="w-5 h-5" /></span>
+                      <span className="registration-field-icon"><Phone className="w-[18px] h-[18px]" /></span>
                       <input
                         type="tel"
                         inputMode="numeric"
@@ -1241,7 +1241,7 @@ export const RegistrationForm: React.FC<RegistrationFormProps> = ({
                         Payment Time <span className="text-rose-500">*</span>
                       </label>
                       <div className="registration-field-row">
-                      <span className="registration-field-icon"><Clock className="w-5 h-5" /></span>
+                      <span className="registration-field-icon"><Clock className="w-[18px] h-[18px]" /></span>
                       <input
                         type="time"
                         value={formData.payment_time}
