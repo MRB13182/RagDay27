@@ -137,6 +137,47 @@ export async function checkDuplicateRegistration(
  * Authoritative registration record lookup by Student ID or Registration Number.
  * Queries database directly to ensure freshest status without relying on client-cached state.
  */
+/**
+ * Verify a rejected student's recovery proof and return only the record
+ * fields needed to prefill their resubmission form.
+ */
+export async function getRejectedRegistrationForResubmission(
+  registrationNo: string,
+  studentName: string,
+  studentId: string
+): Promise<{ success: boolean; data: InvitationRecord | null; errorMessage?: string }> {
+  const regNo = registrationNo.trim().toUpperCase();
+  const name = studentName.trim();
+  const id = studentId.trim();
+  if (!regNo || !name || !id) {
+    return { success: false, data: null, errorMessage: 'Registration number, student name, and Student ID are required to recover a rejected registration.' };
+  }
+
+  try {
+    const { data, error } = await supabase.rpc('get_rejected_registration_for_resubmission', {
+      p_registration_no: regNo,
+      p_student_name: name,
+      p_student_id: id,
+    });
+
+    if (error) {
+      return { success: false, data: null, error, errorMessage: String(error.message || 'Unable to verify rejected registration recovery.') };
+    }
+    if (!data?.found || data.status !== 'rejected') {
+      return { success: false, data: null, errorMessage: 'Recovery details did not match a rejected registration. Check the Registration Number, Student Name, and Student ID.' };
+    }
+
+    const returnedName = String(data.full_name || '').trim().toLowerCase();
+    if (returnedName !== name.toLowerCase() || String(data.student_id || '').trim() !== id) {
+      return { success: false, data: null, errorMessage: 'Recovery verification failed. Please check the original registration details.' };
+    }
+
+    return { success: true, data: mapRowToInvitation(data) };
+  } catch (error: any) {
+    return { success: false, data: null, errorMessage: String(error?.message || 'Unable to verify rejected registration recovery.') };
+  }
+}
+
 export async function fetchAuthoritativeRegistration(
   studentId?: string,
   registrationNo?: string
