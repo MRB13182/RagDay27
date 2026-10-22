@@ -120,7 +120,7 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
           </div>
 
           {/* Official jersey design preview */}
-          {jerseySettings?.enabled && jerseySettings.designCards?.length > 0 && (
+          {jerseySettings?.enabled && (jerseySettings.designCards?.length ?? 0) > 0 && (
             <div className="w-full mt-7 sm:mt-9">
               <div className="flex items-center justify-between gap-3 mb-3">
                 <div>
@@ -130,7 +130,7 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
                 <span className="shrink-0 rounded-full border border-indigo-100 bg-white/80 px-3 py-1 text-[10px] sm:text-xs font-bold text-indigo-700 shadow-sm">NIC 27</span>
               </div>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                {jerseySettings.designCards.slice(0, 2).map((design, index) => (
+                {(jerseySettings.designCards ?? []).slice(0, 2).map((design, index) => (
                   <div
                     key={design.id}
                     className="overflow-hidden rounded-2xl border border-white/90 bg-white/80 shadow-[0_14px_35px_rgba(91,95,239,0.10)] backdrop-blur-xl"
