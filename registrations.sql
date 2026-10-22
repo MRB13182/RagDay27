@@ -503,28 +503,10 @@ begin
       'found', true,
       'status', 'rejected',
       'can_download', false,
-      'id', r.id,
-      'sl_no', r.sl_no,
       'registration_no', r.registration_no,
       'full_name', r.full_name,
-      'class_roll', r.class_roll,
-      'student_id', r.student_id,
-      'contact_mobile_number', r.contact_mobile_number,
-      'academic_group', r.academic_group,
-      'academic_section', r.academic_section,
-      'student_photo', r.student_photo,
-      'send_method', r.send_method,
-      'sender_mobile_no', r.sender_mobile_no,
-      'payment_time', r.payment_time,
-      'transaction_id', r.transaction_id,
-      'jersey_back_name', r.jersey_back_name,
-      'jersey_number', r.jersey_number,
-      'jersey_size', r.jersey_size,
-      'gender', r.gender,
       'reject_reason', r.reject_reason,
-      'rejected_at', r.rejected_at,
-      'created_at', r.created_at,
-      'updated_at', r.updated_at
+      'rejected_at', r.rejected_at
     );
   else
     return json_build_object(
