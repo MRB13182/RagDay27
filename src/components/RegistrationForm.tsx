@@ -715,20 +715,16 @@ export const RegistrationForm: React.FC<RegistrationFormProps> = ({
 
       {/* Main Registration Container (Adapts Theme to Selected Gender) */}
       <div className={`registration-theme rounded-3xl p-4 sm:p-8 lg:p-10 transition-all duration-500 ease-out ${isGenderChosen ? containerClasses : 'glass-panel text-slate-900 border-white/90 shadow-[0_20px_50px_-15px_rgba(91,95,239,0.1)]'}`}>
-        {/* Title Header */}
+        {/* Registration header stays in the site default theme; gender styling is scoped below. */}
         <div className="mb-6 text-center sm:text-left">
-          <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider mb-2 bg-white/20 backdrop-blur-sm">
-            <Sparkles className="w-3.5 h-3.5 text-indigo-400" />
+          <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider mb-2 bg-white/75 border border-white/90 backdrop-blur-xl shadow-sm">
+            <Sparkles className="w-3.5 h-3.5 text-indigo-500" />
             <span>Official Batch 27 Enrollment</span>
           </div>
-          <h1 className="font-display text-2xl sm:text-3xl font-extrabold tracking-tight">
+          <h1 className="font-display text-2xl sm:text-3xl font-extrabold tracking-tight text-slate-900">
             Rag Day 27 Student Registration
           </h1>
-          <p
-            className={`text-xs sm:text-sm mt-1.5 ${
-              isMale ? 'text-slate-300' : isFemale ? 'text-pink-900/80' : 'text-slate-600'
-            }`}
-          >
+          <p className="text-xs sm:text-sm mt-1.5 text-slate-600">
             Select your wing gender first to unlock the enrollment form and personalized jersey preview.
           </p>
         </div>
