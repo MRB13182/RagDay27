@@ -94,16 +94,60 @@
   box-shadow: 0 25px 60px -15px rgba(15, 23, 42, 0.55), 0 0 30px -5px rgba(56, 189, 248, 0.22), inset 0 1.5px 2px rgba(255, 255, 255, 0.12);
 }
 
-/* Female plum, violet and rose theme — bright enough for comfortable form use */
+/* Premium rose-magenta glass theme for the female registration form */
 .glass-female {
   background:
-    radial-gradient(ellipse at 8% 0%, rgba(232, 121, 249, 0.18) 0%, transparent 36%),
-    radial-gradient(ellipse at 100% 18%, rgba(244, 114, 182, 0.2) 0%, transparent 40%),
-    linear-gradient(135deg, rgba(250, 245, 255, 0.98) 0%, rgba(253, 242, 248, 0.96) 48%, rgba(255, 255, 255, 0.98) 100%);
+    radial-gradient(ellipse at 7% 0%, rgba(217, 70, 166, 0.25) 0%, transparent 34%),
+    radial-gradient(ellipse at 100% 15%, rgba(190, 24, 93, 0.20) 0%, transparent 42%),
+    linear-gradient(135deg, rgba(253, 226, 239, 0.97) 0%, rgba(250, 210, 231, 0.94) 42%, rgba(245, 220, 250, 0.96) 100%);
   backdrop-filter: blur(24px);
   -webkit-backdrop-filter: blur(24px);
-  border: 1px solid rgba(192, 132, 252, 0.45);
-  box-shadow: 0 25px 60px -15px rgba(126, 34, 206, 0.15), 0 0 30px -5px rgba(244, 114, 182, 0.2), inset 0 1.5px 2px rgba(255, 255, 255, 0.95);
+  border: 1px solid rgba(219, 39, 119, 0.48);
+  box-shadow: 0 25px 60px -15px rgba(157, 23, 77, 0.24), 0 0 34px -5px rgba(219, 39, 119, 0.24), inset 0 1.5px 2px rgba(255, 255, 255, 0.88);
+}
+
+/* Icon tiles align beside their matching controls in every registration theme */
+.registration-field-row {
+  display: flex;
+  align-items: stretch;
+  gap: 0.5rem;
+  min-width: 0;
+}
+.registration-field-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex: 0 0 3rem;
+  min-height: 3rem;
+  border-radius: 0.75rem;
+  border: 1px solid;
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+}
+.registration-theme:not(.glass-male):not(.glass-female) .registration-field-icon {
+  color: #5B5FEF;
+  background: rgba(255,255,255,.78);
+  border-color: rgba(203,213,225,.8);
+}
+.glass-male .registration-field-icon {
+  color: #67E8F9;
+  background: linear-gradient(135deg, rgba(6,182,212,.25), rgba(37,99,235,.26));
+  border-color: rgba(103,232,249,.38);
+  box-shadow: 0 7px 18px rgba(8,145,178,.14);
+}
+.glass-female .registration-field-icon {
+  color: #A21CAF;
+  background: linear-gradient(135deg, rgba(219,39,119,.22), rgba(192,38,211,.20));
+  border-color: rgba(219,39,119,.38);
+  box-shadow: 0 7px 18px rgba(157,23,77,.13);
+}
+.registration-field-row > input,
+.registration-field-row > select {
+  min-width: 0;
+  flex: 1 1 0%;
+}
+@media (max-width: 420px) {
+  .registration-field-icon { flex-basis: 2.65rem; min-height: 2.8rem; }
 }
 
 .registration-theme {
