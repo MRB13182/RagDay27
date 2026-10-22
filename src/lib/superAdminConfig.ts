@@ -544,10 +544,6 @@ export function getJerseyShowcaseCards(): JerseyDesignCard[] {
         '02. event-settings/Pic/jersey-design.png',
         eventJerseyDesignPic02
       ),
-      'jersey.png': getSuperAdminImageUrl(
-        '02. event-settings/Pic/jersey-design.png',
-        eventJerseyDesignPic02
-      ),
     };
     return {
       ...card,
