@@ -18,7 +18,6 @@ The following configuration files are intended to be editable from the protected
 - `01. website-identity/Pic/favicon.png`
 
 ### 02. Event Settings
-- `02. event-settings/Pic/jersey.png`
 - `02. event-settings/Pic/jersey-design.png`
 - `02. event-settings/Text/Jersey design.txt`
 - `02. event-settings/Text/Event name.txt`
