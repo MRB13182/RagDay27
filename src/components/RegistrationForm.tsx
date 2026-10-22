@@ -48,6 +48,7 @@ interface RegistrationFormProps {
   registrationOpen?: boolean;
   registrationDeadline?: string;
   onResetReRegister?: () => void;
+  onGenderChange?: (gender: GenderType) => void;
 }
 
 const JERSEY_SIZES: JerseySize[] = ['S', 'M', 'L', 'XL', '2XL', '3XL', '4XL'];
@@ -172,6 +173,7 @@ export const RegistrationForm: React.FC<RegistrationFormProps> = ({
   registrationOpen = true,
   registrationDeadline = '2026-11-01T23:59:59',
   onResetReRegister,
+  onGenderChange,
 }) => {
   const activeFee = paymentSettings?.registrationFee ?? 500;
 
@@ -240,6 +242,7 @@ export const RegistrationForm: React.FC<RegistrationFormProps> = ({
   // Pre-load data if initialRecord is provided (e.g. from Invitation Card "Register Again")
   useEffect(() => {
     if (initialRecord) {
+      onGenderChange?.(initialRecord.gender || 'male');
       const flagged = detectFlaggedFields(initialRecord.reject_reason);
       const isPhotoFlagged = flagged.has('student_photo');
 
@@ -271,7 +274,7 @@ export const RegistrationForm: React.FC<RegistrationFormProps> = ({
         academicSection: initialRecord.academic_section || '',
       });
     }
-  }, [initialRecord]);
+  }, [initialRecord, onGenderChange]);
 
   // Keep fee in sync
   useEffect(() => {
@@ -367,6 +370,7 @@ export const RegistrationForm: React.FC<RegistrationFormProps> = ({
   };
 
   const handleGenderSelect = (selectedGender: 'male' | 'female') => {
+    onGenderChange?.(selectedGender);
     setFormData(prev => ({
       ...prev,
       gender: selectedGender,
@@ -511,7 +515,7 @@ export const RegistrationForm: React.FC<RegistrationFormProps> = ({
     const jerseyNumStr = formData.jersey_number.trim();
     if (!jerseyNumStr) {
       errors.jersey_number = 'Jersey number is required.';
-    } else if (!/^\d{1,3}$/.test(jerseyNumStr) || Number(jerseyNumStr) > 999) {
+    } else if (!/^\d{1,3}$/.test(jerseyNumStr) || Number(jerseyNumStr) < 0 || Number(jerseyNumStr) > 999) {
       errors.jersey_number = 'Enter a whole jersey number from 0 to 999.';
     }
 
@@ -1338,7 +1342,7 @@ export const RegistrationForm: React.FC<RegistrationFormProps> = ({
                           onPaste={e => {
                             e.preventDefault();
                             const pasted = e.clipboardData.getData('text');
-                            if (pasted.length > 3 || (pasted.length > 0 && !/^\d+$/.test(pasted)) || Number(pasted) > 999) {
+                            if (pasted.length < 1 || pasted.length > 3 || !/^\d{1,3}$/.test(pasted) || Number(pasted) > 999) {
                               setFormErrors(prev => ({ ...prev, jersey_number: 'Enter a whole jersey number from 0 to 999.' }));
                               return;
                             }
@@ -1348,7 +1352,7 @@ export const RegistrationForm: React.FC<RegistrationFormProps> = ({
                           onChange={e => {
                             const val = e.target.value;
                             setFormData(prev => ({ ...prev, jersey_number: val }));
-                            if (!val || (/^\d{1,3}$/.test(val) && Number(val) <= 999)) {
+                            if (/^\d{1,3}$/.test(val) && Number(val) <= 999) {
                               if (formErrors.jersey_number) setFormErrors(prev => ({ ...prev, jersey_number: '' }));
                             } else {
                               setFormErrors(prev => ({ ...prev, jersey_number: 'Enter a whole jersey number from 0 to 999.' }));
