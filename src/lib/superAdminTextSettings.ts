@@ -41,6 +41,13 @@ export const EDITABLE_SUPER_ADMIN_TEXT_FILES: EditableSuperAdminTextFile[] = [
     defaultValue: 'Title: Official Rag Day Jersey\nDescription: Custom Squad Kit with Personalized Back Name & Number Print Included\nImage: jersey.png',
   },
   {
+    id: 'jersey-design',
+    category: '02. Event Settings',
+    label: 'Jersey showcase design (Jersey design.txt)',
+    path: '02. event-settings/Text/Jersey design.txt',
+    defaultValue: 'Title: Official Rag Day Jersey\nDescription: Custom Squad Kit with Personalized Back Name & Number Print Included\nImage: jersey.png',
+  },
+  {
     id: 'event-name',
     category: '02. Event Settings',
     label: 'Event name (Event name.txt)',
