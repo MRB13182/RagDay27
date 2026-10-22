@@ -552,7 +552,7 @@ returns json
 language plpgsql
 security definer
 set search_path to 'public', 'pg_temp'
-as $
+as $$
 declare
   r public.registrations;
   clean_reg text := upper(trim(coalesce(p_registration_no, '')));
@@ -603,7 +603,7 @@ begin
     'updated_at', r.updated_at
   );
 end;
-$;
+$$;
 
 -- 13. GRANT EXECUTE PRIVILEGES ON ALL RPC FUNCTIONS
 grant execute on function public.get_next_registration_number to anon, authenticated, service_role;
