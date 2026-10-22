@@ -539,7 +539,72 @@ begin
 end;
 $$;
 
--- 12. GRANT EXECUTE PRIVILEGES ON ALL RPC FUNCTIONS
+
+-- 12. VERIFIED REJECTED REGISTRATION RECOVERY LOOKUP
+-- Return form-prefill fields only after registration number, exact name, and original
+-- Student ID all match a currently rejected, visible registration.
+create or replace function public.get_rejected_registration_for_resubmission(
+  p_registration_no text,
+  p_student_name text,
+  p_student_id text
+)
+returns json
+language plpgsql
+security definer
+as $
+declare
+  r public.registrations;
+  clean_reg text := upper(trim(coalesce(p_registration_no, '')));
+  clean_name text := lower(trim(coalesce(p_student_name, '')));
+  clean_student_id text := trim(coalesce(p_student_id, ''));
+begin
+  if clean_reg = '' or clean_name = '' or clean_student_id = '' then
+    return json_build_object('found', false, 'status', 'invalid_recovery_proof');
+  end if;
+
+  select * into r
+  from public.registrations
+  where upper(registration_no) = clean_reg
+    and hidden_from_web = false
+    and status = 'rejected'
+    and lower(trim(full_name)) = clean_name
+    and trim(student_id) = clean_student_id
+  limit 1;
+
+  if not found then
+    return json_build_object('found', false, 'status', 'recovery_not_found');
+  end if;
+
+  return json_build_object(
+    'found', true,
+    'status', 'rejected',
+    'id', r.id,
+    'sl_no', r.sl_no,
+    'registration_no', r.registration_no,
+    'full_name', r.full_name,
+    'class_roll', r.class_roll,
+    'student_id', r.student_id,
+    'contact_mobile_number', r.contact_mobile_number,
+    'academic_group', r.academic_group,
+    'academic_section', r.academic_section,
+    'student_photo', r.student_photo,
+    'send_method', r.send_method,
+    'sender_mobile_no', r.sender_mobile_no,
+    'payment_time', r.payment_time,
+    'transaction_id', r.transaction_id,
+    'jersey_back_name', r.jersey_back_name,
+    'jersey_number', r.jersey_number,
+    'jersey_size', r.jersey_size,
+    'gender', r.gender,
+    'reject_reason', r.reject_reason,
+    'rejected_at', r.rejected_at,
+    'created_at', r.created_at,
+    'updated_at', r.updated_at
+  );
+end;
+$;
+
+-- 13. GRANT EXECUTE PRIVILEGES ON ALL RPC FUNCTIONS
 grant execute on function public.get_next_registration_number to anon, authenticated, service_role;
 grant execute on function public.verify_admin_passcode to anon, authenticated, service_role;
 grant execute on function public.get_admin_registrations to anon, authenticated, service_role;
@@ -550,3 +615,4 @@ grant execute on function public.hide_registration_from_web to anon, authenticat
 grant execute on function public.find_registration_duplicate to anon, authenticated, service_role;
 grant execute on function public.resubmit_rejected_registration to anon, authenticated, service_role;
 grant execute on function public.lookup_invitation_card to anon, authenticated, service_role;
+grant execute on function public.get_rejected_registration_for_resubmission(text, text, text) to anon, authenticated, service_role;
