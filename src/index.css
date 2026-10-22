@@ -94,13 +94,41 @@
   box-shadow: 0 25px 60px -15px rgba(15, 23, 42, 0.55), 0 0 30px -5px rgba(56, 189, 248, 0.22), inset 0 1.5px 2px rgba(255, 255, 255, 0.12);
 }
 
-/* Female Soft Pink Theme helpers */
+/* Female plum, violet and rose theme — bright enough for comfortable form use */
 .glass-female {
-  background: linear-gradient(135deg, rgba(255, 241, 245, 0.95) 0%, rgba(251, 207, 232, 0.88) 45%, rgba(255, 255, 255, 0.95) 100%);
+  background:
+    radial-gradient(ellipse at 8% 0%, rgba(232, 121, 249, 0.18) 0%, transparent 36%),
+    radial-gradient(ellipse at 100% 18%, rgba(244, 114, 182, 0.2) 0%, transparent 40%),
+    linear-gradient(135deg, rgba(250, 245, 255, 0.98) 0%, rgba(253, 242, 248, 0.96) 48%, rgba(255, 255, 255, 0.98) 100%);
   backdrop-filter: blur(24px);
   -webkit-backdrop-filter: blur(24px);
-  border: 1px solid rgba(244, 114, 182, 0.38);
-  box-shadow: 0 25px 60px -15px rgba(236, 72, 153, 0.2), 0 0 30px -5px rgba(244, 114, 182, 0.28), inset 0 1.5px 2px rgba(255, 255, 255, 0.9);
+  border: 1px solid rgba(192, 132, 252, 0.45);
+  box-shadow: 0 25px 60px -15px rgba(126, 34, 206, 0.15), 0 0 30px -5px rgba(244, 114, 182, 0.2), inset 0 1.5px 2px rgba(255, 255, 255, 0.95);
+}
+
+.registration-theme {
+  min-width: 0;
+  max-width: 100%;
+  overflow-wrap: anywhere;
+}
+
+.registration-theme .gender-choice {
+  min-width: 0;
+}
+
+.registration-theme .gender-choice:focus-visible {
+  outline: 3px solid currentColor;
+  outline-offset: 3px;
+}
+
+.registration-theme .jersey-number-input {
+  font-variant-numeric: tabular-nums;
+  letter-spacing: 0.04em;
+}
+
+.registration-theme .jersey-number-input[aria-invalid="true"] {
+  border-color: #e11d48;
+  box-shadow: 0 0 0 2px rgba(225, 29, 72, 0.12);
 }
 
 /* Graceful Fallback for browsers that do not support backdrop-filter */
@@ -116,7 +144,7 @@
     background: #0F172A !important;
   }
   .glass-female {
-    background: #FFF1F5 !important;
+    background: linear-gradient(135deg, #FAF5FF 0%, #FDF2F8 52%, #FFFFFF 100%) !important;
   }
 }
 
