@@ -9,6 +9,7 @@ const checkPaths = [
   '01. website-identity/Text/web header.txt',
   '01. website-identity/Text/web footer.txt',
   '02. event-settings/Pic/jersey.png',
+  '02. event-settings/Pic/jersey-design.png',
   '02. event-settings/Text/Event name.txt',
   '02. event-settings/Text/Event card.txt',
   '02. event-settings/Text/Event date.txt',
