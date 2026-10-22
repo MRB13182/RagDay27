@@ -1315,6 +1315,8 @@ export const RegistrationForm: React.FC<RegistrationFormProps> = ({
                           {formData.jersey_back_name.length}/14 max
                         </span>
                       </div>
+                      <div className="registration-field-row">
+                      <span className="registration-field-icon"><User className="w-5 h-5" /></span>
                       <input
                         type="text"
                         maxLength={14}
@@ -1325,8 +1327,9 @@ export const RegistrationForm: React.FC<RegistrationFormProps> = ({
                           setFormData({ ...formData, jersey_back_name: val });
                           if (formErrors.jersey_back_name) setFormErrors(prev => ({ ...prev, jersey_back_name: '' }));
                         }}
-                        className={`w-full px-4 py-3 rounded-xl text-sm font-mono font-bold uppercase transition-colors outline-none ${inputClasses}`}
+                        className={`min-w-0 flex-1 px-4 py-3 rounded-xl text-sm font-mono font-bold uppercase transition-colors outline-none ${inputClasses}`}
                       />
+                      </div>
                       {formErrors.jersey_back_name && (
                         <p className="text-rose-500 text-xs mt-1 font-semibold">{formErrors.jersey_back_name}</p>
                       )}
@@ -1342,6 +1345,8 @@ export const RegistrationForm: React.FC<RegistrationFormProps> = ({
                           </label>
                           <span className="text-[10px] font-mono opacity-70">0–999</span>
                         </div>
+                        <div className="registration-field-row">
+                        <span className="registration-field-icon"><Hash className="w-5 h-5" /></span>
                         <input
                           type="text"
                           inputMode="numeric"
@@ -1371,9 +1376,10 @@ export const RegistrationForm: React.FC<RegistrationFormProps> = ({
                               setFormErrors(prev => ({ ...prev, jersey_number: 'Enter a whole jersey number from 0 to 999.' }));
                             }
                           }}
-                          className={`jersey-number-input w-full px-4 py-3 rounded-xl text-sm font-mono font-black transition-colors outline-none text-center ${inputClasses}`}
+                          className={`jersey-number-input min-w-0 flex-1 w-full px-4 py-3 rounded-xl text-sm font-mono font-black transition-colors outline-none text-center ${inputClasses}`}
                           aria-invalid={Boolean(formErrors.jersey_number)}
                         />
+                        </div>
                         <p className={`text-[10px] mt-1 ${isMale ? 'text-cyan-200/75' : isFemale ? 'text-fuchsia-800/75' : 'text-slate-500'}`}>Number: 0–999 · Leading zeros are preserved</p>
                         {formErrors.jersey_number && (
                           <p className="text-rose-500 text-xs mt-1 font-semibold">{formErrors.jersey_number}</p>
@@ -1385,10 +1391,12 @@ export const RegistrationForm: React.FC<RegistrationFormProps> = ({
                         <label className={`flex items-center gap-1.5 block text-xs font-bold uppercase tracking-wider mb-1.5 ${labelClasses}`}>
                           <Shirt className="w-3.5 h-3.5 shrink-0" /> Jersey Size <span className="text-rose-500">*</span>
                         </label>
+                        <div className="registration-field-row">
+                        <span className="registration-field-icon"><Shirt className="w-5 h-5" /></span>
                         <select
                           value={formData.jersey_size}
                           onChange={e => setFormData({ ...formData, jersey_size: e.target.value as JerseySize })}
-                          className={`w-full px-4 py-3 rounded-xl text-sm font-semibold transition-colors outline-none cursor-pointer ${inputClasses}`}
+                          className={`min-w-0 flex-1 px-4 py-3 rounded-xl text-sm font-semibold transition-colors outline-none cursor-pointer ${inputClasses}`}
                         >
                           {JERSEY_SIZES.map(sz => (
                             <option
@@ -1400,6 +1408,7 @@ export const RegistrationForm: React.FC<RegistrationFormProps> = ({
                             </option>
                           ))}
                         </select>
+                        </div>
                       </div>
                     </div>
                   </div>
