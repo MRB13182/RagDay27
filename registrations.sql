@@ -23,7 +23,7 @@ create table if not exists public.registrations (
   payment_time text not null,
   transaction_id text,
   jersey_back_name varchar(14) not null,
-  jersey_number varchar(2) not null check (jersey_number ~ '^[0-9]{2}$'),
+  jersey_number varchar(3) not null check (jersey_number ~ '^[0-9]{1,3}$' and jersey_number::integer between 0 and 999),
   jersey_size text not null check (jersey_size in ('S','M','L','XL','2XL','3XL','4XL')),
   gender text not null check (gender in ('male','female')),
   status text not null default 'pending' check (status in ('pending','approved','rejected')),
