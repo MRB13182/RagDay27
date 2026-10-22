@@ -119,50 +119,6 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
             </button>
           </div>
 
-          {/* Official jersey design preview */}
-          {jerseySettings?.enabled && (jerseySettings.designCards?.length ?? 0) > 0 && (
-            <div className="w-full mt-7 sm:mt-9">
-              <div className="flex items-center justify-between gap-3 mb-3">
-                <div>
-                  <p className="text-[11px] font-extrabold uppercase tracking-[0.18em] text-[#5B5FEF]">Official Merchandise</p>
-                  <h2 className="mt-1 text-lg sm:text-xl font-extrabold text-slate-900">Rag Day Jersey Design</h2>
-                </div>
-                <span className="shrink-0 rounded-full border border-indigo-100 bg-white/80 px-3 py-1 text-[10px] sm:text-xs font-bold text-indigo-700 shadow-sm">NIC 27</span>
-              </div>
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                {(jerseySettings.designCards ?? []).slice(0, 2).map((design, index) => (
-                  <div
-                    key={design.id}
-                    className="overflow-hidden rounded-2xl border border-white/90 bg-white/80 shadow-[0_14px_35px_rgba(91,95,239,0.10)] backdrop-blur-xl"
-                  >
-                    <div className="relative aspect-[5/4] bg-gradient-to-br from-slate-50 via-white to-indigo-50 p-3 sm:p-4">
-                      <img
-                        src={design.image || '/src/assets/images/jersey-one.png'}
-                        alt={design.title || 'Rag Day jersey design'}
-                        loading="lazy"
-                        className="h-full w-full object-contain"
-                        onError={event => {
-                          const image = event.currentTarget;
-                          if (!image.dataset.fallbackApplied) {
-                            image.dataset.fallbackApplied = 'true';
-                            image.src = '/src/assets/images/jersey-one.png';
-                          }
-                        }}
-                      />
-                      <span className="absolute bottom-3 left-3 rounded-lg bg-white/90 px-2.5 py-1 text-[10px] font-bold text-slate-700 shadow-sm">
-                        {index === 0 ? 'Official Design' : 'Design Preview'}
-                      </span>
-                    </div>
-                    <div className="px-4 py-3">
-                      <h3 className="font-extrabold text-sm text-slate-900">{design.title || 'Official Rag Day Jersey'}</h3>
-                      {design.description && <p className="mt-1 text-xs leading-relaxed text-slate-600">{design.description}</p>}
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
-          )}
-
           {/* Quick Inclusions Note */}
           <div className="mt-6 flex flex-wrap items-center gap-2.5 text-xs text-slate-600">
             <span className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-white/70 backdrop-blur-md border border-white/80 shadow-2xs">
