@@ -463,7 +463,7 @@ export function getRegistrationSettingsConfig() {
   const paymentRaw = getSavedSuperAdminText('03. reg-settings/Text/Payment number.txt', payContent);
   const payments = parsePaymentNumberFile(paymentRaw);
   const openState = calculateRegistrationOpenState();
-  const jersey = getSuperAdminImageUrl('02. event-settings/Pic/jersey.png', eventJerseyPic || jerseyDesignPic06 || defaultMaleJersey);
+  const jersey = getSuperAdminImageUrl('02. event-settings/Pic/jersey.png', jerseyDesignPic06 || defaultMaleJersey);
   const backJersey = getSuperAdminImageUrl('03. reg-settings/Pic/back jersey preview.png', backJerseyPic || defaultJerseyBg);
 
   const cardRaw = getSavedSuperAdminText('02. event-settings/Text/Event card.txt', eventCardRaw.trim());
