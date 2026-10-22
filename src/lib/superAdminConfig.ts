@@ -55,7 +55,7 @@ import logoPic06 from '../super-admin/06. logo-related/Pic/logo.png';
 import faviconPic06 from '../super-admin/06. logo-related/Pic/favicon.png';
 // Use an existing repository asset as the jersey-design fallback; do not import
 // jersey-design.png from the protected Super Admin Pic folder because it is not present.
-import jerseyDesignPic06 from '../assets/images/jersey-one.png';
+import jerseyDesignPic06 from '../assets/images/male-jersey.png';
 import jerseyDesignRaw from '../super-admin/06. logo-related/Text/jersey-design.txt?raw';
 
 // ============================================================================
