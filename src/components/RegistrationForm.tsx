@@ -739,7 +739,7 @@ export const RegistrationForm: React.FC<RegistrationFormProps> = ({
           {/* STEP 1: GENDER SELECTION (Gating Gate)                  */}
           {/* ======================================================== */}
           <div className="space-y-3">
-            <div className={`pb-2.5 font-display text-base sm:text-lg font-bold flex items-center justify-between ${sectionHeaderClasses}`}>
+            <div className={`pb-2.5 font-display text-base sm:text-lg font-bold flex items-center justify-between ${sectionHeaderClasses} ${!isGenderChosen ? 'text-[#5B5FEF] border-b border-slate-200' : ''}`}>
               <span className="flex items-center gap-2">
                 <User className="w-4 h-4" />
                 Step 1: Select Your Gender
@@ -764,12 +764,12 @@ export const RegistrationForm: React.FC<RegistrationFormProps> = ({
                 onClick={() => handleGenderSelect('male')}
                 className={`gender-choice py-3.5 px-4 rounded-2xl border-2 transition-all duration-200 cursor-pointer flex items-center justify-center gap-2.5 font-bold text-sm sm:text-base ${
                   isMale
-                    ? 'border-[#38BDF8] bg-slate-900/90 backdrop-blur-xl shadow-[0_8px_25px_rgba(56,189,248,0.25),inset_0_1px_1.5px_rgba(255,255,255,0.15)] ring-2 ring-[#38BDF8]/40 text-white'
+                    ? 'border-[#38BDF8] bg-gradient-to-br from-[#082F49]/95 via-[#0C4A6E]/95 to-[#0F172A]/95 backdrop-blur-xl shadow-[0_8px_25px_rgba(56,189,248,0.3),inset_0_1px_1.5px_rgba(255,255,255,0.15)] ring-2 ring-[#38BDF8]/40 text-white'
                     : 'border-slate-300/80 bg-white/70 backdrop-blur-md hover:border-[#38BDF8]/60 hover:bg-white/90 text-slate-800 shadow-2xs'
                 }`}
               >
-                <span className={`w-7 h-7 rounded-xl grid place-items-center font-black text-sm shrink-0 ${
-                  isMale ? 'bg-[#0284C7] text-white' : 'bg-slate-100 text-slate-600'
+                <span className={`w-8 h-8 rounded-xl grid place-items-center font-black text-sm shrink-0 ${
+                  isMale ? 'bg-gradient-to-br from-[#06B6D4] to-[#0284C7] text-white shadow-md shadow-cyan-500/30' : 'bg-slate-100 text-slate-600'
                 }`}>
                   <Mars className="w-4 h-4" />
                 </span>
@@ -783,11 +783,11 @@ export const RegistrationForm: React.FC<RegistrationFormProps> = ({
                 onClick={() => handleGenderSelect('female')}
                 className={`py-3.5 px-4 rounded-2xl border-2 transition-all duration-200 cursor-pointer flex items-center justify-center gap-2.5 font-bold text-sm sm:text-base ${
                   isFemale
-                    ? 'border-[#D946A6] bg-gradient-to-br from-fuchsia-100 via-rose-50 to-white backdrop-blur-xl shadow-[0_8px_25px_rgba(217,70,166,0.22),inset_0_1px_1.5px_white] ring-2 ring-[#D946A6]/30 text-[#4A174C]'
+                    ? 'border-[#D946A6] bg-gradient-to-br from-fuchsia-100/95 via-rose-50/95 to-white/95 backdrop-blur-xl shadow-[0_8px_25px_rgba(217,70,166,0.22),inset_0_1px_1.5px_white] ring-2 ring-[#D946A6]/30 text-[#4A174C]'
                     : 'border-fuchsia-200/90 bg-white/75 backdrop-blur-md hover:border-[#D946A6]/60 hover:bg-rose-50/70 text-slate-800 shadow-2xs'
                 }`}
               >
-                <span className={`w-7 h-7 rounded-xl grid place-items-center font-black text-sm shrink-0 ${
+                <span className={`w-8 h-8 rounded-xl grid place-items-center font-black text-sm shrink-0 ${
                   isFemale ? 'bg-gradient-to-br from-[#C026D3] to-[#EC4899] text-white shadow-md shadow-fuchsia-500/20' : 'bg-slate-100 text-slate-600'
                 }`}>
                   <Venus className="w-4 h-4" />
