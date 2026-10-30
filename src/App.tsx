@@ -45,7 +45,7 @@ export default function App() {
   const [isNoticePopupOpen, setIsNoticePopupOpen] = useState<boolean>(importantNoticeConfig.popupEnabled);
   const [isRegClosedPopupOpen, setIsRegClosedPopupOpen] = useState<boolean>(false);
   const [invitations, setInvitations] = useState<InvitationRecord[]>([]);
-  const [registrationGender, setRegistrationGender] = useState<GenderType>('choose_one');
+  
 
   const handleOpenRegistration = () => {
     if (!registrationSettingsConfig.registrationOpen) {
@@ -494,7 +494,6 @@ export default function App() {
                 registrationOpen={registrationSettingsConfig.registrationOpen}
                 registrationDeadline={countdownSettingsConfig.registrationDeadline}
                 onResetReRegister={() => setReRegisterRecord(null)}
-                onGenderChange={setRegistrationGender}
               />
             </div>
           )}
