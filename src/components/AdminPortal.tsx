@@ -211,6 +211,11 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
     setIsLoggingIn(true);
     try {
       const profile = await signInAdmin(passcode);
+      if (profile.role !== 'male_admin') {
+        await signOutAdmin();
+        setLoginError('Only Male Admin access is enabled for this website.');
+        return;
+      }
       setAdmin(profile);
       setPasscode('');
     } catch (err: any) {
