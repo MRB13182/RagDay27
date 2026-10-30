@@ -168,7 +168,7 @@ const RegistrationCountdown: React.FC<{ deadline: string }> = ({ deadline }) => 
  * Sections depend on gender + academic group and are not hardcoded to five entries.
  */
 export const getAvailableSections = (gender: GenderType, group: string): string[] => {
-  if (gender !== 'male' && gender !== 'female') return [];
+  if (gender !== 'male') return [];
   return getConfiguredSections(gender, group);
 };
 
@@ -307,7 +307,7 @@ export const RegistrationForm: React.FC<RegistrationFormProps> = ({
 
   const isGenderChosen = true;
   const isMale = formData.gender === 'male';
-  const isFemale = formData.gender === 'female';
+  const isFemale = false;
 
   // Container & styling classes based on selected gender
   const containerClasses = isMale
@@ -378,7 +378,8 @@ export const RegistrationForm: React.FC<RegistrationFormProps> = ({
     return '';
   };
 
-  const handleGenderSelect = (selectedGender: 'male' | 'female') => {
+  const handleGenderSelect = (_selectedGender: 'male' | 'female') => {
+    const selectedGender = 'male' as const;
     onGenderChange?.(selectedGender);
     setFormData(prev => ({
       ...prev,
