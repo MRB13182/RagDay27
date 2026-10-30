@@ -186,7 +186,7 @@ export const RegistrationForm: React.FC<RegistrationFormProps> = ({
   const activeFee = paymentSettings?.registrationFee ?? 500;
 
   const [formData, setFormData] = useState<RegistrationFormData>({
-    gender: initialRecord?.gender === 'female' ? 'female' : 'male',
+    gender: 'male',
     full_name: '',
     class_roll: '',
     student_id: '',
@@ -1256,7 +1256,7 @@ export const RegistrationForm: React.FC<RegistrationFormProps> = ({
                     <JerseyGraphic
                       name={formData.jersey_back_name}
                       number={formData.jersey_number}
-                      gender={formData.gender}
+                      gender="male"
                       className="w-full max-w-[280px] h-[300px]"
                     />
                     <div className="mt-2 text-center text-xs opacity-75 font-mono">
