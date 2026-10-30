@@ -182,7 +182,7 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
     try {
       const result = await getRegistrationList();
       if (result.success) {
-        setAdminRegistrations(result.data);
+        setAdminRegistrations(result.data.filter(record => record.gender === 'male'));
       } else {
         setRegistrationLoadError(result.errorMessage || 'Unable to load registrations from database.');
         setAdminRegistrations([]);
@@ -436,7 +436,7 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
                 type="password"
                 value={passcode}
                 onChange={e => setPasscode(e.target.value)}
-                placeholder="Enter Male or Female Admin passcode"
+                placeholder="Enter Male Admin passcode"
                 className="w-full px-4 py-3.5 rounded-xl border border-slate-200/90 bg-slate-50/80 backdrop-blur-md text-sm font-mono font-medium focus:bg-white focus:border-indigo-600 focus:ring-2 focus:ring-indigo-100 outline-none transition-all placeholder:text-slate-400"
                 autoFocus
                 required
@@ -471,7 +471,7 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
 
           <div className="mt-6 pt-5 border-t border-slate-100 text-center">
             <span className="text-[11px] text-slate-400 font-medium">
-              Database-backed role resolution: <strong className="text-slate-600">Male Admin</strong> or <strong className="text-slate-600">Female Admin</strong>
+              Admin access is restricted to the Boys Wing.
             </span>
           </div>
         </div>
@@ -482,12 +482,10 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
   // --------------------------------------------------------------------------
   // AUTHENTICATED ADMIN PANEL (Shared structure for Male & Female Admin)
   // --------------------------------------------------------------------------
-  const isMaleAdmin = admin.role === 'male_admin';
-  const roleBadgeColor = isMaleAdmin
-    ? 'bg-blue-50 text-blue-700 border-blue-200'
-    : 'bg-pink-50 text-pink-700 border-pink-200';
-  const panelTitle = isMaleAdmin ? 'Male Admin Panel' : 'Female Admin Panel';
-  const genderSubtext = isMaleAdmin ? 'Boys Wing Registrations' : 'Girls Wing Registrations';
+  const isMaleAdmin = true;
+  const roleBadgeColor = 'bg-blue-50 text-blue-700 border-blue-200';
+  const panelTitle = 'Male Admin Panel';
+  const genderSubtext = 'Boys Wing Registrations';
 
   return (
     <div className="fixed inset-0 z-[300] bg-black/70 backdrop-blur-md flex items-center justify-center p-2 sm:p-4 md:p-6">
