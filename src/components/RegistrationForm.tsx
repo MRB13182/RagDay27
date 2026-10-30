@@ -1316,7 +1316,7 @@ export const RegistrationForm: React.FC<RegistrationFormProps> = ({
                           aria-invalid={Boolean(formErrors.jersey_number)}
                         />
                         </div>
-                        <p className={`text-[10px] mt-1 ${isMale ? 'text-cyan-200/75' : isFemale ? 'text-fuchsia-800/75' : 'text-slate-500'}`}>Number: 0–999 · Leading zeros are preserved</p>
+                        <p className={`text-[10px] mt-1 ${'text-cyan-200/75'}`}>Number: 0–999 · Leading zeros are preserved</p>
                         {formErrors.jersey_number && (
                           <p className="text-rose-500 text-xs mt-1 font-semibold">{formErrors.jersey_number}</p>
                         )}
@@ -1354,7 +1354,7 @@ export const RegistrationForm: React.FC<RegistrationFormProps> = ({
               {/* ======================================================== */}
               {/* 5. DECLARATION */}
               {/* ======================================================== */}
-              <div className={`pt-3 border-t ${isMale ? 'border-cyan-300/25' : isFemale ? 'border-fuchsia-200/90' : 'border-slate-200/70'}`}>
+              <div className={`pt-3 border-t ${'border-cyan-300/25'}`}>
                 <label className="flex items-center gap-3 cursor-pointer select-none text-xs sm:text-sm font-medium py-2">
                   <input
                     type="checkbox"
