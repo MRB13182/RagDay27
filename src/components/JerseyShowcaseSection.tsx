@@ -16,11 +16,8 @@ export const JerseyShowcaseSection: React.FC<JerseyShowcaseSectionProps> = ({
   className = '',
 }) => {
   const sourceCards: JerseyDesignCard[] =
-    (cards && cards.length > 0)
-      ? cards
-      : (settings?.designCards && settings.designCards.length > 0)
-      ? settings.designCards
-      : [];
+    ((cards && cards.length > 0) ? cards : (settings?.designCards || []))
+      .filter(card => !/female|girls|women|lily/i.test(`${card.id} ${card.title} ${card.description} ${card.imageFilename || ''}`));
 
   const displayCards: JerseyDesignCard[] =
     sourceCards.length > 0
