@@ -27,7 +27,7 @@ export const Navbar: React.FC<NavbarProps> = ({
   };
 
   // Global navigation always keeps the standard white/purple brand theme.
-  const isMaleTheme = false;
+  const isMaleTheme = true;
   const isFemaleTheme = false;
 
   const headerBgClass = isFemaleTheme
