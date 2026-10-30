@@ -186,7 +186,7 @@ export const RegistrationForm: React.FC<RegistrationFormProps> = ({
   const activeFee = paymentSettings?.registrationFee ?? 500;
 
   const [formData, setFormData] = useState<RegistrationFormData>({
-    gender: 'choose_one',
+    gender: initialRecord?.gender === 'female' ? 'female' : 'male',
     full_name: '',
     class_roll: '',
     student_id: '',
@@ -257,7 +257,7 @@ export const RegistrationForm: React.FC<RegistrationFormProps> = ({
 
     setFormData(prev => ({
       ...prev,
-      gender: initialRecord.gender || 'male',
+      gender: 'male',
       full_name: initialRecord.full_name ?? prev.full_name,
       class_roll: initialRecord.class_roll ?? prev.class_roll,
       student_id: initialRecord.student_id ?? prev.student_id,
@@ -305,7 +305,7 @@ export const RegistrationForm: React.FC<RegistrationFormProps> = ({
     return '!border-rose-500 !ring-2 !ring-rose-400/50 focus:!border-rose-600 focus:!ring-rose-500';
   };
 
-  const isGenderChosen = formData.gender === 'male' || formData.gender === 'female';
+  const isGenderChosen = true;
   const isMale = formData.gender === 'male';
   const isFemale = formData.gender === 'female';
 
@@ -474,7 +474,7 @@ export const RegistrationForm: React.FC<RegistrationFormProps> = ({
   const validateForm = () => {
     const errors: { [key: string]: string } = {};
 
-    if (!isGenderChosen) errors.gender = 'Please select your gender (Male / Female).';
+    // Gender is fixed to Male in this registration experience.
     if (!formData.full_name.trim()) errors.full_name = 'Full name is required.';
 
     const rollTrim = formData.class_roll.trim();
@@ -602,7 +602,7 @@ export const RegistrationForm: React.FC<RegistrationFormProps> = ({
       setSuccessModalData({
         name: confirmedRecord.full_name,
         regNo: confirmedRecord.registration_no,
-        gender: confirmedRecord.gender,
+        gender: 'male',
       });
 
       // Clear edit state if any
@@ -638,7 +638,7 @@ export const RegistrationForm: React.FC<RegistrationFormProps> = ({
     const isPhotoFlagged = flagged.has('student_photo');
     setFormData(prev => ({
       ...prev,
-      gender: record.gender || 'male',
+      gender: 'male',
       full_name: record.full_name ?? prev.full_name,
       class_roll: record.class_roll ?? prev.class_roll,
       student_id: record.student_id ?? prev.student_id,
@@ -744,75 +744,18 @@ export const RegistrationForm: React.FC<RegistrationFormProps> = ({
         )}
 
         <form onSubmit={handleSubmit} className={`space-y-8 ${isGenderChosen ? 'registration-form-gendered' : 'registration-form-default'}`}>
-          {/* ======================================================== */}
-          {/* STEP 1: GENDER SELECTION (Gating Gate)                  */}
-          {/* ======================================================== */}
-          <div className="space-y-3">
-            <div className={`pb-2.5 font-display text-base sm:text-lg font-bold flex items-center justify-between ${sectionHeaderClasses} ${!isGenderChosen ? 'text-[#5B5FEF] border-b border-slate-200' : ''}`}>
-              <span className="flex items-center gap-2">
-                <User className="w-4 h-4" />
-                Step 1: Select Your Gender
-              </span>
-
+          <section className="rounded-2xl border border-cyan-300/30 bg-slate-950/80 p-4 shadow-[0_12px_35px_-18px_rgba(56,189,248,0.5)]">
+            <div className="flex items-center justify-between gap-3">
+              <div className="flex items-center gap-3">
+                <span className="grid h-10 w-10 place-items-center rounded-xl bg-cyan-400/15 text-cyan-300"><Mars className="h-5 w-5" /></span>
+                <div>
+                  <p className="text-xs font-bold uppercase tracking-wider text-cyan-300">Registration Gender</p>
+                  <p className="text-sm font-extrabold text-white">Male · Fixed</p>
+                </div>
+              </div>
+              <span className="rounded-full border border-emerald-400/30 bg-emerald-400/10 px-3 py-1 text-[11px] font-bold text-emerald-300">Confirmed</span>
             </div>
-
-            <div className="grid grid-cols-2 gap-3 pt-1">
-              {/* Male Option Card */}
-              <button
-                type="button"
-                onClick={() => handleGenderSelect('male')}
-                className={`gender-choice py-3.5 px-4 rounded-2xl border-2 transition-all duration-200 cursor-pointer flex items-center justify-center gap-2.5 font-bold text-sm sm:text-base ${
-                  isMale
-                    ? 'border-[#38BDF8] bg-gradient-to-br from-[#082F49]/95 via-[#0C4A6E]/95 to-[#0F172A]/95 backdrop-blur-xl shadow-[0_8px_25px_rgba(56,189,248,0.3),inset_0_1px_1.5px_rgba(255,255,255,0.15)] ring-2 ring-[#38BDF8]/40 text-white'
-                    : 'border-slate-300/80 bg-white/70 backdrop-blur-md hover:border-[#38BDF8]/60 hover:bg-white/90 text-slate-800 shadow-2xs'
-                }`}
-              >
-                <span className={`w-8 h-8 rounded-xl grid place-items-center font-black text-sm shrink-0 ${
-                  isMale ? 'bg-gradient-to-br from-[#06B6D4] to-[#0284C7] text-white shadow-md shadow-cyan-500/30' : 'bg-slate-100 text-slate-600'
-                }`}>
-                  <Mars className="w-4 h-4" />
-                </span>
-                <span>Male</span>
-                {isMale && <Check className="w-4 h-4 text-[#38BDF8] ml-0.5" />}
-              </button>
-
-              {/* Female Option Card */}
-              <button
-                type="button"
-                onClick={() => handleGenderSelect('female')}
-                className={`py-3.5 px-4 rounded-2xl border-2 transition-all duration-200 cursor-pointer flex items-center justify-center gap-2.5 font-bold text-sm sm:text-base ${
-                  isFemale
-                    ? 'border-[#D946A6] bg-gradient-to-br from-fuchsia-100/95 via-rose-50/95 to-white/95 backdrop-blur-xl shadow-[0_8px_25px_rgba(217,70,166,0.22),inset_0_1px_1.5px_white] ring-2 ring-[#D946A6]/30 text-[#4A174C]'
-                    : 'border-fuchsia-200/90 bg-white/75 backdrop-blur-md hover:border-[#D946A6]/60 hover:bg-rose-50/70 text-slate-800 shadow-2xs'
-                }`}
-              >
-                <span className={`w-8 h-8 rounded-xl grid place-items-center font-black text-sm shrink-0 ${
-                  isFemale ? 'bg-gradient-to-br from-[#C026D3] to-[#EC4899] text-white shadow-md shadow-fuchsia-500/20' : 'bg-slate-100 text-slate-600'
-                }`}>
-                  <Venus className="w-4 h-4" />
-                </span>
-                <span>Female</span>
-                {isFemale && <Check className="w-4 h-4 text-[#EC4899] ml-0.5" />}
-              </button>
-            </div>
-            {formErrors.gender && (
-              <p className="text-rose-500 text-xs font-bold mt-1.5 flex items-center gap-1">
-                <AlertCircle className="w-3.5 h-3.5" />
-                <span>{formErrors.gender}</span>
-              </p>
-            )}
-          </div>
-
-          {/* ======================================================== */}
-          {/* LOCKED STATE GATE NOTICE (Shown when Gender not chosen) */}
-          {/* ======================================================== */}
-          {!isGenderChosen && (
-            <div className="py-6 px-4 rounded-2xl bg-white/60 border border-slate-200/80 text-center animate-fadeIn shadow-2xs">
-              <p className="text-sm text-slate-600 font-normal">
-                Please select your gender to register.
-              </p>
-            </div>
-          )}
+          </section>
 
           {/* ======================================================== */}
           {/* UNLOCKED FORM SECTIONS (Visible once Gender is Chosen) */}
@@ -1065,7 +1008,7 @@ export const RegistrationForm: React.FC<RegistrationFormProps> = ({
                     <PhotoUploadField
                       student_photo={formData.student_photo}
                       photoUrl={formData.student_photo}
-                      gender={formData.gender}
+                      gender="male"
                       labelClasses={labelClasses}
                       onPhotoSelected={({ student_photo, photoFile, photoBlob }) => {
                         setFormData(prev => ({ ...prev, student_photo, photoFile, photoBlob }));
@@ -1102,7 +1045,7 @@ export const RegistrationForm: React.FC<RegistrationFormProps> = ({
                   <div className="flex flex-wrap items-center justify-between gap-2 border-b border-slate-200/40 pb-3">
                     <div>
                       <span className="text-xs font-bold uppercase tracking-wider text-slate-400 block">
-                        Official Payment Accounts ({isFemale ? 'Girls Wing' : 'Boys Wing'})
+                        Official Payment Accounts (Boys Wing)
                       </span>
                       <p className="text-xs mt-0.5 opacity-80">
                         {paymentSettings.instructions || 'Send Personal payment (Send Money) and retain sender phone number.'}
