@@ -87,23 +87,23 @@
 
 /* Male Dark Navy Theme helpers */
 .glass-male {
-  background: linear-gradient(135deg, rgba(15, 23, 42, 0.94) 0%, rgba(30, 58, 138, 0.90) 50%, rgba(15, 23, 42, 0.96) 100%);
+  background: linear-gradient(145deg, rgba(8, 20, 50, 0.96) 0%, rgba(13, 31, 74, 0.94) 50%, rgba(7, 18, 44, 0.98) 100%);
   backdrop-filter: blur(24px);
   -webkit-backdrop-filter: blur(24px);
-  border: 1px solid rgba(56, 189, 248, 0.3);
-  box-shadow: 0 25px 60px -15px rgba(15, 23, 42, 0.55), 0 0 30px -5px rgba(56, 189, 248, 0.22), inset 0 1.5px 2px rgba(255, 255, 255, 0.12);
+  border: 2px solid rgba(56, 189, 248, 0.4);
+  box-shadow: 0 25px 60px -15px rgba(3, 10, 28, 0.85), 0 0 35px -5px rgba(56, 189, 248, 0.25), inset 0 1.5px 2px rgba(255, 255, 255, 0.12);
 }
 
 /* Premium rose-magenta glass theme for the female registration form */
 .glass-female {
   background:
-    radial-gradient(ellipse at 7% 0%, rgba(217, 70, 166, 0.25) 0%, transparent 34%),
-    radial-gradient(ellipse at 100% 15%, rgba(190, 24, 93, 0.20) 0%, transparent 42%),
-    linear-gradient(135deg, rgba(253, 226, 239, 0.97) 0%, rgba(250, 210, 231, 0.94) 42%, rgba(245, 220, 250, 0.96) 100%);
+    radial-gradient(ellipse at 10% 0%, rgba(244, 114, 182, 0.28) 0%, transparent 40%),
+    radial-gradient(ellipse at 90% 20%, rgba(236, 72, 153, 0.20) 0%, transparent 45%),
+    linear-gradient(145deg, #FFE4EE 0%, #FFDDEB 48%, #FCE7F3 100%);
   backdrop-filter: blur(24px);
   -webkit-backdrop-filter: blur(24px);
-  border: 1px solid rgba(219, 39, 119, 0.48);
-  box-shadow: 0 25px 60px -15px rgba(157, 23, 77, 0.24), 0 0 34px -5px rgba(219, 39, 119, 0.24), inset 0 1.5px 2px rgba(255, 255, 255, 0.88);
+  border: 2px solid rgba(244, 114, 182, 0.85);
+  box-shadow: 0 25px 60px -15px rgba(157, 23, 77, 0.18), 0 0 35px -5px rgba(244, 114, 182, 0.22), inset 0 1.5px 2px rgba(255, 255, 255, 0.9);
 }
 
 /* Icon tiles align beside their matching controls in every registration theme */

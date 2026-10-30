@@ -1,6 +1,7 @@
-import React from 'react';
-import { Shirt, CheckCircle2 } from 'lucide-react';
+import React, { useState } from 'react';
+import { Shirt, CheckCircle2, Maximize2, Sparkles } from 'lucide-react';
 import { JerseyDesignCard, JerseyShowcaseSettings } from '../types';
+import { JerseyShowcaseModal } from './JerseyShowcaseModal';
 
 interface JerseyShowcaseSectionProps {
   cards?: JerseyDesignCard[];
@@ -15,6 +16,8 @@ export const JerseyShowcaseSection: React.FC<JerseyShowcaseSectionProps> = ({
   onRegisterClick,
   className = '',
 }) => {
+  const [selectedPreviewCard, setSelectedPreviewCard] = useState<JerseyDesignCard | null>(null);
+
   const sourceCards: JerseyDesignCard[] =
     ((cards && cards.length > 0) ? cards : (settings?.designCards || []))
       .filter(card => !/female|girls|women|lily/i.test(`${card.id} ${card.title} ${card.description} ${card.imageFilename || ''}`));
@@ -34,7 +37,7 @@ export const JerseyShowcaseSection: React.FC<JerseyShowcaseSectionProps> = ({
 
   const gridClasses =
     displayCards.length === 1
-      ? 'max-w-xl mx-auto'
+      ? 'max-w-2xl mx-auto'
       : displayCards.length === 2
       ? 'grid grid-cols-1 md:grid-cols-2 max-w-4xl mx-auto gap-6 sm:gap-8'
       : 'grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 max-w-6xl mx-auto gap-6 sm:gap-8';
@@ -55,7 +58,7 @@ export const JerseyShowcaseSection: React.FC<JerseyShowcaseSectionProps> = ({
             Batch 2027 Jersey Showcase
           </h2>
           <p className="text-xs sm:text-sm text-slate-500 mt-2">
-            Every registered member receives the authentic high-performance squad kit with personalized print.
+            Every registered member receives the authentic high-performance squad kit with personalized print. Click on any design to open the full interactive lightbox view.
           </p>
         </div>
 
@@ -63,19 +66,30 @@ export const JerseyShowcaseSection: React.FC<JerseyShowcaseSectionProps> = ({
           {displayCards.map((card) => (
             <div
               key={card.id}
-              className="relative rounded-3xl p-4 sm:p-5 bg-white/80 backdrop-blur-2xl border border-white/95 shadow-[0_20px_50px_rgba(91,95,239,0.1),inset_0_1.5px_1px_white] transition-all duration-300 hover:shadow-[0_25px_60px_rgba(91,95,239,0.18),inset_0_2px_1.5px_white] hover:-translate-y-1 flex flex-col overflow-hidden group"
+              role="button"
+              tabIndex={0}
+              onClick={() => setSelectedPreviewCard(card)}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter' || e.key === ' ') {
+                  e.preventDefault();
+                  setSelectedPreviewCard(card);
+                }
+              }}
+              className="relative rounded-3xl p-4 sm:p-5 bg-white/85 backdrop-blur-2xl border border-white/95 shadow-[0_20px_50px_rgba(91,95,239,0.1),inset_0_1.5px_1px_white] transition-all duration-300 hover:shadow-[0_25px_60px_rgba(91,95,239,0.22),inset_0_2px_1.5px_white] hover:-translate-y-1.5 flex flex-col overflow-hidden group cursor-pointer text-left focus:outline-none focus:ring-2 focus:ring-[#5B5FEF]/40"
+              title="Click to preview full high-resolution jersey artwork"
+              aria-label={`Preview ${card.title}`}
             >
               <div className="absolute inset-x-0 top-0 h-1/2 bg-gradient-to-b from-white/40 to-transparent pointer-events-none rounded-t-3xl" />
 
               {/* Keep the image at its intrinsic ratio; do not force a 4:3 box or crop it. */}
-              <div className="relative z-10 w-full overflow-hidden rounded-2xl bg-slate-50">
+              <div className="relative z-10 w-full overflow-hidden rounded-2xl bg-slate-950/5 group-hover:bg-slate-950/10 transition-colors">
                 {card.image ? (
                   <img
                     src={card.image}
                     alt={card.title}
                     loading="lazy"
                     decoding="async"
-                    className="block w-full h-auto max-w-full object-contain"
+                    className="block w-full h-auto max-w-full object-contain transition-transform duration-300 group-hover:scale-[1.02]"
                     style={{ aspectRatio: 'auto' }}
                   />
                 ) : (
@@ -89,16 +103,37 @@ export const JerseyShowcaseSection: React.FC<JerseyShowcaseSectionProps> = ({
                     )}
                   </div>
                 )}
+
+                {/* Hover Reveal Badge */}
+                <div className="absolute bottom-3 right-3 opacity-90 sm:opacity-0 sm:group-hover:opacity-100 transition-all duration-200 transform sm:translate-y-1 sm:group-hover:translate-y-0">
+                  <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-slate-950/80 backdrop-blur-md text-white text-xs font-bold border border-white/20 shadow-lg">
+                    <Maximize2 className="w-3.5 h-3.5 text-cyan-400" />
+                    <span>Expand Artwork</span>
+                  </span>
+                </div>
               </div>
 
               {/* Keep the card copy in normal document flow, fully visible below the image. */}
-              <div className="relative z-10 pt-4 space-y-1.5 px-1">
-                <h3 className="font-display text-base sm:text-lg font-extrabold text-slate-900 tracking-tight">
-                  {card.title}
-                </h3>
-                <p className="text-xs sm:text-sm text-slate-600 leading-relaxed">
-                  {card.description}
-                </p>
+              <div className="relative z-10 pt-4 space-y-1.5 px-1 flex-1 flex flex-col justify-between">
+                <div>
+                  <div className="flex items-center justify-between gap-2">
+                    <h3 className="font-display text-base sm:text-lg font-extrabold text-slate-900 tracking-tight group-hover:text-[#5B5FEF] transition-colors">
+                      {card.title}
+                    </h3>
+                    <span className="inline-flex items-center gap-1 text-[11px] font-bold text-[#5B5FEF] shrink-0">
+                      <Sparkles className="w-3 h-3 text-cyan-500" />
+                      4K View
+                    </span>
+                  </div>
+                  <p className="text-xs sm:text-sm text-slate-600 leading-relaxed mt-1">
+                    {card.description}
+                  </p>
+                </div>
+
+                <div className="pt-3 border-t border-slate-100 flex items-center justify-between text-[11px] font-semibold text-slate-500">
+                  <span>Front · Back · Sleeve · Crest</span>
+                  <span className="text-[#5B5FEF] group-hover:underline">Tap to Zoom & Pan →</span>
+                </div>
               </div>
             </div>
           ))}
@@ -117,6 +152,17 @@ export const JerseyShowcaseSection: React.FC<JerseyShowcaseSectionProps> = ({
           </div>
         )}
       </div>
+
+      {/* Jersey Showcase Lightbox Modal */}
+      {selectedPreviewCard && (
+        <JerseyShowcaseModal
+          isOpen={Boolean(selectedPreviewCard)}
+          onClose={() => setSelectedPreviewCard(null)}
+          imageSrc={selectedPreviewCard.image}
+          title={selectedPreviewCard.title}
+          description={selectedPreviewCard.description}
+        />
+      )}
     </section>
   );
 };

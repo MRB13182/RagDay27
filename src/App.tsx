@@ -8,6 +8,7 @@ import { Footer } from './components/Footer';
 import { AdminPortal } from './components/AdminPortal';
 import { JerseyShowcaseSection } from './components/JerseyShowcaseSection';
 import { ImportantNoticeModal } from './components/ImportantNoticeModal';
+import { ContactInformationSection } from './components/ContactInformationSection';
 import {
   websiteIdentityConfig,
   eventSettingsConfig,
@@ -453,31 +454,8 @@ export default function App() {
                 </>
               )}
 
-              <section className="py-8 sm:py-12 text-center">
-                <div className="max-w-md mx-auto px-4">
-                  {registrationSettingsConfig.registrationOpen ? (
-                    <>
-                      <button
-                        onClick={handleOpenRegistration}
-                        className="w-full sm:w-auto inline-flex items-center justify-center gap-3 px-8 py-4 rounded-2xl bg-gradient-to-r from-[#5B5FEF] via-[#7A6CFF] to-[#5B5FEF] text-white font-extrabold text-base shadow-xl shadow-[#5B5FEF]/30 hover:shadow-2xl hover:shadow-[#5B5FEF]/40 hover:-translate-y-1 active:translate-y-0 transition-all duration-200 cursor-pointer group"
-                      >
-                        <span>Register Now</span>
-                        <ArrowRight className="w-4 h-4 transition-transform group-hover:translate-x-1" />
-                      </button>
-                      <p className="text-xs text-slate-500 mt-2.5">
-                        Registration deadline: {countdownSettingsConfig.registrationDeadline} · Fee: {registrationSettingsConfig.registrationFee}
-                      </p>
-                    </>
-                  ) : (
-                    <button
-                      onClick={() => setIsRegClosedPopupOpen(true)}
-                      className="w-full sm:w-auto p-4 rounded-2xl bg-amber-50 hover:bg-amber-100 border border-amber-200 text-amber-800 text-xs font-semibold cursor-pointer transition-colors shadow-sm"
-                    >
-                      Registration is currently closed. Please contact the organizers manually.
-                    </button>
-                  )}
-                </div>
-              </section>
+              {/* For More Information Section */}
+              <ContactInformationSection />
             </div>
           )}
 
