@@ -709,7 +709,7 @@ export const RegistrationForm: React.FC<RegistrationFormProps> = ({
             Rag Day 27 Student Registration
           </h1>
           <p className="text-xs sm:text-sm mt-1.5 text-slate-600">
-            Select your wing gender first to unlock the enrollment form and personalized jersey preview.
+            Your gender is set to Male. Complete the form below to register.
           </p>
         </div>
 
