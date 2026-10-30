@@ -250,7 +250,7 @@ export const RegistrationForm: React.FC<RegistrationFormProps> = ({
   useEffect(() => {
     if (!initialRecord) return;
 
-    onGenderChange?.(initialRecord.gender || 'male');
+    onGenderChange?.('male');
     const flagged = detectFlaggedFields(initialRecord.reject_reason);
     const isPhotoFlagged = flagged.has('student_photo');
 
@@ -350,25 +350,6 @@ export const RegistrationForm: React.FC<RegistrationFormProps> = ({
     if (!/^\d+$/.test(trimmed)) return 'Must contain numbers only.';
     if (trimmed.length !== 11) return 'Must be 11 digits.';
     return '';
-  };
-
-  const handleGenderSelect = () => {
-    const selectedGender = 'male' as const;
-    onGenderChange?.(selectedGender);
-    setFormData(prev => ({
-      ...prev,
-      gender: selectedGender,
-      academic_section: '', // Reset section when gender changes
-      jersey_back_name:
-        prev.jersey_back_name === 'STRIKER' || prev.jersey_back_name === 'HUNTER' || prev.jersey_back_name === 'NOVA'
-          ? selectedGender === 'male'
-            ? 'HUNTER'
-            : 'NOVA'
-          : prev.jersey_back_name,
-    }));
-    if (formErrors.gender) {
-      setFormErrors(prev => ({ ...prev, gender: '' }));
-    }
   };
 
   const handleGroupSelect = (e: React.ChangeEvent<HTMLSelectElement>) => {
@@ -728,7 +709,6 @@ export const RegistrationForm: React.FC<RegistrationFormProps> = ({
                   <p className="text-sm font-extrabold text-white">Male · Fixed</p>
                 </div>
               </div>
-              <span className="rounded-full border border-emerald-400/30 bg-emerald-400/10 px-3 py-1 text-[11px] font-bold text-emerald-300">Confirmed</span>
             </div>
           </section>
 
