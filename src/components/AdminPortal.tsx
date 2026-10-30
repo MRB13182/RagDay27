@@ -480,7 +480,7 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
   }
 
   // --------------------------------------------------------------------------
-  // AUTHENTICATED ADMIN PANEL (Shared structure for Male & Female Admin)
+  // AUTHENTICATED MALE ADMIN PANEL
   // --------------------------------------------------------------------------
   const isMaleAdmin = true;
   const roleBadgeColor = 'bg-blue-50 text-blue-700 border-blue-200';
@@ -595,7 +595,7 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
           <div className="grid grid-cols-4 min-w-[320px] gap-2 sm:gap-3">
             <div className="p-2 sm:p-2.5 rounded-xl sm:rounded-2xl bg-white/80 backdrop-blur-md border border-slate-200/80 shadow-2xs">
               <span className="text-[9px] sm:text-[10px] font-extrabold uppercase tracking-wider text-slate-400 block leading-tight truncate">
-                Total {isMaleAdmin ? 'Male' : 'Female'}
+                Total Male
               </span>
               <div className="text-base sm:text-lg font-black text-slate-900 mt-0.5 leading-tight">{stats.total}</div>
             </div>
@@ -873,7 +873,7 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
         {/* 5. FOOTER STATUS BAR */}
         <footer className="px-5 py-2.5 border-t border-slate-200 bg-slate-50 text-[11px] text-slate-500 shrink-0">
           <div>
-            Showing <strong className="text-slate-800">{filteredRegistrations.length}</strong> of <strong className="text-slate-800">{adminRegistrations.length}</strong> {isMaleAdmin ? 'male' : 'female'} registrations
+            Showing <strong className="text-slate-800">{filteredRegistrations.length}</strong> of <strong className="text-slate-800">{adminRegistrations.length}</strong> male registrations
           </div>
         </footer>
 
