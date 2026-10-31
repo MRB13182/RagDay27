@@ -38,7 +38,7 @@ import {
 import { ArrowRight, Bell, CheckCircle2, AlertCircle, Info, X, ShieldAlert, Ticket } from 'lucide-react';
 
 export default function App() {
-  const [activeTab, setActiveTab] = useState<'home' | 'register' | 'invitation'>('home');
+  const [activeTab, setActiveTab] = useState<'home' | 'about' | 'projects' | 'certificates' | 'contact' | 'register' | 'invitation'>('home');
   const [invitationSearchTarget, setInvitationSearchTarget] = useState<string>('');
   const [invitationStudentNameTarget, setInvitationStudentNameTarget] = useState<string>('');
   const [reRegisterRecord, setReRegisterRecord] = useState<InvitationRecord | null>(null);
@@ -455,6 +455,51 @@ export default function App() {
               )}
 
               {/* For More Information Section */}
+              <ContactInformationSection />
+            </div>
+          )}
+
+          {activeTab === 'about' && (
+            <section className="min-h-[calc(100vh-4.5rem)] py-16 sm:py-24 bg-gradient-to-b from-[#F8F9FC] via-[#F4F5FF] to-[#EEF9FF]">
+              <div className="max-w-4xl mx-auto px-5 sm:px-8">
+                <p className="text-xs sm:text-sm font-extrabold tracking-[0.2em] uppercase text-cyan-700 mb-3">A little about me</p>
+                <h1 className="text-4xl sm:text-6xl font-black tracking-tight text-slate-950">About <span className="text-transparent bg-clip-text bg-gradient-to-r from-cyan-500 to-violet-600">Me</span></h1>
+                <div className="mt-8 rounded-3xl border border-white bg-white/80 backdrop-blur-xl shadow-xl shadow-indigo-900/5 p-6 sm:p-10">
+                  <p className="text-base sm:text-lg leading-8 text-slate-700">I’m MD. Moshiur Rahman, a student and aspiring software developer interested in building useful digital experiences. I enjoy learning modern web technologies and exploring software development, full-stack engineering, and AI.</p>
+                </div>
+              </div>
+            </section>
+          )}
+
+          {activeTab === 'projects' && (
+            <section className="min-h-[calc(100vh-4.5rem)] py-16 bg-gradient-to-b from-[#F8F9FC] to-[#EEF9FF]">
+              <div className="max-w-5xl mx-auto px-5 sm:px-8 text-center">
+                <p className="text-xs font-extrabold tracking-[0.2em] uppercase text-cyan-700 mb-3">Selected work</p>
+                <h1 className="text-4xl sm:text-5xl font-black text-slate-950">Projects</h1>
+                <p className="mt-4 text-slate-600">Projects and case studies will be added here.</p>
+              </div>
+            </section>
+          )}
+
+          {activeTab === 'certificates' && (
+            <section className="min-h-[calc(100vh-4.5rem)] py-16 sm:py-20 bg-gradient-to-b from-[#F8F9FC] via-[#F4F5FF] to-[#EEF9FF]">
+              <div className="max-w-6xl mx-auto px-5 sm:px-8">
+                <div className="text-center max-w-3xl mx-auto">
+                  <p className="text-xs sm:text-sm font-extrabold tracking-[0.2em] uppercase text-cyan-700 mb-3">Verified credentials</p>
+                  <h1 className="text-4xl sm:text-6xl font-black text-slate-950">Professional <span className="text-transparent bg-clip-text bg-gradient-to-r from-cyan-500 to-violet-600">&amp; Credentials</span></h1>
+                  <p className="mt-5 text-base sm:text-lg leading-8 text-slate-600">Verified credentials and enterprise specializations certified by industry-leading cloud, software, and AI organizations.</p>
+                </div>
+                <div className="mt-12 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+                  <div className="sm:col-span-2 lg:col-span-3 rounded-2xl border border-dashed border-slate-300 bg-white/70 p-8 text-center text-slate-600">
+                    Certificate images have not been added to this repository yet. Add the six original images to the portfolio assets and they will appear here in the verified order.
+                  </div>
+                </div>
+              </div>
+            </section>
+          )}
+
+          {activeTab === 'contact' && (
+            <div className="min-h-[calc(100vh-4.5rem)] pt-12">
               <ContactInformationSection />
             </div>
           )}
