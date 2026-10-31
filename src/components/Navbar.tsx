@@ -3,8 +3,8 @@ import { Ticket, UserCheck, Menu, X, Bell } from 'lucide-react';
 import { GenderType } from '../types';
 
 interface NavbarProps {
-  activeTab: 'home' | 'register' | 'invitation';
-  onNavigate: (tab: 'home' | 'register' | 'invitation') => void;
+  activeTab: 'home' | 'about' | 'projects' | 'certificates' | 'contact' | 'register' | 'invitation';
+  onNavigate: (tab: 'home' | 'about' | 'projects' | 'certificates' | 'contact' | 'register' | 'invitation') => void;
   websiteLogo?: string;
   eventName?: string;
   onOpenNotice?: () => void;
@@ -21,7 +21,7 @@ export const Navbar: React.FC<NavbarProps> = ({
 }) => {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
-  const handleNavClick = (tab: 'home' | 'register' | 'invitation') => {
+  const handleNavClick = (tab: 'home' | 'about' | 'projects' | 'certificates' | 'contact' | 'register' | 'invitation') => {
     onNavigate(tab);
     setMobileMenuOpen(false);
   };
@@ -100,6 +100,36 @@ export const Navbar: React.FC<NavbarProps> = ({
           >
             Home
           </button>
+
+          <button
+            onClick={() => handleNavClick('about')}
+            className={`px-3.5 py-1.5 text-xs sm:text-sm font-semibold rounded-xl transition-all duration-200 cursor-pointer ${activeTab === 'about' ? 'bg-white text-[#0284C7] font-bold shadow-xs' : 'text-slate-300 hover:text-white hover:bg-white/10'}`}
+          >
+            About
+          </button>
+          <button
+            onClick={() => handleNavClick('projects')}
+            className={`px-3.5 py-1.5 text-xs sm:text-sm font-semibold rounded-xl transition-all duration-200 cursor-pointer ${activeTab === 'projects' ? 'bg-white text-[#0284C7] font-bold shadow-xs' : 'text-slate-300 hover:text-white hover:bg-white/10'}`}
+          >
+            Projects
+          </button>
+          <button
+            onClick={() => handleNavClick('certificates')}
+            className={`px-3.5 py-1.5 text-xs sm:text-sm font-semibold rounded-xl transition-all duration-200 cursor-pointer ${activeTab === 'certificates' ? 'bg-white text-[#0284C7] font-bold shadow-xs' : 'text-slate-300 hover:text-white hover:bg-white/10'}`}
+          >
+            Certificates
+          </button>
+          <button
+            onClick={() => handleNavClick('contact')}
+            className={`px-3.5 py-1.5 text-xs sm:text-sm font-semibold rounded-xl transition-all duration-200 cursor-pointer ${activeTab === 'contact' ? 'bg-white text-[#0284C7] font-bold shadow-xs' : 'text-slate-300 hover:text-white hover:bg-white/10'}`}
+          >
+            Contact
+          </button>
+
+          <button onClick={() => handleNavClick('about')} className={`w-full text-left px-4 py-3 rounded-xl text-sm font-bold transition-colors ${activeTab === 'about' ? 'bg-sky-500/20 text-[#38BDF8]' : 'text-slate-200 hover:bg-white/10'}`}>About</button>
+          <button onClick={() => handleNavClick('projects')} className={`w-full text-left px-4 py-3 rounded-xl text-sm font-bold transition-colors ${activeTab === 'projects' ? 'bg-sky-500/20 text-[#38BDF8]' : 'text-slate-200 hover:bg-white/10'}`}>Projects</button>
+          <button onClick={() => handleNavClick('certificates')} className={`w-full text-left px-4 py-3 rounded-xl text-sm font-bold transition-colors ${activeTab === 'certificates' ? 'bg-sky-500/20 text-[#38BDF8]' : 'text-slate-200 hover:bg-white/10'}`}>Certificates</button>
+          <button onClick={() => handleNavClick('contact')} className={`w-full text-left px-4 py-3 rounded-xl text-sm font-bold transition-colors ${activeTab === 'contact' ? 'bg-sky-500/20 text-[#38BDF8]' : 'text-slate-200 hover:bg-white/10'}`}>Contact</button>
 
           <button
             onClick={() => handleNavClick('invitation')}
