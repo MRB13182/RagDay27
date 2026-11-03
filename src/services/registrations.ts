@@ -68,7 +68,7 @@ export async function fetchSections(groupNameOrId?: string, gender?: 'male' | 'f
   }));
 }
 
-export type DuplicateRiskLevel = 'block' | 'review' | 'clear';
+export type DuplicateRiskLevel = 'block' | 'clear';
 
 export interface DuplicateRiskResult {
   level: DuplicateRiskLevel;
@@ -77,8 +77,8 @@ export interface DuplicateRiskResult {
 }
 
 /**
- * Student ID is the sole hard identity key. Payment transaction reuse is a
- * manual-review signal; common names and class rolls never block registration.
+ * Student ID is the sole hard identity key. Contact, payment, gender, IP,
+ * device, photo, name, roll, group and section are never duplicate signals.
  */
 export async function checkDuplicateRegistration(
   studentId: string,
@@ -101,7 +101,7 @@ export async function checkDuplicateRegistration(
   }
   const rows = Array.isArray(data?.matches) ? data.matches : [];
   const matches = rows.map((row: any) => mapRowToInvitation(row));
-  if (data?.level === 'block' || data?.level === 'review' || data?.level === 'clear') {
+  if (data?.level === 'block' || data?.level === 'clear') {
     return { level: data.level, reason: String(data.reason || ''), matches };
   }
   throw new Error('The registration verification service returned an unexpected response.');
