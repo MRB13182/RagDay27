@@ -175,7 +175,7 @@ export const InvitationCardPage: React.FC<InvitationCardPageProps> = ({
   };
 
   return (
-    <div className="py-8 sm:py-12 max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
+    <div className="public-glass-page relative isolate py-8 sm:py-12 max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 rounded-[2rem] overflow-hidden">
       {/* Header */}
       <div className="text-center max-w-2xl mx-auto mb-8">
         <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-white/80 border border-white/90 shadow-[0_4px_16px_rgba(109,40,217,0.06),inset_0_1px_1px_white] backdrop-blur-xl mb-3">
@@ -193,7 +193,7 @@ export const InvitationCardPage: React.FC<InvitationCardPageProps> = ({
       </div>
 
       {/* Search Layout (Form) */}
-      <div className="p-6 sm:p-8 rounded-3xl glass-panel mb-8">
+      <div className="p-6 sm:p-8 rounded-3xl public-glass-surface mb-8">
         <form
           onSubmit={e => {
             e.preventDefault();
