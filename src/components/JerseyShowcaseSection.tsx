@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { motion, type Variants } from 'framer-motion';
 import { Shirt, CheckCircle2, Maximize2, Sparkles } from 'lucide-react';
 import { JerseyDesignCard, JerseyShowcaseSettings } from '../types';
 import { JerseyShowcaseModal } from './JerseyShowcaseModal';
@@ -9,6 +10,53 @@ interface JerseyShowcaseSectionProps {
   onRegisterClick?: () => void;
   className?: string;
 }
+
+const sectionVariants: Variants = {
+  hidden: { opacity: 0 },
+  visible: {
+    opacity: 1,
+    transition: {
+      staggerChildren: 0.14,
+      delayChildren: 0.08,
+    },
+  },
+};
+
+const headerVariants: Variants = {
+  hidden: { opacity: 0, y: 24 },
+  visible: {
+    opacity: 1,
+    y: 0,
+    transition: {
+      duration: 0.55,
+      ease: [0.22, 1, 0.36, 1],
+    },
+  },
+};
+
+const cardVariants: Variants = {
+  hidden: { opacity: 0, y: 36 },
+  visible: {
+    opacity: 1,
+    y: 0,
+    transition: {
+      duration: 0.65,
+      ease: [0.22, 1, 0.36, 1],
+    },
+  },
+};
+
+const footerVariants: Variants = {
+  hidden: { opacity: 0, y: 20 },
+  visible: {
+    opacity: 1,
+    y: 0,
+    transition: {
+      duration: 0.5,
+      ease: [0.22, 1, 0.36, 1],
+    },
+  },
+};
 
 export const JerseyShowcaseSection: React.FC<JerseyShowcaseSectionProps> = ({
   cards,
@@ -43,11 +91,17 @@ export const JerseyShowcaseSection: React.FC<JerseyShowcaseSectionProps> = ({
       : 'grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 max-w-6xl mx-auto gap-6 sm:gap-8';
 
   return (
-    <section className={`py-10 sm:py-16 relative overflow-hidden ${className}`}>
+    <motion.section
+      initial="hidden"
+      whileInView="visible"
+      viewport={{ once: true, amount: 0.15, margin: '-40px' }}
+      variants={sectionVariants}
+      className={`py-10 sm:py-16 relative overflow-hidden ${className}`}
+    >
       <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[350px] bg-gradient-to-r from-[#5B5FEF]/10 via-[#00D4FF]/10 to-[#7A6CFF]/10 rounded-full blur-3xl pointer-events-none -z-10" />
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="text-center max-w-2xl mx-auto mb-8 sm:mb-12">
+        <motion.div variants={headerVariants} className="text-center max-w-2xl mx-auto mb-8 sm:mb-12">
           <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-white/80 border border-white/90 shadow-[0_4px_16px_rgba(91,95,239,0.06),inset_0_1px_1px_white] backdrop-blur-xl mb-3">
             <Shirt className="w-3.5 h-3.5 text-[#5B5FEF]" />
             <span className="text-xs font-bold uppercase tracking-wider text-slate-700">
@@ -60,12 +114,13 @@ export const JerseyShowcaseSection: React.FC<JerseyShowcaseSectionProps> = ({
           <p className="text-xs sm:text-sm text-slate-500 mt-2">
             Every registered member receives the authentic high-performance squad kit with personalized print. Click on any design to open the full interactive lightbox view.
           </p>
-        </div>
+        </motion.div>
 
-        <div className={gridClasses}>
+        <motion.div variants={sectionVariants} className={gridClasses}>
           {displayCards.map((card) => (
-            <div
+            <motion.div
               key={card.id}
+              variants={cardVariants}
               role="button"
               tabIndex={0}
               onClick={() => setSelectedPreviewCard(card)}
@@ -135,12 +190,12 @@ export const JerseyShowcaseSection: React.FC<JerseyShowcaseSectionProps> = ({
                   <span className="text-[#5B5FEF] group-hover:underline">Tap to Zoom & Pan →</span>
                 </div>
               </div>
-            </div>
+            </motion.div>
           ))}
-        </div>
+        </motion.div>
 
         {onRegisterClick && (
-          <div className="mt-8 text-center">
+          <motion.div variants={footerVariants} className="mt-8 text-center">
             <button
               type="button"
               onClick={onRegisterClick}
@@ -149,7 +204,7 @@ export const JerseyShowcaseSection: React.FC<JerseyShowcaseSectionProps> = ({
               <span>Customize your name & size on registration</span>
               <CheckCircle2 className="w-3.5 h-3.5" />
             </button>
-          </div>
+          </motion.div>
         )}
       </div>
 
@@ -163,6 +218,6 @@ export const JerseyShowcaseSection: React.FC<JerseyShowcaseSectionProps> = ({
           description={selectedPreviewCard.description}
         />
       )}
-    </section>
+    </motion.section>
   );
 };

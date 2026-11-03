@@ -1,4 +1,5 @@
 import React from 'react';
+import { motion, type Variants } from 'framer-motion';
 import { EventCard } from '../types';
 import {
   Calendar,
@@ -108,6 +109,41 @@ const getColorConfig = (color: string) => {
   }
 };
 
+const sectionVariants: Variants = {
+  hidden: { opacity: 0 },
+  visible: {
+    opacity: 1,
+    transition: {
+      staggerChildren: 0.12,
+      delayChildren: 0.05,
+    },
+  },
+};
+
+const headerVariants: Variants = {
+  hidden: { opacity: 0, y: 24 },
+  visible: {
+    opacity: 1,
+    y: 0,
+    transition: {
+      duration: 0.55,
+      ease: [0.22, 1, 0.36, 1],
+    },
+  },
+};
+
+const cardVariants: Variants = {
+  hidden: { opacity: 0, y: 30 },
+  visible: {
+    opacity: 1,
+    y: 0,
+    transition: {
+      duration: 0.6,
+      ease: [0.22, 1, 0.36, 1],
+    },
+  },
+};
+
 export const EventInformationSection: React.FC<EventInformationSectionProps> = ({
   cards,
   layout = 'two-column',
@@ -121,9 +157,15 @@ export const EventInformationSection: React.FC<EventInformationSectionProps> = (
   const isOneColumn = layout === 'one-column';
 
   return (
-    <section className="py-6 sm:py-8 relative">
+    <motion.section
+      initial="hidden"
+      whileInView="visible"
+      viewport={{ once: true, amount: 0.15, margin: '-40px' }}
+      variants={sectionVariants}
+      className="py-6 sm:py-8 relative"
+    >
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="text-center max-w-xl mx-auto mb-6 sm:mb-8">
+        <motion.div variants={headerVariants} className="text-center max-w-xl mx-auto mb-6 sm:mb-8">
           <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-white/80 border border-white/90 shadow-[0_4px_16px_rgba(91,95,239,0.06),inset_0_1px_1px_white] backdrop-blur-xl mb-2.5">
             <Sparkles className="w-3.5 h-3.5 text-[#5B5FEF]" />
             <span className="text-xs font-bold text-slate-800 uppercase tracking-wider">
@@ -133,10 +175,11 @@ export const EventInformationSection: React.FC<EventInformationSectionProps> = (
           <h2 className="font-display text-2xl sm:text-3xl font-extrabold text-slate-900 tracking-tight">
             Event Information
           </h2>
-        </div>
+        </motion.div>
 
         {/* Dynamic Cards Grid according to Super Admin event-card-layout */}
-        <div
+        <motion.div
+          variants={sectionVariants}
           className={
             isOneColumn
               ? 'grid grid-cols-1 max-w-2xl mx-auto gap-4 sm:gap-6'
@@ -146,8 +189,9 @@ export const EventInformationSection: React.FC<EventInformationSectionProps> = (
           {visibleCards.map((card) => {
             const colors = getColorConfig(card.customColor);
             return (
-              <div
+              <motion.div
                 key={card.id}
+                variants={cardVariants}
                 className={`relative p-5 sm:p-7 rounded-2xl sm:rounded-3xl bg-white/84 backdrop-blur-2xl border ${colors.cardBorder} shadow-[0_12px_32px_-10px_rgba(15,23,42,0.06),inset_0_1.5px_1.5px_white] transition-all duration-300 hover:-translate-y-1.5 ${colors.glow} flex flex-col justify-between overflow-hidden group`}
               >
                 <div className="absolute inset-x-0 top-0 h-2/5 bg-gradient-to-b from-white/90 to-transparent pointer-events-none rounded-t-2xl sm:rounded-t-3xl" />
@@ -175,11 +219,11 @@ export const EventInformationSection: React.FC<EventInformationSectionProps> = (
                     <span>{card.subDetail}</span>
                   </div>
                 )}
-              </div>
+              </motion.div>
             );
           })}
-        </div>
+        </motion.div>
       </div>
-    </section>
+    </motion.section>
   );
 };
