@@ -34,7 +34,7 @@ export const Navbar: React.FC<NavbarProps> = ({
     ? 'bg-[#15051B]/90 backdrop-blur-2xl border border-[#4A195E]/70 shadow-[0_12px_36px_rgba(0,0,0,0.4),inset_0_1px_1.5px_rgba(255,255,255,0.1)] text-white'
     : isMaleTheme
     ? 'bg-[#070F1E]/90 backdrop-blur-2xl border border-[#1E3A5F]/70 shadow-[0_12px_36px_rgba(0,0,0,0.4),inset_0_1px_1.5px_rgba(255,255,255,0.1)] text-white'
-    : 'bg-white/82 backdrop-blur-2xl border border-white/90 shadow-[0_12px_36px_-10px_rgba(15,23,42,0.06),inset_0_1px_1.5px_white] text-slate-900';
+    : 'bg-white/68 backdrop-blur-2xl border border-white/95 shadow-[0_18px_44px_-16px_rgba(91,75,160,0.16),0_4px_14px_-6px_rgba(79,70,140,0.08),inset_0_1.5px_1.5px_white] text-slate-900';
 
   return (
     <header className="fixed top-0 left-0 right-0 z-50 w-full transition-all duration-300 px-3 sm:px-6 lg:px-8 pt-2 sm:pt-2.5">
@@ -217,7 +217,7 @@ export const Navbar: React.FC<NavbarProps> = ({
             ? 'border-[#4A195E]/80 bg-[#15051B]/95 backdrop-blur-2xl text-white'
             : isMaleTheme
             ? 'border-[#1E3A5F]/80 bg-[#070F1E]/95 backdrop-blur-2xl text-white'
-            : 'border-white/90 bg-white/95 backdrop-blur-2xl text-slate-900 shadow-[0_20px_45px_-10px_rgba(15,23,42,0.12),inset_0_1px_1.5px_white]'
+            : 'border-white/95 bg-white/78 backdrop-blur-2xl text-slate-900 shadow-[0_24px_55px_-16px_rgba(91,75,160,0.18),inset_0_1.5px_1.5px_white]'
         }`}>
           <button
             onClick={() => handleNavClick('home')}
