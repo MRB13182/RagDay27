@@ -332,27 +332,27 @@ export default function App() {
       {toast && (
         <aside
           aria-label="Notification"
-          className="fixed top-20 right-4 sm:right-6 z-[100] max-w-sm sm:max-w-md animate-slideDown shadow-[0_20px_50px_-10px_rgba(15,23,42,0.18),inset_0_1.5px_2px_white] rounded-2xl p-4 border flex items-center gap-3 backdrop-blur-2xl bg-white/92 text-slate-900 border-white/95"
+          className="fixed top-20 right-4 sm:right-6 z-[100] max-w-sm sm:max-w-md animate-slideDown glass-toast rounded-2xl p-4 flex items-center gap-3"
         >
           {toast.type === 'success' && (
-            <div className="w-8 h-8 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center shrink-0 shadow-2xs border border-emerald-100">
+            <div className="w-8 h-8 rounded-xl bg-emerald-500/15 text-emerald-600 flex items-center justify-center shrink-0 border border-emerald-500/20 shadow-2xs">
               <CheckCircle2 className="w-5 h-5" />
             </div>
           )}
           {toast.type === 'error' && (
-            <div className="w-8 h-8 rounded-xl bg-rose-50 text-rose-600 flex items-center justify-center shrink-0 shadow-2xs border border-rose-100">
+            <div className="w-8 h-8 rounded-xl bg-rose-500/15 text-rose-600 flex items-center justify-center shrink-0 border border-rose-500/20 shadow-2xs">
               <AlertCircle className="w-5 h-5" />
             </div>
           )}
           {toast.type === 'info' && (
-            <div className="w-8 h-8 rounded-xl bg-indigo-50 text-indigo-600 flex items-center justify-center shrink-0 shadow-2xs border border-indigo-100">
+            <div className="w-8 h-8 rounded-xl bg-indigo-500/15 text-indigo-600 flex items-center justify-center shrink-0 border border-indigo-500/20 shadow-2xs">
               <Info className="w-5 h-5" />
             </div>
           )}
-          <div className="flex-1 text-xs sm:text-sm font-semibold text-slate-800 leading-snug">{toast.message}</div>
+          <div className="flex-1 text-xs sm:text-sm font-bold text-slate-900 leading-snug">{toast.message}</div>
           <button
             onClick={() => setToast(null)}
-            className="p-1.5 rounded-lg text-slate-400 hover:text-slate-700 hover:bg-slate-100/70 transition-colors cursor-pointer"
+            className="p-1.5 rounded-lg text-slate-400 hover:text-slate-800 hover:bg-black/5 transition-colors cursor-pointer"
           >
             <X className="w-4 h-4" />
           </button>
@@ -370,7 +370,7 @@ export default function App() {
       {isRegClosedPopupOpen && (
         <div className="fixed inset-0 z-[160] flex items-center justify-center p-4 bg-slate-950/60 backdrop-blur-md animate-fadeIn">
           <div className="w-full max-w-md glass-modal rounded-3xl p-6 sm:p-8 space-y-4 text-center">
-            <div className="w-14 h-14 rounded-2xl bg-amber-500/10 text-amber-600 grid place-items-center mx-auto shadow-2xs border border-amber-500/20">
+            <div className="w-14 h-14 rounded-2xl bg-amber-500/15 text-amber-600 grid place-items-center mx-auto shadow-2xs border border-amber-500/25">
               <ShieldAlert className="w-7 h-7" />
             </div>
             <h3 className="font-display text-2xl font-black text-slate-900">Registration Closed</h3>
@@ -379,7 +379,7 @@ export default function App() {
               <button
                 type="button"
                 onClick={() => setIsRegClosedPopupOpen(false)}
-                className="w-full py-3.5 rounded-xl bg-slate-900 hover:bg-slate-800 text-white font-bold text-xs shadow-md cursor-pointer transition-all active:scale-95"
+                className="w-full py-3.5 rounded-2xl glass-button-primary font-bold text-xs shadow-md cursor-pointer transition-all active:scale-95"
               >
                 Close
               </button>

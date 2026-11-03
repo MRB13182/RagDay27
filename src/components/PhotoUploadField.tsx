@@ -139,18 +139,18 @@ export const PhotoUploadField: React.FC<PhotoUploadFieldProps> = ({
         onDragOver={handleDragOver}
         onDragLeave={handleDragLeave}
         onDrop={handleDrop}
-        className={`group relative p-3 sm:p-4 rounded-2xl border transition-all duration-300 cursor-pointer backdrop-blur-md select-none ${
+        className={`group relative p-3 sm:p-4 rounded-2xl border transition-all duration-300 cursor-pointer backdrop-blur-xl select-none ${
           isDragging
             ? isMale
-              ? 'border-[#38BDF8] bg-[#0B1E3F]/70 shadow-[0_0_20px_rgba(56,189,248,0.25)] scale-[1.01]'
+              ? 'border-[#38BDF8] bg-[#0B1E3F]/70 shadow-[0_0_24px_rgba(56,189,248,0.35)] scale-[1.01]'
               : isFemale
-              ? 'border-[#EC4899] bg-[#3D0A4E]/70 shadow-[0_0_20px_rgba(236,72,153,0.3)] scale-[1.01]'
-              : 'border-slate-500 bg-slate-900/80 scale-[1.01]'
+              ? 'border-[#EC4899] bg-pink-500/20 shadow-[0_0_24px_rgba(236,72,153,0.35)] scale-[1.01]'
+              : 'border-indigo-400 bg-white/80 scale-[1.01]'
             : isMale
-            ? 'border-[#1E3A5F]/80 hover:border-[#38BDF8]/80 bg-[#060D1A]/90 hover:bg-[#0B1E3F]/40 shadow-[inset_0_1.5px_2px_rgba(0,0,0,0.5)]'
+            ? 'border-cyan-400/30 hover:border-cyan-400/60 bg-slate-900/40 hover:bg-slate-900/60 shadow-[0_8px_24px_rgba(3,10,28,0.4),inset_0_1px_1px_rgba(255,255,255,0.08)]'
             : isFemale
-            ? 'border-[#4A195E]/80 hover:border-[#EC4899]/80 bg-[#180320]/90 hover:bg-[#3D0A4E]/40 shadow-[inset_0_1.5px_2px_rgba(0,0,0,0.5)]'
-            : 'border-slate-800 hover:border-slate-700 bg-slate-900/80 shadow-[inset_0_1.5px_2px_rgba(0,0,0,0.5)]'
+            ? 'border-pink-300/60 hover:border-pink-400 bg-white/60 hover:bg-white/80 shadow-[0_8px_20px_rgba(236,72,153,0.1),inset_0_1px_1px_white]'
+            : 'glass-upload'
         } ${isProcessing ? 'pointer-events-none opacity-80' : ''}`}
       >
         <div className="flex items-center justify-between gap-3">
@@ -161,7 +161,7 @@ export const PhotoUploadField: React.FC<PhotoUploadFieldProps> = ({
                 <img
                   src={effectivePhoto}
                   alt="Student Portrait Preview"
-                  className="w-12 h-12 sm:w-14 sm:h-14 rounded-xl object-cover border border-white/20 shadow-md transition-transform duration-200 group-hover/preview:scale-105 bg-slate-950"
+                  className="w-12 h-12 sm:w-14 sm:h-14 rounded-xl object-cover border border-white/30 shadow-md transition-transform duration-200 group-hover/preview:scale-105 bg-slate-950/60 backdrop-blur-md"
                 />
                 {isProcessing && (
                   <div className="absolute inset-0 rounded-xl bg-black/60 backdrop-blur-xs flex items-center justify-center">
@@ -171,12 +171,12 @@ export const PhotoUploadField: React.FC<PhotoUploadFieldProps> = ({
               </div>
             ) : (
               <div
-                className={`w-11 h-11 sm:w-12 sm:h-12 rounded-xl flex items-center justify-center flex-shrink-0 transition-all duration-300 ${
+                className={`w-11 h-11 sm:w-12 sm:h-12 rounded-xl flex items-center justify-center flex-shrink-0 transition-all duration-300 backdrop-blur-md ${
                   isMale
-                    ? 'bg-[#0B1E3F] text-[#38BDF8] border border-[#1E3A5F] group-hover:shadow-[0_0_12px_rgba(56,189,248,0.3)]'
+                    ? 'bg-cyan-500/15 text-cyan-300 border border-cyan-400/30 group-hover:shadow-[0_0_15px_rgba(56,189,248,0.3)]'
                     : isFemale
-                    ? 'bg-[#3D0A4E] text-[#EC4899] border border-[#4A195E] group-hover:shadow-[0_0_12px_rgba(236,72,153,0.3)]'
-                    : 'bg-slate-800 text-slate-300 border border-slate-700'
+                    ? 'bg-pink-500/15 text-pink-600 border border-pink-300/50 group-hover:shadow-[0_0_15px_rgba(236,72,153,0.3)]'
+                    : 'bg-indigo-500/10 text-indigo-600 border border-indigo-200/60'
                 }`}
               >
                 {isProcessing ? (
@@ -189,7 +189,7 @@ export const PhotoUploadField: React.FC<PhotoUploadFieldProps> = ({
 
             {/* Middle: Clean Text & Instructions */}
             <div className="min-w-0">
-              <div className="text-xs sm:text-sm font-bold tracking-tight text-white truncate">
+              <div className={`text-xs sm:text-sm font-bold tracking-tight truncate ${isMale ? 'text-white' : 'text-slate-900'}`}>
                 {isProcessing
                   ? 'Processing photo...'
                   : effectivePhoto
@@ -198,7 +198,7 @@ export const PhotoUploadField: React.FC<PhotoUploadFieldProps> = ({
               </div>
               <p
                 className={`text-[11px] truncate mt-0.5 ${
-                  isMale ? 'text-slate-400' : isFemale ? 'text-pink-300/70' : 'text-slate-400'
+                  isMale ? 'text-slate-400' : isFemale ? 'text-pink-600/70' : 'text-slate-500'
                 }`}
               >
                 {effectivePhoto
@@ -215,12 +215,12 @@ export const PhotoUploadField: React.FC<PhotoUploadFieldProps> = ({
                 <button
                   type="button"
                   onClick={() => fileInputRef.current?.click()}
-                  className={`px-3 py-1.5 rounded-xl text-xs font-semibold flex items-center gap-1 transition-all cursor-pointer ${
+                  className={`px-3 py-1.5 rounded-xl text-xs font-semibold flex items-center gap-1 transition-all cursor-pointer backdrop-blur-md ${
                     isMale
-                      ? 'bg-sky-500/20 hover:bg-sky-500/30 text-sky-300 border border-sky-400/40'
+                      ? 'bg-sky-500/20 hover:bg-sky-500/35 text-sky-200 border border-sky-400/40 shadow-xs'
                       : isFemale
-                      ? 'bg-pink-500/20 hover:bg-pink-500/30 text-pink-300 border border-pink-400/40'
-                      : 'bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700'
+                      ? 'bg-pink-500/20 hover:bg-pink-500/35 text-pink-700 border border-pink-400/40 shadow-xs'
+                      : 'glass-button text-slate-700'
                   }`}
                   title="Change photo"
                 >
@@ -230,7 +230,7 @@ export const PhotoUploadField: React.FC<PhotoUploadFieldProps> = ({
                 <button
                   type="button"
                   onClick={handleRemovePhoto}
-                  className="p-1.5 rounded-xl text-xs font-semibold text-rose-400 hover:text-rose-300 bg-rose-950/60 hover:bg-rose-900/70 border border-rose-800/80 transition-all cursor-pointer"
+                  className="p-1.5 rounded-xl text-xs font-semibold text-rose-300 hover:text-white bg-rose-500/20 hover:bg-rose-500/40 border border-rose-400/40 transition-all cursor-pointer backdrop-blur-md"
                   title="Remove photo"
                 >
                   <X className="w-3.5 h-3.5" />
@@ -238,12 +238,12 @@ export const PhotoUploadField: React.FC<PhotoUploadFieldProps> = ({
               </div>
             ) : (
               <span
-                className={`text-xs font-bold px-3.5 py-2 rounded-xl border transition-all duration-200 flex items-center gap-1.5 shadow-sm ${
+                className={`text-xs font-bold px-3.5 py-2 rounded-xl border transition-all duration-200 flex items-center gap-1.5 shadow-sm backdrop-blur-md ${
                   isMale
-                    ? 'bg-[#0284C7] hover:bg-[#0369a1] text-white border-[#38BDF8]/40'
+                    ? 'bg-gradient-to-r from-[#0284C7] to-[#0369A1] hover:from-[#0369A1] hover:to-[#0284C7] text-white border-cyan-400/40 shadow-[0_4px_14px_rgba(2,132,199,0.35),inset_0_1px_1px_rgba(255,255,255,0.3)]'
                     : isFemale
-                    ? 'bg-[#DB2777] hover:bg-[#be185d] text-white border-[#EC4899]/40'
-                    : 'bg-slate-800 text-slate-200 border-slate-700'
+                    ? 'bg-gradient-to-r from-[#DB2777] to-[#BE185D] text-white border-pink-400/40 shadow-[0_4px_14px_rgba(219,39,119,0.35)]'
+                    : 'glass-button-primary'
                 }`}
               >
                 <Upload className="w-3.5 h-3.5" />

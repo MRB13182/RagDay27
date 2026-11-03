@@ -503,9 +503,9 @@ export const InvitationCardPage: React.FC<InvitationCardPageProps> = ({
         </div>
       )}
       {showRecoveryDialog && matchedRecord?.status === 'rejected' && (
-        <div className="fixed inset-0 z-[260] flex items-center justify-center bg-slate-950/60 backdrop-blur-sm p-4">
+        <div className="fixed inset-0 z-[260] flex items-center justify-center bg-slate-950/65 backdrop-blur-md p-4 animate-fadeIn">
           <form
-            className="w-full max-w-md rounded-2xl bg-white p-5 sm:p-6 shadow-2xl border border-rose-100 space-y-4"
+            className="w-full max-w-md rounded-3xl glass-modal p-6 sm:p-7 shadow-[0_30px_80px_-15px_rgba(244,63,94,0.3),inset_0_1.5px_2px_white] border border-rose-300/60 space-y-4"
             onSubmit={async e => {
               e.preventDefault();
               setRecoveryError(null);
@@ -530,8 +530,11 @@ export const InvitationCardPage: React.FC<InvitationCardPageProps> = ({
             }}
           >
             <div>
-              <h3 className="text-lg font-extrabold text-rose-800">Recover Rejected Registration</h3>
-              <p className="mt-1 text-sm text-slate-600">Enter the Student ID from the original registration to verify your record and restore its saved details.</p>
+              <span className="text-[10px] font-extrabold uppercase tracking-widest text-rose-600 bg-rose-500/10 px-2.5 py-1 rounded-full border border-rose-300/40">
+                Data Recovery
+              </span>
+              <h3 className="text-xl font-display font-extrabold text-slate-900 mt-2">Recover Registration</h3>
+              <p className="mt-1 text-xs text-slate-600 leading-relaxed">Enter the Student ID from your original registration to verify your record and restore its saved details.</p>
             </div>
             <label className="block text-xs font-bold uppercase tracking-wide text-slate-700">
               Original Student ID
@@ -540,16 +543,16 @@ export const InvitationCardPage: React.FC<InvitationCardPageProps> = ({
                 inputMode="numeric"
                 value={recoveryStudentId}
                 onChange={e => setRecoveryStudentId(e.target.value.replace(/\D/g, ''))}
-                className="mt-1.5 w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-900 outline-none focus:border-rose-500 focus:ring-2 focus:ring-rose-200"
+                className="mt-1.5 w-full rounded-xl glass-input px-4 py-3 text-sm text-slate-900 outline-none focus:border-rose-500 focus:ring-2 focus:ring-rose-200/50"
                 placeholder="Enter your original Student ID"
                 required
                 disabled={isRecoveringRejected}
               />
             </label>
-            {recoveryError && <p className="rounded-xl border border-rose-200 bg-rose-50 p-3 text-sm font-bold text-rose-700" role="alert">{recoveryError}</p>}
-            <div className="flex gap-3">
-              <button type="button" onClick={() => setShowRecoveryDialog(false)} className="flex-1 rounded-xl border border-slate-200 px-4 py-3 text-sm font-bold text-slate-700" disabled={isRecoveringRejected}>Cancel</button>
-              <button type="submit" className="flex-1 rounded-xl bg-rose-600 px-4 py-3 text-sm font-bold text-white disabled:opacity-60" disabled={isRecoveringRejected || !recoveryStudentId.trim()}>{isRecoveringRejected ? 'Verifying...' : 'Verify & Continue'}</button>
+            {recoveryError && <p className="rounded-xl border border-rose-200/80 bg-rose-500/10 backdrop-blur-md p-3 text-xs font-bold text-rose-700" role="alert">{recoveryError}</p>}
+            <div className="flex gap-3 pt-2">
+              <button type="button" onClick={() => setShowRecoveryDialog(false)} className="flex-1 rounded-xl glass-button px-4 py-3 text-xs font-bold text-slate-700 cursor-pointer" disabled={isRecoveringRejected}>Cancel</button>
+              <button type="submit" className="flex-1 rounded-xl glass-button-primary bg-gradient-to-r from-rose-600 via-rose-500 to-red-600 text-white px-4 py-3 text-xs font-bold disabled:opacity-60 cursor-pointer" disabled={isRecoveringRejected || !recoveryStudentId.trim()}>{isRecoveringRejected ? 'Verifying...' : 'Verify & Continue'}</button>
             </div>
           </form>
         </div>

@@ -362,15 +362,15 @@ export const RegistrationForm: React.FC<RegistrationFormProps> = ({
   const isGenderChosen = isMale;
 
   // Container & styling classes based on selected gender
-  const containerClasses = 'glass-male text-white border-2 border-[#1E40AF]/60 shadow-[0_20px_60px_-15px_rgba(15,23,42,0.9),0_0_35px_-5px_rgba(56,189,248,0.25)]';
+  const containerClasses = 'glass-male text-white border-2 border-cyan-400/40 shadow-[0_25px_60px_-15px_rgba(3,10,28,0.85),0_0_35px_-5px_rgba(56,189,248,0.25)]';
 
-  const sectionHeaderClasses = 'text-[#38BDF8] border-b border-slate-800';
+  const sectionHeaderClasses = 'text-[#38BDF8] border-b border-cyan-500/25';
 
-  const labelClasses = 'text-slate-300';
+  const labelClasses = 'text-slate-200';
 
-  const inputClasses = 'bg-slate-900/85 backdrop-blur-md border-slate-700/90 text-white placeholder-slate-500 focus:border-[#38BDF8] focus:ring-2 focus:ring-[#38BDF8]/30 shadow-[inset_0_1.5px_2px_rgba(0,0,0,0.3)]';
+  const inputClasses = 'glass-male-input text-white placeholder-slate-400 focus:border-[#38BDF8] focus:ring-2 focus:ring-[#38BDF8]/30';
 
-  const subCardClasses = 'bg-slate-900/70 border border-slate-800/90 backdrop-blur-xl shadow-inner';
+  const subCardClasses = 'glass-male-card backdrop-blur-xl';
 
   // Dynamic payment numbers based on gender
   const activeBkashNumber = paymentSettings?.maleBkashNumber || '01712-345678';
@@ -1376,7 +1376,7 @@ export const RegistrationForm: React.FC<RegistrationFormProps> = ({
 
                 <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-center">
                   {/* Left: Live Interactive Jersey Graphic */}
-                  <div className="lg:col-span-5 flex flex-col items-center justify-center p-4 rounded-3xl bg-slate-950/20 border border-white/20">
+                  <div className="lg:col-span-5 flex flex-col items-center justify-center p-4 rounded-3xl glass-male-card border border-cyan-400/25 shadow-inner">
                     <JerseyGraphic
                       name={formData.jersey_back_name}
                       number={formData.jersey_number}
@@ -1579,12 +1579,12 @@ export const RegistrationForm: React.FC<RegistrationFormProps> = ({
       {/* REGISTRATION CLOSED MODAL                                */}
       {/* ======================================================== */}
       {showClosedModal && (
-        <div className="fixed inset-0 z-[250] flex items-center justify-center p-4 bg-slate-950/70 backdrop-blur-sm animate-fadeIn">
-          <div className="w-full max-w-md bg-white/90 backdrop-blur-2xl rounded-3xl p-6 sm:p-7 shadow-[0_25px_60px_-15px_rgba(0,0,0,0.3),inset_0_1.5px_2px_white] border border-white/95 text-slate-900 space-y-4 text-center">
-            <div className="w-14 h-14 rounded-2xl bg-amber-50 text-amber-600 grid place-items-center mx-auto">
+        <div className="fixed inset-0 z-[250] flex items-center justify-center p-4 bg-slate-950/70 backdrop-blur-md animate-fadeIn">
+          <div className="w-full max-w-md glass-modal rounded-3xl p-6 sm:p-7 shadow-[0_25px_60px_-15px_rgba(0,0,0,0.3),inset_0_1.5px_2px_white] border border-white/95 text-slate-900 space-y-4 text-center animate-scaleUp">
+            <div className="w-14 h-14 rounded-2xl bg-amber-500/15 border border-amber-300/40 text-amber-600 grid place-items-center mx-auto shadow-xs backdrop-blur-md">
               <ShieldAlert className="w-7 h-7" />
             </div>
-            <h3 className="text-xl font-black text-slate-900">Registration Closed</h3>
+            <h3 className="text-xl font-display font-extrabold text-slate-900">Registration Closed</h3>
             <p className="text-xs sm:text-sm text-slate-600 leading-relaxed">
               Registration is currently closed. Please contact the organizers manually.
             </p>
@@ -1592,7 +1592,7 @@ export const RegistrationForm: React.FC<RegistrationFormProps> = ({
               <button
                 type="button"
                 onClick={() => setShowClosedModal(false)}
-                className="w-full py-3 rounded-xl bg-slate-900 hover:bg-slate-800 text-white font-bold text-xs shadow-md cursor-pointer"
+                className="w-full py-3 rounded-xl glass-button text-slate-900 font-bold text-xs shadow-md cursor-pointer"
               >
                 Close
               </button>
@@ -1602,64 +1602,64 @@ export const RegistrationForm: React.FC<RegistrationFormProps> = ({
       )}
 
       {/* ======================================================== */}
-      {/* SUCCESS SUBMISSION MODAL                                 */}
+      {/* SUCCESS SUBMISSION MODAL (Frosted Glass)                 */}
       {/* ======================================================== */}
       {successModalData && (
         <div className="fixed inset-0 z-[250] flex items-center justify-center p-4 bg-slate-950/75 backdrop-blur-md animate-fadeIn">
-          <div className="relative w-full max-w-md bg-white/92 backdrop-blur-2xl rounded-3xl p-6 sm:p-8 shadow-[0_25px_60px_-15px_rgba(0,0,0,0.3),inset_0_1.5px_2px_white] border border-white/95 text-slate-900 text-center space-y-5">
+          <div className="relative w-full max-w-md glass-modal rounded-3xl p-6 sm:p-8 shadow-[0_30px_75px_-15px_rgba(16,185,129,0.25),inset_0_1.5px_2px_white] border border-white/95 text-slate-900 text-center space-y-5 animate-scaleUp">
             {/* Close Button at top-right */}
             <button
               type="button"
               onClick={() => setSuccessModalData(null)}
-              className="absolute top-4 right-4 sm:top-5 sm:right-5 w-8 h-8 rounded-full bg-slate-100 hover:bg-slate-200 text-slate-500 hover:text-slate-800 flex items-center justify-center transition-colors cursor-pointer"
+              className="absolute top-4 right-4 sm:top-5 sm:right-5 w-8 h-8 rounded-full bg-white/70 hover:bg-white text-slate-500 hover:text-slate-800 flex items-center justify-center transition-colors cursor-pointer border border-slate-200/60"
               aria-label="Close"
             >
               <X className="w-4 h-4" />
             </button>
 
-            <div className="w-16 h-16 rounded-2xl bg-emerald-50 text-emerald-600 grid place-items-center mx-auto shadow-inner">
+            <div className="w-16 h-16 rounded-2xl bg-emerald-500/15 border border-emerald-300/40 text-emerald-600 grid place-items-center mx-auto shadow-xs backdrop-blur-md">
               <Check className="w-8 h-8 stroke-[3]" />
             </div>
 
             <div>
-              <span className="text-[11px] font-extrabold uppercase tracking-widest text-emerald-600 bg-emerald-50 px-3 py-1 rounded-full border border-emerald-200">
+              <span className="text-[11px] font-extrabold uppercase tracking-widest text-emerald-700 bg-emerald-500/15 px-3 py-1 rounded-full border border-emerald-300/40 backdrop-blur-md">
                 Enrollment Submitted
               </span>
-              <h2 className="text-2xl font-black text-slate-900 mt-3">
+              <h2 className="text-2xl font-display font-black text-slate-900 mt-3">
                 Registration Successful!
               </h2>
-              <p className="text-xs text-slate-500 mt-1">
-                Congratulations <strong className="text-slate-800">{successModalData.name}</strong>, your registration has been recorded.
+              <p className="text-xs text-slate-600 mt-1">
+                Congratulations <strong className="text-slate-900">{successModalData.name}</strong>, your registration has been recorded.
               </p>
             </div>
 
-            <div className="p-4 rounded-2xl bg-slate-50 border border-slate-200 space-y-2">
+            <div className="p-4 rounded-2xl bg-white/75 backdrop-blur-md border border-slate-200/80 shadow-2xs space-y-2">
               <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400 block">
                 Permanent Registration Number
               </span>
               <div className="font-mono text-2xl font-black text-indigo-600 tracking-wider">
                 {successModalData.regNo}
               </div>
-              <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-amber-50 border border-amber-200 text-amber-700 text-xs font-bold">
+              <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-amber-500/15 border border-amber-300/40 text-amber-800 text-xs font-bold backdrop-blur-md">
                 <Clock className="w-3.5 h-3.5" />
                 <span>Status: Pending Review</span>
               </div>
             </div>
 
             {/* Red Notice */}
-            <div className="p-3 sm:p-3.5 rounded-2xl bg-rose-50 border border-rose-200 text-rose-700 text-xs font-medium text-left flex items-start gap-2.5">
+            <div className="p-3 sm:p-3.5 rounded-2xl bg-rose-500/10 backdrop-blur-md border border-rose-300/40 text-rose-800 text-xs font-medium text-left flex items-start gap-2.5">
               <span className="text-base shrink-0 leading-none mt-0.5">⚠️</span>
               <div className="leading-relaxed">
                 <span className="font-bold block">
                   Please Note Your Registration Number and Full Name.
                 </span>
-                <span className="text-rose-600">
+                <span className="text-rose-700">
                   You will need them to check your application status and download your invitation card.
                 </span>
               </div>
             </div>
 
-            <p className="text-xs text-slate-500 leading-relaxed">
+            <p className="text-xs text-slate-600 leading-relaxed">
               Please save your <strong>Registration Number</strong>. The committee will verify your payment and grant your official invitation card pass.
             </p>
 
@@ -1670,7 +1670,7 @@ export const RegistrationForm: React.FC<RegistrationFormProps> = ({
                   navigator.clipboard.writeText(successModalData.regNo);
                   alert(`Copied ${successModalData.regNo} to clipboard!`);
                 }}
-                className="py-3 px-4 rounded-xl border border-slate-200 hover:bg-slate-50 text-slate-700 font-bold text-xs transition-colors flex items-center justify-center gap-1.5 cursor-pointer"
+                className="py-3 px-4 rounded-xl glass-button text-slate-700 font-bold text-xs transition-colors flex items-center justify-center gap-1.5 cursor-pointer"
               >
                 <Copy className="w-3.5 h-3.5 text-indigo-600" />
                 <span>Copy Reg No</span>
@@ -1683,7 +1683,7 @@ export const RegistrationForm: React.FC<RegistrationFormProps> = ({
                   setSuccessModalData(null);
                   onGoToInvitation(regNo, studentName);
                 }}
-                className="py-3 px-4 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs shadow-md shadow-indigo-200 transition-all flex items-center justify-center gap-1.5 cursor-pointer"
+                className="py-3 px-4 rounded-xl glass-button-primary font-bold text-xs shadow-md transition-all flex items-center justify-center gap-1.5 cursor-pointer"
               >
                 <span>Check Status</span>
                 <ArrowRight className="w-3.5 h-3.5" />

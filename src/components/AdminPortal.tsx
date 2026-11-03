@@ -413,21 +413,21 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
   // --------------------------------------------------------------------------
   if (!admin) {
     return (
-      <div className="fixed inset-0 z-[300] bg-black/75 backdrop-blur-md flex items-center justify-center p-4">
-        <div className="w-full max-w-md bg-white/92 backdrop-blur-2xl rounded-3xl shadow-[0_30px_70px_-15px_rgba(0,0,0,0.4),inset_0_1.5px_2px_white] p-6 sm:p-8 relative border border-white/95 animate-scaleUp">
+      <div className="fixed inset-0 z-[300] bg-slate-950/70 backdrop-blur-md flex items-center justify-center p-4 animate-fadeIn">
+        <div className="w-full max-w-md glass-modal rounded-3xl shadow-[0_30px_70px_-15px_rgba(0,0,0,0.4),inset_0_1.5px_2px_white] p-6 sm:p-8 relative border border-white/95 animate-scaleUp">
           <button
             onClick={handleClose}
-            className="absolute top-4 right-4 p-2 rounded-xl text-slate-400 hover:text-slate-700 hover:bg-slate-100 transition-colors"
+            className="absolute top-4 right-4 p-2 rounded-xl text-slate-400 hover:text-slate-700 hover:bg-white/80 transition-colors cursor-pointer"
           >
             <X className="w-5 h-5" />
           </button>
 
           <div className="flex items-center gap-3.5 mb-6">
-            <div className="w-12 h-12 rounded-2xl bg-indigo-50 border border-indigo-100 text-indigo-600 grid place-items-center shadow-sm">
+            <div className="w-12 h-12 rounded-2xl bg-indigo-500/15 border border-indigo-300/40 text-[#5B5FEF] grid place-items-center shadow-xs backdrop-blur-md">
               <Lock className="w-6 h-6" />
             </div>
             <div>
-              <h2 className="text-xl font-extrabold text-slate-900 tracking-tight">Admin Access</h2>
+              <h2 className="text-xl font-display font-extrabold text-slate-900 tracking-tight">Admin Access</h2>
               <p className="text-xs text-slate-500 mt-0.5">Enter committee passcode to unlock your admin panel.</p>
             </div>
           </div>
@@ -442,14 +442,14 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
                 value={passcode}
                 onChange={e => setPasscode(e.target.value)}
                 placeholder="Enter Male Admin passcode"
-                className="w-full px-4 py-3.5 rounded-xl border border-slate-200/90 bg-slate-50/80 backdrop-blur-md text-sm font-mono font-medium focus:bg-white focus:border-indigo-600 focus:ring-2 focus:ring-indigo-100 outline-none transition-all placeholder:text-slate-400"
+                className="w-full px-4 py-3.5 rounded-xl glass-input text-sm font-mono font-medium focus:border-[#5B5FEF] focus:ring-2 focus:ring-[#5B5FEF]/20 outline-none transition-all placeholder:text-slate-400"
                 autoFocus
                 required
               />
             </div>
 
             {loginError && (
-              <div className="p-3 rounded-xl bg-rose-50 border border-rose-200 text-rose-700 text-xs font-semibold flex items-center gap-2">
+              <div className="p-3 rounded-xl bg-rose-500/15 border border-rose-300/50 text-rose-700 text-xs font-semibold flex items-center gap-2 backdrop-blur-md">
                 <AlertCircle className="w-4 h-4 shrink-0" />
                 <span>{loginError}</span>
               </div>
@@ -458,7 +458,7 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
             <button
               type="submit"
               disabled={isLoggingIn || !passcode.trim()}
-              className="w-full py-3.5 rounded-xl bg-slate-900 hover:bg-indigo-600 active:bg-indigo-700 text-white font-bold text-sm shadow-md transition-all flex items-center justify-center gap-2 disabled:opacity-50 cursor-pointer"
+              className="w-full py-3.5 rounded-xl glass-button-primary font-bold text-sm shadow-md transition-all flex items-center justify-center gap-2 disabled:opacity-50 cursor-pointer"
             >
               {isLoggingIn ? (
                 <>
@@ -474,8 +474,8 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
             </button>
           </form>
 
-          <div className="mt-6 pt-5 border-t border-slate-100 text-center">
-            <span className="text-[11px] text-slate-400 font-medium">
+          <div className="mt-6 pt-5 border-t border-slate-200/60 text-center">
+            <span className="text-[11px] text-slate-500 font-medium">
               Admin access is restricted to the Boys Wing.
             </span>
           </div>
@@ -488,18 +488,18 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
   // AUTHENTICATED MALE ADMIN PANEL
   // --------------------------------------------------------------------------
   const isMaleAdmin = true;
-  const roleBadgeColor = 'bg-blue-50 text-blue-700 border-blue-200';
+  const roleBadgeColor = 'bg-blue-500/15 text-blue-700 border-blue-300/40';
   const panelTitle = 'Male Admin Panel';
   const genderSubtext = 'Boys Wing Registrations';
 
   return (
-    <div className="fixed inset-0 z-[300] bg-black/70 backdrop-blur-md flex items-center justify-center p-2 sm:p-4 md:p-6">
-      <div className="w-full max-w-7xl h-[95vh] rounded-3xl bg-white/95 backdrop-blur-2xl shadow-[0_30px_75px_-20px_rgba(0,0,0,0.35),inset_0_1.5px_2px_white] border border-white/95 flex flex-col overflow-hidden animate-scaleUp">
+    <div className="fixed inset-0 z-[300] bg-slate-950/70 backdrop-blur-md flex items-center justify-center p-2 sm:p-4 md:p-6 animate-fadeIn">
+      <div className="w-full max-w-7xl h-[95vh] rounded-3xl glass-modal shadow-[0_30px_75px_-20px_rgba(0,0,0,0.35),inset_0_1.5px_2px_white] border border-white/95 flex flex-col overflow-hidden animate-scaleUp">
 
         {/* 1. ADMIN HEADER */}
-        <header className="px-4 py-3 sm:px-5 sm:py-3.5 border-b border-slate-200/90 bg-white/80 backdrop-blur-md flex items-center justify-between gap-2.5 shrink-0">
+        <header className="px-4 py-3 sm:px-5 sm:py-3.5 border-b border-slate-200/80 glass-modal-header flex items-center justify-between gap-2.5 shrink-0">
           <div className="flex items-center gap-2.5 min-w-0">
-            <div className={`w-9 h-9 sm:w-10 sm:h-10 rounded-xl grid place-items-center font-black text-base sm:text-lg border shrink-0 ${roleBadgeColor}`}>
+            <div className={`w-9 h-9 sm:w-10 sm:h-10 rounded-xl grid place-items-center font-black text-base sm:text-lg border shrink-0 backdrop-blur-md ${roleBadgeColor}`}>
               {isMaleAdmin ? '♂' : '♀'}
             </div>
             <div className="min-w-0">
@@ -521,10 +521,10 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
             {/* Registration Auto/Manual Status & Toggle */}
             <button
               onClick={handleToggleRegistrationOpen}
-              className={`p-2 sm:px-3 sm:py-2 rounded-xl text-xs font-bold transition-all inline-flex items-center gap-1.5 cursor-pointer border ${
+              className={`p-2 sm:px-3 sm:py-2 rounded-xl text-xs font-bold transition-all inline-flex items-center gap-1.5 cursor-pointer border backdrop-blur-md ${
                 regState.isOpen
-                  ? 'bg-emerald-50 text-emerald-700 border-emerald-200 hover:bg-rose-50 hover:text-rose-700 hover:border-rose-200'
-                  : 'bg-rose-50 text-rose-700 border-rose-200 hover:bg-emerald-50 hover:text-emerald-700 hover:border-emerald-200'
+                  ? 'bg-emerald-500/15 text-emerald-800 border-emerald-300/50 hover:bg-rose-500/15 hover:text-rose-800 hover:border-rose-300/50'
+                  : 'bg-rose-500/15 text-rose-800 border-rose-300/50 hover:bg-emerald-500/15 hover:text-emerald-800 hover:border-emerald-300/50'
               }`}
               title={`Click to ${regState.isOpen ? 'manually DISABLE' : 'manually ENABLE'} registration. (Mode: ${regState.isAuto ? 'Automatic Schedule' : 'Manual Override'})`}
             >
@@ -540,7 +540,7 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
             <button
               onClick={handleExportPDF}
               disabled={adminRegistrations.length === 0}
-              className="p-2 sm:px-3 sm:py-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold transition-colors inline-flex items-center gap-1.5 disabled:opacity-40 cursor-pointer"
+              className="p-2 sm:px-3 sm:py-2 rounded-xl glass-button text-slate-700 text-xs font-bold transition-colors inline-flex items-center gap-1.5 disabled:opacity-40 cursor-pointer"
               title="Download registration ledger as PDF"
             >
               <FileSpreadsheet className="w-4 h-4 text-slate-600" />
@@ -550,7 +550,7 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
             <button
               onClick={loadAdminRegistrations}
               disabled={isLoadingRegistrations}
-              className="p-2 sm:px-3 sm:py-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold transition-colors inline-flex items-center gap-1.5 cursor-pointer disabled:opacity-50"
+              className="p-2 sm:px-3 sm:py-2 rounded-xl glass-button text-slate-700 text-xs font-bold transition-colors inline-flex items-center gap-1.5 cursor-pointer disabled:opacity-50"
               title="Refresh registrations from database"
             >
               <RefreshCw className={`w-4 h-4 ${isLoadingRegistrations ? 'animate-spin text-indigo-600' : 'text-slate-600'}`} />
@@ -559,7 +559,7 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
 
             <button
               onClick={handleLogout}
-              className="p-2 sm:px-3 sm:py-2 rounded-xl bg-slate-900 hover:bg-rose-600 text-white text-xs font-bold transition-colors inline-flex items-center gap-1.5 cursor-pointer"
+              className="p-2 sm:px-3 sm:py-2 rounded-xl bg-slate-900/90 hover:bg-rose-600 text-white text-xs font-bold transition-colors inline-flex items-center gap-1.5 cursor-pointer backdrop-blur-md border border-slate-700/60"
               title="Sign out of admin session"
             >
               <LogOut className="w-4 h-4" />
@@ -568,7 +568,7 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
 
             <button
               onClick={handleClose}
-              className="p-2 rounded-xl text-slate-400 hover:text-slate-700 hover:bg-slate-100 transition-colors ml-0.5"
+              className="p-2 rounded-xl text-slate-400 hover:text-slate-700 hover:bg-white/80 transition-colors ml-0.5 cursor-pointer"
               title="Close Admin Panel"
             >
               <X className="w-5 h-5" />
@@ -595,39 +595,39 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
           </div>
         )}
 
-        {/* 2. REGISTRATION STATISTICS & SUMMARY - Compact Single Row */}
-        <section className="px-4 py-2 sm:px-5 sm:py-2.5 border-b border-slate-200/80 bg-slate-50/60 backdrop-blur-md overflow-x-auto shrink-0">
+        {/* 2. REGISTRATION STATISTICS & SUMMARY - Frosted Glass Row */}
+        <section className="px-4 py-2.5 sm:px-5 sm:py-3 border-b border-slate-200/80 bg-white/40 backdrop-blur-md overflow-x-auto shrink-0">
           <div className="grid grid-cols-4 min-w-[320px] gap-2 sm:gap-3">
-            <div className="p-2 sm:p-2.5 rounded-xl sm:rounded-2xl bg-white/80 backdrop-blur-md border border-slate-200/80 shadow-2xs">
-              <span className="text-[9px] sm:text-[10px] font-extrabold uppercase tracking-wider text-slate-400 block leading-tight truncate">
+            <div className="p-2 sm:p-2.5 rounded-xl sm:rounded-2xl glass-card border border-slate-200/90 shadow-2xs">
+              <span className="text-[9px] sm:text-[10px] font-extrabold uppercase tracking-wider text-slate-500 block leading-tight truncate">
                 Total Male
               </span>
               <div className="text-base sm:text-lg font-black text-slate-900 mt-0.5 leading-tight">{stats.total}</div>
             </div>
-            <div className="p-2 sm:p-2.5 rounded-xl sm:rounded-2xl bg-white/80 backdrop-blur-md border border-amber-200/80 shadow-2xs">
-              <span className="text-[9px] sm:text-[10px] font-extrabold uppercase tracking-wider text-amber-600 block leading-tight truncate">
+            <div className="p-2 sm:p-2.5 rounded-xl sm:rounded-2xl bg-amber-500/10 backdrop-blur-md border border-amber-300/60 shadow-2xs">
+              <span className="text-[9px] sm:text-[10px] font-extrabold uppercase tracking-wider text-amber-700 block leading-tight truncate">
                 Pending Review
               </span>
-              <div className="text-base sm:text-lg font-black text-amber-700 mt-0.5 leading-tight">{stats.pending}</div>
+              <div className="text-base sm:text-lg font-black text-amber-800 mt-0.5 leading-tight">{stats.pending}</div>
             </div>
-            <div className="p-2 sm:p-2.5 rounded-xl sm:rounded-2xl bg-white/80 backdrop-blur-md border border-emerald-200/80 shadow-2xs">
-              <span className="text-[9px] sm:text-[10px] font-extrabold uppercase tracking-wider text-emerald-600 block leading-tight truncate">
+            <div className="p-2 sm:p-2.5 rounded-xl sm:rounded-2xl bg-emerald-500/10 backdrop-blur-md border border-emerald-300/60 shadow-2xs">
+              <span className="text-[9px] sm:text-[10px] font-extrabold uppercase tracking-wider text-emerald-700 block leading-tight truncate">
                 Approved
               </span>
-              <div className="text-base sm:text-lg font-black text-emerald-700 mt-0.5 leading-tight">{stats.approved}</div>
+              <div className="text-base sm:text-lg font-black text-emerald-800 mt-0.5 leading-tight">{stats.approved}</div>
             </div>
-            <div className="p-2 sm:p-2.5 rounded-xl sm:rounded-2xl bg-white/80 backdrop-blur-md border border-rose-200/80 shadow-2xs">
-              <span className="text-[9px] sm:text-[10px] font-extrabold uppercase tracking-wider text-rose-600 block leading-tight truncate">
+            <div className="p-2 sm:p-2.5 rounded-xl sm:rounded-2xl bg-rose-500/10 backdrop-blur-md border border-rose-300/60 shadow-2xs">
+              <span className="text-[9px] sm:text-[10px] font-extrabold uppercase tracking-wider text-rose-700 block leading-tight truncate">
                 Rejected
               </span>
-              <div className="text-base sm:text-lg font-black text-rose-700 mt-0.5 leading-tight">{stats.rejected}</div>
+              <div className="text-base sm:text-lg font-black text-rose-800 mt-0.5 leading-tight">{stats.rejected}</div>
             </div>
           </div>
         </section>
 
         {/* 3. CONTROLS: STATUS FILTERS & SEARCH */}
-        <div className="px-5 py-3 border-b border-slate-200/80 bg-white/70 backdrop-blur-md flex flex-wrap items-center justify-between gap-3 shrink-0">
-          <div className="flex items-center gap-1.5 overflow-x-auto">
+        <div className="px-5 py-3 border-b border-slate-200/80 bg-white/60 backdrop-blur-md flex flex-wrap items-center justify-between gap-3 shrink-0">
+          <div className="flex items-center gap-1.5 overflow-x-auto p-1 rounded-2xl bg-slate-100/70 backdrop-blur-md border border-slate-200/70">
             {(['all', 'pending', 'approved', 'rejected'] as const).map(tab => {
               const active = statusFilter === tab;
               const count = tab === 'all' ? stats.total : stats[tab];
@@ -635,10 +635,10 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
                 <button
                   key={tab}
                   onClick={() => setStatusFilter(tab)}
-                  className={`px-3 py-1.5 rounded-xl text-xs font-bold capitalize transition-colors flex items-center gap-1.5 cursor-pointer ${
+                  className={`px-3 py-1.5 rounded-xl text-xs font-bold capitalize transition-all flex items-center gap-1.5 cursor-pointer ${
                     active
                       ? 'bg-slate-900 text-white shadow-xs'
-                      : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
+                      : 'text-slate-600 hover:text-slate-900 hover:bg-white/60'
                   }`}
                 >
                   <span>{tab}</span>
@@ -657,12 +657,12 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
               value={searchTerm}
               onChange={e => setSearchTerm(e.target.value)}
               placeholder="Search reg no, name, roll, txn…"
-              className="w-full pl-8 pr-3 py-1.5 rounded-xl border border-slate-200/90 bg-slate-50/80 backdrop-blur-md text-xs focus:bg-white focus:border-indigo-600 outline-none transition-colors"
+              className="w-full pl-8 pr-3 py-2 rounded-xl glass-input text-xs text-slate-900 placeholder-slate-400 focus:border-[#5B5FEF] focus:ring-2 focus:ring-[#5B5FEF]/20 outline-none transition-all"
             />
             {searchTerm && (
               <button
                 onClick={() => setSearchTerm('')}
-                className="absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600"
+                className="absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 cursor-pointer"
               >
                 <X className="w-3.5 h-3.5" />
               </button>
@@ -671,20 +671,20 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
         </div>
 
         {/* 4. REGISTRATION TABLE / LIST */}
-        <div className="flex-1 overflow-auto bg-slate-50/30">
+        <div className="flex-1 overflow-auto bg-slate-50/20 backdrop-blur-xs">
           {isLoadingRegistrations ? (
             <div className="h-64 flex flex-col items-center justify-center gap-2 text-slate-400">
               <RefreshCw className="w-6 h-6 animate-spin text-indigo-600" />
               <span className="text-xs font-semibold">Loading {panelTitle} records from Supabase…</span>
             </div>
           ) : registrationLoadError ? (
-            <div className="p-8 text-center max-w-md mx-auto my-12 bg-white rounded-3xl border border-rose-200 shadow-sm">
+            <div className="p-8 text-center max-w-md mx-auto my-12 glass-card rounded-3xl border border-rose-300 shadow-sm">
               <AlertCircle className="w-8 h-8 text-rose-600 mx-auto mb-2" />
               <h3 className="text-sm font-bold text-slate-900">Database Connection Issue</h3>
               <p className="text-xs text-rose-600 mt-1">{registrationLoadError}</p>
               <button
                 onClick={loadAdminRegistrations}
-                className="mt-4 px-4 py-2 rounded-xl bg-slate-900 text-white text-xs font-bold hover:bg-slate-800"
+                className="mt-4 px-4 py-2 rounded-xl glass-button-primary text-white text-xs font-bold cursor-pointer"
               >
                 Retry Query
               </button>
@@ -697,22 +697,22 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
             </div>
           ) : (
             <div className="min-w-full inline-block align-middle">
-              <table className="min-w-full text-left text-xs divide-y divide-slate-200">
-                <thead className="bg-slate-100/90 text-slate-700 font-bold sticky top-0 z-10 backdrop-blur-xs">
+              <table className="min-w-full text-left text-xs divide-y divide-slate-200/80">
+                <thead className="bg-slate-100/85 text-slate-700 font-bold sticky top-0 z-10 backdrop-blur-md border-b border-slate-200/80">
                   <tr>
                     <th className="px-3.5 py-3 whitespace-nowrap">SL</th>
                     <th className="px-3 py-3 whitespace-nowrap">Photo</th>
                     <th className="px-3.5 py-3 whitespace-nowrap">Reg No</th>
                     <th className="px-3.5 py-3 whitespace-nowrap">Student Name</th>
-                    <th className="px-3 py-3 whitespace-nowrap">Roll / Section</th>
-                    <th className="px-3 py-3 whitespace-nowrap">College ID</th>
+                    <th className="px-3.5 py-3 whitespace-nowrap">Roll / Section</th>
+                    <th className="px-3.5 py-3 whitespace-nowrap">College ID</th>
                     <th className="px-3.5 py-3 whitespace-nowrap">Jersey</th>
                     <th className="px-3.5 py-3 whitespace-nowrap">Payment</th>
-                    <th className="px-3 py-3 whitespace-nowrap">Status</th>
+                    <th className="px-3.5 py-3 whitespace-nowrap">Status</th>
                     <th className="px-3.5 py-3 text-right whitespace-nowrap">Actions</th>
                   </tr>
                 </thead>
-                <tbody className="bg-white divide-y divide-slate-100">
+                <tbody className="divide-y divide-slate-100 bg-white/40">
                   {filteredRegistrations.map(r => {
                     const isApproved = r.status === 'approved';
                     const isRejected = r.status === 'rejected';
@@ -875,8 +875,8 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
           )}
         </div>
 
-        {/* 5. FOOTER STATUS BAR */}
-        <footer className="px-5 py-2.5 border-t border-slate-200 bg-slate-50 text-[11px] text-slate-500 shrink-0">
+        {/* 5. FOOTER STATUS BAR: Frosted Glass */}
+        <footer className="px-5 py-2.5 border-t border-slate-200/80 bg-white/60 backdrop-blur-md text-[11px] text-slate-500 shrink-0">
           <div>
             Showing <strong className="text-slate-800">{filteredRegistrations.length}</strong> of <strong className="text-slate-800">{adminRegistrations.length}</strong> male registrations
           </div>
@@ -885,18 +885,18 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
       </div>
 
       {/* ---------------------------------------------------------------------- */}
-      {/* MODAL: REJECT REGISTRATION WITH REASON (Required) */}
+      {/* MODAL: REJECT REGISTRATION WITH REASON (Frosted Glass) */}
       {/* ---------------------------------------------------------------------- */}
       {rejectingRecord && (
-        <div className="fixed inset-0 z-[320] bg-black/60 backdrop-blur-md flex items-center justify-center p-4">
-          <div className="w-full max-w-lg bg-white/92 backdrop-blur-2xl rounded-3xl shadow-[0_30px_70px_-15px_rgba(0,0,0,0.35),inset_0_1.5px_2px_white] p-6 border border-white/95 animate-scaleUp">
+        <div className="fixed inset-0 z-[320] bg-slate-950/65 backdrop-blur-md flex items-center justify-center p-4 animate-fadeIn">
+          <div className="w-full max-w-lg glass-modal rounded-3xl shadow-[0_30px_70px_-15px_rgba(244,63,94,0.3),inset_0_1.5px_2px_white] p-6 border border-rose-300/60 animate-scaleUp">
             <div className="flex items-center justify-between mb-4">
               <div className="flex items-center gap-2.5">
-                <div className="w-10 h-10 rounded-2xl bg-rose-50 text-rose-600 grid place-items-center">
+                <div className="w-10 h-10 rounded-2xl bg-rose-500/15 text-rose-600 grid place-items-center border border-rose-300/40 shadow-xs backdrop-blur-md">
                   <XCircle className="w-5 h-5" />
                 </div>
                 <div>
-                  <h3 className="text-base font-black text-slate-900">Reject Registration</h3>
+                  <h3 className="text-base font-display font-black text-slate-900">Reject Registration</h3>
                   <p className="text-xs text-slate-500 font-mono">
                     {rejectingRecord.registration_no} · {rejectingRecord.full_name}
                   </p>
@@ -904,7 +904,7 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
               </div>
               <button
                 onClick={() => { setRejectingRecord(null); setRejectReason(''); }}
-                className="p-1.5 rounded-xl text-slate-400 hover:text-slate-600 cursor-pointer"
+                className="p-1.5 rounded-xl text-slate-400 hover:text-slate-700 hover:bg-white/80 cursor-pointer transition-colors"
               >
                 <X className="w-4 h-4" />
               </button>
@@ -919,7 +919,7 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
                 onChange={e => setRejectReason(e.target.value)}
                 placeholder="State clearly why this registration is rejected (e.g. Transaction ID mismatch, incomplete payment, invalid student ID)..."
                 rows={3}
-                className="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 text-xs font-sans leading-relaxed outline-none focus:border-rose-600 focus:ring-2 focus:ring-rose-100 transition-all placeholder:text-slate-400"
+                className="w-full px-3.5 py-2.5 rounded-xl glass-input text-xs font-sans leading-relaxed outline-none focus:border-rose-600 focus:ring-2 focus:ring-rose-200/50 transition-all placeholder:text-slate-400"
                 autoFocus
                 required
               />
@@ -948,10 +948,10 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
                         key={chip.label}
                         type="button"
                         onClick={() => handleInsertRejectionChip(chip.text)}
-                        className={`px-2.5 py-1 rounded-lg text-[11px] border transition-all cursor-pointer ${
+                        className={`px-2.5 py-1 rounded-lg text-[11px] border transition-all cursor-pointer backdrop-blur-md ${
                           isSelected
-                            ? 'bg-rose-50 border-rose-300 text-rose-700 font-bold shadow-2xs'
-                            : 'bg-slate-50 border-slate-200 text-slate-700 font-medium hover:bg-slate-100 hover:border-slate-300'
+                            ? 'bg-rose-500/20 border-rose-400/60 text-rose-800 font-bold shadow-2xs'
+                            : 'glass-button text-slate-700 hover:text-slate-900'
                         }`}
                       >
                         {chip.label}
@@ -961,16 +961,16 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
                 </div>
               </div>
 
-              <p className="text-[11px] text-slate-400 mt-2">
+              <p className="text-[11px] text-slate-500 mt-2">
                 This reason will be recorded in Supabase and shown to the student on the official gate pass lookup page.
               </p>
             </div>
 
-            <div className="flex items-center justify-end gap-2.5 pt-1 border-t border-slate-100">
+            <div className="flex items-center justify-end gap-2.5 pt-2 border-t border-slate-200/60">
               <button
                 type="button"
                 onClick={() => { setRejectingRecord(null); setRejectReason(''); }}
-                className="px-4 py-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold transition-colors cursor-pointer"
+                className="px-4 py-2.5 rounded-xl glass-button text-slate-700 text-xs font-bold transition-colors cursor-pointer"
               >
                 Cancel
               </button>
@@ -978,7 +978,7 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
                 type="button"
                 onClick={handleConfirmReject}
                 disabled={isSubmittingReject || !rejectReason.trim()}
-                className="px-5 py-2.5 rounded-xl bg-rose-600 hover:bg-rose-700 text-white text-xs font-bold transition-all shadow-md shadow-rose-200 disabled:opacity-50 cursor-pointer inline-flex items-center gap-1.5"
+                className="px-5 py-2.5 rounded-xl glass-button-primary bg-gradient-to-r from-rose-600 via-rose-500 to-red-600 text-white text-xs font-bold transition-all shadow-md shadow-rose-300 disabled:opacity-50 cursor-pointer inline-flex items-center gap-1.5"
               >
                 {isSubmittingReject ? (
                   <>
@@ -998,20 +998,20 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
       )}
 
       {/* ---------------------------------------------------------------------- */}
-      {/* DRAWER: DETAILED REGISTRATION VIEW */}
+      {/* DRAWER: DETAILED REGISTRATION VIEW (Frosted Glass) */}
       {/* ---------------------------------------------------------------------- */}
       {selectedRecord && (
-        <div className="fixed inset-0 z-[310] bg-black/50 backdrop-blur-sm flex items-center justify-end p-2 sm:p-4">
-          <div className="w-full max-w-lg h-full max-h-[92vh] bg-white/95 backdrop-blur-2xl rounded-3xl shadow-[0_30px_70px_-15px_rgba(0,0,0,0.35),inset_0_1.5px_2px_white] border border-white/95 flex flex-col overflow-hidden animate-slideLeft">
+        <div className="fixed inset-0 z-[310] bg-slate-950/50 backdrop-blur-md flex items-center justify-end p-2 sm:p-4 animate-fadeIn">
+          <div className="w-full max-w-lg h-full max-h-[92vh] glass-modal rounded-3xl shadow-[0_30px_70px_-15px_rgba(0,0,0,0.35),inset_0_1.5px_2px_white] border border-white/95 flex flex-col overflow-hidden animate-slideLeft">
             
-            <header className="px-5 py-4 border-b border-slate-200 bg-slate-50 flex items-center justify-between">
+            <header className="px-5 py-4 border-b border-slate-200/80 glass-modal-header flex items-center justify-between">
               <div>
                 <span className="text-[10px] font-extrabold uppercase tracking-wider text-slate-400 block">Registration Details</span>
                 <div className="font-mono text-base font-black text-indigo-600">{selectedRecord.registration_no}</div>
               </div>
               <button
                 onClick={() => setSelectedRecord(null)}
-                className="p-2 rounded-xl text-slate-400 hover:text-slate-700 hover:bg-slate-200/60"
+                className="p-2 rounded-xl text-slate-400 hover:text-slate-700 hover:bg-white/80 cursor-pointer transition-colors"
               >
                 <X className="w-5 h-5" />
               </button>
@@ -1019,7 +1019,7 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
 
             <div className="flex-1 overflow-auto p-5 space-y-5 text-xs">
               {/* Photo & Identity Banner */}
-              <div className="flex items-center gap-4 p-4 rounded-2xl bg-slate-50 border border-slate-200">
+              <div className="flex items-center gap-4 p-4 rounded-2xl glass-card border border-slate-200/80">
                 <AdminStudentPhoto
                   photo={selectedRecord.student_photo}
                   name={selectedRecord.full_name}
@@ -1029,14 +1029,14 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
                   <h4 className="text-sm font-extrabold text-slate-900 truncate">{selectedRecord.full_name}</h4>
                   <p className="text-slate-500 font-mono mt-0.5">SL: #{selectedRecord.sl_no} · ID: {selectedRecord.student_id}</p>
                   <div className="mt-1.5 flex items-center gap-2">
-                    <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold ${
-                      selectedRecord.status === 'approved' ? 'bg-emerald-100 text-emerald-800' :
-                      selectedRecord.status === 'rejected' ? 'bg-rose-100 text-rose-800' :
-                      'bg-amber-100 text-amber-800'
+                    <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold backdrop-blur-md border ${
+                      selectedRecord.status === 'approved' ? 'bg-emerald-500/15 text-emerald-800 border-emerald-300/40' :
+                      selectedRecord.status === 'rejected' ? 'bg-rose-500/15 text-rose-800 border-rose-300/40' :
+                      'bg-amber-500/15 text-amber-800 border-amber-300/40'
                     }`}>
                       Status: {selectedRecord.status.toUpperCase()}
                     </span>
-                    <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-slate-200 text-slate-700 uppercase">
+                    <span className="px-2 py-0.5 rounded-full text-[10px] font-bold glass-pill text-slate-700 uppercase">
                       {selectedRecord.gender}
                     </span>
                   </div>
@@ -1047,21 +1047,21 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
               <section className="space-y-2">
                 <h5 className="font-extrabold text-slate-900 uppercase text-[10px] tracking-wider text-slate-400">Academic Profile</h5>
                 <div className="grid grid-cols-2 gap-2.5">
-                  <div className="p-3 rounded-xl bg-slate-50 border border-slate-100">
-                    <span className="text-[10px] text-slate-400 block">Class Roll</span>
-                    <strong className="text-slate-800 font-mono">{selectedRecord.class_roll}</strong>
+                  <div className="p-3 rounded-xl glass-card border border-slate-200/70">
+                    <span className="text-[10px] text-slate-400 block font-bold uppercase">Class Roll</span>
+                    <strong className="text-slate-800 font-mono text-xs">{selectedRecord.class_roll}</strong>
                   </div>
-                  <div className="p-3 rounded-xl bg-slate-50 border border-slate-100">
-                    <span className="text-[10px] text-slate-400 block">College ID</span>
-                    <strong className="text-slate-800 font-mono">{selectedRecord.student_id}</strong>
+                  <div className="p-3 rounded-xl glass-card border border-slate-200/70">
+                    <span className="text-[10px] text-slate-400 block font-bold uppercase">College ID</span>
+                    <strong className="text-slate-800 font-mono text-xs">{selectedRecord.student_id}</strong>
                   </div>
-                  <div className="p-3 rounded-xl bg-slate-50 border border-slate-100">
-                    <span className="text-[10px] text-slate-400 block">Academic Group</span>
-                    <strong className="text-slate-800">{selectedRecord.academic_group}</strong>
+                  <div className="p-3 rounded-xl glass-card border border-slate-200/70">
+                    <span className="text-[10px] text-slate-400 block font-bold uppercase">Academic Group</span>
+                    <strong className="text-slate-800 text-xs">{selectedRecord.academic_group}</strong>
                   </div>
-                  <div className="p-3 rounded-xl bg-slate-50 border border-slate-100">
-                    <span className="text-[10px] text-slate-400 block">Section</span>
-                    <strong className="text-slate-800">{selectedRecord.academic_section}</strong>
+                  <div className="p-3 rounded-xl glass-card border border-slate-200/70">
+                    <span className="text-[10px] text-slate-400 block font-bold uppercase">Section</span>
+                    <strong className="text-slate-800 text-xs">{selectedRecord.academic_section}</strong>
                   </div>
                 </div>
               </section>
@@ -1069,17 +1069,17 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
               {/* Jersey Customization */}
               <section className="space-y-2">
                 <h5 className="font-extrabold text-slate-900 uppercase text-[10px] tracking-wider text-slate-400">Jersey Customization</h5>
-                <div className="p-3.5 rounded-2xl bg-indigo-50/50 border border-indigo-100 flex items-center justify-between">
+                <div className="p-3.5 rounded-2xl bg-indigo-500/10 backdrop-blur-md border border-indigo-200/60 shadow-2xs flex items-center justify-between">
                   <div>
-                    <span className="text-[10px] text-indigo-400 block uppercase font-bold">Back Print</span>
-                    <div className="text-sm font-black text-indigo-900 flex items-center gap-2">
-                      <span className="font-mono text-base">#{selectedRecord.jersey_number}</span>
+                    <span className="text-[10px] text-indigo-500 block uppercase font-bold">Back Print</span>
+                    <div className="text-sm font-black text-indigo-950 flex items-center gap-2">
+                      <span className="font-mono text-base text-[#5B5FEF]">#{selectedRecord.jersey_number}</span>
                       <span>{selectedRecord.jersey_back_name}</span>
                     </div>
                   </div>
                   <div className="text-right">
-                    <span className="text-[10px] text-indigo-400 block uppercase font-bold">Selected Size</span>
-                    <div className="text-base font-black text-indigo-900 font-mono">{selectedRecord.jersey_size}</div>
+                    <span className="text-[10px] text-indigo-500 block uppercase font-bold">Selected Size</span>
+                    <div className="text-base font-black text-indigo-950 font-mono">{selectedRecord.jersey_size}</div>
                   </div>
                 </div>
               </section>
@@ -1088,28 +1088,28 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
               <section className="space-y-2">
                 <h5 className="font-extrabold text-slate-900 uppercase text-[10px] tracking-wider text-slate-400">Payment Audit</h5>
                 <div className="space-y-2">
-                  <div className="p-3 rounded-xl bg-slate-50 border border-slate-100 flex items-center justify-between">
+                  <div className="p-3 rounded-xl glass-card border border-slate-200/70 flex items-center justify-between">
                     <span className="text-slate-500">Method:</span>
                     <strong className="capitalize font-black text-slate-800">{selectedRecord.send_method}</strong>
                   </div>
-                  <div className="p-3 rounded-xl bg-slate-50 border border-slate-100 flex items-center justify-between">
+                  <div className="p-3 rounded-xl glass-card border border-slate-200/70 flex items-center justify-between">
                     <span className="text-slate-500">Sender Mobile No:</span>
                     <strong className="font-mono text-slate-800">{selectedRecord.sender_mobile_no}</strong>
                   </div>
-                  <div className="p-3 rounded-xl bg-slate-50 border border-slate-100 flex items-center justify-between">
+                  <div className="p-3 rounded-xl glass-card border border-slate-200/70 flex items-center justify-between">
                     <span className="text-slate-500">Payment Time:</span>
                     <strong className="font-mono text-slate-800">{selectedRecord.payment_time}</strong>
                   </div>
-                  <div className="p-3 rounded-xl bg-slate-50 border border-slate-100 flex items-center justify-between">
+                  <div className="p-3 rounded-xl glass-card border border-slate-200/70 flex items-center justify-between">
                     <span className="text-slate-500">Transaction ID:</span>
-                    <strong className="font-mono text-indigo-600">{selectedRecord.transaction_id || 'Not Provided'}</strong>
+                    <strong className="font-mono text-indigo-600 font-black">{selectedRecord.transaction_id || 'Not Provided'}</strong>
                   </div>
                 </div>
               </section>
 
               {/* Rejection / Approval Audit Records */}
               {selectedRecord.reject_reason && (
-                <section className="p-3.5 rounded-2xl bg-rose-50 border border-rose-200">
+                <section className="p-3.5 rounded-2xl bg-rose-500/10 backdrop-blur-md border border-rose-300/50">
                   <span className="text-[10px] font-bold uppercase tracking-wider text-rose-700 block mb-1">
                     Recorded Rejection Reason
                   </span>
@@ -1123,7 +1123,7 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
               )}
 
               {selectedRecord.approved_at && (
-                <section className="p-3 rounded-xl bg-emerald-50 border border-emerald-200 text-emerald-800 text-[11px]">
+                <section className="p-3 rounded-xl bg-emerald-500/10 backdrop-blur-md border border-emerald-300/50 text-emerald-800 text-[11px]">
                   <strong>Approved at:</strong> {new Date(selectedRecord.approved_at).toLocaleString()}
                 </section>
               )}
@@ -1133,7 +1133,7 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
                 <div className="pt-2">
                   <button
                     onClick={() => generateInvitationCardPDF(selectedRecord, pdfSettings, websiteSettings)}
-                    className="w-full py-3 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs shadow-md transition-all flex items-center justify-center gap-2"
+                    className="w-full py-3 rounded-xl glass-button-primary font-bold text-xs shadow-md transition-all flex items-center justify-center gap-2 cursor-pointer"
                   >
                     <Download className="w-4 h-4" />
                     <span>Download Official Invitation Pass (PDF)</span>
@@ -1142,11 +1142,11 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
               )}
             </div>
 
-            {/* Drawer Actions */}
-            <footer className="p-4 border-t border-slate-200 bg-slate-50 flex items-center justify-between gap-2">
+            {/* Drawer Actions: Frosted Glass Footer */}
+            <footer className="p-4 border-t border-slate-200/80 glass-modal-header flex items-center justify-between gap-2">
               <button
                 onClick={() => handleHide(selectedRecord.registration_no)}
-                className="px-3.5 py-2.5 rounded-xl border border-slate-200 hover:bg-rose-50 hover:text-rose-700 hover:border-rose-200 text-slate-600 text-xs font-bold transition-colors inline-flex items-center gap-1.5"
+                className="px-3.5 py-2.5 rounded-xl glass-button hover:text-rose-700 text-slate-600 text-xs font-bold transition-colors inline-flex items-center gap-1.5 cursor-pointer"
               >
                 <Trash2 className="w-3.5 h-3.5" />
                 <span>Remove From Web</span>
@@ -1156,7 +1156,7 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
                 {selectedRecord.status !== 'rejected' && (
                   <button
                     onClick={() => openRejectModal(selectedRecord)}
-                    className="px-4 py-2.5 rounded-xl bg-rose-50 hover:bg-rose-600 hover:text-white text-rose-700 border border-rose-200 text-xs font-bold transition-all"
+                    className="px-4 py-2.5 rounded-xl bg-rose-500/15 hover:bg-rose-600 hover:text-white text-rose-700 border border-rose-300/60 text-xs font-bold transition-all cursor-pointer backdrop-blur-md"
                   >
                     Reject
                   </button>
@@ -1164,7 +1164,7 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
                 {selectedRecord.status !== 'approved' && (
                   <button
                     onClick={() => handleApprove(selectedRecord.registration_no)}
-                    className="px-5 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold shadow-md transition-all inline-flex items-center gap-1.5"
+                    className="px-5 py-2.5 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white text-xs font-bold shadow-md shadow-emerald-500/20 transition-all inline-flex items-center gap-1.5 cursor-pointer"
                   >
                     <Check className="w-3.5 h-3.5" />
                     <span>Approve</span>
