@@ -387,18 +387,18 @@ create or replace function public.find_registration_duplicate(
 returns setof public.registrations
 language plpgsql
 security definer
-as $$
+set search_path = ''
+as $
 begin
   return query
-    select * from public.registrations
-    where hidden_from_web = false
-      and (
-        student_id = trim(p_student_id)
-        or (lower(trim(full_name)) = lower(trim(p_full_name)) and class_roll = trim(p_class_roll))
-      )
+    select r.* from public.registrations r
+    where r.hidden_from_web = false
+      and nullif(trim(p_student_id), '') is not null
+      and trim(r.student_id) = trim(p_student_id)
+    order by case when r.status <> 'rejected' then 0 else 1 end, r.created_at desc
     limit 1;
 end;
-$$;
+$;
 
 -- 10. RESUBMIT REJECTED REGISTRATION
 create or replace function public.resubmit_rejected_registration(
