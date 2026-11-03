@@ -80,6 +80,15 @@ export interface DuplicateRiskResult {
  * Student ID is the sole hard identity key. Payment transaction reuse is a
  * manual-review signal; common names and class rolls never block registration.
  */
+export type DuplicateRiskLevel = 'block' | 'review' | 'clear';
+
+export interface DuplicateRiskResult {
+  level: DuplicateRiskLevel;
+  reason: string;
+  matches: InvitationRecord[];
+}
+
+/** Student ID is the only hard identity key. Reused transaction IDs require manual review. */
 export async function checkDuplicateRegistration(
   studentId: string,
   _fullName: string,
@@ -95,20 +104,15 @@ export async function checkDuplicateRegistration(
     p_student_id: cleanStudentId,
     p_current_registration_no: currentRegistrationNo || null,
   });
-
-  // Fail closed when authoritative verification is unavailable.
   if (error) {
     console.error('Authoritative registration risk check failed:', error);
     throw new Error('We could not verify this Student ID right now. Please try again in a moment.');
   }
-
   const rows = Array.isArray(data?.matches) ? data.matches : [];
   const matches = rows.map((row: any) => mapRowToInvitation(row));
-
   if (data?.level === 'block' || data?.level === 'review' || data?.level === 'clear') {
     return { level: data.level, reason: String(data.reason || ''), matches };
   }
-
   throw new Error('The registration verification service returned an unexpected response.');
 }
 
