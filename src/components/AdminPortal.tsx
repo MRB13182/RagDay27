@@ -559,7 +559,7 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
 
             <button
               onClick={handleLogout}
-              className="p-2 sm:px-3 sm:py-2 rounded-xl bg-slate-900/90 hover:bg-rose-600 text-white text-xs font-bold transition-colors inline-flex items-center gap-1.5 cursor-pointer backdrop-blur-md border border-slate-700/60"
+              className="p-2 sm:px-3 sm:py-2 rounded-xl glass-button text-slate-700 hover:bg-rose-500/15 hover:text-rose-700 text-xs font-bold transition-colors inline-flex items-center gap-1.5 cursor-pointer border border-white/80"
               title="Sign out of admin session"
             >
               <LogOut className="w-4 h-4" />
@@ -627,7 +627,7 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
 
         {/* 3. CONTROLS: STATUS FILTERS & SEARCH */}
         <div className="px-5 py-3 border-b border-slate-200/80 bg-white/60 backdrop-blur-md flex flex-wrap items-center justify-between gap-3 shrink-0">
-          <div className="flex items-center gap-1.5 overflow-x-auto p-1 rounded-2xl bg-slate-100/70 backdrop-blur-md border border-slate-200/70">
+          <div className="flex items-center gap-1.5 overflow-x-auto p-1 rounded-2xl glass-surface-subtle">
             {(['all', 'pending', 'approved', 'rejected'] as const).map(tab => {
               const active = statusFilter === tab;
               const count = tab === 'all' ? stats.total : stats[tab];
@@ -637,12 +637,12 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
                   onClick={() => setStatusFilter(tab)}
                   className={`px-3 py-1.5 rounded-xl text-xs font-bold capitalize transition-all flex items-center gap-1.5 cursor-pointer ${
                     active
-                      ? 'bg-slate-900 text-white shadow-xs'
+                      ? 'glass-tab-active text-[#4338CA] shadow-sm'
                       : 'text-slate-600 hover:text-slate-900 hover:bg-white/60'
                   }`}
                 >
                   <span>{tab}</span>
-                  <span className={`px-1.5 py-0.2 rounded-full text-[10px] font-mono ${active ? 'bg-white/25 text-white' : 'bg-slate-200 text-slate-700'}`}>
+                  <span className={`px-1.5 py-0.2 rounded-full text-[10px] font-mono ${active ? 'bg-white/25 text-white' : 'bg-white/65 backdrop-blur-md border border-white/80 text-slate-700'}`}>
                     {count}
                   </span>
                 </button>
@@ -698,7 +698,7 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
           ) : (
             <div className="min-w-full inline-block align-middle">
               <table className="min-w-full text-left text-xs divide-y divide-slate-200/80">
-                <thead className="bg-slate-100/85 text-slate-700 font-bold sticky top-0 z-10 backdrop-blur-md border-b border-slate-200/80">
+                <thead className="bg-white/60 text-slate-700 font-bold sticky top-0 z-10 backdrop-blur-xl border-b border-white/80">
                   <tr>
                     <th className="px-3.5 py-3 whitespace-nowrap">SL</th>
                     <th className="px-3 py-3 whitespace-nowrap">Photo</th>
@@ -712,7 +712,7 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
                     <th className="px-3.5 py-3 text-right whitespace-nowrap">Actions</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-slate-100 bg-white/40">
+                <tbody className="divide-y divide-white/55 bg-white/20 backdrop-blur-md">
                   {filteredRegistrations.map(r => {
                     const isApproved = r.status === 'approved';
                     const isRejected = r.status === 'rejected';
@@ -721,7 +721,7 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
                     return (
                       <tr
                         key={r.registration_no}
-                        className="hover:bg-slate-50/80 transition-colors cursor-pointer group"
+                        className="hover:bg-white/45 transition-colors cursor-pointer group"
                         onClick={() => setSelectedRecord(r)}
                       >
                         {/* SL No */}
@@ -798,14 +798,14 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
                         {/* Status */}
                         <td className="px-3 py-3 whitespace-nowrap">
                           {isApproved && (
-                            <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[11px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-200">
+                            <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[11px] font-bold glass-status glass-status-approved">
                               <CheckCircle2 className="w-3 h-3" />
                               Approved
                             </span>
                           )}
                           {isRejected && (
                             <div>
-                              <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[11px] font-bold bg-rose-50 text-rose-700 border border-rose-200">
+                              <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[11px] font-bold glass-status glass-status-rejected">
                                 <XCircle className="w-3 h-3" />
                                 Rejected
                               </span>
@@ -817,7 +817,7 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
                             </div>
                           )}
                           {isPending && (
-                            <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[11px] font-bold bg-amber-50 text-amber-700 border border-amber-200">
+                            <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[11px] font-bold glass-status glass-status-pending">
                               <Clock className="w-3 h-3" />
                               Pending
                             </span>
@@ -835,7 +835,7 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
                               className={`p-2 rounded-xl transition-all cursor-pointer ${
                                 isApproved
                                   ? 'bg-slate-100 text-slate-400 cursor-not-allowed opacity-50'
-                                  : 'bg-emerald-50 text-emerald-700 hover:bg-emerald-600 hover:text-white border border-emerald-200 shadow-2xs'
+                                  : 'bg-emerald-500/10 text-emerald-700 hover:bg-emerald-500/25 hover:text-emerald-800 border border-emerald-300/50 backdrop-blur-md shadow-2xs'
                               }`}
                             >
                               <Check className="w-4 h-4" />
@@ -849,7 +849,7 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
                               className={`p-2 rounded-xl transition-all cursor-pointer ${
                                 isRejected
                                   ? 'bg-slate-100 text-slate-400 cursor-not-allowed opacity-50'
-                                  : 'bg-rose-50 text-rose-700 hover:bg-rose-600 hover:text-white border border-rose-200 shadow-2xs'
+                                  : 'bg-rose-500/10 text-rose-700 hover:bg-rose-500/25 hover:text-rose-800 border border-rose-300/50 backdrop-blur-md shadow-2xs'
                               }`}
                             >
                               <XCircle className="w-4 h-4" />
@@ -860,7 +860,7 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
                               onClick={() => handleHide(r.registration_no)}
                               disabled={hidingRegNo === r.registration_no}
                               title="Delete from Web View (Kept in Database)"
-                              className="p-2 rounded-xl bg-slate-100 text-slate-600 hover:bg-slate-800 hover:text-white transition-all cursor-pointer border border-slate-200"
+                              className="p-2 rounded-xl glass-button text-slate-600 hover:bg-rose-500/15 hover:text-rose-700 transition-all cursor-pointer"
                             >
                               <Trash2 className="w-4 h-4" />
                             </button>
