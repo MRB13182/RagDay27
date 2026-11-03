@@ -70,7 +70,10 @@ export const ContactInformationSection: React.FC = () => {
       aria-labelledby="contact-info-heading"
       className="py-10 sm:py-14 text-center animate-fadeIn"
     >
-      <div className="max-w-md mx-auto px-6 py-8 sm:py-9 rounded-3xl glass-card text-center">
+      <div className="max-w-md mx-auto px-6 py-8 sm:py-9 rounded-3xl public-glass-surface public-glass-edge text-center relative overflow-hidden">
+        <div aria-hidden="true" className="pointer-events-none absolute -top-20 -right-16 h-44 w-44 rounded-full bg-violet-300/20 blur-3xl" />
+        <div aria-hidden="true" className="pointer-events-none absolute -bottom-20 -left-16 h-44 w-44 rounded-full bg-sky-300/20 blur-3xl" />
+        <div className="relative z-10">
         {/* Heading */}
         <h2
           id="contact-info-heading"
@@ -103,6 +106,7 @@ export const ContactInformationSection: React.FC = () => {
               </div>
             </a>
           ))}
+        </div>
         </div>
       </div>
 
