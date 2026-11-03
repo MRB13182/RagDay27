@@ -159,8 +159,10 @@ export async function fetchAuthoritativeRegistration(
 
   try {
     if (cleanId) {
-      const match = await checkDuplicateRegistration(cleanId, '', '', '', '');
-      if (match) return match;
+      const duplicateResult = await checkDuplicateRegistration(cleanId, '', '', '', '');
+      if (duplicateResult.level === 'block' && duplicateResult.matches[0]) {
+        return duplicateResult.matches[0];
+      }
     }
 
     if (cleanReg) {
