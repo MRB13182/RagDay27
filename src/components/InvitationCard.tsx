@@ -91,7 +91,7 @@ export const InvitationCard: React.FC<InvitationCardProps> = ({
       {/* LUXURY GLASSMORPHISM CARD MASTER CONTAINER */}
       <div
         id={isExport ? 'invitation-card-export-area' : 'invitation-card-render-area'}
-        className={`relative w-full overflow-hidden rounded-[28px] sm:rounded-[36px] bg-gradient-to-br from-white/95 via-[#F8FAFC]/90 to-[#EDF2F7]/85 backdrop-blur-2xl border-2 border-white/95 shadow-[0_30px_70px_-15px_rgba(11,31,58,0.18),0_0_0_1px_rgba(192,192,192,0.5),inset_0_1.5px_2px_rgba(255,255,255,1),inset_0_-2px_4px_rgba(11,31,58,0.05)] select-none ${
+        className={`relative w-full overflow-hidden rounded-[28px] sm:rounded-[36px] bg-gradient-to-br from-white/95 via-[#FAF8FF]/92 to-[#EDF5FF]/88 backdrop-blur-2xl border-2 border-white/95 shadow-[0_30px_70px_-15px_rgba(91,75,160,0.16),0_0_0_1px_rgba(196,181,253,0.30),inset_0_1.5px_2px_rgba(255,255,255,1),inset_0_-2px_4px_rgba(91,75,160,0.04)] select-none ${
           isExport ? 'p-9' : 'p-5 sm:p-8 lg:p-9'
         }`}
         style={{
