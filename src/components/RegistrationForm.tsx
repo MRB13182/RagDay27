@@ -176,19 +176,19 @@ const RegistrationCountdown: React.FC<{ deadline: string; theme?: 'light' | 'dar
 
       {!timeLeft.isExpired ? (
         <div className="flex items-center justify-center gap-1 sm:gap-2 font-mono font-bold text-slate-800 text-xs sm:text-sm flex-wrap">
-          <span className="px-2 py-1 rounded-lg bg-white/90 border border-slate-200/80 shadow-2xs">
+          <span className="px-2 py-1 rounded-lg glass-pill">
             {timeLeft.days} <span className="text-[10px] font-sans font-medium text-slate-500">Days</span>
           </span>
           <span className="text-slate-400 font-sans font-normal">:</span>
-          <span className="px-2 py-1 rounded-lg bg-white/90 border border-slate-200/80 shadow-2xs">
+          <span className="px-2 py-1 rounded-lg glass-pill">
             {String(timeLeft.hours).padStart(2, '0')} <span className="text-[10px] font-sans font-medium text-slate-500">Hours</span>
           </span>
           <span className="text-slate-400 font-sans font-normal">:</span>
-          <span className="px-2 py-1 rounded-lg bg-white/90 border border-slate-200/80 shadow-2xs">
+          <span className="px-2 py-1 rounded-lg glass-pill">
             {String(timeLeft.minutes).padStart(2, '0')} <span className="text-[10px] font-sans font-medium text-slate-500">Minutes</span>
           </span>
           <span className="text-slate-400 font-sans font-normal">:</span>
-          <span className="px-2 py-1 rounded-lg bg-white/90 border border-slate-200/80 shadow-2xs">
+          <span className="px-2 py-1 rounded-lg glass-pill">
             {String(timeLeft.seconds).padStart(2, '0')} <span className="text-[10px] font-sans font-medium text-slate-500">Seconds</span>
           </span>
         </div>
@@ -841,7 +841,7 @@ export const RegistrationForm: React.FC<RegistrationFormProps> = ({
               <button
                 type="button"
                 onClick={() => handleGenderSelect('choose_one')}
-                className="inline-flex items-center gap-2 px-6 py-2.5 rounded-xl bg-[#EEF2FF] hover:bg-[#E0E7FF] text-[#4F46E5] font-bold text-xs sm:text-sm border border-[#C7D2FE] shadow-2xs hover:shadow-sm transition-all cursor-pointer active:scale-95"
+                className="inline-flex items-center gap-2 px-6 py-2.5 rounded-xl glass-button text-[#4F46E5] font-bold text-xs sm:text-sm border border-indigo-200/60 hover:shadow-sm cursor-pointer active:scale-95"
               >
                 <span>←</span>
                 <span>আবার সিলেক্ট করো</span>
@@ -1178,7 +1178,7 @@ export const RegistrationForm: React.FC<RegistrationFormProps> = ({
                             ? 'bg-emerald-500 text-white shadow-md shadow-emerald-500/30'
                             : isMale
                             ? 'bg-[#E2136E]/25 hover:bg-[#E2136E]/40 text-pink-200 border border-[#E2136E]/50'
-                            : 'bg-white/90 hover:bg-white text-pink-700 border border-pink-200 shadow-xs'
+                            : 'glass-fintech-bkash text-pink-700'
                         }`}
                         title="Click to copy bKash account number"
                       >
@@ -1218,7 +1218,7 @@ export const RegistrationForm: React.FC<RegistrationFormProps> = ({
                             ? 'bg-emerald-500 text-white shadow-md shadow-emerald-500/30'
                             : isMale
                             ? 'bg-[#F7941D]/25 hover:bg-[#F7941D]/40 text-amber-200 border border-[#F7941D]/50'
-                            : 'bg-white/90 hover:bg-white text-amber-700 border border-orange-200 shadow-xs'
+                            : 'glass-fintech-nagad'
                         }`}
                         title="Click to copy Nagad account number"
                       >
