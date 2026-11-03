@@ -437,10 +437,6 @@ export const RegistrationForm: React.FC<RegistrationFormProps> = ({
       else setSubmitErrorMessage(result.reason || 'This Student ID is already registered.');
       return true;
     }
-    if (result.level === 'review') {
-      setSubmitErrorMessage(result.reason || 'The payment transaction needs organizer review.');
-      return true;
-    }
     return false;
   };
 
@@ -460,8 +456,6 @@ export const RegistrationForm: React.FC<RegistrationFormProps> = ({
       );
       if (result.level === 'block' && result.matches[0]) {
         setDuplicateModal({ record: result.matches[0] });
-      } else if (result.level === 'review') {
-        setSubmitErrorMessage(result.reason || 'The payment transaction needs organizer review.');
       }
     } catch (error: any) {
       setSubmitErrorMessage(error?.message || 'Unable to verify Student ID. Please retry.');
