@@ -600,32 +600,41 @@ grant execute on function public.lookup_invitation_card to anon, authenticated, 
 grant execute on function public.get_rejected_registration_for_resubmission(text, text, text) to anon, authenticated, service_role;
 
  
-create or replace function public.check_registration_risk(p_student_id text, p_current_registration_no text default null)
-returns jsonb language plpgsql security definer set search_path = ''
+create or replace function public.check_registration_risk(
+  p_student_id text,
+  p_current_registration_no text default null
+)
+returns jsonb
+language plpgsql
+security definer
+set search_path = ''
 as $$
 declare
   clean_id text := trim(coalesce(p_student_id, ''));
   clean_current text := upper(trim(coalesce(p_current_registration_no, '')));
   v_match public.registrations;
-  v_matches jsonb := '[]'::jsonb;
 begin
-  if clean_id = '' then return jsonb_build_object('level','clear','reason','','matches',v_matches); end if;
-  select r.* into v_match from public.registrations r
-  where trim(r.student_id)=clean_id and r.hidden_from_web=false
-    and (clean_current='' or upper(r.registration_no)<>clean_current)
-  order by case when r.status<>'rejected' then 0 else 1 end, r.created_at desc limit 1;
-  if found then return jsonb_build_object('level','block','reason','This Student ID is already registered.','matches',jsonb_build_array(to_jsonb(v_match))); end if;
-  select coalesce(jsonb_agg(to_jsonb(r) order by r.created_at desc),'[]'::jsonb) into v_matches
-  from public.registrations r
-  where r.hidden_from_web=false and (clean_current='' or upper(r.registration_no)<>clean_current)
-    and nullif(trim(r.transaction_id),'') is not null
-    and exists(select 1 from public.registrations x where x.hidden_from_web=false and x.id<>r.id
-      and trim(x.student_id)<>clean_id and trim(x.transaction_id)=trim(r.transaction_id)
-      and nullif(trim(x.transaction_id),'') is not null);
-  if jsonb_array_length(v_matches)>0 then
-    return jsonb_build_object('level','review','reason','The payment transaction ID appears on another registration. Organizer review is required.','matches',v_matches);
+  if clean_id = '' then
+    return jsonb_build_object('level','clear','reason','','matches','[]'::jsonb);
   end if;
-  return jsonb_build_object('level','clear','reason','','matches',v_matches);
+
+  select r.* into v_match
+  from public.registrations r
+  where trim(r.student_id) = clean_id
+    and r.hidden_from_web = false
+    and (clean_current = '' or upper(r.registration_no) <> clean_current)
+  order by case when r.status <> 'rejected' then 0 else 1 end, r.created_at desc
+  limit 1;
+
+  if found then
+    return jsonb_build_object(
+      'level','block',
+      'reason','This Student ID is already registered.',
+      'matches',jsonb_build_array(to_jsonb(v_match))
+    );
+  end if;
+
+  return jsonb_build_object('level','clear','reason','','matches','[]'::jsonb);
 end;
 $$;
 revoke all on function public.check_registration_risk(text,text) from public;
