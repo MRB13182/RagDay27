@@ -422,19 +422,24 @@ export const RegistrationForm: React.FC<RegistrationFormProps> = ({
 
   // Perform Duplicate Detection Check
   const runDuplicateCheck = async (): Promise<boolean> => {
-    // Re-submission updates the same rejected record. Duplicate protection still
-    // checks for conflicting records, but exempts only the exact record being edited.
-    const match = await checkDuplicateRegistration(
+    const result = await checkDuplicateRegistration(
       formData.student_id,
       formData.full_name,
       formData.class_roll,
       formData.academic_group,
-      formData.academic_section
+      formData.academic_section,
+      editingRegNo || undefined
     );
 
-    if (match) {
-      if (editingRegNo && match.registration_no === editingRegNo) return false;
-      setDuplicateModal({ record: match });
+    if (result.level === 'block') {
+      const record = result.matches[0];
+      if (record) setDuplicateModal({ record });
+      else setSubmitErrorMessage(result.reason || 'This Student ID is already registered.');
+      return true;
+    }
+
+    if (result.level === 'review') {
+      setSubmitErrorMessage(result.reason || 'This registration needs organizer review before payment can be confirmed.');
       return true;
     }
 
@@ -447,12 +452,21 @@ export const RegistrationForm: React.FC<RegistrationFormProps> = ({
     if (editingRegNo && sId === recoveryProof?.studentId) return;
 
     try {
-      const match = await checkDuplicateRegistration(sId, '', '', '', '');
-      if (match && (!editingRegNo || match.registration_no !== editingRegNo)) {
-        setDuplicateModal({ record: match });
+      const result = await checkDuplicateRegistration(
+        sId,
+        formData.full_name,
+        formData.class_roll,
+        formData.academic_group,
+        formData.academic_section,
+        editingRegNo || undefined
+      );
+      if (result.level === 'block' && result.matches[0]) {
+        setDuplicateModal({ record: result.matches[0] });
+      } else if (result.level === 'review') {
+        setSubmitErrorMessage(result.reason || 'This registration needs organizer review.');
       }
-    } catch {
-      // ignore blur errors, submission will validate
+    } catch (error: any) {
+      setSubmitErrorMessage(error?.message || 'Unable to verify Student ID. Please retry.');
     }
   };
 
