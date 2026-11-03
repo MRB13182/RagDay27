@@ -322,14 +322,14 @@ export default function App() {
   };
 
   return (
-    <div className="min-h-screen flex flex-col bg-[#FBFAFF] text-[#111827] selection:bg-[#5B5FEF] selection:text-white relative isolate">
+    <div className="min-h-screen flex flex-col bg-[#FBFAFF] text-[#111827] selection:bg-[#5B5FEF] selection:text-white relative isolate public-glass-page">
       {/* Public pages use a bright lavender-white glass atmosphere. RegistrationForm keeps its original dark glass theme. */}
-      <div aria-hidden="true" className="fixed inset-0 pointer-events-none -z-10 overflow-hidden bg-[linear-gradient(145deg,#FFFFFF_0%,#F8F6FF_38%,#F2F7FF_72%,#FFF7FC_100%)]" />
-      <div aria-hidden="true" className="fixed -top-52 -left-44 w-[620px] h-[620px] rounded-full bg-[radial-gradient(circle,rgba(196,181,253,0.42)_0%,rgba(221,214,254,0.2)_42%,transparent_72%)] blur-[90px] pointer-events-none -z-10" />
-      <div aria-hidden="true" className="fixed top-[18%] -right-56 w-[680px] h-[680px] rounded-full bg-[radial-gradient(circle,rgba(147,197,253,0.32)_0%,rgba(191,219,254,0.16)_45%,transparent_72%)] blur-[100px] pointer-events-none -z-10" />
-      <div aria-hidden="true" className="fixed top-[58%] -left-48 w-[560px] h-[560px] rounded-full bg-[radial-gradient(circle,rgba(244,184,225,0.26)_0%,rgba(233,213,255,0.16)_48%,transparent_72%)] blur-[95px] pointer-events-none -z-10" />
-      <div aria-hidden="true" className="fixed -bottom-64 right-[8%] w-[620px] h-[620px] rounded-full bg-[radial-gradient(circle,rgba(196,181,253,0.24)_0%,rgba(186,230,253,0.16)_46%,transparent_72%)] blur-[100px] pointer-events-none -z-10" />
-      <div aria-hidden="true" className="fixed inset-0 pointer-events-none -z-10 opacity-[0.22] bg-[linear-gradient(120deg,transparent_0%,rgba(255,255,255,0.7)_45%,transparent_70%)]" />
+      <div aria-hidden="true" className="fixed inset-0 pointer-events-none -z-10 overflow-hidden public-glass-atmosphere" />
+      <div aria-hidden="true" className="fixed -top-52 -left-44 w-[620px] h-[620px] rounded-full public-glass-orb public-glass-orb-lavender pointer-events-none -z-10" />
+      <div aria-hidden="true" className="fixed top-[18%] -right-56 w-[680px] h-[680px] rounded-full public-glass-orb public-glass-orb-blue pointer-events-none -z-10" />
+      <div aria-hidden="true" className="fixed top-[58%] -left-48 w-[560px] h-[560px] rounded-full public-glass-orb public-glass-orb-pink pointer-events-none -z-10" />
+      <div aria-hidden="true" className="fixed -bottom-64 right-[8%] w-[620px] h-[620px] rounded-full public-glass-orb public-glass-orb-mixed pointer-events-none -z-10" />
+      <div aria-hidden="true" className="fixed inset-0 pointer-events-none -z-10 public-glass-sheen" />
 
       {toast && (
         <aside
@@ -465,7 +465,7 @@ export default function App() {
 
           {activeTab === 'register' && (
             <div
-              className="animate-fadeIn min-h-[calc(100vh-4.5rem)] bg-gradient-to-b from-[#F8F9FC] via-[#F4F5FF] to-[#EEF9FF]"
+              className="animate-fadeIn min-h-[calc(100vh-4.5rem)] registration-page-shell"
             >
               <RegistrationForm
                 onSuccessSubmit={handleSuccessSubmit}
