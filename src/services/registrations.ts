@@ -80,15 +80,6 @@ export interface DuplicateRiskResult {
  * Student ID is the sole hard identity key. Payment transaction reuse is a
  * manual-review signal; common names and class rolls never block registration.
  */
-export type DuplicateRiskLevel = 'block' | 'review' | 'clear';
-
-export interface DuplicateRiskResult {
-  level: DuplicateRiskLevel;
-  reason: string;
-  matches: InvitationRecord[];
-}
-
-/** Student ID is the only hard identity key. Reused transaction IDs require manual review. */
 export async function checkDuplicateRegistration(
   studentId: string,
   _fullName: string,
