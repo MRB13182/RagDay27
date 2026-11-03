@@ -322,12 +322,14 @@ export default function App() {
   };
 
   return (
-    <div className="min-h-screen flex flex-col bg-[#F8F9FC] text-[#111827] selection:bg-[#5B5FEF] selection:text-white relative">
-      {/* Fintech Layered Ambient Gradient Mesh for Glass Refractions */}
-      <div className="fixed -top-48 -left-48 w-[500px] h-[500px] bg-gradient-to-br from-[#5B5FEF]/12 to-[#7A6CFF]/8 rounded-full blur-[100px] pointer-events-none -z-10" />
-      <div className="fixed top-1/4 -right-48 w-[550px] h-[550px] bg-gradient-to-bl from-[#00D4FF]/10 via-[#38BDF8]/6 to-transparent rounded-full blur-[110px] pointer-events-none -z-10" />
-      <div className="fixed top-2/3 -left-36 w-[450px] h-[450px] bg-gradient-to-tr from-[#E2136E]/6 via-transparent to-transparent rounded-full blur-[90px] pointer-events-none -z-10" />
-      <div className="fixed bottom-0 right-1/4 w-[400px] h-[400px] bg-gradient-to-t from-[#F7941D]/5 to-transparent rounded-full blur-[80px] pointer-events-none -z-10" />
+    <div className="min-h-screen flex flex-col bg-[#FBFAFF] text-[#111827] selection:bg-[#5B5FEF] selection:text-white relative isolate">
+      {/* Public pages use a bright lavender-white glass atmosphere. RegistrationForm keeps its original dark glass theme. */}
+      <div aria-hidden="true" className="fixed inset-0 pointer-events-none -z-10 overflow-hidden bg-[linear-gradient(145deg,#FFFFFF_0%,#F8F6FF_38%,#F2F7FF_72%,#FFF7FC_100%)]" />
+      <div aria-hidden="true" className="fixed -top-52 -left-44 w-[620px] h-[620px] rounded-full bg-[radial-gradient(circle,rgba(196,181,253,0.42)_0%,rgba(221,214,254,0.2)_42%,transparent_72%)] blur-[90px] pointer-events-none -z-10" />
+      <div aria-hidden="true" className="fixed top-[18%] -right-56 w-[680px] h-[680px] rounded-full bg-[radial-gradient(circle,rgba(147,197,253,0.32)_0%,rgba(191,219,254,0.16)_45%,transparent_72%)] blur-[100px] pointer-events-none -z-10" />
+      <div aria-hidden="true" className="fixed top-[58%] -left-48 w-[560px] h-[560px] rounded-full bg-[radial-gradient(circle,rgba(244,184,225,0.26)_0%,rgba(233,213,255,0.16)_48%,transparent_72%)] blur-[95px] pointer-events-none -z-10" />
+      <div aria-hidden="true" className="fixed -bottom-64 right-[8%] w-[620px] h-[620px] rounded-full bg-[radial-gradient(circle,rgba(196,181,253,0.24)_0%,rgba(186,230,253,0.16)_46%,transparent_72%)] blur-[100px] pointer-events-none -z-10" />
+      <div aria-hidden="true" className="fixed inset-0 pointer-events-none -z-10 opacity-[0.22] bg-[linear-gradient(120deg,transparent_0%,rgba(255,255,255,0.7)_45%,transparent_70%)]" />
 
       {toast && (
         <aside
