@@ -149,7 +149,7 @@ export const PhotoUploadField: React.FC<PhotoUploadFieldProps> = ({
             : isMale
             ? 'border-cyan-400/30 hover:border-cyan-400/60 bg-slate-900/40 hover:bg-slate-900/60 shadow-[0_8px_24px_rgba(3,10,28,0.4),inset_0_1px_1px_rgba(255,255,255,0.08)]'
             : isFemale
-            ? 'border-pink-300/60 hover:border-pink-400 bg-white/60 hover:bg-white/80 shadow-[0_8px_20px_rgba(236,72,153,0.1),inset_0_1px_1px_white]'
+            ? 'border-pink-300/60 hover:border-pink-400 bg-pink-500/10 backdrop-blur-2xl hover:bg-pink-500/15 shadow-[0_8px_20px_rgba(236,72,153,0.1),inset_0_1px_1px_rgba(255,255,255,.75)]'
             : 'glass-upload'
         } ${isProcessing ? 'pointer-events-none opacity-80' : ''}`}
       >
@@ -161,7 +161,7 @@ export const PhotoUploadField: React.FC<PhotoUploadFieldProps> = ({
                 <img
                   src={effectivePhoto}
                   alt="Student Portrait Preview"
-                  className="w-12 h-12 sm:w-14 sm:h-14 rounded-xl object-cover border border-white/30 shadow-md transition-transform duration-200 group-hover/preview:scale-105 bg-slate-950/60 backdrop-blur-md"
+                  className="w-12 h-12 sm:w-14 sm:h-14 rounded-xl object-cover border border-white/30 shadow-md transition-transform duration-200 group-hover/preview:scale-105 bg-slate-950/60"
                 />
                 {isProcessing && (
                   <div className="absolute inset-0 rounded-xl bg-black/60 backdrop-blur-xs flex items-center justify-center">
