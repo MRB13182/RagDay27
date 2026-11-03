@@ -25,7 +25,8 @@ export function translateBackendError(error: any): string {
   if (!error) return 'Database request failed.';
   const message = String(error.message || error.details || error.hint || error);
   const code = String(error.code || '');
-  if (/DUPLICATE_REGISTRATION/i.test(message) || code === '23505') return 'A registration already exists for this Student ID or Name + Class Roll.';
+  if (/DUPLICATE_REGISTRATION/i.test(message) || code === '23505') return 'This Student ID is already registered. Please use the existing registration or recovery flow.';
+  if (/REGISTRATION_REVIEW_REQUIRED/i.test(message)) return 'The payment transaction appears on another registration. Organizer review is required.';
   if (/REQUIRED_FIELD_MISSING/i.test(message)) return 'Please complete all required registration fields.';
   if (/INVALID_PAYMENT_METHOD/i.test(message)) return 'Payment method must be bKash or Nagad.';
   if (/INVALID_JERSEY_NUMBER/i.test(message)) return 'Jersey number must be a whole number from 0 to 999.';
@@ -67,74 +68,48 @@ export async function fetchSections(groupNameOrId?: string, gender?: 'male' | 'f
   }));
 }
 
+export type DuplicateRiskLevel = 'block' | 'review' | 'clear';
+
+export interface DuplicateRiskResult {
+  level: DuplicateRiskLevel;
+  reason: string;
+  matches: InvitationRecord[];
+}
+
+/**
+ * Student ID is the sole hard identity key. Payment transaction reuse is a
+ * manual-review signal; common names and class rolls never block registration.
+ */
 export async function checkDuplicateRegistration(
   studentId: string,
-  fullName: string,
-  classRoll: string,
-  academicGroup: string,
-  academicSection: string
-): Promise<InvitationRecord | null> {
+  _fullName: string,
+  _classRoll: string,
+  _academicGroup: string,
+  _academicSection: string,
+  currentRegistrationNo?: string
+): Promise<DuplicateRiskResult> {
   const cleanStudentId = studentId.trim();
-  const cleanFullName = fullName.trim();
-  const cleanRoll = classRoll.trim();
-  const cleanGroup = academicGroup.trim();
-  const cleanSection = academicSection.trim();
+  if (!cleanStudentId) return { level: 'clear', reason: '', matches: [] };
 
-  // 1. Query authoritative RPC. Prefer a non-rejected matching record over a
-  // rejected one so a student's own rejected record can be excluded by the UI
-  // when it is being edited, while genuine active duplicates still block.
-  try {
-    const { data, error } = await supabase.rpc('find_registration_duplicate', {
-      p_student_id: cleanStudentId,
-      p_full_name: cleanFullName,
-      p_class_roll: cleanRoll,
-      p_academic_group: cleanGroup,
-      p_academic_section: cleanSection,
-    });
-    if (!error && data) {
-      const rows = (Array.isArray(data) ? data : [data]).filter(Boolean);
-      const active = rows.find((row: any) => String(row.status || '').toLowerCase() !== 'rejected');
-      const row = active || rows[0];
-      if (row) return mapRowToInvitation(row);
-    }
-  } catch (rpcErr) {
-    console.warn('find_registration_duplicate RPC failed, attempting fallback query:', rpcErr);
+  const { data, error } = await supabase.rpc('check_registration_risk', {
+    p_student_id: cleanStudentId,
+    p_current_registration_no: currentRegistrationNo || null,
+  });
+
+  // Fail closed when authoritative verification is unavailable.
+  if (error) {
+    console.error('Authoritative registration risk check failed:', error);
+    throw new Error('We could not verify this Student ID right now. Please try again in a moment.');
   }
 
-  // 2. Fallback direct table query if RPC is temporarily unavailable
-  try {
-    if (cleanStudentId) {
-      const { data, error } = await supabase
-        .from('registrations')
-        .select('*')
-        .eq('student_id', cleanStudentId)
-        .eq('hidden_from_web', false)
-        .limit(1)
-        .maybeSingle();
-      if (!error && data) {
-        return mapRowToInvitation(data);
-      }
-    }
+  const rows = Array.isArray(data?.matches) ? data.matches : [];
+  const matches = rows.map((row: any) => mapRowToInvitation(row));
 
-    if (cleanRoll && cleanGroup && cleanSection) {
-      const { data, error } = await supabase
-        .from('registrations')
-        .select('*')
-        .eq('class_roll', cleanRoll)
-        .eq('academic_group', cleanGroup)
-        .eq('academic_section', cleanSection)
-        .eq('hidden_from_web', false)
-        .limit(1)
-        .maybeSingle();
-      if (!error && data) {
-        return mapRowToInvitation(data);
-      }
-    }
-  } catch (fallbackErr) {
-    console.warn('Fallback direct duplicate check encountered an issue:', fallbackErr);
+  if (data?.level === 'block' || data?.level === 'review' || data?.level === 'clear') {
+    return { level: data.level, reason: String(data.reason || ''), matches };
   }
 
-  return null;
+  throw new Error('The registration verification service returned an unexpected response.');
 }
 
 /**
