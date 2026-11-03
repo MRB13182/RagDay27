@@ -540,3 +540,17 @@
 .custom-notice-scrollbar::-webkit-scrollbar-thumb:hover {
   background: rgba(100, 116, 139, 0.85);
 }
+
+
+/* Reusable lavender-white glass surfaces for public pages only. */
+.public-glass-page {
+  background: radial-gradient(ellipse at 8% 4%, rgba(221,214,254,.30) 0%, transparent 34%), radial-gradient(ellipse at 94% 22%, rgba(191,219,254,.24) 0%, transparent 36%), radial-gradient(ellipse at 48% 100%, rgba(251,207,232,.18) 0%, transparent 42%), linear-gradient(145deg,#fff 0%,#faf9ff 42%,#f4f8ff 76%,#fff9fd 100%);
+}
+.public-glass-surface {
+  background: rgba(255,255,255,.74);
+  -webkit-backdrop-filter: blur(24px) saturate(145%);
+  backdrop-filter: blur(24px) saturate(145%);
+  border: 1px solid rgba(255,255,255,.92);
+  box-shadow: 0 18px 44px -22px rgba(91,95,239,.18), 0 5px 16px -8px rgba(55,65,110,.08), inset 0 1px 1.5px rgba(255,255,255,.98);
+}
+.public-glass-edge { border-color: rgba(196,181,253,.30); }
