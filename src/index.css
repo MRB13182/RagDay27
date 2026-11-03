@@ -554,3 +554,38 @@
   box-shadow: 0 18px 44px -22px rgba(91,95,239,.18), 0 5px 16px -8px rgba(55,65,110,.08), inset 0 1px 1.5px rgba(255,255,255,.98);
 }
 .public-glass-edge { border-color: rgba(196,181,253,.30); }
+
+
+/* Refined public-site atmosphere: white first, with layered lavender, blue and blush tones.
+   Scoped outside registration theme tokens; the existing dark/cyan form remains untouched. */
+.public-glass-page {
+  position: relative; isolation: isolate;
+  background:
+    radial-gradient(ellipse at 12% 8%, rgba(226,214,255,.46) 0%, transparent 34%),
+    radial-gradient(ellipse at 92% 18%, rgba(196,220,255,.34) 0%, transparent 36%),
+    radial-gradient(ellipse at 82% 72%, rgba(244,211,244,.30) 0%, transparent 32%),
+    radial-gradient(ellipse at 18% 88%, rgba(206,232,255,.28) 0%, transparent 34%),
+    linear-gradient(145deg,#fff 0%,#fbf9ff 38%,#f5f8ff 72%,#fff9fd 100%);
+}
+.public-glass-atmosphere {
+  background: linear-gradient(132deg,rgba(255,255,255,.72),transparent 34%,rgba(255,255,255,.34) 68%,transparent),
+    repeating-linear-gradient(146deg,transparent 0 76px,rgba(179,157,255,.035) 77px 78px,transparent 79px 154px);
+}
+.public-glass-orb { filter: blur(92px); opacity: .76; }
+.public-glass-orb-lavender { background: radial-gradient(circle,rgba(192,168,255,.48),rgba(226,214,255,.23) 44%,transparent 72%); }
+.public-glass-orb-blue { background: radial-gradient(circle,rgba(135,190,255,.38),rgba(198,224,255,.20) 46%,transparent 72%); }
+.public-glass-orb-pink { background: radial-gradient(circle,rgba(244,174,220,.30),rgba(229,204,255,.18) 48%,transparent 72%); }
+.public-glass-orb-mixed { background: radial-gradient(circle,rgba(198,179,255,.30),rgba(172,224,255,.20) 46%,transparent 72%); }
+.public-glass-sheen { opacity:.34; background:linear-gradient(118deg,transparent,rgba(255,255,255,.84) 36%,transparent 54%,rgba(255,255,255,.36) 74%,transparent); }
+.registration-page-shell {
+  background:
+    radial-gradient(ellipse at 12% 12%,rgba(220,208,255,.30) 0%,transparent 40%),
+    radial-gradient(ellipse at 90% 88%,rgba(190,222,255,.22) 0%,transparent 42%),
+    linear-gradient(150deg,#fcfbff 0%,#f5f7ff 58%,#f8fbff 100%);
+}
+@media (prefers-reduced-motion: reduce) {
+  .public-glass-page *, .public-glass-page *::before, .public-glass-page *::after {
+    scroll-behavior:auto !important; animation-duration:.01ms !important;
+    animation-iteration-count:1 !important; transition-duration:.01ms !important;
+  }
+}
