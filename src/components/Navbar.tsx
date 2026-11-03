@@ -27,18 +27,18 @@ export const Navbar: React.FC<NavbarProps> = ({
   };
 
   // Global navigation always keeps the standard white/purple brand theme.
-  const isMaleTheme = true;
+  const isMaleTheme = false;
   const isFemaleTheme = false;
 
   const headerBgClass = isFemaleTheme
-    ? 'bg-[#15051B]/90 backdrop-blur-2xl border-b border-[#4A195E]/70 shadow-[0_4px_30px_rgba(0,0,0,0.4)] text-white'
+    ? 'bg-[#15051B]/90 backdrop-blur-2xl border border-[#4A195E]/70 shadow-[0_12px_36px_rgba(0,0,0,0.4),inset_0_1px_1.5px_rgba(255,255,255,0.1)] text-white'
     : isMaleTheme
-    ? 'bg-[#070F1E]/90 backdrop-blur-2xl border-b border-[#1E3A5F]/70 shadow-[0_4px_30px_rgba(0,0,0,0.4)] text-white'
-    : 'bg-white/80 backdrop-blur-2xl border-b border-white/70 shadow-[0_4px_30px_rgba(0,0,0,0.03)] text-slate-900';
+    ? 'bg-[#070F1E]/90 backdrop-blur-2xl border border-[#1E3A5F]/70 shadow-[0_12px_36px_rgba(0,0,0,0.4),inset_0_1px_1.5px_rgba(255,255,255,0.1)] text-white'
+    : 'bg-white/82 backdrop-blur-2xl border border-white/90 shadow-[0_12px_36px_-10px_rgba(15,23,42,0.06),inset_0_1px_1.5px_white] text-slate-900';
 
   return (
-    <header className={`fixed top-0 left-0 right-0 z-50 w-full transition-all duration-300 ${headerBgClass}`}>
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 sm:h-18 flex items-center justify-between relative">
+    <header className="fixed top-0 left-0 right-0 z-50 w-full transition-all duration-300 px-3 sm:px-6 lg:px-8 pt-2 sm:pt-2.5">
+      <div className={`max-w-7xl mx-auto rounded-2xl sm:rounded-3xl transition-all duration-300 ${headerBgClass} px-3.5 sm:px-6 h-15 sm:h-17 flex items-center justify-between relative`}>
         {/* Left: Logo: RD27 Rag Day 2027 */}
         <button
           onClick={() => handleNavClick('home')}
@@ -212,12 +212,12 @@ export const Navbar: React.FC<NavbarProps> = ({
 
       {/* Mobile Drawer */}
       {mobileMenuOpen && (
-        <div className={`md:hidden border-t px-4 py-4 space-y-2 shadow-xl animate-fadeIn ${
+        <div className={`md:hidden mt-2 max-w-7xl mx-auto rounded-2xl border px-4 py-4 space-y-2 shadow-2xl animate-fadeIn ${
           isFemaleTheme
             ? 'border-[#4A195E]/80 bg-[#15051B]/95 backdrop-blur-2xl text-white'
             : isMaleTheme
             ? 'border-[#1E3A5F]/80 bg-[#070F1E]/95 backdrop-blur-2xl text-white'
-            : 'border-white/70 bg-white/90 backdrop-blur-2xl text-slate-900'
+            : 'border-white/90 bg-white/95 backdrop-blur-2xl text-slate-900 shadow-[0_20px_45px_-10px_rgba(15,23,42,0.12),inset_0_1px_1.5px_white]'
         }`}>
           <button
             onClick={() => handleNavClick('home')}

@@ -31,10 +31,10 @@ export const Footer: React.FC<FooterProps> = ({
   const isMaleTheme = themeGender === 'male' || themeGender === 'choose_one';
 
   const footerClass = isFemaleTheme
-    ? 'w-full mt-auto py-5 px-4 sm:px-6 lg:px-8 border-t border-[#4A195E]/70 bg-[#15051B]/95 backdrop-blur-xl shadow-[0_-4px_20px_rgba(0,0,0,0.4)] text-pink-200/60'
+    ? 'w-full mt-auto py-6 px-4 sm:px-6 lg:px-8 border-t border-[#4A195E]/70 bg-[#15051B]/95 backdrop-blur-2xl shadow-[0_-8px_30px_rgba(0,0,0,0.4)] text-pink-200/60'
     : isMaleTheme
-    ? 'w-full mt-auto py-5 px-4 sm:px-6 lg:px-8 border-t border-[#1E3A5F]/70 bg-[#070F1E]/95 backdrop-blur-xl shadow-[0_-4px_20px_rgba(0,0,0,0.4)] text-slate-400'
-    : 'w-full mt-auto py-5 px-4 sm:px-6 lg:px-8 border-t border-white/80 bg-white/75 backdrop-blur-xl shadow-[0_-4px_20px_rgba(0,0,0,0.02)] text-slate-500';
+    ? 'w-full mt-auto py-6 px-4 sm:px-6 lg:px-8 border-t border-[#1E3A5F]/70 bg-[#070F1E]/95 backdrop-blur-2xl shadow-[0_-8px_30px_rgba(0,0,0,0.4)] text-slate-400'
+    : 'w-full mt-auto py-6 px-4 sm:px-6 lg:px-8 border-t border-white/85 bg-white/80 backdrop-blur-2xl shadow-[0_-8px_30px_rgba(15,23,42,0.03),inset_0_1px_1.5px_white] text-slate-500';
 
   return (
     <footer className={footerClass}>

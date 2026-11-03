@@ -75,15 +75,15 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
 
           {/* Quick Meta Badges */}
           <div className="flex flex-wrap items-center gap-2.5 mb-6">
-            <span className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl bg-white/80 backdrop-blur-xl border border-white/90 text-xs font-semibold text-slate-700 shadow-[0_4px_16px_rgba(0,0,0,0.03),inset_0_1px_1px_white]">
-              <span className="w-2 h-2 rounded-full bg-[#5B5FEF]" />
+            <span className="inline-flex items-center gap-2 px-4 py-2 rounded-xl glass-pill text-xs font-semibold text-slate-800">
+              <span className="w-2 h-2 rounded-full bg-[#5B5FEF] shadow-sm shadow-[#5B5FEF]/50" />
               {websiteSettings.eventDate}
             </span>
-            <span className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl bg-white/80 backdrop-blur-xl border border-white/90 text-xs font-semibold text-slate-700 shadow-[0_4px_16px_rgba(0,0,0,0.03),inset_0_1px_1px_white]">
-              <span className="w-2 h-2 rounded-full bg-[#00D4FF]" />
+            <span className="inline-flex items-center gap-2 px-4 py-2 rounded-xl glass-pill text-xs font-semibold text-slate-800">
+              <span className="w-2 h-2 rounded-full bg-[#00D4FF] shadow-sm shadow-[#00D4FF]/50" />
               {websiteSettings.venue}
             </span>
-            <span className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl bg-[#5B5FEF]/10 backdrop-blur-xl border border-[#5B5FEF]/20 text-xs font-bold text-[#5B5FEF] shadow-xs">
+            <span className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-gradient-to-r from-[#5B5FEF]/12 to-[#00D4FF]/12 backdrop-blur-xl border border-[#5B5FEF]/25 text-xs font-bold text-[#5B5FEF] shadow-xs">
               Fee: {websiteSettings.registrationFee}
             </span>
           </div>
@@ -101,10 +101,10 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
           )}
 
           {/* Actions */}
-          <div className="flex flex-wrap items-center gap-3 w-full sm:w-auto mt-2">
+          <div className="flex flex-wrap items-center gap-3.5 w-full sm:w-auto mt-2">
             <button
               onClick={onRegisterClick}
-              className="w-full sm:w-auto px-7 py-3.5 rounded-xl bg-gradient-to-r from-[#5B5FEF] via-[#7A6CFF] to-[#5B5FEF] text-white font-semibold text-sm sm:text-base shadow-lg shadow-[#5B5FEF]/30 hover:shadow-xl hover:shadow-[#5B5FEF]/40 hover:-translate-y-0.5 active:translate-y-0 transition-all duration-200 flex items-center justify-center gap-2.5 group cursor-pointer"
+              className="w-full sm:w-auto px-8 py-3.5 rounded-2xl bg-gradient-to-r from-[#5B5FEF] via-[#7A6CFF] to-[#00D4FF] text-white font-bold text-sm sm:text-base shadow-[0_14px_36px_-6px_rgba(91,95,239,0.36),inset_0_1.5px_1.5px_rgba(255,255,255,0.4)] hover:shadow-[0_20px_45px_-6px_rgba(91,95,239,0.48)] hover:-translate-y-0.5 active:translate-y-0 transition-all duration-200 flex items-center justify-center gap-2.5 group cursor-pointer"
             >
               <span>Register Now</span>
               <ArrowRight className="w-4 h-4 transition-transform group-hover:translate-x-1" />
@@ -112,7 +112,7 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
 
             <button
               onClick={onInvitationClick}
-              className="w-full sm:w-auto px-6 py-3.5 rounded-xl bg-white/80 backdrop-blur-xl text-slate-700 hover:text-slate-900 font-semibold text-sm sm:text-base border border-white/90 shadow-[0_4px_16px_rgba(0,0,0,0.04),inset_0_1px_1px_white] hover:bg-white hover:shadow-[0_8px_24px_rgba(0,0,0,0.06)] hover:-translate-y-0.5 active:translate-y-0 transition-all duration-200 flex items-center justify-center gap-2 cursor-pointer"
+              className="w-full sm:w-auto px-7 py-3.5 rounded-2xl glass-button text-slate-800 hover:text-slate-950 font-bold text-sm sm:text-base border border-white/95 shadow-[0_8px_24px_-6px_rgba(15,23,42,0.06),inset_0_1.5px_1px_white] hover:bg-white hover:-translate-y-0.5 active:translate-y-0 transition-all duration-200 flex items-center justify-center gap-2 cursor-pointer"
             >
               <Ticket className="w-4 h-4 text-[#5B5FEF]" />
               <span>Check Invitation Card</span>
@@ -120,14 +120,14 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
           </div>
 
           {/* Quick Inclusions Note */}
-          <div className="mt-6 flex flex-wrap items-center gap-2.5 text-xs text-slate-600">
-            <span className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-white/70 backdrop-blur-md border border-white/80 shadow-2xs">
+          <div className="mt-7 flex flex-wrap items-center gap-2.5 text-xs text-slate-600 font-medium">
+            <span className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl glass-pill">
               <CheckCircle2 className="w-3.5 h-3.5 text-emerald-500" /> Custom Printed Jersey
             </span>
-            <span className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-white/70 backdrop-blur-md border border-white/80 shadow-2xs">
+            <span className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl glass-pill">
               <CheckCircle2 className="w-3.5 h-3.5 text-emerald-500" /> Grand Gala Feast
             </span>
-            <span className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-white/70 backdrop-blur-md border border-white/80 shadow-2xs">
+            <span className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl glass-pill">
               <ShieldCheck className="w-3.5 h-3.5 text-[#5B5FEF]" /> Gate Entry Pass
             </span>
           </div>

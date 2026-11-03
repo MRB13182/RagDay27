@@ -38,6 +38,7 @@ import {
   X,
   FileCheck,
   Mars,
+  Venus,
   IdCard,
   Hash,
   ClipboardCheck,
@@ -77,7 +78,10 @@ function formatRegistrationClosingDate(dateStr: string): string {
   return dateStr;
 }
 
-const RegistrationCountdown: React.FC<{ deadline: string }> = ({ deadline }) => {
+const RegistrationCountdown: React.FC<{ deadline: string; theme?: 'light' | 'dark' }> = ({
+  deadline,
+  theme = 'light',
+}) => {
   const [timeLeft, setTimeLeft] = useState<{
     days: number;
     hours: number;
@@ -122,6 +126,46 @@ const RegistrationCountdown: React.FC<{ deadline: string }> = ({ deadline }) => 
   }, [deadline]);
 
   const formattedClosingDate = formatRegistrationClosingDate(deadline);
+
+  if (theme === 'dark') {
+    return (
+      <div className="mb-6 p-4 rounded-2xl bg-[#0B1528]/95 backdrop-blur-md border border-[#1E3A5F] shadow-inner text-center animate-fadeIn">
+        <div className="flex items-center justify-center gap-1.5 text-xs font-bold text-[#38BDF8] uppercase tracking-wider mb-2">
+          <Clock className="w-3.5 h-3.5 text-[#38BDF8]" />
+          <span>{timeLeft.isExpired ? 'Registration Closed' : 'Registration Ends In'}</span>
+        </div>
+
+        {!timeLeft.isExpired ? (
+          <div className="flex items-center justify-center gap-1 sm:gap-2 font-mono font-bold text-white text-xs sm:text-sm flex-wrap">
+            <span className="px-2.5 py-1.5 rounded-lg bg-[#060D19] border border-cyan-500/30 shadow-2xs">
+              {timeLeft.days} <span className="text-[10px] font-sans font-medium text-slate-400">Days</span>
+            </span>
+            <span className="text-slate-500 font-sans font-normal">:</span>
+            <span className="px-2.5 py-1.5 rounded-lg bg-[#060D19] border border-cyan-500/30 shadow-2xs">
+              {String(timeLeft.hours).padStart(2, '0')} <span className="text-[10px] font-sans font-medium text-slate-400">Hours</span>
+            </span>
+            <span className="text-slate-500 font-sans font-normal">:</span>
+            <span className="px-2.5 py-1.5 rounded-lg bg-[#060D19] border border-cyan-500/30 shadow-2xs">
+              {String(timeLeft.minutes).padStart(2, '0')} <span className="text-[10px] font-sans font-medium text-slate-400">Minutes</span>
+            </span>
+            <span className="text-slate-500 font-sans font-normal">:</span>
+            <span className="px-2.5 py-1.5 rounded-lg bg-[#060D19] border border-cyan-500/30 shadow-2xs">
+              {String(timeLeft.seconds).padStart(2, '0')} <span className="text-[10px] font-sans font-medium text-slate-400">Seconds</span>
+            </span>
+          </div>
+        ) : (
+          <p className="text-xs font-bold text-rose-400 py-0.5">
+            The registration deadline has passed.
+          </p>
+        )}
+
+        <div className="text-[11px] text-slate-400 mt-2">
+          <span>Closing Date: </span>
+          <strong className="text-slate-200">{formattedClosingDate}</strong>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="mb-6 p-4 rounded-2xl bg-white/70 backdrop-blur-md border border-slate-200/80 shadow-xs text-center animate-fadeIn">
@@ -185,7 +229,7 @@ export const RegistrationForm: React.FC<RegistrationFormProps> = ({
   const activeFee = paymentSettings?.registrationFee ?? 500;
 
   const [formData, setFormData] = useState<RegistrationFormData>({
-    gender: 'male',
+    gender: initialRecord ? 'male' : 'choose_one',
     full_name: '',
     class_roll: '',
     student_id: '',
@@ -201,6 +245,15 @@ export const RegistrationForm: React.FC<RegistrationFormProps> = ({
     jersey_number: '27',
     jersey_size: 'L',
   });
+
+  const handleGenderSelect = (gender: GenderType) => {
+    setFormData(prev => ({ ...prev, gender }));
+    if (gender === 'male') {
+      onGenderChange?.('male');
+    } else {
+      onGenderChange?.(gender);
+    }
+  };
 
   // Re-submission / editing state for rejected registrations
   const [editingRegNo, setEditingRegNo] = useState<string | null>(null);
@@ -304,11 +357,12 @@ export const RegistrationForm: React.FC<RegistrationFormProps> = ({
     return '!border-rose-500 !ring-2 !ring-rose-400/50 focus:!border-rose-600 focus:!ring-rose-500';
   };
 
-  const isGenderChosen = true;
   const isMale = formData.gender === 'male';
+  const isFemale = formData.gender === 'female';
+  const isGenderChosen = isMale;
 
   // Container & styling classes based on selected gender
-  const containerClasses = 'glass-male text-white border-[#38BDF8]/40 shadow-[0_20px_60px_-15px_rgba(15,23,42,0.9),0_0_35px_-5px_rgba(56,189,248,0.25)]';
+  const containerClasses = 'glass-male text-white border-2 border-[#1E40AF]/60 shadow-[0_20px_60px_-15px_rgba(15,23,42,0.9),0_0_35px_-5px_rgba(56,189,248,0.25)]';
 
   const sectionHeaderClasses = 'text-[#38BDF8] border-b border-slate-800';
 
@@ -679,43 +733,126 @@ export const RegistrationForm: React.FC<RegistrationFormProps> = ({
       )}
 
       {/* Main Registration Container (Adapts Theme to Selected Gender) */}
-      <div className={`registration-theme rounded-3xl p-4 sm:p-8 lg:p-10 transition-all duration-500 ease-out ${isGenderChosen ? containerClasses : 'glass-panel text-slate-900 border-white/90 shadow-[0_20px_50px_-15px_rgba(91,95,239,0.1)]'}`}>
-        {/* Registration header stays in the site default theme; gender styling is scoped below. */}
+      <div className={`registration-theme rounded-3xl p-4 sm:p-8 lg:p-10 transition-all duration-500 ease-out ${isMale ? containerClasses : 'glass-panel text-slate-900 border-white/90 shadow-[0_20px_50px_-15px_rgba(91,95,239,0.1)]'}`}>
+        {/* Registration Header */}
         <div className="mb-6 text-center sm:text-left">
-          <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider mb-2 bg-white/75 border border-white/90 backdrop-blur-xl shadow-sm">
-            <Sparkles className="w-3.5 h-3.5 text-indigo-500" />
+          <div className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider mb-2 backdrop-blur-xl ${
+            isMale
+              ? 'bg-cyan-950/60 border border-cyan-400/40 text-cyan-300 shadow-sm'
+              : 'bg-white/75 border border-white/90 text-slate-700 shadow-sm'
+          }`}>
+            <Sparkles className={`w-3.5 h-3.5 ${isMale ? 'text-cyan-400' : 'text-indigo-500'}`} />
             <span>Official Batch 27 Enrollment</span>
           </div>
-          <h1 className="font-display text-2xl sm:text-3xl font-extrabold tracking-tight text-slate-900">
+          <h1 className={`font-display text-2xl sm:text-3xl font-extrabold tracking-tight ${
+            isMale ? 'text-white' : 'text-slate-900'
+          }`}>
             Rag Day 27 Student Registration
           </h1>
-          <p className="text-xs sm:text-sm mt-1.5 text-slate-600">
-            Your gender is set to Male. Complete the form below to register.
+          <p className={`text-xs sm:text-sm mt-1.5 ${
+            isMale ? 'text-slate-300' : 'text-slate-600'
+          }`}>
+            Select your wing gender first to unlock the enrollment form and personalized jersey preview.
           </p>
         </div>
 
         {/* Compact Registration Countdown */}
         {registrationDeadline && (
-          <RegistrationCountdown deadline={registrationDeadline} />
+          <RegistrationCountdown deadline={registrationDeadline} theme={isMale ? 'dark' : 'light'} />
         )}
 
-        <form onSubmit={handleSubmit} className={`space-y-8 ${isGenderChosen ? 'registration-form-gendered' : 'registration-form-default'}`}>
-          <section className="rounded-2xl border border-cyan-300/30 bg-slate-950/80 p-4 shadow-[0_12px_35px_-18px_rgba(56,189,248,0.5)]">
-            <div className="flex items-center justify-between gap-3">
-              <div className="flex items-center gap-3">
-                <span className="grid h-10 w-10 place-items-center rounded-xl bg-cyan-400/15 text-cyan-300"><Mars className="h-5 w-5" /></span>
-                <div>
-                  <p className="text-xs font-bold uppercase tracking-wider text-cyan-300">Registration Gender</p>
-                  <p className="text-sm font-extrabold text-white">Male · Fixed</p>
-                </div>
-              </div>
-            </div>
-          </section>
+        {/* Step 1: Select Your Gender */}
+        <section className="space-y-4">
+          <div className={`pb-2.5 font-display text-base sm:text-lg font-bold flex items-center justify-between ${
+            isMale ? 'text-[#38BDF8] border-b border-slate-800' : 'text-slate-900 border-b border-slate-200/80'
+          }`}>
+            <span className="flex items-center gap-2">
+              <User className={`w-4 h-4 ${isMale ? 'text-[#38BDF8]' : 'text-indigo-600'}`} />
+              Step 1: Select Your Gender
+            </span>
+          </div>
 
-          {/* ======================================================== */}
-          {/* UNLOCKED FORM SECTIONS (Visible once Gender is Chosen) */}
-          {/* ======================================================== */}
-          {isGenderChosen && (
+          <div className="grid grid-cols-2 gap-3 sm:gap-4">
+            {/* Male Option Card */}
+            <button
+              type="button"
+              onClick={() => handleGenderSelect('male')}
+              className={`p-3.5 sm:p-4 rounded-2xl flex items-center justify-center gap-2 font-bold text-sm sm:text-base transition-all duration-200 cursor-pointer ${
+                formData.gender === 'male'
+                  ? 'bg-gradient-to-r from-[#0284C7]/40 to-[#0369A1]/40 border-2 border-[#38BDF8] text-white shadow-[0_0_20px_rgba(56,189,248,0.35)] ring-2 ring-[#38BDF8]/20'
+                  : isMale
+                  ? 'bg-slate-900/60 border border-slate-800 text-slate-300 hover:border-slate-700'
+                  : 'bg-white/90 border border-slate-200/90 text-slate-700 hover:border-slate-300 hover:bg-white shadow-2xs'
+              }`}
+            >
+              <Mars className={`w-5 h-5 ${formData.gender === 'male' ? 'text-cyan-300' : isMale ? 'text-slate-400' : 'text-indigo-600'}`} />
+              <span>Male</span>
+              {formData.gender === 'male' && <Check className="w-4 h-4 ml-1 text-cyan-300" />}
+            </button>
+
+            {/* Female Option Card */}
+            <button
+              type="button"
+              onClick={() => handleGenderSelect('female')}
+              className={`p-3.5 sm:p-4 rounded-2xl flex items-center justify-center gap-2 font-bold text-sm sm:text-base transition-all duration-200 cursor-pointer ${
+                formData.gender === 'female'
+                  ? 'bg-pink-50/90 border-2 border-pink-400 text-pink-700 shadow-sm ring-2 ring-pink-400/20'
+                  : isMale
+                  ? 'bg-slate-900/60 border border-slate-800 text-slate-400 hover:text-white hover:border-slate-700'
+                  : 'bg-white/90 border border-slate-200/90 text-slate-700 hover:border-pink-300 hover:bg-white shadow-2xs'
+              }`}
+            >
+              <Venus className={`w-5 h-5 ${formData.gender === 'female' ? 'text-pink-600' : isMale ? 'text-slate-500' : 'text-pink-500'}`} />
+              <span>Female</span>
+            </button>
+          </div>
+        </section>
+
+        {/* State A: Gender not selected yet (Reference Image 2) */}
+        {formData.gender === 'choose_one' && (
+          <div className="mt-6 p-8 sm:p-12 rounded-2xl border border-slate-200/80 bg-white/75 backdrop-blur-sm text-center shadow-2xs animate-fadeIn">
+            <p className="text-sm sm:text-base font-semibold text-slate-500">
+              Please select your gender to register.
+            </p>
+          </div>
+        )}
+
+        {/* State B: Female Selected - Humorous Warning Card (Reference Image 4) */}
+        {formData.gender === 'female' && (
+          <div className="mt-6 p-6 sm:p-10 rounded-3xl bg-gradient-to-b from-[#FFF5F7] via-[#FFF0F3] to-[#FFE8ED] border border-rose-200/90 text-center shadow-[0_15px_40px_-15px_rgba(244,63,94,0.15)] animate-fadeIn">
+            {/* Angry Pointing Face with Tension Marks */}
+            <div className="relative inline-flex items-center justify-center my-3 select-none">
+              <span className="text-rose-500 font-extrabold text-2xl select-none animate-pulse mr-2">💢</span>
+              <span className="text-6xl sm:text-7xl leading-none select-none drop-shadow-sm" role="img" aria-label="angry pointing">
+                😠👉
+              </span>
+              <span className="text-rose-500 font-extrabold text-2xl select-none animate-pulse ml-2">💢</span>
+            </div>
+
+            {/* Exact Bengali Humorous Message */}
+            <h3 className="font-display text-xl sm:text-2xl lg:text-[26px] font-black text-slate-900 leading-snug tracking-tight my-4">
+              ওই বেটা তুই কি মহিলা,<br />
+              তোর জিনিস নাই?<br />
+              <span className="text-rose-600 font-black block mt-1.5">Male এ চাপ দে।</span>
+            </h3>
+
+            {/* Action button to re-select */}
+            <div className="pt-2">
+              <button
+                type="button"
+                onClick={() => handleGenderSelect('choose_one')}
+                className="inline-flex items-center gap-2 px-6 py-2.5 rounded-xl bg-[#EEF2FF] hover:bg-[#E0E7FF] text-[#4F46E5] font-bold text-xs sm:text-sm border border-[#C7D2FE] shadow-2xs hover:shadow-sm transition-all cursor-pointer active:scale-95"
+              >
+                <span>←</span>
+                <span>আবার সিলেক্ট করো</span>
+              </button>
+            </div>
+          </div>
+        )}
+
+        {/* State C: Male Selected - Full Registration Form (Reference Image 3) */}
+        {formData.gender === 'male' && (
+          <form onSubmit={handleSubmit} className="mt-8 space-y-8 registration-form-gendered animate-fadeIn">
             <div className="space-y-8 animate-fadeIn">
               {/* ======================================================== */}
               {/* 2. PERSONAL INFORMATION                                  */}
@@ -1008,17 +1145,26 @@ export const RegistrationForm: React.FC<RegistrationFormProps> = ({
                     </div>
                   </div>
 
-                  {/* Payment Numbers */}
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                    {/* bKash Number */}
-                    <div className="p-3 sm:p-4 rounded-xl bg-white/70 border border-slate-200/80 flex items-center justify-between gap-2">
-                      <div className="flex items-center gap-3">
-                        <div className="w-9 h-9 rounded-xl bg-pink-50 flex items-center justify-center p-1">
-                          <BkashLogo className="w-6 h-6" />
+                  {/* Payment Numbers: bKash & Nagad Fintech Glass Cards */}
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
+                    {/* bKash Fintech Card */}
+                    <div className={`relative overflow-hidden p-4 rounded-2xl transition-all duration-300 flex items-center justify-between gap-3 ${
+                      isMale
+                        ? 'bg-gradient-to-br from-[#E2136E]/20 via-slate-900/90 to-slate-950/95 border border-[#E2136E]/40 shadow-[0_12px_30px_-8px_rgba(226,19,110,0.25),inset_0_1.5px_1px_rgba(255,255,255,0.15)] hover:border-[#E2136E]/70'
+                        : 'glass-fintech-bkash'
+                    }`}>
+                      <div className="absolute inset-x-0 top-0 h-1/2 bg-gradient-to-b from-white/20 to-transparent pointer-events-none rounded-t-2xl" />
+                      <div className="relative z-10 flex items-center gap-3 min-w-0">
+                        <div className="w-11 h-11 rounded-2xl bg-white/95 backdrop-blur-md flex items-center justify-center p-1.5 shadow-sm border border-pink-200/80 shrink-0">
+                          <BkashLogo className="w-7 h-7" />
                         </div>
-                        <div>
-                          <div className="text-[10px] font-bold uppercase text-slate-400">bKash Personal</div>
-                          <div className="font-mono font-extrabold text-sm text-slate-900">{activeBkashNumber}</div>
+                        <div className="min-w-0">
+                          <div className={`text-[10px] font-extrabold uppercase tracking-wider ${isMale ? 'text-pink-300' : 'text-pink-700'}`}>
+                            bKash Personal
+                          </div>
+                          <div className={`font-mono font-black text-sm sm:text-base tracking-tight truncate ${isMale ? 'text-white' : 'text-slate-900'}`}>
+                            {activeBkashNumber}
+                          </div>
                         </div>
                       </div>
                       <button
@@ -1027,22 +1173,38 @@ export const RegistrationForm: React.FC<RegistrationFormProps> = ({
                           handleCopyAccount(activeBkashNumber.replace(/\D/g, '') || activeBkashNumber, 'bkash');
                           setFormData(prev => ({ ...prev, send_method: 'bkash' }));
                         }}
-                        className="px-2.5 py-1.5 rounded-lg text-xs font-bold bg-slate-100 hover:bg-slate-200 text-slate-700 transition-colors flex items-center gap-1 cursor-pointer"
+                        className={`relative z-10 px-3 py-2 rounded-xl text-xs font-extrabold transition-all duration-200 flex items-center gap-1.5 cursor-pointer active:scale-95 shrink-0 ${
+                          copiedAccount === 'bkash'
+                            ? 'bg-emerald-500 text-white shadow-md shadow-emerald-500/30'
+                            : isMale
+                            ? 'bg-[#E2136E]/25 hover:bg-[#E2136E]/40 text-pink-200 border border-[#E2136E]/50'
+                            : 'bg-white/90 hover:bg-white text-pink-700 border border-pink-200 shadow-xs'
+                        }`}
+                        title="Click to copy bKash account number"
                       >
-                        {copiedAccount === 'bkash' ? <Check className="w-3.5 h-3.5 text-emerald-600" /> : <Copy className="w-3.5 h-3.5" />}
+                        {copiedAccount === 'bkash' ? <Check className="w-3.5 h-3.5" /> : <Copy className="w-3.5 h-3.5" />}
                         <span>{copiedAccount === 'bkash' ? 'Copied' : 'Copy'}</span>
                       </button>
                     </div>
 
-                    {/* Nagad Number */}
-                    <div className="p-3 sm:p-4 rounded-xl bg-white/70 border border-slate-200/80 flex items-center justify-between gap-2">
-                      <div className="flex items-center gap-3">
-                        <div className="w-9 h-9 rounded-xl bg-orange-50 flex items-center justify-center p-1">
-                          <NagadLogo className="w-6 h-6" />
+                    {/* Nagad Fintech Card */}
+                    <div className={`relative overflow-hidden p-4 rounded-2xl transition-all duration-300 flex items-center justify-between gap-3 ${
+                      isMale
+                        ? 'bg-gradient-to-br from-[#F7941D]/20 via-slate-900/90 to-slate-950/95 border border-[#F7941D]/40 shadow-[0_12px_30px_-8px_rgba(247,148,29,0.25),inset_0_1.5px_1px_rgba(255,255,255,0.15)] hover:border-[#F7941D]/70'
+                        : 'glass-fintech-nagad'
+                    }`}>
+                      <div className="absolute inset-x-0 top-0 h-1/2 bg-gradient-to-b from-white/20 to-transparent pointer-events-none rounded-t-2xl" />
+                      <div className="relative z-10 flex items-center gap-3 min-w-0">
+                        <div className="w-11 h-11 rounded-2xl bg-white/95 backdrop-blur-md flex items-center justify-center p-1.5 shadow-sm border border-orange-200/80 shrink-0">
+                          <NagadLogo className="w-7 h-7" />
                         </div>
-                        <div>
-                          <div className="text-[10px] font-bold uppercase text-slate-400">Nagad Personal</div>
-                          <div className="font-mono font-extrabold text-sm text-slate-900">{activeNagadNumber}</div>
+                        <div className="min-w-0">
+                          <div className={`text-[10px] font-extrabold uppercase tracking-wider ${isMale ? 'text-amber-300' : 'text-amber-700'}`}>
+                            Nagad Personal
+                          </div>
+                          <div className={`font-mono font-black text-sm sm:text-base tracking-tight truncate ${isMale ? 'text-white' : 'text-slate-900'}`}>
+                            {activeNagadNumber}
+                          </div>
                         </div>
                       </div>
                       <button
@@ -1051,9 +1213,16 @@ export const RegistrationForm: React.FC<RegistrationFormProps> = ({
                           handleCopyAccount(activeNagadNumber.replace(/\D/g, '') || activeNagadNumber, 'nagad');
                           setFormData(prev => ({ ...prev, send_method: 'nagad' }));
                         }}
-                        className="px-2.5 py-1.5 rounded-lg text-xs font-bold bg-slate-100 hover:bg-slate-200 text-slate-700 transition-colors flex items-center gap-1 cursor-pointer"
+                        className={`relative z-10 px-3 py-2 rounded-xl text-xs font-extrabold transition-all duration-200 flex items-center gap-1.5 cursor-pointer active:scale-95 shrink-0 ${
+                          copiedAccount === 'nagad'
+                            ? 'bg-emerald-500 text-white shadow-md shadow-emerald-500/30'
+                            : isMale
+                            ? 'bg-[#F7941D]/25 hover:bg-[#F7941D]/40 text-amber-200 border border-[#F7941D]/50'
+                            : 'bg-white/90 hover:bg-white text-amber-700 border border-orange-200 shadow-xs'
+                        }`}
+                        title="Click to copy Nagad account number"
                       >
-                        {copiedAccount === 'nagad' ? <Check className="w-3.5 h-3.5 text-emerald-600" /> : <Copy className="w-3.5 h-3.5" />}
+                        {copiedAccount === 'nagad' ? <Check className="w-3.5 h-3.5" /> : <Copy className="w-3.5 h-3.5" />}
                         <span>{copiedAccount === 'nagad' ? 'Copied' : 'Copy'}</span>
                       </button>
                     </div>
@@ -1390,8 +1559,8 @@ export const RegistrationForm: React.FC<RegistrationFormProps> = ({
                 </button>
               </div>
             </div>
-          )}
-        </form>
+          </form>
+        )}
       </div>
 
       {/* ======================================================== */}

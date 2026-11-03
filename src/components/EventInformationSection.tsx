@@ -148,20 +148,20 @@ export const EventInformationSection: React.FC<EventInformationSectionProps> = (
             return (
               <div
                 key={card.id}
-                className={`relative p-5 sm:p-6 rounded-2xl sm:rounded-3xl bg-white/80 backdrop-blur-xl border ${colors.cardBorder} shadow-[0_8px_25px_-5px_rgba(0,0,0,0.04),inset_0_1.5px_1px_white] transition-all duration-300 hover:-translate-y-1 ${colors.glow} flex flex-col justify-between overflow-hidden`}
+                className={`relative p-5 sm:p-7 rounded-2xl sm:rounded-3xl bg-white/84 backdrop-blur-2xl border ${colors.cardBorder} shadow-[0_12px_32px_-10px_rgba(15,23,42,0.06),inset_0_1.5px_1.5px_white] transition-all duration-300 hover:-translate-y-1.5 ${colors.glow} flex flex-col justify-between overflow-hidden group`}
               >
-                <div className="absolute inset-x-0 top-0 h-1/2 bg-gradient-to-b from-white/50 to-transparent pointer-events-none rounded-t-2xl sm:rounded-t-3xl" />
+                <div className="absolute inset-x-0 top-0 h-2/5 bg-gradient-to-b from-white/90 to-transparent pointer-events-none rounded-t-2xl sm:rounded-t-3xl" />
                 <div className="relative z-10">
                   <div className="flex items-center justify-between mb-4">
-                    <div className={`w-11 h-11 rounded-2xl ${colors.badgeBg} flex items-center justify-center shadow-xs border border-white/80 backdrop-blur-md`}>
+                    <div className={`w-12 h-12 rounded-2xl ${colors.badgeBg} flex items-center justify-center shadow-xs border border-white/90 backdrop-blur-md transition-transform duration-300 group-hover:scale-105`}>
                       {renderCardIcon(card.icon, 'w-5 h-5')}
                     </div>
-                    <span className="text-[11px] font-bold uppercase tracking-wider text-slate-400 font-mono">
+                    <span className="text-[11px] font-bold uppercase tracking-wider text-slate-400 font-mono px-2.5 py-1 rounded-lg glass-pill">
                       #{card.order}
                     </span>
                   </div>
 
-                  <h3 className="text-xs font-bold uppercase tracking-wider text-slate-500 mb-1">
+                  <h3 className="text-xs font-bold uppercase tracking-wider text-slate-500 mb-1.5">
                     {card.title}
                   </h3>
 
@@ -171,7 +171,7 @@ export const EventInformationSection: React.FC<EventInformationSectionProps> = (
                 </div>
 
                 {card.subDetail && (
-                  <div className="relative z-10 mt-4 pt-3 border-t border-slate-100/90 flex items-center text-xs text-slate-500 font-medium">
+                  <div className="relative z-10 mt-5 pt-3.5 border-t border-slate-200/60 flex items-center text-xs text-slate-500 font-medium">
                     <span>{card.subDetail}</span>
                   </div>
                 )}

@@ -193,7 +193,7 @@ export const InvitationCardPage: React.FC<InvitationCardPageProps> = ({
       </div>
 
       {/* Search Layout (Form) */}
-      <div className="p-6 sm:p-8 rounded-3xl bg-white/80 backdrop-blur-xl border border-white/95 shadow-[0_20px_45px_-15px_rgba(91,95,239,0.08),inset_0_1.5px_1px_white] mb-8">
+      <div className="p-6 sm:p-8 rounded-3xl glass-panel mb-8">
         <form
           onSubmit={e => {
             e.preventDefault();
@@ -211,7 +211,7 @@ export const InvitationCardPage: React.FC<InvitationCardPageProps> = ({
                 placeholder="e.g. RD27-01"
                 value={searchRegNo}
                 onChange={e => setSearchRegNo(e.target.value.toUpperCase())}
-                className="w-full px-4 py-3 rounded-xl text-sm font-mono font-bold bg-slate-50/80 backdrop-blur-md border border-slate-200/90 text-slate-900 placeholder-slate-400 focus:bg-white focus:border-[#6D28D9] focus:ring-2 focus:ring-[#6D28D9]/20 outline-none transition-all shadow-[inset_0_1px_2px_rgba(0,0,0,0.02)]"
+                className="w-full px-4 py-3.5 rounded-xl text-sm font-mono font-bold glass-input text-slate-900 placeholder-slate-400 focus:border-[#5B5FEF] focus:ring-2 focus:ring-[#5B5FEF]/20 outline-none transition-all"
                 required
               />
             </div>
@@ -225,7 +225,7 @@ export const InvitationCardPage: React.FC<InvitationCardPageProps> = ({
                 placeholder="Enter student full name..."
                 value={searchStudentName}
                 onChange={e => setSearchStudentName(e.target.value)}
-                className="w-full px-4 py-3 rounded-xl text-sm font-medium bg-slate-50/80 backdrop-blur-md border border-slate-200/90 text-slate-900 placeholder-slate-400 focus:bg-white focus:border-[#6D28D9] focus:ring-2 focus:ring-[#6D28D9]/20 outline-none transition-all shadow-[inset_0_1px_2px_rgba(0,0,0,0.02)]"
+                className="w-full px-4 py-3.5 rounded-xl text-sm font-medium glass-input text-slate-900 placeholder-slate-400 focus:border-[#5B5FEF] focus:ring-2 focus:ring-[#5B5FEF]/20 outline-none transition-all"
                 required
               />
             </div>
@@ -235,7 +235,7 @@ export const InvitationCardPage: React.FC<InvitationCardPageProps> = ({
             <button
               type="submit"
               disabled={isSearching}
-              className="py-3 px-6 rounded-xl bg-gradient-to-r from-[#6D28D9] via-[#7C3AED] to-[#8B5CF6] text-white font-bold text-sm shadow-md shadow-[#6D28D9]/25 hover:shadow-lg hover:shadow-[#6D28D9]/35 hover:-translate-y-0.5 active:translate-y-0 transition-all flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50"
+              className="py-3.5 px-7 rounded-xl bg-gradient-to-r from-[#5B5FEF] via-[#7A6CFF] to-[#00D4FF] text-white font-bold text-sm shadow-[0_12px_28px_-6px_rgba(91,95,239,0.32),inset_0_1px_1px_rgba(255,255,255,0.4)] hover:shadow-[0_16px_36px_-6px_rgba(91,95,239,0.45)] hover:-translate-y-0.5 active:translate-y-0 transition-all flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50"
             >
               {isSearching ? (
                 <Loader2 className="w-4 h-4 animate-spin" />
@@ -442,7 +442,7 @@ export const InvitationCardPage: React.FC<InvitationCardPageProps> = ({
                   type="button"
                   onClick={handleDownloadPass}
                   disabled={isDownloading}
-                  className="w-full sm:w-auto px-7 py-3.5 rounded-xl bg-gradient-to-r from-[#6D28D9] via-[#7C3AED] to-[#8B5CF6] hover:from-[#5B21B6] hover:to-[#7C3AED] text-white font-extrabold text-sm shadow-lg shadow-[#7C3AED]/25 hover:shadow-xl hover:shadow-[#7C3AED]/35 transition-all flex items-center justify-center gap-2 cursor-pointer hover:-translate-y-0.5 active:translate-y-0 disabled:opacity-60"
+                  className="w-full sm:w-auto px-8 py-3.5 rounded-2xl bg-gradient-to-r from-[#5B5FEF] via-[#7A6CFF] to-[#00D4FF] hover:brightness-105 text-white font-extrabold text-sm shadow-[0_12px_28px_-6px_rgba(91,95,239,0.36),inset_0_1px_1px_rgba(255,255,255,0.4)] hover:shadow-[0_16px_36px_-6px_rgba(91,95,239,0.48)] transition-all flex items-center justify-center gap-2 cursor-pointer hover:-translate-y-0.5 active:translate-y-0 disabled:opacity-60"
                 >
                   {isDownloading ? (
                     <Loader2 className="w-4 h-4 animate-spin" />

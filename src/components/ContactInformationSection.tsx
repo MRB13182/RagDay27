@@ -70,7 +70,7 @@ export const ContactInformationSection: React.FC = () => {
       aria-labelledby="contact-info-heading"
       className="py-10 sm:py-14 text-center animate-fadeIn"
     >
-      <div className="max-w-md mx-auto px-4">
+      <div className="max-w-md mx-auto px-6 py-8 sm:py-9 rounded-3xl glass-card text-center">
         {/* Heading */}
         <h2
           id="contact-info-heading"
