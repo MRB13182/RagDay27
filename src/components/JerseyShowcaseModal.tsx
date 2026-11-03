@@ -258,7 +258,7 @@ export const JerseyShowcaseModal: React.FC<JerseyShowcaseModalProps> = ({
         <div className="absolute inset-x-0 top-0 h-1/3 bg-gradient-to-b from-cyan-400/15 via-blue-600/5 to-transparent pointer-events-none" />
 
         {/* Top Control Bar: Frosted Glass Toolbar */}
-        <div className="relative z-20 flex items-center justify-between gap-3 px-4 sm:px-6 py-3.5 border-b border-cyan-500/20 bg-slate-900/60 backdrop-blur-2xl">
+        <div className="relative z-20 flex items-center justify-between gap-3 px-4 sm:px-6 py-3.5 border-b border-cyan-500/20 bg-slate-800/45 backdrop-blur-2xl">
           {/* Left: Branding & Title */}
           <div className="flex items-center gap-2.5 min-w-0">
             <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-[#2563EB] to-[#0284C7] text-white flex items-center justify-center shadow-md shadow-blue-500/20 border border-cyan-300/30 shrink-0">
@@ -282,7 +282,7 @@ export const JerseyShowcaseModal: React.FC<JerseyShowcaseModalProps> = ({
           {/* Right: Zoom controls & Primary Close Button */}
           <div className="flex items-center gap-2 shrink-0">
             {/* Zoom Controls: Frosted Glass Capsule */}
-            <div className="hidden sm:flex items-center gap-1 bg-slate-900/70 border border-cyan-400/25 rounded-2xl p-1 shadow-inner backdrop-blur-md">
+            <div className="hidden sm:flex items-center gap-1 bg-slate-800/40 border border-cyan-300/25 rounded-2xl p-1 shadow-inner backdrop-blur-2xl">
               <button
                 type="button"
                 onClick={handleZoomOut}
@@ -371,7 +371,7 @@ export const JerseyShowcaseModal: React.FC<JerseyShowcaseModalProps> = ({
             </div>
           ) : (
             <div className="flex flex-col items-center justify-center text-center p-8 text-slate-400 max-w-sm">
-              <div className="w-16 h-16 rounded-2xl bg-slate-800/80 border border-slate-700 flex items-center justify-center text-cyan-400 mb-3 shadow-inner">
+              <div className="w-16 h-16 rounded-2xl bg-slate-700/35 backdrop-blur-xl border border-white/15 flex items-center justify-center text-cyan-400 mb-3 shadow-inner">
                 <Shirt className="w-8 h-8" />
               </div>
               <h4 className="text-base font-bold text-white mb-1">Preview Loading</h4>
@@ -390,7 +390,7 @@ export const JerseyShowcaseModal: React.FC<JerseyShowcaseModalProps> = ({
         </div>
 
         {/* Bottom Status & Mobile Controls Footer: Frosted Glass */}
-        <div className="relative z-20 px-4 py-2.5 sm:py-3 bg-slate-900/60 backdrop-blur-2xl border-t border-cyan-500/20 flex items-center justify-between text-[11px] text-slate-400 flex-wrap gap-2">
+        <div className="relative z-20 px-4 py-2.5 sm:py-3 bg-slate-800/45 backdrop-blur-2xl border-t border-cyan-500/20 flex items-center justify-between text-[11px] text-slate-400 flex-wrap gap-2">
           <div className="flex items-center gap-2">
             <span className="w-2 h-2 rounded-full bg-cyan-400 animate-pulse shadow-[0_0_8px_#22d3ee]" />
             <span className="text-slate-300 font-medium truncate max-w-xs sm:max-w-md">
@@ -400,7 +400,7 @@ export const JerseyShowcaseModal: React.FC<JerseyShowcaseModalProps> = ({
 
           <div className="flex items-center gap-3 ml-auto">
             {/* Mobile zoom controls */}
-            <div className="flex sm:hidden items-center gap-1 bg-slate-900/80 p-0.5 rounded-xl border border-cyan-400/20">
+            <div className="flex sm:hidden items-center gap-1 bg-slate-800/45 p-0.5 rounded-xl border border-cyan-300/25 backdrop-blur-xl">
               <button
                 type="button"
                 onClick={handleZoomOut}
