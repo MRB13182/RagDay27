@@ -68,6 +68,18 @@ export const InvitationCardPage: React.FC<InvitationCardPageProps> = ({
   const [editError, setEditError] = useState<string | null>(null);
   const [editPolicy, setEditPolicy] = useState<{deadline:string;can_edit:boolean}|null>(null);
 
+  useEffect(() => {
+    let active = true;
+    if (!matchedRecord || matchedRecord.status === 'rejected') {
+      setEditPolicy(null);
+      return;
+    }
+    getEditPolicy()
+      .then(policy => { if (active) setEditPolicy(policy); })
+      .catch(() => { if (active) setEditPolicy(null); });
+    return () => { active = false; };
+  }, [matchedRecord?.registration_no, matchedRecord?.updated_at, matchedRecord?.status]);
+
   const exportCardRef = useRef<HTMLDivElement>(null);
   const displayCardRef = useRef<HTMLDivElement>(null);
 
@@ -414,7 +426,7 @@ export const InvitationCardPage: React.FC<InvitationCardPageProps> = ({
                   <strong>Verification in Progress:</strong> Your payment and student records are currently pending authorization by the Rag Day 27 Admin committee. Once approved, your invitation card and official entry pass download will appear here automatically.
                 </div>
               </div>
-              {canAttemptEdit && !editOpen && (
+              {canAttemptEdit && editPolicy?.can_edit && !editOpen && (
                 <div className="flex flex-col sm:flex-row items-center justify-between gap-3 p-4 rounded-2xl glass-card border border-slate-200/80">
                   <div className="text-xs text-slate-600">
                     <strong className="block text-slate-900">Need to correct your registration?</strong>
@@ -424,6 +436,11 @@ export const InvitationCardPage: React.FC<InvitationCardPageProps> = ({
                     className="inline-flex items-center gap-2 rounded-xl border border-indigo-300 px-4 py-2.5 text-xs font-bold text-indigo-700 hover:bg-indigo-50 disabled:opacity-60">
                     <Pencil className="w-4 h-4"/>{editLoading ? 'Verifying…' : 'Edit Registration'}
                   </button>
+                </div>
+              )}
+              {canAttemptEdit && editPolicy && !editPolicy.can_edit && !editOpen && (
+                <div role="status" className="rounded-xl border border-amber-200 bg-amber-50 p-3 text-xs font-semibold text-amber-800">
+                  Registration editing deadline has passed. Editing is now closed.
                 </div>
               )}
               {editMessage && <div role="status" className="rounded-xl border border-emerald-200 bg-emerald-50 p-3 text-xs font-semibold text-emerald-800">{editMessage}</div>}
