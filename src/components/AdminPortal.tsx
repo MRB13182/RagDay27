@@ -183,9 +183,15 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
     setIsLoadingRegistrations(true);
     setRegistrationLoadError('');
     try {
-      const result = await getRegistrationList();
+      const [result, metadata] = await Promise.all([
+        getRegistrationList(),
+        getStoredAdminPasscode()
+          ? getRegistrationEditMetadata(getStoredAdminPasscode() || '')
+          : Promise.resolve([]),
+      ]);
       if (result.success) {
         setAdminRegistrations(result.data.filter(record => record.gender === 'male'));
+        setEditMetadata(metadata);
       } else {
         setRegistrationLoadError(result.errorMessage || 'Unable to load registrations from database.');
         setAdminRegistrations([]);
