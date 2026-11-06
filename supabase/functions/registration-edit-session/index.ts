@@ -21,7 +21,7 @@ const hash = async (value:string) => {
   return Array.from(new Uint8Array(digest)).map(b=>b.toString(16).padStart(2,"0")).join("");
 };
 const cookie = (token:string, maxAge:number) =>
-  `${COOKIE}=${token}; Max-Age=${maxAge}; Path=/; Secure; HttpOnly; SameSite=None`;
+  `${COOKIE}=${token}; Max-Age=${maxAge}; Path=/; Secure; HttpOnly; SameSite=Lax`;
 const readCookie = (header:string|null) => {
   const item = (header || "").split(";").map(s=>s.trim()).find(s=>s.startsWith(COOKIE+"="));
   return item ? item.slice(COOKIE.length+1) : null;
@@ -45,7 +45,6 @@ Deno.serve(async (req:Request) => {
   if(req.method!=="POST") return fail("Method not allowed.",405);
   const origin=req.headers.get("origin");
   // Host-only cookie on the Supabase function origin, never a first-party website cookie.
-  const allowedOrigins=(Deno.env.get("RD27_ALLOWED_ORIGINS")||"").split(",").map(s=>s.trim()).filter(Boolean);
   if(origin !== ALLOWED_ORIGIN) return fail("Origin not allowed.",403);
   const url=Deno.env.get("SUPABASE_URL")!;
   const secret=Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
