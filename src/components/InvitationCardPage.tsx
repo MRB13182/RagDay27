@@ -14,6 +14,18 @@ import {
 import { toPng } from 'html-to-image';
 import { getPublicInvitation, getRejectedRegistrationForResubmission } from '../services';
 import { InvitationCard } from './InvitationCard';
+import { verifyRegistrationForEdit, saveRegistrationEdit, getEditPolicy } from '../services/registrationEditing';
+import { JerseyGraphic } from './JerseyGraphic';
+import { Pencil, Save, X, Lock } from 'lucide-react';
+
+type EditForm = {
+  full_name: string; class_roll: string; student_id: string; contact_mobile_number: string;
+  academic_group: string; academic_section: string; student_photo: string | null;
+  send_method: 'bkash' | 'nagad'; sender_mobile_no: string; payment_time: string;
+  transaction_id: string; jersey_back_name: string; jersey_number: string; jersey_size: string;
+};
+const editSizes = ['S','M','L','XL','2XL','3XL','4XL'];
+
 
 interface InvitationCardPageProps {
   invitations: InvitationRecord[];
@@ -44,6 +56,14 @@ export const InvitationCardPage: React.FC<InvitationCardPageProps> = ({
   const [recoveryError, setRecoveryError] = useState<string | null>(null);
   const [showRecoveryDialog, setShowRecoveryDialog] = useState(false);
   const [recoveryStudentId, setRecoveryStudentId] = useState('');
+  const [editState, setEditState] = useState<any>(null);
+  const [editForm, setEditForm] = useState<EditForm | null>(null);
+  const [editOpen, setEditOpen] = useState(false);
+  const [editLoading, setEditLoading] = useState(false);
+  const [editSaving, setEditSaving] = useState(false);
+  const [editMessage, setEditMessage] = useState<string | null>(null);
+  const [editError, setEditError] = useState<string | null>(null);
+  const [editPolicy, setEditPolicy] = useState<{deadline:string;can_edit:boolean}|null>(null);
 
   const exportCardRef = useRef<HTMLDivElement>(null);
   const displayCardRef = useRef<HTMLDivElement>(null);
@@ -95,6 +115,51 @@ export const InvitationCardPage: React.FC<InvitationCardPageProps> = ({
     } finally {
       setIsSearching(false);
     }
+  };
+
+
+  const canAttemptEdit = matchedRecord && matchedRecord.status !== 'rejected';
+  const handleStartEdit = async () => {
+    if (!matchedRecord) return;
+    setEditError(null); setEditMessage(null); setEditLoading(true);
+    try {
+      const policy = await getEditPolicy();
+      setEditPolicy(policy);
+      if (!policy.can_edit) { setEditError('The editing deadline has passed.'); return; }
+      const verified = await verifyRegistrationForEdit(matchedRecord.registration_no, searchStudentName);
+      if (!verified.success || !verified.data) throw new Error(verified.errorMessage || 'Unable to verify registration for editing.');
+      setEditState(verified.data);
+      const r = verified.data.record;
+      setEditForm({
+        full_name:r.full_name || '', class_roll:r.class_roll || '', student_id:r.student_id || '',
+        contact_mobile_number:r.contact_mobile_number || '', academic_group:r.academic_group || '',
+        academic_section:r.academic_section || '', student_photo:r.student_photo || null,
+        send_method:r.send_method || 'bkash', sender_mobile_no:r.sender_mobile_no || '',
+        payment_time:r.payment_time || '', transaction_id:r.transaction_id || '',
+        jersey_back_name:r.jersey_back_name || '', jersey_number:r.jersey_number || '',
+        jersey_size:r.jersey_size || 'L'
+      });
+      setEditOpen(true);
+    } catch (e:any) { setEditError(e?.message || 'Unable to start editing.'); }
+    finally { setEditLoading(false); }
+  };
+  const handleSaveEdit = async () => {
+    if (!matchedRecord || !editForm) return;
+    setEditError(null); setEditMessage(null);
+    if (!/^\\d{1,3}$/.test(editForm.jersey_number)) { setEditError('Jersey Number must contain 1–3 digits.'); return; }
+    if (!editForm.full_name.trim() || !editForm.class_roll.trim() || !editForm.student_id.trim()) { setEditError('Complete all required personal information fields.'); return; }
+    if (!/^\\d{11}$/.test(editForm.contact_mobile_number) || !/^\\d{11}$/.test(editForm.sender_mobile_no)) { setEditError('Both mobile numbers must contain exactly 11 digits.'); return; }
+    setEditSaving(true);
+    try {
+      const saved = await saveRegistrationEdit(editForm as any);
+      if (!saved.success || !saved.data) throw new Error(saved.errorMessage || 'Unable to save changes.');
+      // Database response is authoritative; refresh card state and latest edit metadata.
+      setMatchedRecord(saved.data);
+      setSearchStudentName(saved.data.full_name);
+      setEditOpen(false); setEditState(null); setEditForm(null);
+      setEditMessage('Your registration was updated successfully. Latest information is now shown below.');
+    } catch (e:any) { setEditError(e?.message || 'Unable to save changes.'); }
+    finally { setEditSaving(false); }
   };
 
   /**
@@ -420,6 +485,44 @@ export const InvitationCardPage: React.FC<InvitationCardPageProps> = ({
                   </div>
                 </div>
               </div>
+
+              {canAttemptEdit && !editOpen && (
+                <div className="flex flex-col sm:flex-row items-center justify-between gap-3 p-4 rounded-2xl glass-card border border-slate-200/80">
+                  <div className="text-xs text-slate-600">
+                    <strong className="block text-slate-900">Need to correct your registration?</strong>
+                    <span>{editState ? `${editState.edit_count}/5 successful edits used` : 'Verify your details to make a permitted update.'}</span>
+                  </div>
+                  <button type="button" onClick={handleStartEdit} disabled={editLoading}
+                    className="inline-flex items-center gap-2 rounded-xl border border-indigo-300 px-4 py-2.5 text-xs font-bold text-indigo-700 hover:bg-indigo-50 disabled:opacity-60">
+                    <Pencil className="w-4 h-4"/>{editLoading ? 'Verifying…' : 'Edit Registration'}
+                  </button>
+                </div>
+              )}
+              {editMessage && <div role="status" className="rounded-xl border border-emerald-200 bg-emerald-50 p-3 text-xs font-semibold text-emerald-800">{editMessage}</div>}
+              {editError && <div role="alert" className="rounded-xl border border-rose-200 bg-rose-50 p-3 text-xs font-semibold text-rose-700">{editError}</div>}
+              {editOpen && editForm && (
+                <section className="rounded-3xl border border-indigo-200 bg-white/95 p-5 sm:p-6 shadow-lg space-y-5">
+                  <header className="flex items-center justify-between gap-3">
+                    <div><span className="text-[10px] font-bold uppercase tracking-wider text-indigo-500">Registration Correction</span><h3 className="text-lg font-black text-slate-900">Edit your information</h3><p className="text-xs text-slate-500">{editState?.edit_count ?? 0}/5 successful edits used</p></div>
+                    <button type="button" onClick={()=>{setEditOpen(false);setEditError(null);}} className="rounded-lg p-2 text-slate-500 hover:bg-slate-100" aria-label="Close edit form"><X className="w-5 h-5"/></button>
+                  </header>
+                  <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
+                    <div className="rounded-2xl bg-slate-50 p-4 space-y-2"><h4 className="text-xs font-extrabold text-slate-700">Current Information</h4>
+                      {Object.entries({Name:matchedRecord.full_name,Roll:matchedRecord.class_roll,StudentID:matchedRecord.student_id,Mobile:matchedRecord.contact_mobile_number,Group:matchedRecord.academic_group,Section:matchedRecord.academic_section,JerseyName:matchedRecord.jersey_back_name,JerseyNumber:matchedRecord.jersey_number,JerseySize:matchedRecord.jersey_size}).map(([k,v])=><div key={k} className="flex justify-between gap-2 border-b border-slate-200 py-1.5 text-xs"><span className="text-slate-500">{k}</span><strong className="text-slate-800 text-right">{v || '—'}</strong></div>)}
+                    </div>
+                    <div className="space-y-3">
+                      {([
+                        ['full_name','Full Name'],['class_roll','Class Roll'],['student_id','Student ID'],['contact_mobile_number','Contact Mobile Number'],
+                        ['academic_group','Academic Group'],['academic_section','Section'],['sender_mobile_no','Payment Sender Mobile'],['payment_time','Payment Time'],['transaction_id','Transaction ID'],['jersey_back_name','Jersey Back Name'],['jersey_number','Jersey Number']
+                      ] as const).map(([key,label])=><label key={key} className="block text-xs font-bold text-slate-700">{label}<input value={(editForm as any)[key] || ''} maxLength={key==='jersey_number'?3:key==='jersey_back_name'?14:120} inputMode={key==='jersey_number'||key.includes('mobile')?'numeric':undefined} onChange={e=>setEditForm(prev=>prev?({...prev,[key]:key==='jersey_back_name'?e.target.value.toUpperCase():e.target.value}):prev)} className="mt-1 w-full rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-sm text-slate-900 outline-none focus:border-indigo-400"/></label>)}
+                      <label className="block text-xs font-bold text-slate-700">Send Method<select value={editForm.send_method} onChange={e=>setEditForm(p=>p?({...p,send_method:e.target.value as any}):p)} className="mt-1 w-full rounded-xl border border-slate-200 px-3 py-2.5 text-sm"><option value="bkash">bKash</option><option value="nagad">Nagad</option></select></label>
+                      <label className="block text-xs font-bold text-slate-700">Jersey Size<div className="mt-2 flex flex-wrap gap-2">{editSizes.map(sz=><button key={sz} type="button" onClick={()=>setEditForm(p=>p?({...p,jersey_size:sz}):p)} className={`rounded-lg border px-3 py-2 text-xs font-bold ${editForm.jersey_size===sz?'border-indigo-600 bg-indigo-600 text-white':'border-slate-200 text-slate-700'}`}>{sz}</button>)}</div></label>
+                    </div>
+                  </div>
+                  <div className="rounded-2xl bg-indigo-50 p-4 flex flex-col sm:flex-row items-center gap-4"><JerseyGraphic name={editForm.jersey_back_name} number={editForm.jersey_number} gender={matchedRecord.gender} className="w-40 h-44"/><div className="text-xs text-indigo-900"><strong>Live Jersey Preview</strong><p>{editForm.jersey_back_name} · #{editForm.jersey_number} · Size {editForm.jersey_size}</p></div></div>
+                  <div className="flex flex-col sm:flex-row justify-end gap-2"><button type="button" onClick={()=>{setEditOpen(false);setEditForm(null);}} className="rounded-xl border border-slate-300 px-4 py-3 text-xs font-bold text-slate-700">Cancel</button><button type="button" disabled={editSaving} onClick={handleSaveEdit} className="inline-flex items-center justify-center gap-2 rounded-xl bg-indigo-600 px-5 py-3 text-xs font-bold text-white disabled:opacity-60"><Save className="w-4 h-4"/>{editSaving?'Saving…':'Save Changes'}</button></div>
+                </section>
+              )}
 
               {/* Status: Approved Header with the single [ Download Pass ] button */}
               <div className="p-5 sm:p-6 rounded-3xl bg-emerald-500/10 backdrop-blur-2xl border-2 border-emerald-300/90 shadow-[0_15px_35px_-10px_rgba(16,185,129,0.15),inset_0_1.5px_2px_white] flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
