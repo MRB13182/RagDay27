@@ -498,7 +498,6 @@ export default function App() {
                 }}
                 pdfSettings={pdfSettings}
                 websiteSettings={websiteSettings}
-                registrationOpen={registrationSettingsConfig.registrationOpen}
               />
             </div>
           )}

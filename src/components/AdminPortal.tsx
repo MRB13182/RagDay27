@@ -1,11 +1,14 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import type { InvitationRecord, InvitationStatus, AdminProfile, PdfSettings, WebsiteSettings } from '../types';
-import { signInAdmin, signOutAdmin, getCurrentAdmin, getStoredAdminPasscode } from '../lib/supabase';
+import { signInAdmin, signOutAdmin, getCurrentAdmin } from '../lib/supabase';
 import { getRegistrationList } from '../services/admin';
 import { resolveStudentPhotoUrl } from '../services/storage';
 import { calculateRegistrationOpenState, setManualRegistrationOverride } from '../lib/superAdminConfig';
-import { generateRegistrationListPDF, generateInvitationCardPDF } from '../utils/pdfGenerator';
-import { getRegistrationEditMetadata, setRegistrationIndividualEditLock } from '../services/registrationEditing';
+import {
+  generateRegistrationListPDF,
+  generateInvitationCardPDF,
+  sortRegistrationsForAdmin,
+} from '../utils/pdfGenerator';
 import {
   X, Lock, LogIn, LogOut, Check, XCircle,
   Trash2, Download, Search, RefreshCw, AlertCircle,
@@ -96,8 +99,8 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
   onUpdateStatus,
   onDeleteRegistration,
   pdfSettings = {
-    pdfHeader: 'RAG DAY 27 (RD27) - OFFICIAL REGISTRATION LEDGER',
-    pdfSubHeader: 'Batch 27 Executive Committee Ledger',
+    pdfHeader: 'RAG DAY 27 - OFFICIAL REGISTRATION',
+    pdfSubHeader: 'Batch 27 Executive Committee',
     watermarkLogo: 'RD27 OFFICIAL',
     watermarkOpacity: 0.08,
     footerText: 'Official Rag Day 27 Portal',
@@ -131,7 +134,7 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
   const [registrationLoadError, setRegistrationLoadError] = useState('');
 
   // Filters & Search
-  const [statusFilter, setStatusFilter] = useState<'all' | InvitationStatus | 'updated'>('all');
+  const [statusFilter, setStatusFilter] = useState<'all' | InvitationStatus>('all');
   const [searchTerm, setSearchTerm] = useState('');
 
   // Modals & In-flight actions
@@ -141,8 +144,6 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
   const [approvingRegNo, setApprovingRegNo] = useState<string | null>(null);
   const [hidingRegNo, setHidingRegNo] = useState<string | null>(null);
   const [actionMessage, setActionMessage] = useState<{ text: string; type: 'success' | 'error' } | null>(null);
-  const [editMetadata, setEditMetadata] = useState<any[]>([]);
-  const [isLoadingEditMetadata, setIsLoadingEditMetadata] = useState(false);
 
   // Expanded details drawer/modal
   const [selectedRecord, setSelectedRecord] = useState<InvitationRecord | null>(null);
@@ -183,15 +184,10 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
     setIsLoadingRegistrations(true);
     setRegistrationLoadError('');
     try {
-      const [result, metadata] = await Promise.all([
-        getRegistrationList(),
-        getStoredAdminPasscode()
-          ? getRegistrationEditMetadata(getStoredAdminPasscode() || '')
-          : Promise.resolve([]),
-      ]);
+      const result = await getRegistrationList();
       if (result.success) {
-        setAdminRegistrations(result.data.filter(record => record.gender === 'male'));
-        setEditMetadata(metadata);
+        const maleRecords = result.data.filter(record => record.gender === 'male');
+        setAdminRegistrations(sortRegistrationsForAdmin(maleRecords));
       } else {
         setRegistrationLoadError(result.errorMessage || 'Unable to load registrations from database.');
         setAdminRegistrations([]);
@@ -226,8 +222,6 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
         return;
       }
       setAdmin(profile);
-      setIsLoadingEditMetadata(true);
-      void getRegistrationEditMetadata(getStoredAdminPasscode() || '').then(setEditMetadata).catch((e:any)=>setActionMessage({text:e?.message||'Unable to load edit metadata.',type:'error'})).finally(()=>setIsLoadingEditMetadata(false));
       setPasscode('');
     } catch (err: any) {
       setLoginError(err?.message || 'Invalid Admin Passcode');
@@ -265,7 +259,7 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
   const filteredRegistrations = useMemo(() => {
     return adminRegistrations.filter(r => {
       // Status filter
-      if (statusFilter === 'updated' ? !((editMetadata.find(item => item.registration_no === r.registration_no)?.edit_count || 0) > 0) : statusFilter !== 'all' && r.status !== statusFilter) {
+      if (statusFilter !== 'all' && r.status !== statusFilter) {
         return false;
       }
       // Search query (Reg No, Full Name, Student ID, Roll, Contact No, Txn ID, Jersey Name)
@@ -282,7 +276,7 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
       }
       return true;
     });
-  }, [adminRegistrations, statusFilter, searchTerm, editMetadata]);
+  }, [adminRegistrations, statusFilter, searchTerm]);
 
   // Statistics
   const stats = useMemo(() => {
@@ -301,12 +295,14 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
       const updatedRecord = await onUpdateStatus(regNo, 'approved');
       // Update local state ONLY after successful database operation using the returned DB record
       setAdminRegistrations(prev =>
-        prev.map(r =>
-          r.registration_no === regNo
-            ? (updatedRecord
-                ? { ...r, ...updatedRecord }
-                : { ...r, status: 'approved', reject_reason: undefined, approved_at: new Date().toISOString() })
-            : r
+        sortRegistrationsForAdmin(
+          prev.map(r =>
+            r.registration_no === regNo
+              ? (updatedRecord
+                  ? { ...r, ...updatedRecord }
+                  : { ...r, status: 'approved', reject_reason: undefined, approved_at: new Date().toISOString() })
+              : r
+          )
         )
       );
       if (selectedRecord?.registration_no === regNo) {
@@ -357,12 +353,14 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
       const updatedRecord = await onUpdateStatus(regNo, 'rejected', cleanReason);
       // Update local state ONLY after successful database operation using the returned DB record
       setAdminRegistrations(prev =>
-        prev.map(r =>
-          r.registration_no === regNo
-            ? (updatedRecord
-                ? { ...r, ...updatedRecord }
-                : { ...r, status: 'rejected', reject_reason: cleanReason, rejected_at: new Date().toISOString() })
-            : r
+        sortRegistrationsForAdmin(
+          prev.map(r =>
+            r.registration_no === regNo
+              ? (updatedRecord
+                  ? { ...r, ...updatedRecord }
+                  : { ...r, status: 'rejected', reject_reason: cleanReason, rejected_at: new Date().toISOString() })
+              : r
+          )
         )
       );
       if (selectedRecord?.registration_no === regNo) {
@@ -408,10 +406,10 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
   };
 
   // Export ledger to PDF
-  const handleExportPDF = () => {
+  const handleExportPDF = async () => {
     if (!admin?.role) return;
     try {
-      generateRegistrationListPDF(adminRegistrations, pdfSettings, websiteSettings, admin.role);
+      await generateRegistrationListPDF(adminRegistrations, pdfSettings, websiteSettings, admin.role);
     } catch (err: any) {
       alert(err?.message || 'Unable to generate PDF ledger.');
     }
@@ -639,9 +637,9 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
         {/* 3. CONTROLS: STATUS FILTERS & SEARCH */}
         <div className="px-5 py-3 border-b border-slate-200/80 bg-white/60 backdrop-blur-md flex flex-wrap items-center justify-between gap-3 shrink-0">
           <div className="flex items-center gap-1.5 overflow-x-auto p-1 rounded-2xl glass-surface-subtle">
-            {(['all', 'pending', 'approved', 'rejected', 'updated'] as const).map(tab => {
+            {(['all', 'pending', 'approved', 'rejected'] as const).map(tab => {
               const active = statusFilter === tab;
-              const count = tab === 'all' ? stats.total : tab === 'updated' ? editMetadata.filter(row => Number(row.edit_count) > 0 && adminRegistrations.some(r => r.registration_no === row.registration_no)).length : stats[tab];
+              const count = tab === 'all' ? stats.total : stats[tab];
               return (
                 <button
                   key={tab}
@@ -652,7 +650,7 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
                       : 'text-slate-600 hover:text-slate-900 hover:bg-white/60'
                   }`}
                 >
-                  <span>{tab === 'updated' ? 'Update' : tab}</span>
+                  <span>{tab}</span>
                   <span className={`px-1.5 py-0.2 rounded-full text-[10px] font-mono ${active ? 'bg-white/25 text-white' : 'bg-white/65 backdrop-blur-md border border-white/80 text-slate-700'}`}>
                     {count}
                   </span>
@@ -703,7 +701,7 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
           ) : filteredRegistrations.length === 0 ? (
             <div className="h-64 flex flex-col items-center justify-center gap-2 text-slate-400">
               <User className="w-8 h-8 text-slate-300" />
-              <span className="text-xs font-semibold">No {statusFilter === 'updated' ? 'updated' : statusFilter !== 'all' ? statusFilter : ''} registrations found.</span>
+              <span className="text-xs font-semibold">No {statusFilter !== 'all' ? statusFilter : ''} registrations found.</span>
               {searchTerm && <span className="text-[11px] text-slate-400">Try clearing your search query.</span>}
             </div>
           ) : (

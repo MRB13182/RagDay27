@@ -4,4 +4,3 @@ export * from './admin';
 export * from './invitations';
 export * from './storage';
 export * from './exports';
-export * from './registrationEditing';
