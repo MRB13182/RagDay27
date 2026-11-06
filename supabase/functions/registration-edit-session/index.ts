@@ -127,7 +127,7 @@ Deno.serve(async (req:Request) => {
         const {data:lockedRow,error:lockError}=await db.from("registrations").update({edit_locked:!!b.locked})
           .eq("registration_no",reg).eq("hidden_from_web",false).select("registration_no,edit_locked").maybeSingle();
         if(lockError||!lockedRow) return fail(lockError?.message||"Registration not found.",404);
-        return reply({success:true,record:data});
+        return reply({success:true,record:lockedRow});
       }
       const {data:metadataRows,error:metadataError}=await db.from("registrations").select("registration_no,edit_count,edit_locked,last_edited_at,last_edit_source")
         .eq("hidden_from_web",false).order("last_edited_at",{ascending:false,nullsFirst:false});
