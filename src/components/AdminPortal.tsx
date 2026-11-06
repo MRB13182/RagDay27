@@ -1,11 +1,14 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import type { InvitationRecord, InvitationStatus, AdminProfile, PdfSettings, WebsiteSettings } from '../types';
-import { signInAdmin, signOutAdmin, getCurrentAdmin, getStoredAdminPasscode } from '../lib/supabase';
+import { signInAdmin, signOutAdmin, getCurrentAdmin } from '../lib/supabase';
 import { getRegistrationList } from '../services/admin';
 import { resolveStudentPhotoUrl } from '../services/storage';
 import { calculateRegistrationOpenState, setManualRegistrationOverride } from '../lib/superAdminConfig';
-import { generateRegistrationListPDF, generateInvitationCardPDF, sortRegistrationsForAdmin } from '../utils/pdfGenerator';
-import { getRegistrationEditMetadata, setRegistrationIndividualEditLock, setServerRegistrationOpenStatus } from '../services/registrationEditing';
+import {
+  generateRegistrationListPDF,
+  generateInvitationCardPDF,
+  sortRegistrationsForAdmin,
+} from '../utils/pdfGenerator';
 import {
   X, Lock, LogIn, LogOut, Check, XCircle,
   Trash2, Download, Search, RefreshCw, AlertCircle,
@@ -96,8 +99,8 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
   onUpdateStatus,
   onDeleteRegistration,
   pdfSettings = {
-    pdfHeader: 'RAG DAY 27 (RD27) - OFFICIAL REGISTRATION LEDGER',
-    pdfSubHeader: 'Batch 27 Executive Committee Ledger',
+    pdfHeader: 'RAG DAY 27 - OFFICIAL REGISTRATION',
+    pdfSubHeader: 'Batch 27 Executive Committee',
     watermarkLogo: 'RD27 OFFICIAL',
     watermarkOpacity: 0.08,
     footerText: 'Official Rag Day 27 Portal',
@@ -131,7 +134,7 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
   const [registrationLoadError, setRegistrationLoadError] = useState('');
 
   // Filters & Search
-  const [statusFilter, setStatusFilter] = useState<'all' | InvitationStatus | 'updated'>('all');
+  const [statusFilter, setStatusFilter] = useState<'all' | InvitationStatus>('all');
   const [searchTerm, setSearchTerm] = useState('');
 
   // Modals & In-flight actions
@@ -140,10 +143,7 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
   const [isSubmittingReject, setIsSubmittingReject] = useState(false);
   const [approvingRegNo, setApprovingRegNo] = useState<string | null>(null);
   const [hidingRegNo, setHidingRegNo] = useState<string | null>(null);
-  const [lockingRegNo, setLockingRegNo] = useState<string | null>(null);
   const [actionMessage, setActionMessage] = useState<{ text: string; type: 'success' | 'error' } | null>(null);
-  const [editMetadata, setEditMetadata] = useState<any[]>([]);
-  const [isLoadingEditMetadata, setIsLoadingEditMetadata] = useState(false);
 
   // Expanded details drawer/modal
   const [selectedRecord, setSelectedRecord] = useState<InvitationRecord | null>(null);
@@ -151,57 +151,19 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
   // Registration Auto / Manual state
   const [regState, setRegState] = useState(calculateRegistrationOpenState);
 
-  const handleToggleRegistrationOpen = async () => {
-    const currentPasscode = getStoredAdminPasscode() || passcode;
+  const handleToggleRegistrationOpen = () => {
     if (regState.isOpen) {
       const confirmDisable = window.confirm("Manually DISABLE registration? Students will not be able to register until re-enabled.");
       if (!confirmDisable) return;
       setManualRegistrationOverride('disable');
       setRegState(calculateRegistrationOpenState());
-      if (currentPasscode) {
-        void setServerRegistrationOpenStatus(currentPasscode, false);
-      }
       setActionMessage({ text: 'Registration manually DISABLED by admin.', type: 'success' });
     } else {
       const confirmEnable = window.confirm("Manually ENABLE registration? Students will be able to register immediately.");
       if (!confirmEnable) return;
       setManualRegistrationOverride('enable');
       setRegState(calculateRegistrationOpenState());
-      if (currentPasscode) {
-        void setServerRegistrationOpenStatus(currentPasscode, true);
-      }
       setActionMessage({ text: 'Registration manually ENABLED by admin.', type: 'success' });
-    }
-  };
-
-  const handleToggleLock = async (regNo: string, currentLocked: boolean) => {
-    const currentPasscode = getStoredAdminPasscode() || passcode;
-    if (!currentPasscode) {
-      setActionMessage({ text: 'Admin authentication required to change lock status.', type: 'error' });
-      return;
-    }
-    setLockingRegNo(regNo);
-    try {
-      const newLocked = !currentLocked;
-      const res = await setRegistrationIndividualEditLock(currentPasscode, regNo, newLocked);
-      if (res.success) {
-        setAdminRegistrations(prev =>
-          prev.map(r => r.registration_no === regNo ? { ...r, edit_locked: newLocked } : r)
-        );
-        setEditMetadata(prev =>
-          prev.map(m => m.registration_no === regNo ? { ...m, edit_locked: newLocked } : m)
-        );
-        setActionMessage({
-          text: `Registration ${regNo} editing is now ${newLocked ? 'LOCKED' : 'UNLOCKED'}.`,
-          type: 'success',
-        });
-      } else {
-        setActionMessage({ text: res.errorMessage || 'Unable to update lock status.', type: 'error' });
-      }
-    } catch (e: any) {
-      setActionMessage({ text: e?.message || 'Unable to update lock status.', type: 'error' });
-    } finally {
-      setLockingRegNo(null);
     }
   };
 
@@ -222,16 +184,10 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
     setIsLoadingRegistrations(true);
     setRegistrationLoadError('');
     try {
-      const [result, metadata] = await Promise.all([
-        getRegistrationList(),
-        getStoredAdminPasscode()
-          ? getRegistrationEditMetadata(getStoredAdminPasscode() || '')
-          : Promise.resolve([]),
-      ]);
+      const result = await getRegistrationList();
       if (result.success) {
         const maleRecords = result.data.filter(record => record.gender === 'male');
         setAdminRegistrations(sortRegistrationsForAdmin(maleRecords));
-        setEditMetadata(metadata);
       } else {
         setRegistrationLoadError(result.errorMessage || 'Unable to load registrations from database.');
         setAdminRegistrations([]);
@@ -266,8 +222,6 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
         return;
       }
       setAdmin(profile);
-      setIsLoadingEditMetadata(true);
-      void getRegistrationEditMetadata(getStoredAdminPasscode() || '').then(setEditMetadata).catch((e:any)=>setActionMessage({text:e?.message||'Unable to load edit metadata.',type:'error'})).finally(()=>setIsLoadingEditMetadata(false));
       setPasscode('');
     } catch (err: any) {
       setLoginError(err?.message || 'Invalid Admin Passcode');
@@ -305,7 +259,7 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
   const filteredRegistrations = useMemo(() => {
     return adminRegistrations.filter(r => {
       // Status filter
-      if (statusFilter === 'updated' ? !((editMetadata.find(item => item.registration_no === r.registration_no)?.edit_count || 0) > 0) : statusFilter !== 'all' && r.status !== statusFilter) {
+      if (statusFilter !== 'all' && r.status !== statusFilter) {
         return false;
       }
       // Search query (Reg No, Full Name, Student ID, Roll, Contact No, Txn ID, Jersey Name)
@@ -322,7 +276,7 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
       }
       return true;
     });
-  }, [adminRegistrations, statusFilter, searchTerm, editMetadata]);
+  }, [adminRegistrations, statusFilter, searchTerm]);
 
   // Statistics
   const stats = useMemo(() => {
@@ -341,12 +295,14 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
       const updatedRecord = await onUpdateStatus(regNo, 'approved');
       // Update local state ONLY after successful database operation using the returned DB record
       setAdminRegistrations(prev =>
-        prev.map(r =>
-          r.registration_no === regNo
-            ? (updatedRecord
-                ? { ...r, ...updatedRecord }
-                : { ...r, status: 'approved', reject_reason: undefined, approved_at: new Date().toISOString() })
-            : r
+        sortRegistrationsForAdmin(
+          prev.map(r =>
+            r.registration_no === regNo
+              ? (updatedRecord
+                  ? { ...r, ...updatedRecord }
+                  : { ...r, status: 'approved', reject_reason: undefined, approved_at: new Date().toISOString() })
+              : r
+          )
         )
       );
       if (selectedRecord?.registration_no === regNo) {
@@ -397,12 +353,14 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
       const updatedRecord = await onUpdateStatus(regNo, 'rejected', cleanReason);
       // Update local state ONLY after successful database operation using the returned DB record
       setAdminRegistrations(prev =>
-        prev.map(r =>
-          r.registration_no === regNo
-            ? (updatedRecord
-                ? { ...r, ...updatedRecord }
-                : { ...r, status: 'rejected', reject_reason: cleanReason, rejected_at: new Date().toISOString() })
-            : r
+        sortRegistrationsForAdmin(
+          prev.map(r =>
+            r.registration_no === regNo
+              ? (updatedRecord
+                  ? { ...r, ...updatedRecord }
+                  : { ...r, status: 'rejected', reject_reason: cleanReason, rejected_at: new Date().toISOString() })
+              : r
+          )
         )
       );
       if (selectedRecord?.registration_no === regNo) {
@@ -448,10 +406,10 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
   };
 
   // Export ledger to PDF
-  const handleExportPDF = () => {
+  const handleExportPDF = async () => {
     if (!admin?.role) return;
     try {
-      generateRegistrationListPDF(adminRegistrations, pdfSettings, websiteSettings, admin.role);
+      await generateRegistrationListPDF(adminRegistrations, pdfSettings, websiteSettings, admin.role);
     } catch (err: any) {
       alert(err?.message || 'Unable to generate PDF ledger.');
     }
@@ -679,9 +637,9 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
         {/* 3. CONTROLS: STATUS FILTERS & SEARCH */}
         <div className="px-5 py-3 border-b border-slate-200/80 bg-white/60 backdrop-blur-md flex flex-wrap items-center justify-between gap-3 shrink-0">
           <div className="flex items-center gap-1.5 overflow-x-auto p-1 rounded-2xl glass-surface-subtle">
-            {(['all', 'pending', 'approved', 'rejected', 'updated'] as const).map(tab => {
+            {(['all', 'pending', 'approved', 'rejected'] as const).map(tab => {
               const active = statusFilter === tab;
-              const count = tab === 'all' ? stats.total : tab === 'updated' ? editMetadata.filter(row => Number(row.edit_count) > 0 && adminRegistrations.some(r => r.registration_no === row.registration_no)).length : stats[tab];
+              const count = tab === 'all' ? stats.total : stats[tab];
               return (
                 <button
                   key={tab}
@@ -692,7 +650,7 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
                       : 'text-slate-600 hover:text-slate-900 hover:bg-white/60'
                   }`}
                 >
-                  <span>{tab === 'updated' ? 'Update' : tab}</span>
+                  <span>{tab}</span>
                   <span className={`px-1.5 py-0.2 rounded-full text-[10px] font-mono ${active ? 'bg-white/25 text-white' : 'bg-white/65 backdrop-blur-md border border-white/80 text-slate-700'}`}>
                     {count}
                   </span>
@@ -743,49 +701,31 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
           ) : filteredRegistrations.length === 0 ? (
             <div className="h-64 flex flex-col items-center justify-center gap-2 text-slate-400">
               <User className="w-8 h-8 text-slate-300" />
-              <span className="text-xs font-semibold">No {statusFilter === 'updated' ? 'updated' : statusFilter !== 'all' ? statusFilter : ''} registrations found.</span>
+              <span className="text-xs font-semibold">No {statusFilter !== 'all' ? statusFilter : ''} registrations found.</span>
               {searchTerm && <span className="text-[11px] text-slate-400">Try clearing your search query.</span>}
             </div>
           ) : (
             <div className="min-w-full inline-block align-middle">
               <table className="min-w-full text-left text-xs divide-y divide-slate-200/80">
                 <thead className="bg-white/60 text-slate-700 font-bold sticky top-0 z-10 backdrop-blur-xl border-b border-white/80">
-                  {statusFilter === 'updated' ? (
-                    <tr>
-                      <th className="px-3.5 py-3 whitespace-nowrap">SL</th>
-                      <th className="px-3 py-3 whitespace-nowrap">Photo</th>
-                      <th className="px-3.5 py-3 whitespace-nowrap">Reg No</th>
-                      <th className="px-3.5 py-3 whitespace-nowrap">Student Name</th>
-                      <th className="px-3.5 py-3 whitespace-nowrap">Edits Used</th>
-                      <th className="px-3.5 py-3 whitespace-nowrap">Last Edited</th>
-                      <th className="px-3.5 py-3 whitespace-nowrap">Lock Status</th>
-                      <th className="px-3.5 py-3 whitespace-nowrap">Status</th>
-                      <th className="px-3.5 py-3 text-right whitespace-nowrap">Actions</th>
-                    </tr>
-                  ) : (
-                    <tr>
-                      <th className="px-3.5 py-3 whitespace-nowrap">SL</th>
-                      <th className="px-3 py-3 whitespace-nowrap">Photo</th>
-                      <th className="px-3.5 py-3 whitespace-nowrap">Reg No</th>
-                      <th className="px-3.5 py-3 whitespace-nowrap">Student Name</th>
-                      <th className="px-3.5 py-3 whitespace-nowrap">Roll / Section</th>
-                      <th className="px-3.5 py-3 whitespace-nowrap">College ID</th>
-                      <th className="px-3.5 py-3 whitespace-nowrap">Jersey</th>
-                      <th className="px-3.5 py-3 whitespace-nowrap">Payment</th>
-                      <th className="px-3.5 py-3 whitespace-nowrap">Status</th>
-                      <th className="px-3.5 py-3 text-right whitespace-nowrap">Actions</th>
-                    </tr>
-                  )}
+                  <tr>
+                    <th className="px-3.5 py-3 whitespace-nowrap">SL</th>
+                    <th className="px-3 py-3 whitespace-nowrap">Photo</th>
+                    <th className="px-3.5 py-3 whitespace-nowrap">Reg No</th>
+                    <th className="px-3.5 py-3 whitespace-nowrap">Student Name</th>
+                    <th className="px-3.5 py-3 whitespace-nowrap">Roll / Section</th>
+                    <th className="px-3.5 py-3 whitespace-nowrap">College ID</th>
+                    <th className="px-3.5 py-3 whitespace-nowrap">Jersey</th>
+                    <th className="px-3.5 py-3 whitespace-nowrap">Payment</th>
+                    <th className="px-3.5 py-3 whitespace-nowrap">Status</th>
+                    <th className="px-3.5 py-3 text-right whitespace-nowrap">Actions</th>
+                  </tr>
                 </thead>
                 <tbody className="divide-y divide-white/55 bg-white/20 backdrop-blur-md">
                   {filteredRegistrations.map(r => {
                     const isApproved = r.status === 'approved';
                     const isRejected = r.status === 'rejected';
                     const isPending = r.status === 'pending';
-                    const meta = editMetadata.find(item => item.registration_no === r.registration_no);
-                    const editCount = r.edit_count ?? meta?.edit_count ?? 0;
-                    const isLocked = Boolean(r.edit_locked ?? meta?.edit_locked);
-                    const lastEdited = r.last_edited_at || meta?.last_edited_at;
 
                     return (
                       <tr
@@ -822,83 +762,47 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
                           </div>
                         </td>
 
-                        {statusFilter === 'updated' ? (
-                          <>
-                            {/* Edits Used */}
-                            <td className="px-3.5 py-3 whitespace-nowrap">
-                              <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[11px] font-bold bg-indigo-50 text-indigo-700 border border-indigo-200 shadow-2xs font-mono">
-                                {editCount}/5 edits
-                              </span>
-                            </td>
+                        {/* Roll, Group & Section */}
+                        <td className="px-3 py-3 whitespace-nowrap">
+                          <div className="font-bold text-slate-800">Roll: {r.class_roll}</div>
+                          <div className="text-[11px] text-slate-500">
+                            {r.academic_group} · <span className="font-bold text-slate-700">{r.academic_section}</span>
+                          </div>
+                        </td>
 
-                            {/* Last Edited Date/Time */}
-                            <td className="px-3.5 py-3 whitespace-nowrap text-slate-600 font-mono text-[11px]">
-                              {lastEdited ? new Date(lastEdited).toLocaleString('en-US', { month: 'short', day: 'numeric', year: 'numeric', hour: '2-digit', minute: '2-digit' }) : '—'}
-                            </td>
+                        {/* Student ID */}
+                        <td className="px-3 py-3 font-mono text-slate-600 whitespace-nowrap">
+                          {r.student_id}
+                        </td>
 
-                            {/* Individual Lock Status Toggle */}
-                            <td className="px-3.5 py-3 whitespace-nowrap" onClick={e => e.stopPropagation()}>
-                              <button
-                                type="button"
-                                onClick={() => handleToggleLock(r.registration_no, isLocked)}
-                                disabled={lockingRegNo === r.registration_no}
-                                className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer border ${
-                                  isLocked
-                                    ? 'bg-rose-50 text-rose-700 border-rose-200 hover:bg-rose-100 shadow-2xs'
-                                    : 'bg-emerald-50 text-emerald-700 border-emerald-200 hover:bg-emerald-100 shadow-2xs'
-                                }`}
-                                title={isLocked ? 'Click to unlock editing for this student' : 'Click to lock editing for this student'}
-                              >
-                                <Lock className="w-3.5 h-3.5" />
-                                <span>{lockingRegNo === r.registration_no ? 'Updating…' : isLocked ? 'Locked' : 'Unlocked'}</span>
-                              </button>
-                            </td>
-                          </>
-                        ) : (
-                          <>
-                            {/* Roll, Group & Section */}
-                            <td className="px-3 py-3 whitespace-nowrap">
-                              <div className="font-bold text-slate-800">Roll: {r.class_roll}</div>
-                              <div className="text-[11px] text-slate-500">
-                                {r.academic_group} · <span className="font-bold text-slate-700">{r.academic_section}</span>
-                              </div>
-                            </td>
+                        {/* Jersey Info */}
+                        <td className="px-3.5 py-3 whitespace-nowrap">
+                          <div className="font-extrabold text-slate-800 flex items-center gap-1.5">
+                            <span className="font-mono text-indigo-600">#{r.jersey_number}</span>
+                            <span>{r.jersey_back_name}</span>
+                          </div>
+                          <div className="text-[11px] text-slate-500">
+                            Size: <strong className="text-slate-700">{r.jersey_size}</strong>
+                          </div>
+                        </td>
 
-                            {/* Student ID */}
-                            <td className="px-3 py-3 font-mono text-slate-600 whitespace-nowrap">
-                              {r.student_id}
-                            </td>
-
-                            {/* Jersey Info */}
-                            <td className="px-3.5 py-3 whitespace-nowrap">
-                              <div className="font-extrabold text-slate-800 flex items-center gap-1.5">
-                                <span className="font-mono text-indigo-600">#{r.jersey_number}</span>
-                                <span>{r.jersey_back_name}</span>
-                              </div>
-                              <div className="text-[11px] text-slate-500">
-                                Size: <strong className="text-slate-700">{r.jersey_size}</strong>
-                              </div>
-                            </td>
-
-                            {/* Payment Info */}
-                            <td className="px-3.5 py-3 whitespace-nowrap">
-                              <div className="font-bold text-slate-800 capitalize flex items-center gap-1">
-                                <span className={r.send_method === 'bkash' ? 'text-pink-600 font-black' : 'text-orange-600 font-black'}>
-                                  {r.send_method}
-                                </span>
-                                <span className="text-[11px] text-slate-400">({r.payment_time})</span>
-                              </div>
-                              <div className="text-[11px] font-mono text-slate-500">
-                                {r.sender_mobile_no}
-                              </div>
-                              {r.transaction_id && (
-                                <div className="text-[10px] font-mono text-indigo-600 truncate max-w-28" title={r.transaction_id}>
-                                  Txn: {r.transaction_id}
-                                </div>
-                              )}
-                            </td>
-                          </>
-                        )}
+                        {/* Payment Info */}
+                        <td className="px-3.5 py-3 whitespace-nowrap">
+                          <div className="font-bold text-slate-800 capitalize flex items-center gap-1">
+                            <span className={r.send_method === 'bkash' ? 'text-pink-600 font-black' : 'text-orange-600 font-black'}>
+                              {r.send_method}
+                            </span>
+                            <span className="text-[11px] text-slate-400">({r.payment_time})</span>
+                          </div>
+                          <div className="text-[11px] font-mono text-slate-500">
+                            {r.sender_mobile_no}
+                          </div>
+                          {r.transaction_id && (
+                            <div className="text-[10px] font-mono text-indigo-600 truncate max-w-28" title={r.transaction_id}>
+                              Txn: {r.transaction_id}
+                            </div>
+                          )}
+                        </td>
 
                         {/* Status */}
                         <td className="px-3 py-3 whitespace-nowrap">
