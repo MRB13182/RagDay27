@@ -61,6 +61,7 @@ Deno.serve(async (req:Request) => {
       const reg=String(b.registration_no||"").trim().toUpperCase();
       const name=String(b.student_name||"").trim();
       if(!/^RD27-\d+$/i.test(reg)||!name||name.length>120) return fail("Enter a valid Registration Number and Student Name.");
+      await db.from("registration_edit_sessions").delete().lt("expires_at",new Date().toISOString());
       const {data:setting,error:policyError}=await db.from("registration_edit_settings").select("edit_deadline").eq("singleton",true).single();
       if(policyError||!setting) throw new Error("Edit policy unavailable.");
       if(Date.now()>new Date(setting.edit_deadline).getTime()) return fail("The editing deadline has passed.",403);
