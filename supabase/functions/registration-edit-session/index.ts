@@ -121,15 +121,15 @@ Deno.serve(async (req:Request) => {
       if(action==="lock") {
         const reg=String(b.registration_no||"").trim().toUpperCase();
         if(!/^RD27-\d+$/i.test(reg)) return fail("Invalid Registration Number.");
-        const {data,error}=await db.from("registrations").update({edit_locked:!!b.locked})
+        const {data:lockedRow,error:lockError}=await db.from("registrations").update({edit_locked:!!b.locked})
           .eq("registration_no",reg).eq("hidden_from_web",false).select("registration_no,edit_locked").maybeSingle();
-        if(error||!data) return fail(error?.message||"Registration not found.",404);
+        if(lockError||!lockedRow) return fail(lockError?.message||"Registration not found.",404);
         return reply({success:true,record:data});
       }
-      const {data,error}=await db.from("registrations").select("registration_no,edit_count,edit_locked,last_edited_at,last_edit_source")
+      const {data:metadataRows,error:metadataError}=await db.from("registrations").select("registration_no,edit_count,edit_locked,last_edited_at,last_edit_source")
         .eq("hidden_from_web",false).order("last_edited_at",{ascending:false,nullsFirst:false});
-      if(error) throw error;
-      return reply({success:true,records:data||[]});
+      if(metadataError) throw metadataError;
+      return reply({success:true,records:metadataRows||[]});
     }
     return fail("Unsupported action.");
   } catch(e) {
