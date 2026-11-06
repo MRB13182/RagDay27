@@ -4,7 +4,7 @@ module.exports = async function registrationEditSession(req, res) {
 
   const allowedOrigin = 'https://rdnic27.vercel.app';
   const origin = req.headers.origin;
-  if (origin && origin !== allowedOrigin) {
+  if (origin !== allowedOrigin) {
     res.status(403).json({ success: false, message: 'Origin not allowed.' });
     return;
   }
