@@ -1,4 +1,4 @@
-module.exports = async function registrationEditSession(req, res) {
+export default async function registrationEditSession(req, res) {
   res.setHeader('Cache-Control', 'no-store, private');
   res.setHeader('Vary', 'Origin');
 
