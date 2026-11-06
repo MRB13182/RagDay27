@@ -1,12 +1,19 @@
-import { supabase } from '../lib/supabase';
 import type { InvitationRecord, RegistrationFormData } from '../types';
 
-const API = 'registration-edit-session';
+const API_PATH = '/api/registration-edit-session';
 
 async function request(action: string, body: Record<string, unknown> = {}) {
-  const { data, error } = await supabase.functions.invoke(API, { body: { action, ...body } });
-  if (error) throw new Error(error.message || 'Registration edit service unavailable.');
-  if (!data?.success) throw new Error(data?.message || 'Registration edit request failed.');
+  const response = await fetch(API_PATH, {
+    method: 'POST',
+    credentials: 'same-origin',
+    headers: { 'Content-Type': 'application/json' },
+    cache: 'no-store',
+    body: JSON.stringify({ action, ...body }),
+  });
+  const data = await response.json().catch(() => ({}));
+  if (!response.ok || !data?.success) {
+    throw new Error(data?.message || 'Registration edit request failed.');
+  }
   return data;
 }
 
@@ -22,7 +29,9 @@ export async function verifyRegistrationForEdit(registrationNo: string, studentN
   try {
     const reg = registrationNo.trim().toUpperCase();
     const name = studentName.trim();
-    if (!/^RD27-\d+$/i.test(reg) || !name) throw new Error('Enter a valid Registration Number and Student Name.');
+    if (!/^RD27-\d+$/i.test(reg) || !name) {
+      throw new Error('Enter a valid Registration Number and Student Name.');
+    }
     const result = await request('verify', { registration_no: reg, student_name: name });
     return { success: true, data: result.state as RegistrationEditState };
   } catch (error: any) {
@@ -43,7 +52,7 @@ export async function saveRegistrationEdit(form: Pick<RegistrationFormData,
       full_name: form.full_name.trim(), class_roll: form.class_roll.trim(),
       student_id: form.student_id.trim(), contact_mobile_number: form.contact_mobile_number.trim(),
       academic_group: form.academic_group.trim(), academic_section: form.academic_section.trim(),
-      student_photo: form.student_photo || null, send_method: form.send_method,
+      student_photo: form.student_photo ?? null, send_method: form.send_method,
       sender_mobile_no: form.sender_mobile_no.trim(), payment_time: form.payment_time.trim(),
       transaction_id: form.transaction_id.trim() || null, jersey_back_name: form.jersey_back_name.trim(),
       jersey_number: jerseyNo, jersey_size: form.jersey_size,
@@ -55,7 +64,7 @@ export async function saveRegistrationEdit(form: Pick<RegistrationFormData,
 }
 
 export async function getEditPolicy() {
-  return await request('policy') as { deadline: string; can_edit: boolean; };
+  return await request('policy') as { deadline: string; can_edit: boolean };
 }
 
 export async function updateEditDeadline(passcode: string, deadline: string) {
