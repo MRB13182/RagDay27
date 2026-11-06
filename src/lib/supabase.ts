@@ -10,6 +10,9 @@ const ENV_SUPABASE_KEY =
 
 export function createSupabaseClient(url: string, key: string): SupabaseClient {
   return createClient(url.trim(), key.trim(), {
+    global: {
+      fetch: (input, init) => fetch(input, { ...init, credentials: 'include' }),
+    },
     auth: {
       persistSession: true,
       autoRefreshToken: true,
