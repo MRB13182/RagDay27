@@ -1,12 +1,13 @@
 import type { InvitationRecord, RegistrationFormData } from '../types';
+import { SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY } from '../lib/supabase';
 
-const API_PATH = '/api/registration-edit-session';
+const API_PATH = `${SUPABASE_URL}/functions/v1/registration-edit-session`;
 
 async function request(action: string, body: Record<string, unknown> = {}) {
   const response = await fetch(API_PATH, {
     method: 'POST',
-    credentials: 'same-origin',
-    headers: { 'Content-Type': 'application/json' },
+    credentials: 'include',
+    headers: { 'Content-Type': 'application/json', apikey: SUPABASE_PUBLISHABLE_KEY },
     cache: 'no-store',
     body: JSON.stringify({ action, ...body }),
   });
