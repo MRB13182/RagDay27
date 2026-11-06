@@ -1,10 +1,13 @@
 import "jsr:@supabase/functions-js/edge-runtime.d.ts";
 import { createClient } from "npm:@supabase/supabase-js@2.80.0";
 
+const ALLOWED_ORIGIN = "https://rdnic27.vercel.app";
 const corsHeaders = {
-  "Access-Control-Allow-Origin": "*",
+  "Access-Control-Allow-Origin": ALLOWED_ORIGIN,
+  "Access-Control-Allow-Credentials": "true",
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
   "Access-Control-Allow-Methods": "POST, OPTIONS",
+  "Vary": "Origin",
 };
 const COOKIE = "rd27_edit_session";
 const reply = (body: unknown, status = 200, extra: HeadersInit = {}) =>
@@ -43,7 +46,7 @@ Deno.serve(async (req:Request) => {
   const origin=req.headers.get("origin");
   // Host-only cookie on the Supabase function origin, never a first-party website cookie.
   const allowedOrigins=(Deno.env.get("RD27_ALLOWED_ORIGINS")||"").split(",").map(s=>s.trim()).filter(Boolean);
-  if(origin && allowedOrigins.length && !allowedOrigins.includes(origin)) return fail("Origin not allowed.",403);
+  if(origin !== ALLOWED_ORIGIN) return fail("Origin not allowed.",403);
   const url=Deno.env.get("SUPABASE_URL")!;
   const secret=Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
   const db=createClient(url,secret,{auth:{persistSession:false,autoRefreshToken:false}});
