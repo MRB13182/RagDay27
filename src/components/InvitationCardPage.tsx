@@ -42,6 +42,7 @@ interface InvitationCardPageProps {
   onNavigateToRegister: (record?: InvitationRecord) => void;
   pdfSettings: PdfSettings;
   websiteSettings: WebsiteSettings;
+  registrationOpen: boolean;
 }
 
 export const InvitationCardPage: React.FC<InvitationCardPageProps> = ({
@@ -50,6 +51,7 @@ export const InvitationCardPage: React.FC<InvitationCardPageProps> = ({
   onNavigateToRegister,
   pdfSettings,
   websiteSettings,
+  registrationOpen,
 }) => {
   const [searchRegNo, setSearchRegNo] = useState(initialSearchRegNo);
   const [searchStudentName, setSearchStudentName] = useState(initialSearchStudentName);
@@ -140,13 +142,14 @@ export const InvitationCardPage: React.FC<InvitationCardPageProps> = ({
   };
 
 
-  const canAttemptEdit = matchedRecord && matchedRecord.status !== 'rejected';
+  const canAttemptEdit = matchedRecord && matchedRecord.status !== 'rejected' && registrationOpen;
   const handleStartEdit = async () => {
-    if (!matchedRecord) return;
+    if (!matchedRecord || !registrationOpen) return;
     setEditError(null); setEditMessage(null); setEditLoading(true);
     try {
       const policy = await getEditPolicy();
       setEditPolicy(policy);
+      if (!registrationOpen) { setEditError('Registration is closed. Editing is unavailable.'); return; }
       if (!policy.can_edit) { setEditError('The editing deadline has passed.'); return; }
       const verified = await verifyRegistrationForEdit(matchedRecord.registration_no, searchStudentName);
       if (!verified.success || !verified.data) throw new Error(verified.errorMessage || 'Unable to verify registration for editing.');
