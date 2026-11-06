@@ -1,18 +1,21 @@
 import "jsr:@supabase/functions-js/edge-runtime.d.ts";
 import { createClient } from "npm:@supabase/supabase-js@2.80.0";
 
-const ALLOWED_ORIGIN = "https://rdnic27.vercel.app";
-const corsHeaders = {
-  "Access-Control-Allow-Origin": ALLOWED_ORIGIN,
+const configuredOrigins = (Deno.env.get("RD27_ALLOWED_ORIGINS") || "")
+  .split(",").map((value) => value.trim()).filter(Boolean);
+const localOrigins = ["http://localhost:3000", "http://127.0.0.1:3000"];
+const allowedOrigins = new Set([...configuredOrigins, ...localOrigins]);
+const corsForOrigin = (origin: string | null): HeadersInit => ({
+  ...(origin && allowedOrigins.has(origin) ? { "Access-Control-Allow-Origin": origin } : {}),
   "Access-Control-Allow-Credentials": "true",
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
   "Access-Control-Allow-Methods": "POST, OPTIONS",
   "Vary": "Origin",
-};
+});
 const COOKIE = "rd27_edit_session";
-const reply = (body: unknown, status = 200, extra: HeadersInit = {}) =>
+const reply = (body: unknown, status = 200, origin: string | null = null, extra: HeadersInit = {}) =>
   new Response(JSON.stringify(body), { status, headers: {
-    ...corsHeaders, "Content-Type":"application/json", "Cache-Control":"no-store",
+    ...corsForOrigin(origin), "Content-Type":"application/json", "Cache-Control":"no-store",
     "Pragma":"no-cache", ...extra
   }});
 const fail = (message: string, status=400) => reply({success:false,message},status);
@@ -41,11 +44,13 @@ const valid = (p:any) =>
   ["S","M","L","XL","2XL","3XL","4XL"].includes(String(p.jersey_size));
 
 Deno.serve(async (req:Request) => {
-  if(req.method==="OPTIONS") return new Response("ok",{headers:corsHeaders});
+  const origin = req.headers.get("origin");
+  if (req.method === "OPTIONS") {
+    if (!origin || !allowedOrigins.has(origin)) return new Response("Origin not allowed.", { status: 403 });
+    return new Response("ok", { headers: corsForOrigin(origin) });
+  }
   if(req.method!=="POST") return fail("Method not allowed.",405);
-  const origin=req.headers.get("origin");
-  // Host-only cookie on the Supabase function origin, never a first-party website cookie.
-  if(origin !== ALLOWED_ORIGIN) return fail("Origin not allowed.",403);
+  if (!origin || !allowedOrigins.has(origin)) return fail("Origin not allowed.",403);
   const url=Deno.env.get("SUPABASE_URL")!;
   const secret=Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
   const db=createClient(url,secret,{auth:{persistSession:false,autoRefreshToken:false}});
@@ -54,7 +59,7 @@ Deno.serve(async (req:Request) => {
     if(action==="policy") {
       const {data,error}=await db.from("registration_edit_settings").select("edit_deadline").eq("singleton",true).single();
       if(error||!data) throw new Error("Edit policy is unavailable.");
-      return reply({success:true,deadline:data.edit_deadline,can_edit:Date.now()<=new Date(data.edit_deadline).getTime()});
+      return reply({success:true,deadline:data.edit_deadline,can_edit:Date.now()<=new Date(data.edit_deadline).getTime()},200,origin);
     }
     if(action==="verify") {
       const reg=String(b.registration_no||"").trim().toUpperCase();
@@ -79,7 +84,7 @@ Deno.serve(async (req:Request) => {
       return reply({success:true,state:{
         registration_no:r.registration_no,edit_count:r.edit_count||0,edit_locked:!!r.edit_locked,
         edit_deadline:setting.edit_deadline,record:r
-      }},200,{"Set-Cookie":cookie(token,900),"Access-Control-Allow-Credentials":"true"});
+      }},200,origin,{"Set-Cookie":cookie(token,900)});
     }
     if(action==="save") {
       const raw=readCookie(req.headers.get("cookie"));
@@ -99,7 +104,7 @@ Deno.serve(async (req:Request) => {
           /expired|session/i.test(message)?401:400;
         return fail(message,status);
       }
-      return reply({success:true,record:atomic.record,edit_count:atomic.edit_count},200,{"Set-Cookie":cookie("",0)});
+      return reply({success:true,record:atomic.record,edit_count:atomic.edit_count},200,origin,{"Set-Cookie":cookie("",0)});
     }
     if(["lock","metadata","deadline"].includes(action)) {
       const passcode=String(b.passcode||"").trim();
@@ -115,12 +120,12 @@ Deno.serve(async (req:Request) => {
         const {data:lockedRow,error:lockError}=await db.from("registrations").update({edit_locked:!!b.locked})
           .eq("registration_no",reg).eq("hidden_from_web",false).select("registration_no,edit_locked").maybeSingle();
         if(lockError||!lockedRow) return fail(lockError?.message||"Registration not found.",404);
-        return reply({success:true,record:lockedRow});
+        return reply({success:true,record:lockedRow},200,origin);
       }
       const {data:metadataRows,error:metadataError}=await db.from("registrations").select("registration_no,edit_count,edit_locked,last_edited_at,last_edit_source")
         .eq("hidden_from_web",false).order("last_edited_at",{ascending:false,nullsFirst:false});
       if(metadataError) throw metadataError;
-      return reply({success:true,records:metadataRows||[]});
+      return reply({success:true,records:metadataRows||[]},200,origin);
     }
     return fail("Unsupported action.");
   } catch(e) {
