@@ -87,6 +87,10 @@ export interface RegistrationRecord {
   recovery_original_student_id?: string;
   recovery_original_full_name?: string;
   recovery_original_class_roll?: string;
+  edit_count?: number;
+  edit_locked?: boolean;
+  last_edited_at?: string | null;
+  last_edit_source?: string | null;
 }
 
 export type InvitationRecord = RegistrationRecord;
