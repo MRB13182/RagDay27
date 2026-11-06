@@ -473,7 +473,6 @@ export default function App() {
                 paymentSettings={paymentSettings}
                 existingRegistrations={invitations}
                 initialRecord={reRegisterRecord}
-                registrationOpen={registrationSettingsConfig.registrationOpen}
                 registrationDeadline={countdownSettingsConfig.registrationDeadline}
                 onResetReRegister={() => setReRegisterRecord(null)}
               />
