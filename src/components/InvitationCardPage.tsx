@@ -23,7 +23,7 @@ import { getPublicInvitation, getRejectedRegistrationForResubmission } from '../
 import { InvitationCard } from './InvitationCard';
 import { verifyRegistrationForEdit, saveRegistrationEdit, getEditPolicy } from '../services/registrationEditing';
 import { JerseyGraphic } from './JerseyGraphic';
-import { Pencil, Save, X, Lock } from 'lucide-react';
+import { Pencil, Save, X } from 'lucide-react';
 import { uploadStudentPhoto, resolveStudentPhotoUrl } from '../services/storage';
 
 type EditForm = {
