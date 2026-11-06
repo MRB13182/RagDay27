@@ -52,43 +52,39 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
             <span className="w-1.5 h-1.5 rounded-full bg-[#00D4FF]" />
           </div>
 
-          {/* Event Name - Configured from Admin */}
-          <h1 className="font-display text-4xl sm:text-5xl lg:text-6xl font-extrabold tracking-tight text-slate-900 leading-[1.08] mb-4">
-            {websiteSettings.eventName.includes('(') ? (
-              <>
-                {websiteSettings.eventName.split('(')[0]}
-                <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#5B5FEF] via-[#7A6CFF] to-[#00D4FF]">
-                  ({websiteSettings.eventName.split('(')[1]}
-                </span>
-              </>
-            ) : (
-              <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#5B5FEF] via-[#7A6CFF] to-[#00D4FF]">
-                {websiteSettings.eventName}
-              </span>
-            )}
+          {/* Event Name - Formatted strictly matching Screen 01 reference */}
+          <h1 className="font-display text-4xl sm:text-5xl lg:text-6xl font-extrabold tracking-tight text-[#10143C] leading-[1.08] mb-4">
+            RAG DAY of <br />
+            <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#11C8F4] via-[#00D4FF] to-[#7138F5]">
+              NIC 27
+            </span>
           </h1>
 
-          {/* Event Description - Configured from Admin */}
-          <p className="text-base sm:text-lg text-slate-600 leading-relaxed max-w-2xl mb-6">
-            {websiteSettings.eventDescription}
+          {/* Event Description */}
+          <p className="text-base sm:text-lg text-slate-600 leading-relaxed max-w-2xl mb-6 font-medium">
+            {websiteSettings.eventDescription || 'Celebrate our journey together with us.'}
           </p>
 
-          {/* Quick Meta Badges */}
-          <div className="flex flex-wrap items-center gap-2.5 mb-6">
-            <span className="inline-flex items-center gap-2 px-4 py-2 rounded-xl glass-pill text-xs font-semibold text-slate-800">
-              <span className="w-2 h-2 rounded-full bg-[#5B5FEF] shadow-sm shadow-[#5B5FEF]/50" />
-              {websiteSettings.eventDate}
-            </span>
-            <span className="inline-flex items-center gap-2 px-4 py-2 rounded-xl glass-pill text-xs font-semibold text-slate-800">
-              <span className="w-2 h-2 rounded-full bg-[#00D4FF] shadow-sm shadow-[#00D4FF]/50" />
-              {websiteSettings.venue}
-            </span>
-            <span className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-gradient-to-r from-[#5B5FEF]/12 to-[#00D4FF]/12 backdrop-blur-xl border border-[#5B5FEF]/25 text-xs font-bold text-[#5B5FEF] shadow-xs">
-              Fee: {websiteSettings.registrationFee}
-            </span>
+          {/* Quick Meta Badges matching Reference Image 1 */}
+          <div className="flex flex-col gap-2.5 mb-6">
+            <div>
+              <span className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-white/85 border border-white/95 shadow-[0_4px_16px_rgba(15,23,42,0.04),inset_0_1px_1px_white] text-xs font-semibold text-slate-800">
+                <span className="w-2 h-2 rounded-full bg-[#7138F5] shadow-xs" />
+                {websiteSettings.eventDate}
+              </span>
+            </div>
+            <div className="flex flex-wrap items-center gap-2.5">
+              <span className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-white/85 border border-white/95 shadow-[0_4px_16px_rgba(15,23,42,0.04),inset_0_1px_1px_white] text-xs font-semibold text-slate-800">
+                <span className="w-2 h-2 rounded-full bg-[#11C8F4] shadow-xs" />
+                {websiteSettings.venue}
+              </span>
+              <span className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-[#7138F5]/10 border border-[#7138F5]/30 text-xs font-bold text-[#7138F5] shadow-2xs">
+                Fee: {websiteSettings.registrationFee}
+              </span>
+            </div>
           </div>
 
-          {/* Dynamic Event Countdown Timer (Configured by Super Admin) */}
+          {/* Dynamic Event Countdown Timer */}
           {websiteSettings.countdownEnabled !== false && (
             <EventCountdown
               day={websiteSettings.eventDay}
@@ -101,10 +97,10 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
           )}
 
           {/* Actions */}
-          <div className="flex flex-wrap items-center gap-3.5 w-full sm:w-auto mt-2">
+          <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 w-full sm:w-auto mt-1">
             <button
               onClick={onRegisterClick}
-              className="w-full sm:w-auto px-8 py-3.5 rounded-2xl bg-gradient-to-r from-[#5B5FEF] via-[#7A6CFF] to-[#00D4FF] text-white font-bold text-sm sm:text-base shadow-[0_14px_36px_-6px_rgba(91,95,239,0.36),inset_0_1.5px_1.5px_rgba(255,255,255,0.4)] hover:shadow-[0_20px_45px_-6px_rgba(91,95,239,0.48)] hover:-translate-y-0.5 active:translate-y-0 transition-all duration-200 flex items-center justify-center gap-2.5 group cursor-pointer"
+              className="w-full sm:w-auto px-8 py-3.5 rounded-2xl bg-gradient-to-r from-[#7138F5] via-[#5224D8] to-[#11C8F4] text-white font-extrabold text-sm sm:text-base shadow-[0_14px_36px_-6px_rgba(113,56,245,0.4),inset_0_1.5px_1.5px_rgba(255,255,255,0.4)] hover:shadow-[0_20px_45px_-6px_rgba(113,56,245,0.55)] hover:-translate-y-0.5 active:translate-y-0 transition-all duration-200 flex items-center justify-center gap-2.5 group cursor-pointer"
             >
               <span>Register Now</span>
               <ArrowRight className="w-4 h-4 transition-transform group-hover:translate-x-1" />
@@ -112,24 +108,11 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
 
             <button
               onClick={onInvitationClick}
-              className="w-full sm:w-auto px-7 py-3.5 rounded-2xl glass-button text-slate-800 hover:text-slate-950 font-bold text-sm sm:text-base border border-white/95 shadow-[0_8px_24px_-6px_rgba(15,23,42,0.06),inset_0_1.5px_1px_white] hover:bg-white hover:-translate-y-0.5 active:translate-y-0 transition-all duration-200 flex items-center justify-center gap-2 cursor-pointer"
+              className="w-full sm:w-auto px-7 py-3.5 rounded-2xl bg-white/85 hover:bg-white text-slate-800 hover:text-slate-950 font-extrabold text-sm sm:text-base border border-white/95 shadow-[0_8px_24px_-6px_rgba(15,23,42,0.06),inset_0_1.5px_1px_white] hover:-translate-y-0.5 active:translate-y-0 transition-all duration-200 flex items-center justify-center gap-2 cursor-pointer"
             >
-              <Ticket className="w-4 h-4 text-[#5B5FEF]" />
+              <Ticket className="w-4 h-4 text-[#7138F5]" />
               <span>Check Invitation Card</span>
             </button>
-          </div>
-
-          {/* Quick Inclusions Note */}
-          <div className="mt-7 flex flex-wrap items-center gap-2.5 text-xs text-slate-600 font-medium">
-            <span className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl glass-pill">
-              <CheckCircle2 className="w-3.5 h-3.5 text-emerald-500" /> Custom Printed Jersey
-            </span>
-            <span className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl glass-pill">
-              <CheckCircle2 className="w-3.5 h-3.5 text-emerald-500" /> Grand Gala Feast
-            </span>
-            <span className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl glass-pill">
-              <ShieldCheck className="w-3.5 h-3.5 text-[#5B5FEF]" /> Gate Entry Pass
-            </span>
           </div>
         </div>
       </div>

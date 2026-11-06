@@ -166,14 +166,14 @@ export const EventInformationSection: React.FC<EventInformationSectionProps> = (
     >
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <motion.div variants={headerVariants} className="text-center max-w-xl mx-auto mb-6 sm:mb-8">
-          <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-white/80 border border-white/90 shadow-[0_4px_16px_rgba(91,95,239,0.06),inset_0_1px_1px_white] backdrop-blur-xl mb-2.5">
-            <Sparkles className="w-3.5 h-3.5 text-[#5B5FEF]" />
+          <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-white/80 border border-white/90 shadow-[0_4px_16px_rgba(113,56,245,0.06),inset_0_1px_1px_white] backdrop-blur-xl mb-2.5">
+            <Calendar className="w-3.5 h-3.5 text-[#7138F5]" />
             <span className="text-xs font-bold text-slate-800 uppercase tracking-wider">
               Essential Schedule & Key Details
             </span>
           </div>
-          <h2 className="font-display text-2xl sm:text-3xl font-extrabold text-slate-900 tracking-tight">
-            Event Information
+          <h2 className="font-display text-2xl sm:text-3xl font-extrabold text-[#10143C] tracking-tight">
+            Event <br className="sm:hidden" /> Information
           </h2>
         </motion.div>
 

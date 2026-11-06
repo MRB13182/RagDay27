@@ -190,8 +190,8 @@ export default function App() {
 
   const pdfSettings: PdfSettings = {
     pdfLogo: websiteIdentityConfig.websiteLogo,
-    pdfHeader: websiteIdentityConfig.websiteName,
-    pdfSubHeader: eventSettingsConfig.eventName,
+    pdfHeader: 'RAG DAY 27 - OFFICIAL REGISTRATION',
+    pdfSubHeader: 'Batch 27 Executive Committee',
     watermarkLogo: 'RD27 OFFICIAL',
     watermarkOpacity: 0.08,
     footerText: websiteIdentityConfig.footerText,
@@ -518,6 +518,8 @@ export default function App() {
           invitations={invitations}
           onUpdateStatus={handleUpdateRegistrationStatus}
           onDeleteRegistration={handleDeleteRegistration}
+          pdfSettings={pdfSettings}
+          websiteSettings={websiteSettings}
         />
       )}
     </div>

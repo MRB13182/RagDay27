@@ -1,8 +1,90 @@
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
 import { InvitationRecord, PdfSettings, WebsiteSettings } from '../types';
+import defaultLogo from '../assets/images/logo.png';
 
-export const generateRegistrationListPDF = (
+export const loadImage = (src: string): Promise<HTMLImageElement> =>
+  new Promise((resolve, reject) => {
+    const img = new Image();
+    if (!src.startsWith('data:')) {
+      img.crossOrigin = 'anonymous';
+    }
+    img.onload = () => resolve(img);
+    img.onerror = () => {
+      // Retry without crossOrigin if local or asset origin blocked it
+      const fallbackImg = new Image();
+      fallbackImg.onload = () => resolve(fallbackImg);
+      fallbackImg.onerror = (err) => reject(err);
+      fallbackImg.src = src;
+    };
+    img.src = src;
+  });
+
+export const imageToDataUrl = (img: HTMLImageElement, mime = 'image/png'): string => {
+  const canvas = document.createElement('canvas');
+  canvas.width = img.naturalWidth || img.width;
+  canvas.height = img.naturalHeight || img.height;
+  const ctx = canvas.getContext('2d');
+  if (!ctx) throw new Error('Canvas is unavailable.');
+  ctx.drawImage(img, 0, 0);
+  return canvas.toDataURL(mime, 0.95);
+};
+
+/**
+ * Assigns permanent, immutable 1-based serial numbers (sl_no) based on the chronological
+ * registration order (created_at ASC, with registration_no numeric tie-breaker).
+ */
+export function assignPermanentSerialNumbers(records: InvitationRecord[]): InvitationRecord[] {
+  const sortedAsc = [...records].sort((a, b) => {
+    const timeA = a.created_at ? new Date(a.created_at).getTime() : 0;
+    const timeB = b.created_at ? new Date(b.created_at).getTime() : 0;
+    if (timeA !== timeB) return timeA - timeB;
+    const numA = parseInt((a.registration_no || '').replace(/\D+/g, ''), 10) || 0;
+    const numB = parseInt((b.registration_no || '').replace(/\D+/g, ''), 10) || 0;
+    return numA - numB;
+  });
+
+  return sortedAsc.map((record, index) => ({
+    ...record,
+    sl_no: record.sl_no ?? (index + 1),
+  }));
+}
+
+/**
+ * Returns registrations formatted for Admin Panel:
+ * Latest registration appears at the TOP (created_at DESC / newest first),
+ * while maintaining the permanent sl_no for each student.
+ */
+export function sortRegistrationsForAdmin(records: InvitationRecord[]): InvitationRecord[] {
+  const withPermanentSL = assignPermanentSerialNumbers(records);
+  return [...withPermanentSL].sort((a, b) => {
+    const timeA = a.created_at ? new Date(a.created_at).getTime() : 0;
+    const timeB = b.created_at ? new Date(b.created_at).getTime() : 0;
+    if (timeA !== timeB) return timeB - timeA;
+    const numA = parseInt((a.registration_no || '').replace(/\D+/g, ''), 10) || 0;
+    const numB = parseInt((b.registration_no || '').replace(/\D+/g, ''), 10) || 0;
+    return numB - numA;
+  });
+}
+
+/**
+ * Returns registrations formatted for PDF Ledger:
+ * Oldest registration appears at the TOP (created_at ASC / oldest first),
+ * and newest registration appears at the BOTTOM.
+ */
+export function sortRegistrationsForPDF(records: InvitationRecord[]): InvitationRecord[] {
+  const withPermanentSL = assignPermanentSerialNumbers(records);
+  return [...withPermanentSL].sort((a, b) => {
+    const timeA = a.created_at ? new Date(a.created_at).getTime() : 0;
+    const timeB = b.created_at ? new Date(b.created_at).getTime() : 0;
+    if (timeA !== timeB) return timeA - timeB;
+    const numA = parseInt((a.registration_no || '').replace(/\D+/g, ''), 10) || 0;
+    const numB = parseInt((b.registration_no || '').replace(/\D+/g, ''), 10) || 0;
+    return numA - numB;
+  });
+}
+
+export const generateRegistrationListPDF = async (
   records: InvitationRecord[],
   pdfSettings: PdfSettings,
   websiteSettings: WebsiteSettings,
@@ -18,64 +100,119 @@ export const generateRegistrationListPDF = (
     throw new Error(`Registration ledger contains records outside the ${adminRole} scope.`);
   }
 
+  // 1. Sort records chronologically (ASC) for PDF ledger with permanent serial numbers
+  const sortedRecords = sortRegistrationsForPDF(records);
+
   const doc = new jsPDF({ orientation: 'landscape', unit: 'mm', format: 'a4' });
   const pageWidth = doc.internal.pageSize.getWidth();
   const pageHeight = doc.internal.pageSize.getHeight();
 
-  doc.saveGraphicsState();
-  // @ts-ignore
-  if (doc.setGState) {
+  // Watermark helper
+  const drawWatermark = () => {
+    doc.saveGraphicsState();
     // @ts-ignore
-    doc.setGState(new doc.GState({ opacity: pdfSettings.watermarkOpacity || 0.08 }));
-  }
-  doc.setFontSize(54);
-  doc.setFont('helvetica', 'bold');
-  doc.setTextColor(100, 110, 140);
-  doc.text(pdfSettings.watermarkLogo || 'RD27 OFFICIAL', pageWidth / 2, pageHeight / 2, {
-    align: 'center',
-    angle: 30,
-  });
-  doc.restoreGraphicsState();
-
-  doc.setFillColor(15, 23, 42);
-  doc.rect(0, 0, pageWidth, 32, 'F');
-  doc.setFillColor(91, 95, 239);
-  doc.rect(0, 31, pageWidth, 1.5, 'F');
-
-  let textStartX = 14;
-  if (pdfSettings.pdfLogo) {
-    try {
-      doc.setFillColor(255, 255, 255);
-      doc.roundedRect(12, 4, 24, 24, 3, 3, 'F');
-      doc.addImage(pdfSettings.pdfLogo, 'PNG', 13, 5, 22, 22, undefined, 'FAST');
-      textStartX = 40;
-    } catch (e) {
-      console.warn('Could not draw logo in PDF:', e);
+    if (doc.setGState) {
+      // @ts-ignore
+      doc.setGState(new doc.GState({ opacity: pdfSettings.watermarkOpacity || 0.07 }));
     }
-  }
+    doc.setFontSize(52);
+    doc.setFont('helvetica', 'bold');
+    doc.setTextColor(100, 110, 140);
+    doc.text(pdfSettings.watermarkLogo || 'RD27 OFFICIAL', pageWidth / 2, pageHeight / 2, {
+      align: 'center',
+      angle: 30,
+    });
+    doc.restoreGraphicsState();
+  };
 
+  // Draw initial watermark
+  drawWatermark();
+
+  // 2. Redesigned PDF Header Banner (Dark Navy Blue #0B152E)
+  const headerHeight = 38;
+  doc.setFillColor(11, 21, 46);
+  doc.rect(0, 0, pageWidth, headerHeight, 'F');
+
+  // Bottom separator rule (Purple / Blue #7138F5)
+  doc.setFillColor(113, 56, 245);
+  doc.rect(0, headerHeight - 1.2, pageWidth, 1.2, 'F');
+
+  // Left-aligned header contents
+  const textStartX = 14;
+
+  // Main Heading: Bold, prominent uppercase "RAG DAY 27 - OFFICIAL REGISTRATION" in crisp white text
   doc.setTextColor(255, 255, 255);
-  doc.setFontSize(14);
+  doc.setFontSize(16);
   doc.setFont('helvetica', 'bold');
-  doc.text(pdfSettings.pdfHeader || 'RAG DAY 27 (RD27)', textStartX, 10);
+  doc.text('RAG DAY 27 - OFFICIAL REGISTRATION', textStartX, 12.5);
 
-  doc.setFontSize(9.5);
+  // Subtitle: "Batch 27 Executive Committee" styled in sky-blue/cyan (#38BDF8)
+  doc.setFontSize(10.5);
   doc.setFont('helvetica', 'bold');
   doc.setTextColor(56, 189, 248);
-  doc.text(pdfSettings.pdfSubHeader || 'Official Registration Ledger', textStartX, 16);
+  doc.text('Batch 27 Executive Committee', textStartX, 19);
 
+  // Batch Information
   doc.setFontSize(8.5);
-  doc.setFont('helvetica', 'normal');
+  doc.setFont('helvetica', 'bold');
   doc.setTextColor(226, 232, 240);
-  doc.text('Batch 2027', textStartX, 22);
+  doc.text('Batch 2027', textStartX, 25);
 
-  doc.setFontSize(7.5);
+  // Event Date, Venue & Total Registrations
+  doc.setFontSize(8);
+  doc.setFont('helvetica', 'normal');
   doc.setTextColor(148, 163, 184);
+  const eventDateText = websiteSettings?.eventDate || 'November 20, 2026';
+  const venueText = websiteSettings?.venue || 'Central Amphitheatre';
   doc.text(
-    `Event Date: ${websiteSettings.eventDate}   |   Venue: ${websiteSettings.venue}   |   Total Registrations: ${records.length}`,
+    `Event Date: ${eventDateText}   |   Venue: ${venueText}   |   Total Registrations: ${sortedRecords.length}`,
     textStartX,
-    27
+    31.5
   );
+
+  // 3. Extreme Right-Side Logo Container
+  const logoSource = pdfSettings?.pdfLogo || defaultLogo;
+  if (logoSource) {
+    try {
+      const logoBoxWidth = 26;
+      const logoBoxHeight = 26;
+      const logoBoxX = pageWidth - 14 - logoBoxWidth; // 257mm in landscape A4
+      const logoBoxY = 6;
+
+      // Clean white rounded container card
+      doc.setFillColor(255, 255, 255);
+      doc.roundedRect(logoBoxX, logoBoxY, logoBoxWidth, logoBoxHeight, 3.5, 3.5, 'F');
+      doc.setDrawColor(203, 213, 225);
+      doc.setLineWidth(0.3);
+      doc.roundedRect(logoBoxX, logoBoxY, logoBoxWidth, logoBoxHeight, 3.5, 3.5, 'S');
+
+      // Load image and render centered without stretching
+      const img = await loadImage(logoSource);
+
+      const maxLogoW = 21;
+      const maxLogoH = 21;
+      let drawW = maxLogoW;
+      let drawH = maxLogoH;
+
+      if (img.naturalWidth && img.naturalHeight) {
+        const aspect = img.naturalWidth / img.naturalHeight;
+        if (aspect > 1) {
+          drawW = maxLogoW;
+          drawH = maxLogoW / aspect;
+        } else {
+          drawH = maxLogoH;
+          drawW = maxLogoH * aspect;
+        }
+      }
+
+      const drawX = logoBoxX + (logoBoxWidth - drawW) / 2;
+      const drawY = logoBoxY + (logoBoxHeight - drawH) / 2;
+
+      doc.addImage(img, 'PNG', drawX, drawY, drawW, drawH, undefined, 'FAST');
+    } catch (e) {
+      console.warn('Could not draw logo in PDF header:', e);
+    }
+  }
 
   const headCols = [
     'SL NO',
@@ -89,7 +226,8 @@ export const generateRegistrationListPDF = (
     'JERSEY NUMBER',
     'JERSEY SIZE',
   ];
-  const tableData = records.map((record, index) => [
+
+  const tableData = sortedRecords.map((record, index) => [
     record.sl_no ?? (index + 1),
     record.registration_no,
     record.full_name,
@@ -101,6 +239,7 @@ export const generateRegistrationListPDF = (
     record.jersey_number ? `#${record.jersey_number}` : '–',
     record.jersey_size || '–',
   ]);
+
   const columnStyles: { [key: number]: any } = {
     0: { cellWidth: 14, halign: 'center' },
     1: { cellWidth: 26, fontStyle: 'bold', halign: 'center' },
@@ -115,15 +254,27 @@ export const generateRegistrationListPDF = (
   };
 
   autoTable(doc, {
-    startY: 38,
+    startY: 44,
     head: [headCols],
     body: tableData,
     theme: 'grid',
-    headStyles: { fillColor: [30, 41, 59], textColor: [255, 255, 255], fontSize: 8, fontStyle: 'bold', halign: 'center' },
+    showHead: 'everyPage',
+    headStyles: {
+      fillColor: [11, 21, 46],
+      textColor: [255, 255, 255],
+      fontSize: 8,
+      fontStyle: 'bold',
+      halign: 'center',
+    },
     bodyStyles: { fontSize: 8, textColor: [30, 41, 59], valign: 'middle' },
     alternateRowStyles: { fillColor: [248, 250, 252] },
     columnStyles,
-    margin: { top: 38, bottom: 26, left: 14, right: 14 },
+    margin: { top: 18, bottom: 26, left: 14, right: 14 },
+    didDrawPage: (data) => {
+      if (data.pageNumber > 1) {
+        drawWatermark();
+      }
+    },
   });
 
   const finalY = (doc as any).lastAutoTable ? (doc as any).lastAutoTable.finalY + 12 : pageHeight - 35;
@@ -164,7 +315,7 @@ export const generateRegistrationListPDF = (
     doc.text(`Page ${i} of ${totalPages}`, pageWidth - 14, pageHeight - 8, { align: 'right' });
   }
 
-  doc.save(`${pdfSettings.pdfHeader || websiteSettings.eventName || 'RagDay27'}-registrations.pdf`);
+  doc.save('RAG_DAY_27_Official_Registration.pdf');
 };
 
 export const generateInvitationCardPDF = (

@@ -10,6 +10,13 @@ import {
   ArrowRight,
   AlertTriangle,
   Loader2,
+  ShieldCheck,
+  Building2,
+  GraduationCap,
+  IdCard,
+  Hash,
+  User,
+  Lock,
 } from 'lucide-react';
 import { toPng } from 'html-to-image';
 import { getPublicInvitation, getRejectedRegistrationForResubmission } from '../services';
@@ -279,24 +286,27 @@ export const InvitationCardPage: React.FC<InvitationCardPageProps> = ({
 
   return (
     <div className="public-glass-page relative isolate py-8 sm:py-12 max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 rounded-[2rem] overflow-hidden">
-      {/* Header */}
+      {/* Header matching Reference Image 2 Screen 10 */}
       <div className="text-center max-w-2xl mx-auto mb-8">
-        <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-white/80 border border-white/90 shadow-[0_4px_16px_rgba(109,40,217,0.06),inset_0_1px_1px_white] backdrop-blur-xl mb-3">
-          <Sparkles className="w-3.5 h-3.5 text-[#6D28D9]" />
+        <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-white/80 border border-white/90 shadow-[0_4px_16px_rgba(113,56,245,0.06),inset_0_1px_1px_white] backdrop-blur-xl mb-3">
+          <ShieldCheck className="w-3.5 h-3.5 text-[#7138F5]" />
           <span className="text-xs font-bold text-slate-800 tracking-wide uppercase">
-            Official Gate Pass Portal
+            Official Entry Pass
           </span>
         </div>
-        <h1 className="font-display text-3xl sm:text-4xl font-extrabold text-slate-900 tracking-tight">
-          Verify & Download Invitation Card
+        <h1 className="font-display text-3xl sm:text-4xl md:text-5xl font-extrabold text-[#10143C] tracking-tight leading-tight">
+          Verify & Download <br />
+          <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#7138F5] via-[#5224D8] to-[#11C8F4]">
+            Invitation Card
+          </span>
         </h1>
-        <p className="text-sm text-slate-600 mt-2">
-          Enter your <strong>Registration Number</strong> and <strong>Student Name</strong> to verify committee authorization and access your digital pass. Both fields are required for security verification.
+        <p className="text-xs sm:text-sm text-slate-600 mt-2.5 max-w-lg mx-auto font-medium leading-relaxed">
+          Enter your Registration Number and Student Name to verify committee authorization and access your digital pass. Both fields are required for security verification.
         </p>
       </div>
 
-      {/* Search Layout (Form) */}
-      <div className="p-6 sm:p-8 rounded-3xl public-glass-surface mb-8">
+      {/* Search Layout (Form) matching Screen 10 */}
+      <div className="p-5 sm:p-7 rounded-3xl bg-white/85 backdrop-blur-2xl border border-white/95 shadow-[0_15px_35px_-10px_rgba(113,56,245,0.08),inset_0_1.5px_1px_white] mb-8">
         <form
           onSubmit={e => {
             e.preventDefault();
@@ -304,41 +314,51 @@ export const InvitationCardPage: React.FC<InvitationCardPageProps> = ({
           }}
           className="space-y-4"
         >
-          <div className="grid grid-cols-1 sm:grid-cols-12 gap-4">
-            <div className="sm:col-span-6">
-              <label className="block text-xs font-bold uppercase tracking-wider text-slate-700 mb-1.5">
+          <div className="space-y-3.5">
+            <div>
+              <label className="block text-xs font-extrabold uppercase tracking-wider text-slate-700 mb-1.5">
                 Registration Number <span className="text-rose-500">*</span>
               </label>
-              <input
-                type="text"
-                placeholder="e.g. RD27-01"
-                value={searchRegNo}
-                onChange={e => setSearchRegNo(e.target.value.toUpperCase())}
-                className="w-full px-4 py-3.5 rounded-xl text-sm font-mono font-bold glass-input text-slate-900 placeholder-slate-400 focus:border-[#5B5FEF] focus:ring-2 focus:ring-[#5B5FEF]/20 outline-none transition-all"
-                required
-              />
+              <div className="relative flex items-center">
+                <span className="absolute left-3.5 text-slate-400">
+                  <User className="w-4 h-4" />
+                </span>
+                <input
+                  type="text"
+                  placeholder="e.g. RD27-01"
+                  value={searchRegNo}
+                  onChange={e => setSearchRegNo(e.target.value.toUpperCase())}
+                  className="w-full pl-10 pr-4 py-3.5 rounded-xl text-sm font-mono font-bold bg-white/90 border border-slate-200/90 text-slate-900 placeholder-slate-400 focus:border-[#7138F5] focus:ring-2 focus:ring-[#7138F5]/20 outline-none transition-all shadow-2xs"
+                  required
+                />
+              </div>
             </div>
 
-            <div className="sm:col-span-6">
-              <label className="block text-xs font-bold uppercase tracking-wider text-slate-700 mb-1.5">
+            <div>
+              <label className="block text-xs font-extrabold uppercase tracking-wider text-slate-700 mb-1.5">
                 Student Name <span className="text-rose-500">*</span>
               </label>
-              <input
-                type="text"
-                placeholder="Enter student full name..."
-                value={searchStudentName}
-                onChange={e => setSearchStudentName(e.target.value)}
-                className="w-full px-4 py-3.5 rounded-xl text-sm font-medium glass-input text-slate-900 placeholder-slate-400 focus:border-[#5B5FEF] focus:ring-2 focus:ring-[#5B5FEF]/20 outline-none transition-all"
-                required
-              />
+              <div className="relative flex items-center">
+                <span className="absolute left-3.5 text-slate-400">
+                  <User className="w-4 h-4" />
+                </span>
+                <input
+                  type="text"
+                  placeholder="Enter student full name..."
+                  value={searchStudentName}
+                  onChange={e => setSearchStudentName(e.target.value)}
+                  className="w-full pl-10 pr-4 py-3.5 rounded-xl text-sm font-medium bg-white/90 border border-slate-200/90 text-slate-900 placeholder-slate-400 focus:border-[#7138F5] focus:ring-2 focus:ring-[#7138F5]/20 outline-none transition-all shadow-2xs"
+                  required
+                />
+              </div>
             </div>
           </div>
 
-          <div className="flex justify-end pt-2">
+          <div className="pt-2">
             <button
               type="submit"
               disabled={isSearching}
-              className="py-3.5 px-7 rounded-xl bg-gradient-to-r from-[#5B5FEF] via-[#7A6CFF] to-[#00D4FF] text-white font-bold text-sm shadow-[0_12px_28px_-6px_rgba(91,95,239,0.32),inset_0_1px_1px_rgba(255,255,255,0.4)] hover:shadow-[0_16px_36px_-6px_rgba(91,95,239,0.45)] hover:-translate-y-0.5 active:translate-y-0 transition-all flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50"
+              className="w-full py-3.5 px-7 rounded-xl bg-gradient-to-r from-[#7138F5] via-[#5224D8] to-[#11C8F4] text-white font-extrabold text-sm shadow-[0_12px_28px_-6px_rgba(113,56,245,0.36),inset_0_1px_1px_rgba(255,255,255,0.4)] hover:shadow-[0_16px_36px_-6px_rgba(113,56,245,0.48)] hover:-translate-y-0.5 active:translate-y-0 transition-all flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50"
             >
               {isSearching ? (
                 <Loader2 className="w-4 h-4 animate-spin" />
@@ -554,31 +574,43 @@ export const InvitationCardPage: React.FC<InvitationCardPageProps> = ({
                     <span className="text-[11px] font-bold uppercase tracking-wider text-slate-500">
                       Registration Information
                     </span>
-                    <h3 className="font-display text-xl sm:text-2xl font-black text-slate-900">
+                    <h3 className="font-display text-xl sm:text-2xl font-black text-[#10143C]">
                       {matchedRecord.full_name}
                     </h3>
                   </div>
-                  <div className="px-3.5 py-1.5 rounded-xl bg-violet-100/80 border border-violet-200/80 text-[#6D28D9] text-xs font-mono font-bold tracking-wider shadow-2xs">
+                  <div className="px-3.5 py-1.5 rounded-xl bg-[#7138F5] text-white text-xs font-mono font-bold tracking-wider shadow-sm">
                     {matchedRecord.registration_no}
                   </div>
                 </div>
 
                 <div className="pt-4 grid grid-cols-2 sm:grid-cols-4 gap-3 text-xs">
-                  <div className="p-3 rounded-xl glass-surface-subtle">
-                    <span className="text-slate-400 font-bold uppercase text-[10px] block">Class Roll</span>
-                    <span className="text-slate-900 font-extrabold text-sm mt-0.5 block">{matchedRecord.class_roll || '—'}</span>
+                  <div className="p-3 rounded-2xl bg-white/90 border border-slate-200/80 shadow-2xs">
+                    <div className="flex items-center gap-1.5 text-slate-400 font-bold uppercase text-[10px]">
+                      <Lock className="w-3 h-3 text-[#7138F5]" />
+                      <span>Class Roll</span>
+                    </div>
+                    <span className="text-[#10143C] font-black text-base sm:text-lg mt-1 block">{matchedRecord.class_roll || '—'}</span>
                   </div>
-                  <div className="p-3 rounded-xl glass-surface-subtle">
-                    <span className="text-slate-400 font-bold uppercase text-[10px] block">Student ID</span>
-                    <span className="text-slate-900 font-extrabold text-sm mt-0.5 block">{matchedRecord.student_id || matchedRecord.id || '—'}</span>
+                  <div className="p-3 rounded-2xl bg-white/90 border border-slate-200/80 shadow-2xs">
+                    <div className="flex items-center gap-1.5 text-slate-400 font-bold uppercase text-[10px]">
+                      <IdCard className="w-3 h-3 text-[#7138F5]" />
+                      <span>Student ID</span>
+                    </div>
+                    <span className="text-[#10143C] font-black text-base sm:text-lg mt-1 block">{matchedRecord.student_id || matchedRecord.id || '—'}</span>
                   </div>
-                  <div className="p-3 rounded-xl glass-surface-subtle">
-                    <span className="text-slate-400 font-bold uppercase text-[10px] block">Academic Group</span>
-                    <span className="text-slate-900 font-extrabold text-sm mt-0.5 block">{matchedRecord.academic_group || '—'}</span>
+                  <div className="p-3 rounded-2xl bg-white/90 border border-slate-200/80 shadow-2xs">
+                    <div className="flex items-center gap-1.5 text-slate-400 font-bold uppercase text-[10px]">
+                      <GraduationCap className="w-3 h-3 text-[#7138F5]" />
+                      <span>Academic Group</span>
+                    </div>
+                    <span className="text-[#10143C] font-black text-base sm:text-lg mt-1 block">{matchedRecord.academic_group || '—'}</span>
                   </div>
-                  <div className="p-3 rounded-xl glass-surface-subtle">
-                    <span className="text-slate-400 font-bold uppercase text-[10px] block">Section</span>
-                    <span className="text-slate-900 font-extrabold text-sm mt-0.5 block">{matchedRecord.academic_section || '—'}</span>
+                  <div className="p-3 rounded-2xl bg-white/90 border border-slate-200/80 shadow-2xs">
+                    <div className="flex items-center gap-1.5 text-slate-400 font-bold uppercase text-[10px]">
+                      <Building2 className="w-3 h-3 text-[#7138F5]" />
+                      <span>Section</span>
+                    </div>
+                    <span className="text-[#10143C] font-black text-base sm:text-lg mt-1 block">{matchedRecord.academic_section || '—'}</span>
                   </div>
                 </div>
               </div>
@@ -658,7 +690,7 @@ export const InvitationCardPage: React.FC<InvitationCardPageProps> = ({
                   type="button"
                   onClick={handleDownloadPass}
                   disabled={isDownloading}
-                  className="w-full sm:w-auto px-8 py-3.5 rounded-2xl bg-gradient-to-r from-[#5B5FEF] via-[#7A6CFF] to-[#00D4FF] hover:brightness-105 text-white font-extrabold text-sm shadow-[0_12px_28px_-6px_rgba(91,95,239,0.36),inset_0_1px_1px_rgba(255,255,255,0.4)] hover:shadow-[0_16px_36px_-6px_rgba(91,95,239,0.48)] transition-all flex items-center justify-center gap-2 cursor-pointer hover:-translate-y-0.5 active:translate-y-0 disabled:opacity-60"
+                  className="w-full sm:w-auto px-8 py-3.5 rounded-2xl bg-gradient-to-r from-[#7138F5] via-[#5224D8] to-[#11C8F4] hover:brightness-105 text-white font-extrabold text-sm shadow-[0_12px_28px_-6px_rgba(113,56,245,0.36),inset_0_1px_1px_rgba(255,255,255,0.4)] hover:shadow-[0_16px_36px_-6px_rgba(113,56,245,0.48)] transition-all flex items-center justify-center gap-2 cursor-pointer hover:-translate-y-0.5 active:translate-y-0 disabled:opacity-60"
                 >
                   {isDownloading ? (
                     <Loader2 className="w-4 h-4 animate-spin" />
@@ -667,6 +699,34 @@ export const InvitationCardPage: React.FC<InvitationCardPageProps> = ({
                   )}
                   <span>{isDownloading ? 'Generating Pass…' : 'Download Pass'}</span>
                 </button>
+              </div>
+
+              {/* Institution Card matching Reference Image 2 Screen 11 */}
+              <div className="p-5 sm:p-6 rounded-3xl bg-white/85 backdrop-blur-2xl border border-white/95 shadow-[0_15px_35px_-10px_rgba(113,56,245,0.08),inset_0_1.5px_1px_white] flex flex-col items-center justify-center text-center space-y-2">
+                <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-[#7138F5]/15 to-[#11C8F4]/15 p-2 border border-white/95 flex items-center justify-center shadow-xs">
+                  {pdfSettings?.pdfLogo ? (
+                    <img src={pdfSettings.pdfLogo} alt="NIC Logo" className="w-full h-full object-contain" />
+                  ) : (
+                    <span className="font-extrabold text-[#7138F5] text-xs">NIC</span>
+                  )}
+                </div>
+                <div>
+                  <h3 className="font-display text-lg sm:text-xl font-black text-[#10143C]">
+                    National Ideal College
+                  </h3>
+                  <p className="text-xs sm:text-sm font-bold text-slate-600 mt-0.5">
+                    Rag Day of NIC 27
+                  </p>
+                </div>
+                <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-slate-100/90 border border-slate-200/80 text-[10px] font-extrabold text-slate-700 uppercase tracking-widest">
+                  BATCH 2027
+                </div>
+                <div className="pt-1">
+                  <span className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full bg-white/90 border border-slate-200/90 text-[10px] font-extrabold text-[#10143C] uppercase tracking-wider shadow-2xs font-mono">
+                    <ShieldCheck className="w-3.5 h-3.5 text-[#7138F5]" />
+                    NIC 2027 · OFFICIAL PASS
+                  </span>
+                </div>
               </div>
 
               {/* Toast Feedback */}

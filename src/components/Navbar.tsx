@@ -159,35 +159,11 @@ export const Navbar: React.FC<NavbarProps> = ({
           </div>
         )}
 
-        {/* Mobile Right Controls */}
-        <div className="flex items-center gap-1.5 md:hidden">
-          {onOpenNotice && (
-            <button
-              type="button"
-              onClick={onOpenNotice}
-              className={`p-1.5 border rounded-lg shadow-xs backdrop-blur-md transition-colors cursor-pointer ${
-                isFemaleTheme
-                  ? 'text-pink-300 bg-[#240A30]/80 border-[#4A195E]'
-                  : isMaleTheme
-                  ? 'text-sky-300 bg-[#0B1A35]/80 border-[#1E3A5F]'
-                  : 'text-[#4F46E5] bg-white/80 border-violet-200/60'
-              }`}
-              title="Important Notice"
-              aria-label="Important Notice"
-            >
-              <Bell className="w-4 h-4" />
-            </button>
-          )}
-
+        {/* Mobile Right Controls matching Reference Image 1 */}
+        <div className="flex items-center gap-2 md:hidden">
           <button
             onClick={() => handleNavClick('register')}
-            className={`px-3 py-1.5 text-xs font-bold rounded-lg shadow-sm flex items-center gap-1 cursor-pointer ${
-              isFemaleTheme
-                ? 'bg-gradient-to-r from-[#D91B74] to-[#EC4899] text-white shadow-pink-500/25'
-                : isMaleTheme
-                ? 'bg-gradient-to-r from-[#0070F3] to-[#00D2FF] text-white shadow-cyan-500/25'
-                : 'bg-gradient-to-r from-[#5B5FEF] to-[#7A6CFF] text-white'
-            }`}
+            className="px-3.5 py-1.5 text-xs font-extrabold rounded-xl bg-gradient-to-r from-[#7138F5] via-[#5224D8] to-[#11C8F4] text-white shadow-md shadow-[#7138F5]/25 flex items-center gap-1.5 cursor-pointer active:scale-95 transition-transform"
           >
             <UserCheck className="w-3.5 h-3.5" />
             <span>Register</span>
@@ -197,13 +173,7 @@ export const Navbar: React.FC<NavbarProps> = ({
             type="button"
             onClick={() => setMobileMenuOpen(prev => !prev)}
             aria-label="Toggle navigation menu"
-            className={`p-2 rounded-lg border border-transparent focus:outline-none cursor-pointer transition-colors ${
-              isFemaleTheme
-                ? 'text-pink-200 hover:text-white hover:bg-white/10'
-                : isMaleTheme
-                ? 'text-slate-300 hover:text-white hover:bg-white/10'
-                : 'text-slate-600 hover:text-slate-900 hover:bg-white/80'
-            }`}
+            className="p-2 rounded-xl bg-white/80 border border-white/95 text-slate-700 hover:text-slate-900 shadow-2xs focus:outline-none cursor-pointer transition-colors"
           >
             {mobileMenuOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
           </button>

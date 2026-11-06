@@ -226,29 +226,25 @@ export const EventCountdown: React.FC<EventCountdownProps> = ({
   // 2. LIVE COUNTDOWN DISPLAY
   return (
     <div className="w-full max-w-lg mb-8">
-      {/* Countdown Label with glowing beacon */}
+      {/* Countdown Label with glowing beacon matching Reference Image 1 */}
       <div className="flex items-center justify-between mb-3 px-1">
         <div className="inline-flex items-center gap-2">
-          <span className="relative flex h-2.5 w-2.5">
-            <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-[#5B5FEF] opacity-75"></span>
-            <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-[#5B5FEF]"></span>
-          </span>
-          <span className="text-xs font-extrabold uppercase tracking-wider text-slate-700">
+          <span className="text-xs sm:text-sm font-extrabold uppercase tracking-wider text-[#10143C]">
             Event Countdown
           </span>
         </div>
-        <span className="text-[11px] font-semibold text-slate-500 flex items-center gap-1">
-          <Radio className="w-3 h-3 text-[#5B5FEF] animate-pulse" />
-          Live Countdown
+        <span className="text-[11px] sm:text-xs font-semibold text-slate-500 flex items-center gap-1.5">
+          <Radio className="w-3.5 h-3.5 text-[#5B5FEF] animate-pulse" />
+          <span>Live Countdown</span>
         </span>
       </div>
 
       {/* 4 Glassmorphism Cards: Days, Hours, Minutes, Seconds */}
-      <div className="grid grid-cols-4 gap-2.5 sm:gap-4">
+      <div className="grid grid-cols-4 gap-2 sm:gap-3.5">
         {/* Days */}
-        <div className="group relative flex flex-col items-center justify-center p-3.5 sm:p-4.5 rounded-2xl sm:rounded-3xl glass-card hover:-translate-y-1 transition-all duration-300 overflow-hidden text-center">
-          <div className="absolute inset-x-0 top-0 h-2/5 bg-gradient-to-b from-white/90 to-transparent pointer-events-none rounded-t-2xl sm:rounded-t-3xl" />
-          <div className="relative font-display text-2xl sm:text-3xl lg:text-4xl font-extrabold text-slate-900 tracking-tight tabular-nums">
+        <div className="group relative flex flex-col items-center justify-center p-3 sm:p-4 rounded-2xl bg-white/85 backdrop-blur-xl border border-white/95 shadow-[0_8px_24px_-6px_rgba(15,23,42,0.06),inset_0_1.5px_1px_white] hover:-translate-y-0.5 transition-all duration-200 overflow-hidden text-center">
+          <div className="absolute inset-x-0 top-0 h-2/5 bg-gradient-to-b from-white/90 to-transparent pointer-events-none rounded-t-2xl" />
+          <div className="relative font-display text-2xl sm:text-3xl lg:text-4xl font-extrabold text-[#10143C] tracking-tight tabular-nums">
             {timeLeft.days < 10 ? `0${timeLeft.days}` : timeLeft.days}
           </div>
           <div className="relative text-[10px] sm:text-xs font-bold uppercase tracking-wider text-slate-500 mt-1">
@@ -257,9 +253,9 @@ export const EventCountdown: React.FC<EventCountdownProps> = ({
         </div>
 
         {/* Hours */}
-        <div className="group relative flex flex-col items-center justify-center p-3.5 sm:p-4.5 rounded-2xl sm:rounded-3xl glass-card hover:-translate-y-1 transition-all duration-300 overflow-hidden text-center">
-          <div className="absolute inset-x-0 top-0 h-2/5 bg-gradient-to-b from-white/90 to-transparent pointer-events-none rounded-t-2xl sm:rounded-t-3xl" />
-          <div className="relative font-display text-2xl sm:text-3xl lg:text-4xl font-extrabold text-slate-900 tracking-tight tabular-nums">
+        <div className="group relative flex flex-col items-center justify-center p-3 sm:p-4 rounded-2xl bg-white/85 backdrop-blur-xl border border-white/95 shadow-[0_8px_24px_-6px_rgba(15,23,42,0.06),inset_0_1.5px_1px_white] hover:-translate-y-0.5 transition-all duration-200 overflow-hidden text-center">
+          <div className="absolute inset-x-0 top-0 h-2/5 bg-gradient-to-b from-white/90 to-transparent pointer-events-none rounded-t-2xl" />
+          <div className="relative font-display text-2xl sm:text-3xl lg:text-4xl font-extrabold text-[#10143C] tracking-tight tabular-nums">
             {String(timeLeft.hours).padStart(2, '0')}
           </div>
           <div className="relative text-[10px] sm:text-xs font-bold uppercase tracking-wider text-slate-500 mt-1">
@@ -268,9 +264,9 @@ export const EventCountdown: React.FC<EventCountdownProps> = ({
         </div>
 
         {/* Minutes */}
-        <div className="group relative flex flex-col items-center justify-center p-3.5 sm:p-4.5 rounded-2xl sm:rounded-3xl glass-card hover:-translate-y-1 transition-all duration-300 overflow-hidden text-center">
-          <div className="absolute inset-x-0 top-0 h-2/5 bg-gradient-to-b from-white/90 to-transparent pointer-events-none rounded-t-2xl sm:rounded-t-3xl" />
-          <div className="relative font-display text-2xl sm:text-3xl lg:text-4xl font-extrabold text-slate-900 tracking-tight tabular-nums">
+        <div className="group relative flex flex-col items-center justify-center p-3 sm:p-4 rounded-2xl bg-white/85 backdrop-blur-xl border border-white/95 shadow-[0_8px_24px_-6px_rgba(15,23,42,0.06),inset_0_1.5px_1px_white] hover:-translate-y-0.5 transition-all duration-200 overflow-hidden text-center">
+          <div className="absolute inset-x-0 top-0 h-2/5 bg-gradient-to-b from-white/90 to-transparent pointer-events-none rounded-t-2xl" />
+          <div className="relative font-display text-2xl sm:text-3xl lg:text-4xl font-extrabold text-[#10143C] tracking-tight tabular-nums">
             {String(timeLeft.minutes).padStart(2, '0')}
           </div>
           <div className="relative text-[10px] sm:text-xs font-bold uppercase tracking-wider text-slate-500 mt-1">
@@ -279,12 +275,12 @@ export const EventCountdown: React.FC<EventCountdownProps> = ({
         </div>
 
         {/* Seconds */}
-        <div className="group relative flex flex-col items-center justify-center p-3.5 sm:p-4.5 rounded-2xl sm:rounded-3xl glass-card hover:-translate-y-1 transition-all duration-300 overflow-hidden text-center">
-          <div className="absolute inset-x-0 top-0 h-2/5 bg-gradient-to-b from-white/90 to-transparent pointer-events-none rounded-t-2xl sm:rounded-t-3xl" />
-          <div className="relative font-display text-2xl sm:text-3xl lg:text-4xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-[#5B5FEF] to-[#00D4FF] tracking-tight tabular-nums">
+        <div className="group relative flex flex-col items-center justify-center p-3 sm:p-4 rounded-2xl bg-white/85 backdrop-blur-xl border border-white/95 shadow-[0_8px_24px_-6px_rgba(15,23,42,0.06),inset_0_1.5px_1px_white] hover:-translate-y-0.5 transition-all duration-200 overflow-hidden text-center">
+          <div className="absolute inset-x-0 top-0 h-2/5 bg-gradient-to-b from-white/90 to-transparent pointer-events-none rounded-t-2xl" />
+          <div className="relative font-display text-2xl sm:text-3xl lg:text-4xl font-extrabold text-[#10143C] tracking-tight tabular-nums">
             {String(timeLeft.seconds).padStart(2, '0')}
           </div>
-          <div className="relative text-[10px] sm:text-xs font-bold uppercase tracking-wider text-[#5B5FEF] mt-1">
+          <div className="relative text-[10px] sm:text-xs font-bold uppercase tracking-wider text-slate-500 mt-1">
             Seconds
           </div>
         </div>

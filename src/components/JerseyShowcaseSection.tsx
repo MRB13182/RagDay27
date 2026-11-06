@@ -185,9 +185,21 @@ export const JerseyShowcaseSection: React.FC<JerseyShowcaseSectionProps> = ({
                   </p>
                 </div>
 
-                <div className="pt-3 border-t border-slate-100 flex items-center justify-between text-[11px] font-semibold text-slate-500">
-                  <span>Front · Back · Sleeve · Crest</span>
-                  <span className="text-[#5B5FEF] group-hover:underline">Tap to Zoom & Pan →</span>
+                {/* View Options: Front, Back, Sleeve, Crest pills matching Reference Image 1 */}
+                <div className="pt-3 border-t border-slate-100 flex flex-wrap items-center gap-2">
+                  {(['Front', 'Back', 'Sleeve', 'Crest'] as const).map((viewName) => (
+                    <button
+                      key={viewName}
+                      type="button"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setSelectedPreviewCard(card);
+                      }}
+                      className="px-3 py-1 rounded-lg bg-white/90 border border-slate-200/80 hover:border-[#7138F5]/50 text-[11px] font-bold text-slate-700 hover:text-[#7138F5] shadow-2xs transition-colors cursor-pointer"
+                    >
+                      {viewName}
+                    </button>
+                  ))}
                 </div>
               </div>
             </motion.div>
