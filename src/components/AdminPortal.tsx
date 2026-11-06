@@ -5,6 +5,7 @@ import { getRegistrationList } from '../services/admin';
 import { resolveStudentPhotoUrl } from '../services/storage';
 import { calculateRegistrationOpenState, setManualRegistrationOverride } from '../lib/superAdminConfig';
 import { generateRegistrationListPDF, generateInvitationCardPDF } from '../utils/pdfGenerator';
+import { getRegistrationEditMetadata, setRegistrationIndividualEditLock } from '../services/registrationEditing';
 import {
   X, Lock, LogIn, LogOut, Check, XCircle,
   Trash2, Download, Search, RefreshCw, AlertCircle,
@@ -140,6 +141,8 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
   const [approvingRegNo, setApprovingRegNo] = useState<string | null>(null);
   const [hidingRegNo, setHidingRegNo] = useState<string | null>(null);
   const [actionMessage, setActionMessage] = useState<{ text: string; type: 'success' | 'error' } | null>(null);
+  const [editMetadata, setEditMetadata] = useState<any[]>([]);
+  const [isLoadingEditMetadata, setIsLoadingEditMetadata] = useState(false);
 
   // Expanded details drawer/modal
   const [selectedRecord, setSelectedRecord] = useState<InvitationRecord | null>(null);
@@ -217,6 +220,8 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
         return;
       }
       setAdmin(profile);
+      setIsLoadingEditMetadata(true);
+      void getRegistrationEditMetadata(passcode).then(setEditMetadata).catch((e:any)=>setActionMessage({text:e?.message||'Unable to load edit metadata.',type:'error'})).finally(()=>setIsLoadingEditMetadata(false));
       setPasscode('');
     } catch (err: any) {
       setLoginError(err?.message || 'Invalid Admin Passcode');
@@ -995,6 +1000,23 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
             </div>
           </div>
         </div>
+      )}
+
+      {admin?.role === 'male_admin' && (
+        <section className="mx-4 mb-4 rounded-2xl border border-indigo-200 bg-white/90 p-4 shadow-sm">
+          <div className="flex flex-wrap items-center justify-between gap-3">
+            <div><h3 className="text-sm font-extrabold text-slate-900">Registration Edit Metadata</h3><p className="text-[11px] text-slate-500">Latest edit only · no previous values are stored</p></div>
+            <button type="button" onClick={async()=>{setIsLoadingEditMetadata(true);try{setEditMetadata(await getRegistrationEditMetadata(passcode));}catch(e:any){setActionMessage({text:e?.message||'Unable to refresh edit metadata.',type:'error'});}finally{setIsLoadingEditMetadata(false);}}} className="rounded-lg border border-indigo-300 px-3 py-2 text-xs font-bold text-indigo-700">Refresh</button>
+          </div>
+          {isLoadingEditMetadata ? <p className="py-4 text-xs text-slate-500">Loading latest edit data…</p> : (
+            <div className="mt-3 max-h-64 overflow-auto">
+              <table className="w-full text-left text-[11px]"><thead className="sticky top-0 bg-slate-50 text-slate-500"><tr><th className="p-2">Reg No</th><th className="p-2">Edits</th><th className="p-2">Last Edited</th><th className="p-2">Lock</th></tr></thead><tbody>
+                {editMetadata.map((row:any)=><tr key={row.registration_no} className="border-t border-slate-100"><td className="p-2 font-mono font-bold text-slate-800">{row.registration_no}</td><td className="p-2">{row.edit_count}/5</td><td className="p-2">{row.last_edited_at?new Date(row.last_edited_at).toLocaleString():'—'}</td><td className="p-2"><button type="button" onClick={async()=>{const locked=!row.edit_locked;const result=await setRegistrationIndividualEditLock(passcode,row.registration_no,locked);if(!result.success)throw new Error(result.errorMessage||'Lock update failed');setEditMetadata(prev=>prev.map(x=>x.registration_no===row.registration_no?{...x,edit_locked:locked}:x));}} className={`rounded-lg border px-2 py-1 font-bold ${row.edit_locked?'border-rose-200 text-rose-700':'border-emerald-200 text-emerald-700'}`}><Lock className="mr-1 inline h-3 w-3"/>{row.edit_locked?'Unlock':'Lock'}</button></td></tr>)}
+              </tbody></table>
+              {!editMetadata.length && <p className="py-4 text-xs text-slate-500">No registrations found.</p>}
+            </div>
+          )}
+        </section>
       )}
 
       {/* ---------------------------------------------------------------------- */}
