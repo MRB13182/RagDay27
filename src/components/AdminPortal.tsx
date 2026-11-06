@@ -131,7 +131,7 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
   const [registrationLoadError, setRegistrationLoadError] = useState('');
 
   // Filters & Search
-  const [statusFilter, setStatusFilter] = useState<'all' | InvitationStatus>('all');
+  const [statusFilter, setStatusFilter] = useState<'all' | InvitationStatus | 'updated'>('all');
   const [searchTerm, setSearchTerm] = useState('');
 
   // Modals & In-flight actions
@@ -259,7 +259,7 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
   const filteredRegistrations = useMemo(() => {
     return adminRegistrations.filter(r => {
       // Status filter
-      if (statusFilter !== 'all' && r.status !== statusFilter) {
+      if (statusFilter === 'updated' ? !((editMetadata.find(item => item.registration_no === r.registration_no)?.edit_count || 0) > 0) : statusFilter !== 'all' && r.status !== statusFilter) {
         return false;
       }
       // Search query (Reg No, Full Name, Student ID, Roll, Contact No, Txn ID, Jersey Name)
@@ -276,7 +276,7 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
       }
       return true;
     });
-  }, [adminRegistrations, statusFilter, searchTerm]);
+  }, [adminRegistrations, statusFilter, searchTerm, editMetadata]);
 
   // Statistics
   const stats = useMemo(() => {
@@ -633,9 +633,9 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
         {/* 3. CONTROLS: STATUS FILTERS & SEARCH */}
         <div className="px-5 py-3 border-b border-slate-200/80 bg-white/60 backdrop-blur-md flex flex-wrap items-center justify-between gap-3 shrink-0">
           <div className="flex items-center gap-1.5 overflow-x-auto p-1 rounded-2xl glass-surface-subtle">
-            {(['all', 'pending', 'approved', 'rejected'] as const).map(tab => {
+            {(['all', 'pending', 'approved', 'rejected', 'updated'] as const).map(tab => {
               const active = statusFilter === tab;
-              const count = tab === 'all' ? stats.total : stats[tab];
+              const count = tab === 'all' ? stats.total : tab === 'updated' ? editMetadata.filter(row => Number(row.edit_count) > 0 && adminRegistrations.some(r => r.registration_no === row.registration_no)).length : stats[tab];
               return (
                 <button
                   key={tab}
@@ -646,7 +646,7 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
                       : 'text-slate-600 hover:text-slate-900 hover:bg-white/60'
                   }`}
                 >
-                  <span>{tab}</span>
+                  <span>{tab === 'updated' ? 'Update' : tab}</span>
                   <span className={`px-1.5 py-0.2 rounded-full text-[10px] font-mono ${active ? 'bg-white/25 text-white' : 'bg-white/65 backdrop-blur-md border border-white/80 text-slate-700'}`}>
                     {count}
                   </span>
@@ -697,7 +697,7 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
           ) : filteredRegistrations.length === 0 ? (
             <div className="h-64 flex flex-col items-center justify-center gap-2 text-slate-400">
               <User className="w-8 h-8 text-slate-300" />
-              <span className="text-xs font-semibold">No {statusFilter !== 'all' ? statusFilter : ''} registrations found.</span>
+              <span className="text-xs font-semibold">No {statusFilter === 'updated' ? 'updated' : statusFilter !== 'all' ? statusFilter : ''} registrations found.</span>
               {searchTerm && <span className="text-[11px] text-slate-400">Try clearing your search query.</span>}
             </div>
           ) : (
@@ -1000,23 +1000,6 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
             </div>
           </div>
         </div>
-      )}
-
-      {admin?.role === 'male_admin' && (
-        <section className="mx-4 mb-4 rounded-2xl border border-indigo-200 bg-white/90 p-4 shadow-sm">
-          <div className="flex flex-wrap items-center justify-between gap-3">
-            <div><h3 className="text-sm font-extrabold text-slate-900">Registration Edit Metadata</h3><p className="text-[11px] text-slate-500">Latest edit only · no previous values are stored</p></div>
-            <button type="button" onClick={async()=>{setIsLoadingEditMetadata(true);try{setEditMetadata(await getRegistrationEditMetadata(getStoredAdminPasscode() || ''));}catch(e:any){setActionMessage({text:e?.message||'Unable to refresh edit metadata.',type:'error'});}finally{setIsLoadingEditMetadata(false);}}} className="rounded-lg border border-indigo-300 px-3 py-2 text-xs font-bold text-indigo-700">Refresh</button>
-          </div>
-          {isLoadingEditMetadata ? <p className="py-4 text-xs text-slate-500">Loading latest edit data…</p> : (
-            <div className="mt-3 max-h-64 overflow-auto">
-              <table className="w-full text-left text-[11px]"><thead className="sticky top-0 bg-slate-50 text-slate-500"><tr><th className="p-2">Reg No</th><th className="p-2">Edits</th><th className="p-2">Last Edited</th><th className="p-2">Lock</th></tr></thead><tbody>
-                {editMetadata.map((row:any)=><tr key={row.registration_no} className="border-t border-slate-100"><td className="p-2 font-mono font-bold text-slate-800">{row.registration_no}</td><td className="p-2">{row.edit_count}/5</td><td className="p-2">{row.last_edited_at?new Date(row.last_edited_at).toLocaleString():'—'}</td><td className="p-2"><button type="button" onClick={async()=>{const locked=!row.edit_locked;try{const result=await setRegistrationIndividualEditLock(getStoredAdminPasscode() || '',row.registration_no,locked);if(!result.success)throw new Error(result.errorMessage||'Lock update failed');setEditMetadata(prev=>prev.map(x=>x.registration_no===row.registration_no?{...x,edit_locked:locked}:x));setActionMessage({text:locked?'Individual editing locked.':'Individual editing unlocked.',type:'success'});}catch(error:any){setActionMessage({text:error?.message||'Lock update failed.',type:'error'});}}} className={`rounded-lg border px-2 py-1 font-bold ${row.edit_locked?'border-rose-200 text-rose-700':'border-emerald-200 text-emerald-700'}`}><Lock className="mr-1 inline h-3 w-3"/>{row.edit_locked?'Unlock':'Lock'}</button></td></tr>)}
-              </tbody></table>
-              {!editMetadata.length && <p className="py-4 text-xs text-slate-500">No registrations found.</p>}
-            </div>
-          )}
-        </section>
       )}
 
       {/* ---------------------------------------------------------------------- */}
