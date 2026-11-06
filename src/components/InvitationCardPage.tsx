@@ -339,8 +339,6 @@ export const InvitationCardPage: React.FC<InvitationCardPageProps> = ({
                   <strong>Verification in Progress:</strong> Your payment and student records are currently pending authorization by the Rag Day 27 Admin committee. Once approved, your invitation card and official entry pass download will appear here automatically.
                 </div>
               </div>
-              {/* SINGLE EDIT REGISTRATION SECTION */}
-
             </div>
           )}
 
@@ -534,8 +532,6 @@ export const InvitationCardPage: React.FC<InvitationCardPageProps> = ({
                   pdfSettings={pdfSettings}
                 />
               </div>
-
-              {/* SINGLE EDIT REGISTRATION SECTION (BELOW INVITATION CARD) */}
 
               {/* Off-screen fixed 1024px landscape card used for generating pristine high-res PNG pass */}
               <div
