@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { InvitationRecord, PdfSettings, WebsiteSettings } from '../types';
+import { InvitationRecord, PdfSettings, WebsiteSettings, JerseySize } from '../types';
 import {
   Search,
   CheckCircle2,
@@ -21,6 +21,19 @@ import {
 import { toPng } from 'html-to-image';
 import { getPublicInvitation, getRejectedRegistrationForResubmission } from '../services';
 import { InvitationCard } from './InvitationCard';
+import { verifyRegistrationForEdit, saveRegistrationEdit, getEditPolicy } from '../services/registrationEditing';
+import { JerseyGraphic } from './JerseyGraphic';
+import { Pencil, Save, X } from 'lucide-react';
+import { uploadStudentPhoto, resolveStudentPhotoUrl } from '../services/storage';
+
+type EditForm = {
+  full_name: string; class_roll: string; student_id: string; contact_mobile_number: string;
+  academic_group: string; academic_section: string; student_photo: string | null;
+  send_method: 'bkash' | 'nagad'; sender_mobile_no: string; payment_time: string;
+  transaction_id: string; jersey_back_name: string; jersey_number: string; jersey_size: JerseySize;
+};
+const editSizes: JerseySize[] = ['S', 'M', 'L', 'XL', '2XL', '3XL', '4XL'];
+
 
 interface InvitationCardPageProps {
   invitations: InvitationRecord[];
@@ -29,6 +42,7 @@ interface InvitationCardPageProps {
   onNavigateToRegister: (record?: InvitationRecord) => void;
   pdfSettings: PdfSettings;
   websiteSettings: WebsiteSettings;
+  registrationOpen: boolean;
 }
 
 export const InvitationCardPage: React.FC<InvitationCardPageProps> = ({
@@ -37,6 +51,7 @@ export const InvitationCardPage: React.FC<InvitationCardPageProps> = ({
   onNavigateToRegister,
   pdfSettings,
   websiteSettings,
+  registrationOpen,
 }) => {
   const [searchRegNo, setSearchRegNo] = useState(initialSearchRegNo);
   const [searchStudentName, setSearchStudentName] = useState(initialSearchStudentName);
@@ -51,6 +66,28 @@ export const InvitationCardPage: React.FC<InvitationCardPageProps> = ({
   const [recoveryError, setRecoveryError] = useState<string | null>(null);
   const [showRecoveryDialog, setShowRecoveryDialog] = useState(false);
   const [recoveryStudentId, setRecoveryStudentId] = useState('');
+  const [editState, setEditState] = useState<any>(null);
+  const [editForm, setEditForm] = useState<EditForm | null>(null);
+  const [editOpen, setEditOpen] = useState(false);
+  const [editLoading, setEditLoading] = useState(false);
+  const [editSaving, setEditSaving] = useState(false);
+  const [editPhotoUploading, setEditPhotoUploading] = useState(false);
+  const [editPhotoError, setEditPhotoError] = useState<string | null>(null);
+  const [editMessage, setEditMessage] = useState<string | null>(null);
+  const [editError, setEditError] = useState<string | null>(null);
+  const [editPolicy, setEditPolicy] = useState<{deadline:string;can_edit:boolean}|null>(null);
+
+  useEffect(() => {
+    let active = true;
+    if (!matchedRecord || matchedRecord.status === 'rejected') {
+      setEditPolicy(null);
+      return;
+    }
+    getEditPolicy()
+      .then(policy => { if (active) setEditPolicy(policy); })
+      .catch(() => { if (active) setEditPolicy(null); });
+    return () => { active = false; };
+  }, [matchedRecord?.registration_no, matchedRecord?.updated_at, matchedRecord?.status]);
 
   const exportCardRef = useRef<HTMLDivElement>(null);
   const displayCardRef = useRef<HTMLDivElement>(null);
@@ -102,6 +139,81 @@ export const InvitationCardPage: React.FC<InvitationCardPageProps> = ({
     } finally {
       setIsSearching(false);
     }
+  };
+
+
+  const handleStartEdit = async () => {
+    if (!matchedRecord || !registrationOpen) return;
+    setEditError(null); setEditMessage(null); setEditLoading(true);
+    try {
+      const policy = await getEditPolicy();
+      setEditPolicy(policy);
+      if (!registrationOpen) { setEditError('Registration is closed. Editing is unavailable.'); return; }
+      if (!policy.can_edit) { setEditError('The editing deadline has passed.'); return; }
+      const verified = await verifyRegistrationForEdit(matchedRecord.registration_no, searchStudentName);
+      if (!verified.success || !verified.data) throw new Error(verified.errorMessage || 'Unable to verify registration for editing.');
+      setEditState(verified.data);
+      const r = verified.data.record;
+      setEditForm({
+        full_name: r.full_name || '', class_roll: r.class_roll || '', student_id: r.student_id || '',
+        contact_mobile_number: r.contact_mobile_number || '', academic_group: r.academic_group || '',
+        academic_section: r.academic_section || '', student_photo: r.student_photo || null,
+        send_method: r.send_method || 'bkash', sender_mobile_no: r.sender_mobile_no || '',
+        payment_time: r.payment_time || '', transaction_id: r.transaction_id || '',
+        jersey_back_name: r.jersey_back_name || '', jersey_number: r.jersey_number || '',
+        jersey_size: (r.jersey_size as JerseySize) || 'L'
+      });
+      setEditOpen(true);
+    } catch (e: any) { setEditError(e?.message || 'Unable to start editing.'); }
+    finally { setEditLoading(false); }
+  };
+
+  const handleSelectEditPhoto = async (file?: File) => {
+    if (!file || !matchedRecord || !editForm) return;
+    setEditPhotoError(null);
+    if (!file.type.startsWith('image/')) {
+      setEditPhotoError('Please select an image file.');
+      return;
+    }
+    if (file.size > 3 * 1024 * 1024) {
+      setEditPhotoError('Photo size must be 3 MB or less.');
+      return;
+    }
+    setEditPhotoUploading(true);
+    try {
+      const uploaded = await uploadStudentPhoto(file, matchedRecord.class_roll || matchedRecord.student_id);
+      if (!uploaded.success || !uploaded.storagePath) throw new Error(uploaded.errorMessage || 'Student photo upload failed.');
+      setEditForm(prev => prev ? { ...prev, student_photo: uploaded.storagePath } : prev);
+    } catch (error: any) {
+      setEditPhotoError(error?.message || 'Student photo upload failed.');
+    } finally {
+      setEditPhotoUploading(false);
+    }
+  };
+
+  const handleSaveEdit = async () => {
+    if (!matchedRecord || !editForm) return;
+    setEditError(null); setEditMessage(null);
+    const jerseyNo = String(editForm.jersey_number || '').trim();
+    if (!/^\d{1,3}$/.test(jerseyNo)) { setEditError('Jersey Number must contain 1–3 digits (e.g. 7 or 007).'); return; }
+    if (!editForm.full_name.trim() || !editForm.class_roll.trim() || !editForm.student_id.trim()) { setEditError('Complete all required personal information fields.'); return; }
+    const contactMobile = editForm.contact_mobile_number.trim();
+    const senderMobile = editForm.sender_mobile_no.trim();
+    if (!/^\d{11}$/.test(contactMobile) || !/^\d{11}$/.test(senderMobile)) { setEditError('Both mobile numbers must contain exactly 11 digits.'); return; }
+    setEditSaving(true);
+    try {
+      const saved = await saveRegistrationEdit({
+        ...editForm,
+        jersey_number: jerseyNo,
+      });
+      if (!saved.success || !saved.data) throw new Error(saved.errorMessage || 'Unable to save changes.');
+      // Database response is authoritative; refresh card state and latest edit metadata.
+      setMatchedRecord(saved.data);
+      setSearchStudentName(saved.data.full_name);
+      setEditOpen(false); setEditState(null); setEditForm(null);
+      setEditMessage('Your registration was updated successfully. Latest information is now shown below.');
+    } catch (e: any) { setEditError(e?.message || 'Unable to save changes.'); }
+    finally { setEditSaving(false); }
   };
 
   /**
@@ -179,6 +291,258 @@ export const InvitationCardPage: React.FC<InvitationCardPageProps> = ({
     } finally {
       setIsDownloading(false);
     }
+  };
+
+  const renderEditSection = () => {
+    if (!matchedRecord || matchedRecord.status === 'rejected') return null;
+
+    if (!registrationOpen) {
+      return (
+        <div role="status" className="rounded-2xl border border-slate-200/90 bg-white/80 backdrop-blur-md p-4 text-xs font-semibold text-slate-600 text-center shadow-xs">
+          Registration is closed. Editing is unavailable.
+        </div>
+      );
+    }
+
+    if (matchedRecord.edit_locked) {
+      return (
+        <div role="status" className="rounded-2xl border border-amber-200/90 bg-amber-50/90 backdrop-blur-md p-4 text-xs font-semibold text-amber-800 text-center shadow-xs">
+          Your registration has been locked by an administrator and cannot be edited.
+        </div>
+      );
+    }
+
+    if ((matchedRecord.edit_count || 0) >= 5) {
+      return (
+        <div role="status" className="rounded-2xl border border-amber-200/90 bg-amber-50/90 backdrop-blur-md p-4 text-xs font-semibold text-amber-800 text-center shadow-xs">
+          You have reached the maximum limit of 5 edits. No further changes can be made.
+        </div>
+      );
+    }
+
+    if (editPolicy && !editPolicy.can_edit) {
+      return (
+        <div role="status" className="rounded-2xl border border-amber-200/90 bg-amber-50/90 backdrop-blur-md p-4 text-xs font-semibold text-amber-800 text-center shadow-xs">
+          Registration editing deadline has passed. Editing is now closed.
+        </div>
+      );
+    }
+
+    return (
+      <div className="space-y-4 pt-2">
+        {editMessage && (
+          <div role="status" className="rounded-xl border border-emerald-200 bg-emerald-50 p-3 text-xs font-semibold text-emerald-800 animate-fadeIn">
+            {editMessage}
+          </div>
+        )}
+        {editError && (
+          <div role="alert" className="rounded-xl border border-rose-200 bg-rose-50 p-3 text-xs font-semibold text-rose-700 animate-fadeIn">
+            {editError}
+          </div>
+        )}
+
+        {!editOpen ? (
+          <div className="flex flex-col sm:flex-row items-center justify-between gap-3 p-4 sm:p-5 rounded-2xl glass-card border border-indigo-200/80 shadow-xs">
+            <div className="text-xs text-slate-600">
+              <strong className="block text-slate-900 text-sm font-bold">Need to correct your registration?</strong>
+              <span>
+                {editState
+                  ? `${editState.edit_count}/5 successful edits used`
+                  : `${matchedRecord.edit_count || 0}/5 edits used. You can update your details without admin approval.`}
+              </span>
+            </div>
+            <button
+              type="button"
+              onClick={handleStartEdit}
+              disabled={editLoading}
+              className="w-full sm:w-auto inline-flex items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-indigo-600 to-indigo-700 px-5 py-2.5 text-xs font-bold text-white shadow-md hover:brightness-105 active:scale-95 transition-all disabled:opacity-60 cursor-pointer"
+            >
+              <Pencil className="w-4 h-4" />
+              <span>{editLoading ? 'Verifying…' : 'Edit Registration'}</span>
+            </button>
+          </div>
+        ) : editForm ? (
+          <section className="rounded-3xl border border-indigo-200 bg-white/95 p-5 sm:p-6 shadow-xl space-y-5 animate-fadeIn">
+            <header className="flex items-center justify-between gap-3 pb-3 border-b border-slate-100">
+              <div>
+                <span className="text-[10px] font-bold uppercase tracking-wider text-indigo-500">Self-Service Update</span>
+                <h3 className="text-lg font-black text-slate-900">Edit Registration Details</h3>
+                <p className="text-xs text-slate-500">
+                  {editState?.edit_count ?? (matchedRecord.edit_count || 0)}/5 successful edits used
+                </p>
+              </div>
+              <button
+                type="button"
+                onClick={() => { setEditOpen(false); setEditError(null); }}
+                className="rounded-xl p-2 text-slate-400 hover:text-slate-700 hover:bg-slate-100 transition-colors cursor-pointer"
+                aria-label="Close edit form"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </header>
+
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
+              <div className="rounded-2xl bg-slate-50/80 p-4 space-y-2 border border-slate-200/70">
+                <h4 className="text-xs font-extrabold uppercase tracking-wide text-slate-700 mb-2">Current Information</h4>
+                {([
+                  ['Full Name', matchedRecord.full_name],
+                  ['Class Roll', matchedRecord.class_roll],
+                  ['Student ID', matchedRecord.student_id],
+                  ['Contact Mobile', matchedRecord.contact_mobile_number],
+                  ['Academic Group', matchedRecord.academic_group],
+                  ['Section', matchedRecord.academic_section],
+                  ['Payment Method', matchedRecord.send_method],
+                  ['Payment Sender', matchedRecord.sender_mobile_no],
+                  ['Payment Time', matchedRecord.payment_time],
+                  ['Transaction ID', matchedRecord.transaction_id],
+                  ['Jersey Name', matchedRecord.jersey_back_name],
+                  ['Jersey Number', `#${matchedRecord.jersey_number}`],
+                  ['Jersey Size', matchedRecord.jersey_size],
+                ] as const).map(([k, v]) => (
+                  <div key={k} className="flex justify-between gap-2 border-b border-slate-200/60 py-1.5 text-xs">
+                    <span className="text-slate-500">{k}</span>
+                    <strong className="text-slate-800 text-right">{v || '—'}</strong>
+                  </div>
+                ))}
+              </div>
+
+              <div className="space-y-3">
+                {([
+                  ['full_name', 'Full Name'],
+                  ['class_roll', 'Class Roll'],
+                  ['student_id', 'Student ID'],
+                  ['contact_mobile_number', 'Contact Mobile Number (11 Digits)'],
+                  ['academic_group', 'Academic Group'],
+                  ['academic_section', 'Section'],
+                  ['sender_mobile_no', 'Payment Sender Mobile (11 Digits)'],
+                  ['payment_time', 'Payment Time'],
+                  ['transaction_id', 'Transaction ID'],
+                  ['jersey_back_name', 'Jersey Back Name (Max 14 Chars)'],
+                  ['jersey_number', 'Jersey Number (1–3 Digits, e.g. 7 or 007)'],
+                ] as const).map(([key, label]) => (
+                  <label key={key} className="block text-xs font-bold text-slate-700">
+                    {label}
+                    <input
+                      value={(editForm as any)[key] || ''}
+                      maxLength={key === 'jersey_number' ? 3 : key === 'jersey_back_name' ? 14 : 120}
+                      inputMode={key === 'jersey_number' || key.includes('mobile') ? 'numeric' : undefined}
+                      onChange={e => setEditForm(prev => prev ? ({
+                        ...prev,
+                        [key]: key === 'jersey_back_name' ? e.target.value.toUpperCase() : e.target.value
+                      }) : prev)}
+                      className="mt-1 w-full rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-sm text-slate-900 outline-none focus:border-indigo-400 focus:ring-2 focus:ring-indigo-100 transition-all"
+                    />
+                  </label>
+                ))}
+
+                <div className="rounded-xl border border-slate-200 p-3 space-y-2 bg-slate-50/50">
+                  <div className="text-xs font-bold text-slate-700">
+                    Student Photo <span className="font-normal text-slate-400">(optional)</span>
+                  </div>
+                  <div className="flex items-center gap-3">
+                    {editForm.student_photo ? (
+                      <img
+                        src={resolveStudentPhotoUrl(editForm.student_photo) || ''}
+                        alt="Student photo preview"
+                        className="h-16 w-16 rounded-xl border border-slate-200 object-cover shadow-2xs"
+                      />
+                    ) : (
+                      <div className="h-16 w-16 rounded-xl bg-slate-200 text-[10px] text-slate-400 font-bold flex items-center justify-center">
+                        No Photo
+                      </div>
+                    )}
+                    <div className="flex-1 space-y-2">
+                      <input
+                        type="file"
+                        accept="image/*"
+                        disabled={editPhotoUploading || editSaving}
+                        onChange={e => { void handleSelectEditPhoto(e.target.files?.[0]); e.currentTarget.value = ''; }}
+                        className="block w-full text-[11px] text-slate-600 file:mr-2 file:rounded-lg file:border-0 file:bg-indigo-50 file:px-3 file:py-2 file:text-[11px] file:font-bold file:text-indigo-700 cursor-pointer"
+                      />
+                      {editForm.student_photo && (
+                        <button
+                          type="button"
+                          onClick={() => setEditForm(p => p ? ({ ...p, student_photo: null }) : p)}
+                          className="text-[11px] font-bold text-rose-600 hover:underline cursor-pointer"
+                        >
+                          Remove photo
+                        </button>
+                      )}
+                    </div>
+                  </div>
+                  {editPhotoUploading && <p className="text-[11px] text-indigo-600 font-medium">Uploading photo…</p>}
+                  {editPhotoError && <p role="alert" className="text-[11px] font-semibold text-rose-600">{editPhotoError}</p>}
+                </div>
+
+                <label className="block text-xs font-bold text-slate-700">
+                  Payment Send Method
+                  <select
+                    value={editForm.send_method}
+                    onChange={e => setEditForm(p => p ? ({ ...p, send_method: e.target.value as any }) : p)}
+                    className="mt-1 w-full rounded-xl border border-slate-200 px-3 py-2.5 text-sm bg-white outline-none focus:border-indigo-400"
+                  >
+                    <option value="bkash">bKash</option>
+                    <option value="nagad">Nagad</option>
+                  </select>
+                </label>
+
+                <div className="block text-xs font-bold text-slate-700">
+                  Jersey Size
+                  <div className="mt-2 flex flex-wrap gap-2">
+                    {editSizes.map(sz => (
+                      <button
+                        key={sz}
+                        type="button"
+                        onClick={() => setEditForm(p => p ? ({ ...p, jersey_size: sz }) : p)}
+                        className={`rounded-lg border px-3 py-2 text-xs font-bold transition-all cursor-pointer ${
+                          editForm.jersey_size === sz
+                            ? 'border-indigo-600 bg-indigo-600 text-white shadow-xs'
+                            : 'border-slate-200 bg-white text-slate-700 hover:border-slate-300'
+                        }`}
+                      >
+                        {sz}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div className="rounded-2xl bg-indigo-50/80 border border-indigo-100 p-4 flex flex-col sm:flex-row items-center gap-4">
+              <JerseyGraphic name={editForm.jersey_back_name} number={editForm.jersey_number} gender={matchedRecord.gender} className="w-40 h-44 shrink-0" />
+              <div className="text-xs text-indigo-900">
+                <strong className="block text-sm font-extrabold text-indigo-950">Live Squad Kit Preview</strong>
+                <p className="mt-0.5 text-indigo-700">
+                  Name: <span className="font-bold">{editForm.jersey_back_name || '—'}</span> · Number: <span className="font-mono font-bold">#{editForm.jersey_number || '—'}</span> · Size: <span className="font-bold">{editForm.jersey_size}</span>
+                </p>
+                <p className="mt-1 text-[11px] text-indigo-600">
+                  Leading zeros are preserved on your official entry pass (e.g. 007).
+                </p>
+              </div>
+            </div>
+
+            <div className="flex flex-col sm:flex-row justify-end gap-2 pt-2 border-t border-slate-100">
+              <button
+                type="button"
+                onClick={() => { setEditOpen(false); setEditForm(null); }}
+                className="rounded-xl border border-slate-300 px-4 py-3 text-xs font-bold text-slate-700 hover:bg-slate-50 cursor-pointer"
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                disabled={editSaving || editPhotoUploading}
+                onClick={handleSaveEdit}
+                className="inline-flex items-center justify-center gap-2 rounded-xl bg-indigo-600 px-6 py-3 text-xs font-bold text-white shadow-md hover:bg-indigo-700 active:scale-95 disabled:opacity-60 transition-all cursor-pointer"
+              >
+                <Save className="w-4 h-4" />
+                <span>{editSaving ? 'Saving Changes…' : 'Save Changes'}</span>
+              </button>
+            </div>
+          </section>
+        ) : null}
+      </div>
+    );
   };
 
   return (
@@ -343,6 +707,9 @@ export const InvitationCardPage: React.FC<InvitationCardPageProps> = ({
                   <strong>Verification in Progress:</strong> Your payment and student records are currently pending authorization by the Rag Day 27 Admin committee. Once approved, your invitation card and official entry pass download will appear here automatically.
                 </div>
               </div>
+              {/* SINGLE EDIT REGISTRATION SECTION */}
+              {renderEditSection()}
+
             </div>
           )}
 
@@ -536,6 +903,9 @@ export const InvitationCardPage: React.FC<InvitationCardPageProps> = ({
                   pdfSettings={pdfSettings}
                 />
               </div>
+
+              {/* SINGLE EDIT REGISTRATION SECTION (BELOW INVITATION CARD) */}
+              {renderEditSection()}
 
               {/* Off-screen fixed 1024px landscape card used for generating pristine high-res PNG pass */}
               <div

@@ -22,7 +22,7 @@ export const JerseyGraphic: React.FC<JerseyGraphicProps> = ({
   const displayName = (name && name.trim() ? name.trim() : isFemale ? 'LILY' : 'HUNTER')
     .toUpperCase()
     .slice(0, 14);
-  const displayNumber = (number && number.trim() ? number.trim() : '27').slice(0, 3);
+  const displayNumber = (number !== undefined && number !== null && number.trim() !== '' ? number.trim() : '27').slice(0, 3);
 
   // Dynamic font sizing for long names
   const nameFontSize =

@@ -537,8 +537,8 @@ export const RegistrationForm: React.FC<RegistrationFormProps> = ({
     const jerseyNumStr = formData.jersey_number.trim();
     if (!jerseyNumStr) {
       errors.jersey_number = 'Jersey number is required.';
-    } else if (!/^\d{1,3}$/.test(jerseyNumStr) || Number(jerseyNumStr) < 0 || Number(jerseyNumStr) > 999) {
-      errors.jersey_number = 'Enter a whole jersey number from 0 to 999.';
+    } else if (!/^\d{1,3}$/.test(jerseyNumStr)) {
+      errors.jersey_number = 'Jersey number must be 1 to 3 digits only (0–999).';
     }
 
     // Declaration Checkbox Validation
@@ -1390,7 +1390,7 @@ export const RegistrationForm: React.FC<RegistrationFormProps> = ({
                       className="w-full max-w-[280px] h-[300px]"
                     />
                     <div className="mt-2 text-center text-xs opacity-75 font-mono">
-                      {formData.jersey_back_name || 'YOUR NAME'} · #{formData.jersey_number || '27'} · Size: {formData.jersey_size}
+                      {formData.jersey_back_name || 'YOUR NAME'} · #{formData.jersey_number !== '' ? formData.jersey_number : '27'} · Size: {formData.jersey_size}
                     </div>
                   </div>
 
@@ -1445,33 +1445,48 @@ export const RegistrationForm: React.FC<RegistrationFormProps> = ({
                           maxLength={3}
                           required
                           placeholder="27"
-                          aria-label="Jersey number, 0 to 999"
+                          aria-label="Jersey number, 1 to 3 digits (0 to 999)"
                           value={formData.jersey_number}
                           onKeyDown={handleNumericKeyDown}
                           onPaste={e => {
                             e.preventDefault();
                             const pasted = e.clipboardData.getData('text');
-                            if (pasted.length < 1 || pasted.length > 3 || !/^\d{1,3}$/.test(pasted) || Number(pasted) > 999) {
-                              setFormErrors(prev => ({ ...prev, jersey_number: 'Enter a whole jersey number from 0 to 999.' }));
+                            const clean = pasted.replace(/\D/g, '').slice(0, 3);
+                            if (!clean || !/^\d{1,3}$/.test(clean)) {
+                              setFormErrors(prev => ({ ...prev, jersey_number: 'Enter 1 to 3 digits only (0–999).' }));
                               return;
                             }
-                            setFormData(prev => ({ ...prev, jersey_number: pasted }));
+                            setFormData(prev => ({ ...prev, jersey_number: clean }));
                             if (formErrors.jersey_number) setFormErrors(prev => ({ ...prev, jersey_number: '' }));
                           }}
                           onChange={e => {
-                            const val = e.target.value;
-                            setFormData(prev => ({ ...prev, jersey_number: val }));
-                            if (/^\d{1,3}$/.test(val) && Number(val) <= 999) {
+                            const raw = e.target.value;
+                            // Strictly allow digits only (0-9) and max 3 characters
+                            const clean = raw.replace(/\D/g, '').slice(0, 3);
+                            setFormData(prev => ({ ...prev, jersey_number: clean }));
+                            if (clean === '' || /^\d{1,3}$/.test(clean)) {
                               if (formErrors.jersey_number) setFormErrors(prev => ({ ...prev, jersey_number: '' }));
                             } else {
-                              setFormErrors(prev => ({ ...prev, jersey_number: 'Enter a whole jersey number from 0 to 999.' }));
+                              setFormErrors(prev => ({ ...prev, jersey_number: 'Enter 1 to 3 digits only (0–999).' }));
+                            }
+                          }}
+                          onBlur={() => {
+                            const trimmed = formData.jersey_number.trim();
+                            if (!trimmed) {
+                              setFormErrors(prev => ({ ...prev, jersey_number: 'Jersey number is required (1 to 3 digits).' }));
+                            } else if (!/^\d{1,3}$/.test(trimmed)) {
+                              setFormErrors(prev => ({ ...prev, jersey_number: 'Enter 1 to 3 digits only (0–999).' }));
+                            } else if (formErrors.jersey_number) {
+                              setFormErrors(prev => ({ ...prev, jersey_number: '' }));
                             }
                           }}
                           className={`jersey-number-input min-w-0 flex-1 w-full px-4 py-3 rounded-xl text-sm font-mono font-black transition-colors outline-none text-center ${inputClasses}`}
                           aria-invalid={Boolean(formErrors.jersey_number)}
                         />
                         </div>
-                        <p className={`text-[10px] mt-1 ${'text-cyan-200/75'}`}>Number: 0–999 · Leading zeros are preserved</p>
+                        <p className={`text-[10px] mt-1 ${'text-cyan-200/75'}`}>
+                          1 to 3 digits (0–999) · e.g. 5, 05, 005, 10, 99, 100 · Leading zeros preserved
+                        </p>
                         {formErrors.jersey_number && (
                           <p className="text-rose-500 text-xs mt-1 font-semibold">{formErrors.jersey_number}</p>
                         )}

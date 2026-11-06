@@ -38,6 +38,10 @@ export function mapRowToInvitation(row: any): InvitationRecord {
     hidden_from_web: row?.hidden_from_web ?? false,
     hidden_by: toNullableUuid(row?.hidden_by),
     hidden_at: row?.hidden_at ?? null,
+    edit_count: Number(row?.edit_count || 0),
+    edit_locked: Boolean(row?.edit_locked),
+    last_edited_at: row?.last_edited_at ?? null,
+    last_edit_source: row?.last_edit_source ?? null,
   };
 }
 
