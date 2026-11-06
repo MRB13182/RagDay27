@@ -18,7 +18,7 @@ const reply = (body: unknown, status = 200, origin: string | null = null, extra:
     ...corsForOrigin(origin), "Content-Type":"application/json", "Cache-Control":"no-store",
     "Pragma":"no-cache", ...extra
   }});
-const fail = (message: string, status=400) => reply({success:false,message},status);
+const fail = (message: string, status=400, origin: string | null = null) => reply({success:false,message},status,origin);
 const hash = async (value:string) => {
   const digest = await crypto.subtle.digest("SHA-256",new TextEncoder().encode(value));
   return Array.from(new Uint8Array(digest)).map(b=>b.toString(16).padStart(2,"0")).join("");
