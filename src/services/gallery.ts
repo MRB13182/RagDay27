@@ -1,65 +1,9 @@
-import { createClient } from '@supabase/supabase-js';
-import { supabase, getAdminPasscodeForGallery, SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY } from '../lib/supabase';
-import { uploadFileToStorage } from './storage';
-import type { GalleryItem } from '../components/GallerySection';
-
-interface GalleryRpcResponse<T> { data: T | null; error: { message: string } | null; }
-function adminGalleryClient() {
-  const passcode = getAdminPasscodeForGallery();
-  if (!passcode) throw new Error('Admin session missing. Please sign in again.');
-  return createClient(SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY, {
-    auth: { persistSession: false, autoRefreshToken: false, detectSessionInUrl: false },
-    global: { headers: { 'x-rd27-passcode': passcode } },
-  });
-}
-
-export async function getPublicGalleryItems(): Promise<GalleryItem[]> {
-  const { data, error } = await supabase
-    .from('gallery_items')
-    .select('id,title,caption,image_url,created_at')
-    .eq('is_published', true)
-    .order('sort_order', { ascending: true })
-    .order('created_at', { ascending: false });
-  if (error) {
-    console.warn('Gallery could not be loaded:', error.message);
-    return [];
-  }
-  return (data || []) as GalleryItem[];
-}
-
-export async function getAdminGalleryItems(): Promise<GalleryItem[]> {
-  const client = adminGalleryClient();
-  const { data, error }: GalleryRpcResponse<GalleryItem[]> = await client.rpc('admin_list_gallery');
-  if (error) throw new Error(error.message);
-  return data || [];
-}
-
-export async function saveGalleryItem(file: File, title: string, caption: string, existingId?: string): Promise<void> {
-  if (!title.trim()) throw new Error('A gallery title is required.');
-  const client = adminGalleryClient();
-  const upload = await uploadFileToStorage(file, 'gallery');
-  if (!upload.success) throw new Error(upload.errorMessage || 'Image upload failed.');
-  const { error } = await client.rpc('admin_save_gallery_item', {
-    p_id: existingId || null,
-    p_title: title.trim(),
-    p_caption: caption.trim() || null,
-    p_image_url: upload.publicUrl,
-    p_storage_path: upload.storagePath,
-  });
-  if (error) throw new Error(error.message);
-}
-
-export async function updateGalleryDetails(id: string, title: string, caption: string): Promise<void> {
-  if (!title.trim()) throw new Error('A gallery title is required.');
-  const client = adminGalleryClient();
-  const { error } = await client.rpc('admin_update_gallery_item', {
-    p_id: id, p_title: title.trim(), p_caption: caption.trim() || null,
-  });
-  if (error) throw new Error(error.message);
-}
-
-export async function deleteGalleryItem(id: string): Promise<void> {
-  const client = adminGalleryClient();
-  const { error } = await client.rpc('admin_delete_gallery_item', { p_id: id });
-  if (error) throw new Error(error.message);
-}
+import type {GalleryMedia} from '../super-admin/gallery/types';
+const DB_NAME='rd27-gallery-local-v1',STORE='media',VERSION=1,EVENT='rd27-gallery-change';
+function openDb():Promise<IDBDatabase>{return new Promise((resolve,reject)=>{if(!('indexedDB'in window)){reject(new Error('IndexedDB is unavailable in this browser.'));return;}const req=indexedDB.open(DB_NAME,VERSION);req.onupgradeneeded=()=>{const db=req.result;if(!db.objectStoreNames.contains(STORE)){const store=db.createObjectStore(STORE,{keyPath:'id'});store.createIndex('order','sort_order');}};req.onsuccess=()=>resolve(req.result);req.onerror=()=>reject(req.error||new Error('Cannot open local media storage.'));});}
+function request<T>(r:IDBRequest<T>):Promise<T>{return new Promise((resolve,reject)=>{r.onsuccess=()=>resolve(r.result);r.onerror=()=>reject(r.error||new Error('Local media operation failed.'));});}
+export async function getGalleryMedia(includeDisabled=false):Promise<GalleryMedia[]>{const db=await openDb();try{const tx=db.transaction(STORE,'readonly'),rows=await request(tx.objectStore(STORE).getAll()) as GalleryMedia[];return rows.filter(x=>includeDisabled||x.enabled).sort((a,b)=>a.sort_order-b.sort_order||a.created_at.localeCompare(b.created_at));}finally{db.close();}}
+export async function putGalleryMedia(items:GalleryMedia[]):Promise<void>{const db=await openDb();try{const tx=db.transaction(STORE,'readwrite');items.forEach(item=>tx.objectStore(STORE).put(item));await new Promise<void>((resolve,reject)=>{tx.oncomplete=()=>resolve();tx.onerror=()=>reject(tx.error||new Error('Could not save media.'));tx.onabort=()=>reject(tx.error||new Error('Save cancelled.'));});}catch(e){if(e instanceof DOMException&&(e.name==='QuotaExceededError'||e.name==='NS_ERROR_DOM_QUOTA_REACHED'))throw new Error('Browser storage quota is full. Please remove large files or choose smaller uploads.');throw e;}finally{db.close();}window.dispatchEvent(new CustomEvent(EVENT));}
+export async function deleteGalleryMedia(id:string):Promise<void>{const db=await openDb();try{const tx=db.transaction(STORE,'readwrite');tx.objectStore(STORE).delete(id);await new Promise<void>((resolve,reject)=>{tx.oncomplete=()=>resolve();tx.onerror=()=>reject(tx.error||new Error('Delete failed.'));});}finally{db.close();}window.dispatchEvent(new CustomEvent(EVENT));}
+export function createGalleryMediaId():string{return 'gallery-'+Date.now()+'-'+Math.random().toString(36).slice(2,10);}
+export function subscribeToGalleryChanges(callback:()=>void):()=>void{window.addEventListener(EVENT,callback);return()=>window.removeEventListener(EVENT,callback);}
