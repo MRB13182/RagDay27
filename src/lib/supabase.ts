@@ -120,6 +120,10 @@ export async function signInAdmin(passcode: string): Promise<AdminProfile> {
   return profile;
 }
 
+export function getAdminPasscodeForGallery(): string | null {
+  return activeSessionRole === 'male_admin' ? activeSessionPasscode : null;
+}
+
 export async function signOutAdmin(): Promise<void> {
   activeSessionRole = null;
   activeSessionPasscode = null;
