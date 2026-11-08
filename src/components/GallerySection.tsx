@@ -1,137 +1,21 @@
-import React, { useEffect, useMemo, useState } from 'react';
-import { ArrowUpRight, ImagePlus, Images, Link2, Play, X, ExternalLink, Film, Image as ImageIcon } from 'lucide-react';
-import { getPublicGalleryItems } from '../services/gallery';
-
-export interface GalleryItem {
-  id: string;
-  title: string;
-  caption: string | null;
-  image_url: string;
-  created_at: string;
-  media_type?: 'image' | 'video' | 'album';
-  external_url?: string | null;
-  thumbnail_url?: string | null;
-}
-
-type GalleryFilter = 'all' | 'image' | 'video' | 'album';
-
-const isSafeExternalUrl = (value: string): boolean => {
-  try {
-    const parsed = new URL(value);
-    return parsed.protocol === 'https:' || parsed.protocol === 'http:';
-  } catch {
-    return false;
-  }
-};
-
-export const GallerySection: React.FC<{ preview?: boolean }> = ({ preview = false }) => {
-  const [items, setItems] = useState<GalleryItem[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [active, setActive] = useState<GalleryItem | null>(null);
-  const [filter, setFilter] = useState<GalleryFilter>('all');
-
-  useEffect(() => {
-    let live = true;
-    getPublicGalleryItems()
-      .then(rows => { if (live) setItems(rows); })
-      .catch(error => console.error('Gallery loading failed:', error))
-      .finally(() => { if (live) setLoading(false); });
-    return () => { live = false; };
-  }, []);
-
-  const visibleItems = useMemo(() => {
-    const typed = items.map(item => ({ ...item, media_type: item.media_type || 'image' }));
-    return typed.filter(item => filter === 'all' || item.media_type === filter)
-      .slice(0, preview ? 6 : undefined);
-  }, [items, filter, preview]);
-
-  const counts = useMemo(() => ({
-    image: items.filter(item => !item.media_type || item.media_type === 'image').length,
-    video: items.filter(item => item.media_type === 'video').length,
-    album: items.filter(item => item.media_type === 'album').length,
-  }), [items]);
-
-  const filters: { id: GalleryFilter; label: string; Icon: typeof Images }[] = [
-    { id: 'all', label: 'All memories', Icon: Images },
-    { id: 'image', label: 'Photos', Icon: ImageIcon },
-    { id: 'video', label: 'Videos', Icon: Film },
-    { id: 'album', label: 'Albums', Icon: Images },
-  ];
-
-  return (
-    <section id="gallery" className="rd-section py-16 sm:py-24 px-4 sm:px-6">
-      <div className="max-w-7xl mx-auto">
-        <div className="flex flex-col lg:flex-row lg:items-end lg:justify-between gap-6 mb-9">
-          <div>
-            <span className="rd-eyebrow"><Images className="w-4 h-4" /> MOMENTS THAT STAY</span>
-            <h1 className="rd-heading mt-4">{preview ? <>A glimpse of <em>Rag Day</em></> : <>The <em>Rag Day</em> Gallery</>}</h1>
-            <p className="text-slate-500 mt-3 max-w-xl">Photos, videos and shared albums celebrating our batch memories.</p>
-          </div>
-          <div className="flex flex-wrap gap-2">
-            {filters.map(({ id, label, Icon }) => (
-              <button key={id} type="button" onClick={() => setFilter(id)}
-                className={`rd-gallery-filter ${filter === id ? 'is-active' : ''}`}>
-                <Icon className="w-4 h-4" /> {label}
-                <span>{id === 'all' ? items.length : counts[id]}</span>
-              </button>
-            ))}
-          </div>
-        </div>
-
-        {loading ? (
-          <div className="rd-gallery-empty">Loading memories…</div>
-        ) : visibleItems.length === 0 ? (
-          <div className="rd-gallery-empty"><ImagePlus className="w-8 h-8 mb-3" />No {filter === 'all' ? 'gallery' : filter} memories have been shared yet.</div>
-        ) : (
-          <div className="rd-gallery-grid">
-            {visibleItems.map((item, index) => {
-              const type = item.media_type || 'image';
-              const thumbnail = item.thumbnail_url || item.image_url;
-              const isAlbum = type === 'album';
-              const safeUrl = isAlbum && item.external_url && isSafeExternalUrl(item.external_url);
-              return (
-                <article key={item.id} className={`rd-gallery-card ${index % 7 === 0 ? 'rd-gallery-feature' : ''}`}>
-                  {isAlbum && safeUrl ? (
-                    <a href={item.external_url!} target="_blank" rel="noopener noreferrer" className="rd-gallery-media-link">
-                      <img src={thumbnail} alt={item.title} loading="lazy" />
-                      <span className="rd-gallery-media-badge"><Link2 className="w-4 h-4" /> Album link</span>
-                      <span className="rd-gallery-overlay"><span><b>{item.title}</b>{item.caption && <small>{item.caption}</small>}</span><ExternalLink className="w-5 h-5" /></span>
-                    </a>
-                  ) : type === 'video' ? (
-                    <button type="button" onClick={() => setActive(item)} className="rd-gallery-media-link">
-                      <img src={thumbnail} alt={item.title} loading="lazy" />
-                      <span className="rd-gallery-play"><Play className="w-6 h-6 fill-current" /></span>
-                      <span className="rd-gallery-overlay"><span><b>{item.title}</b>{item.caption && <small>{item.caption}</small>}</span><Play className="w-5 h-5" /></span>
-                    </button>
-                  ) : !isAlbum ? (
-                    <button type="button" onClick={() => setActive(item)} className="rd-gallery-media-link">
-                      <img src={item.image_url} alt={item.title} loading="lazy" />
-                      <span className="rd-gallery-overlay"><span><b>{item.title}</b>{item.caption && <small>{item.caption}</small>}</span><ArrowUpRight className="w-5 h-5" /></span>
-                    </button>
-                  ) : (
-                    <div className="rd-gallery-invalid-album"><Link2 className="w-6 h-6" /><b>{item.title}</b><small>Album link unavailable</small></div>
-                  )}
-                </article>
-              );
-            })}
-          </div>
-        )}
-      </div>
-
-      {active && (
-        <div className="fixed inset-0 z-[220] bg-slate-950/95 backdrop-blur-xl flex items-center justify-center p-4" onClick={() => setActive(null)}>
-          <button type="button" aria-label="Close media preview" className="absolute top-5 right-5 p-3 rounded-full bg-white/10 text-white" onClick={() => setActive(null)}><X /></button>
-          <div className="max-w-5xl w-full" onClick={event => event.stopPropagation()}>
-            {active.media_type === 'video' ? (
-              <video src={active.external_url || active.image_url} poster={active.thumbnail_url || undefined} controls playsInline className="max-h-[78vh] w-full rounded-2xl bg-black" />
-            ) : (
-              <img src={active.image_url} alt={active.title} className="max-h-[78vh] w-full object-contain rounded-2xl" />
-            )}
-            <h2 className="text-white text-xl font-bold mt-4">{active.title}</h2>
-            {active.caption && <p className="text-white/65 mt-1">{active.caption}</p>}
-          </div>
-        </div>
-      )}
-    </section>
-  );
+import React,{useEffect,useMemo,useRef,useState} from 'react';
+import {ArrowLeft,ArrowRight,Film,Image as ImageIcon,Images,Pause,Play,X} from 'lucide-react';
+import type {GalleryMedia} from '../super-admin/gallery/types';
+import {getGalleryMedia,subscribeToGalleryChanges} from '../services/gallery';
+type Filter='all'|'image'|'video';
+export const GallerySection:React.FC=()=>{
+ const [items,setItems]=useState<GalleryMedia[]>([]),[loading,setLoading]=useState(true),[filter,setFilter]=useState<Filter>('all'),[index,setIndex]=useState(0),[active,setActive]=useState<GalleryMedia|null>(null),[playing,setPlaying]=useState(true);
+ const videoRef=useRef<HTMLVideoElement>(null),urls=useRef(new Map<string,string>());
+ const refresh=async()=>{try{setItems(await getGalleryMedia());}catch(e){console.error('Local Gallery unavailable',e);}finally{setLoading(false);}};
+ useEffect(()=>{void refresh();const unsubscribe=subscribeToGalleryChanges(()=>void refresh());return()=>{unsubscribe();urls.current.forEach(URL.revokeObjectURL);};},[]);
+ const visible=useMemo(()=>items.filter(x=>filter==='all'||x.type===filter),[items,filter]);
+ const current=visible[index]||null;
+ const src=(item:GalleryMedia)=>{let value=urls.current.get(item.id);if(!value){value=URL.createObjectURL(item.blob);urls.current.set(item.id,value);}return value;};
+ const reduced=typeof window!=='undefined'&&window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+ const next=()=>setIndex(v=>(v+1)%Math.max(visible.length,1)),previous=()=>setIndex(v=>(v-1+visible.length)%Math.max(visible.length,1));
+ useEffect(()=>{if(!playing||!current||current.type!=='image'||reduced)return;const t=window.setTimeout(next,5500);return()=>window.clearTimeout(t);},[playing,current?.id,visible.length,reduced]);
+ useEffect(()=>{if(current?.type==='video'&&videoRef.current&&playing)void videoRef.current.play().catch(()=>setPlaying(false));},[current?.id,playing]);
+ return <section className="rd-section min-h-[75vh] px-4 py-16 sm:px-6 sm:py-24"><div className="mx-auto max-w-7xl"><header className="mb-8 flex flex-col gap-5 lg:flex-row lg:items-end lg:justify-between"><div><span className="rd-eyebrow"><Images className="h-4 w-4"/> BATCH MEMORIES</span><h1 className="rd-heading mt-4">The <em>Rag Day</em> Gallery</h1><p className="mt-3 text-slate-500">Photos and videos from our batch celebration.</p></div><div className="flex gap-2">{([{id:'all',label:'All',Icon:Images},{id:'image',label:'Photos',Icon:ImageIcon},{id:'video',label:'Videos',Icon:Film}] as const).map(({id,label,Icon})=><button key={id} onClick={()=>{setFilter(id);setIndex(0);}} className={'rd-gallery-filter '+(filter===id?'is-active':'')}><Icon className="h-4 w-4"/>{label}</button>)}</div></header>
+ {loading?<div className="rd-gallery-empty">Loading media…</div>:!visible.length?<div className="rd-gallery-empty"><Images className="mb-3 h-8 w-8"/>No media has been added yet.</div>:<><div className="overflow-hidden rounded-[2rem] border border-white bg-slate-950 shadow-2xl"><div className="relative grid min-h-[260px] place-items-center sm:min-h-[480px]">{current?.type==='image'?<img key={current.id} src={src(current)} alt={current.title} className="max-h-[72vh] w-full object-contain animate-fadeIn"/>:<video key={current?.id} ref={videoRef} src={current?src(current):undefined} muted autoPlay={playing} playsInline controls onEnded={next} onError={()=>setPlaying(false)} className="max-h-[72vh] w-full"/>}<button onClick={previous} aria-label="Previous" className="absolute left-3 top-1/2 -translate-y-1/2 rounded-full bg-white/90 p-3 text-slate-900"><ArrowLeft/></button><button onClick={next} aria-label="Next" className="absolute right-3 top-1/2 -translate-y-1/2 rounded-full bg-white/90 p-3 text-slate-900"><ArrowRight/></button><button onClick={()=>setPlaying(v=>!v)} aria-label="Pause or play" className="absolute bottom-4 right-4 rounded-full bg-white/90 p-3 text-slate-900">{playing?<Pause/>:<Play/>}</button><button onClick={()=>current&&setActive(current)} aria-label="Fullscreen preview" className="absolute bottom-4 left-4 rounded-full bg-white/90 p-3 text-slate-900"><Images/></button></div><div className="flex items-center justify-between gap-3 bg-slate-950 px-5 py-4 text-white"><div className="min-w-0"><p className="truncate font-bold">{current?.title}</p><p className="truncate text-xs text-white/60">{current?.caption}</p></div><span className="text-xs text-white/60">{index+1} / {visible.length}</span></div></div><div className="mt-5 grid grid-cols-3 gap-3 sm:grid-cols-5 lg:grid-cols-7">{visible.map((item,i)=><button key={item.id} onClick={()=>{setIndex(i);setPlaying(false);}} className={'relative aspect-video overflow-hidden rounded-xl border-2 bg-slate-900 '+(i===index?'border-indigo-500':'border-transparent')}>{item.type==='image'?<img src={src(item)} alt={item.title} className="h-full w-full object-cover"/>:<span className="grid h-full place-items-center text-white"><Film/></span>}</button>)}</div></>}</div>
+ {active&&<div className="fixed inset-0 z-[230] grid place-items-center bg-black/95 p-4" onClick={()=>setActive(null)}><button onClick={()=>setActive(null)} aria-label="Close fullscreen" className="absolute right-5 top-5 rounded-full bg-white/15 p-3 text-white"><X/></button><div className="w-full max-w-6xl" onClick={e=>e.stopPropagation()}>{active.type==='image'?<img src={src(active)} alt={active.title} className="mx-auto max-h-[85vh] object-contain"/>:<video src={src(active)} muted autoPlay controls playsInline className="mx-auto max-h-[85vh] w-full"/>}<p className="mt-3 text-center text-white">{active.title}</p></div></div>}</section>;
 };
