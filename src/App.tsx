@@ -9,6 +9,7 @@ import { AdminPortal } from './components/AdminPortal';
 import { JerseyShowcaseSection } from './components/JerseyShowcaseSection';
 import { ImportantNoticeModal } from './components/ImportantNoticeModal';
 import { ContactInformationSection } from './components/ContactInformationSection';
+import { GallerySection } from './components/GallerySection';
 import {
   websiteIdentityConfig,
   eventSettingsConfig,
@@ -38,7 +39,7 @@ import {
 import { ArrowRight, Bell, CheckCircle2, AlertCircle, Info, X, ShieldAlert, Ticket } from 'lucide-react';
 
 export default function App() {
-  const [activeTab, setActiveTab] = useState<'home' | 'register' | 'invitation'>('home');
+  const [activeTab, setActiveTab] = useState<'home' | 'register' | 'invitation' | 'gallery'>('home');
   const [invitationSearchTarget, setInvitationSearchTarget] = useState<string>('');
   const [invitationStudentNameTarget, setInvitationStudentNameTarget] = useState<string>('');
   const [reRegisterRecord, setReRegisterRecord] = useState<InvitationRecord | null>(null);
@@ -458,10 +459,14 @@ export default function App() {
                 </>
               )}
 
+              <GallerySection />
+
               {/* For More Information Section */}
               <ContactInformationSection />
             </div>
           )}
+
+          {activeTab === 'gallery' && <GallerySection />}
 
           {activeTab === 'register' && (
             <div
