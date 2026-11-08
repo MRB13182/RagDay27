@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useState } from 'react';
-import { ArrowUpRight, ImagePlus, Images, Link2, Play, X, ExternalLink, Film, Image as ImageIcon, Album } from 'lucide-react';
+import { ArrowUpRight, ImagePlus, Images, Link2, Play, X, ExternalLink, Film, Image as ImageIcon } from 'lucide-react';
 import { getPublicGalleryItems } from '../services/gallery';
 
 export interface GalleryItem {
@@ -55,7 +55,7 @@ export const GallerySection: React.FC<{ preview?: boolean }> = ({ preview = fals
     { id: 'all', label: 'All memories', Icon: Images },
     { id: 'image', label: 'Photos', Icon: ImageIcon },
     { id: 'video', label: 'Videos', Icon: Film },
-    { id: 'album', label: 'Albums', Icon: Album },
+    { id: 'album', label: 'Albums', Icon: Images },
   ];
 
   return (
