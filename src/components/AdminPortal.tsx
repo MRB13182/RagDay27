@@ -3,6 +3,8 @@ import type { InvitationRecord, InvitationStatus, AdminProfile, PdfSettings, Web
 import { signInAdmin, signOutAdmin, getCurrentAdmin } from '../lib/supabase';
 import { getRegistrationList } from '../services/admin';
 import { resolveStudentPhotoUrl } from '../services/storage';
+import { AdminGalleryManager } from './AdminGalleryManager';
+import { Images } from 'lucide-react';
 import { calculateRegistrationOpenState, setManualRegistrationOverride } from '../lib/superAdminConfig';
 import {
   generateRegistrationListPDF,
@@ -125,6 +127,7 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
   },
 }) => {
   const [admin, setAdmin] = useState<AdminProfile | null>(null);
+  const [adminView, setAdminView] = useState<'registrations' | 'gallery'>('registrations');
   const [passcode, setPasscode] = useState('');
   const [loginError, setLoginError] = useState('');
   const [isLoggingIn, setIsLoggingIn] = useState(false);
@@ -176,6 +179,7 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
       setAdminRegistrations([]);
       setSelectedRecord(null);
       setRejectingRecord(null);
+      setAdminView('registrations');
     }
   }, [isOpen]);
 
@@ -604,6 +608,9 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
           </div>
         )}
 
+        <div className="px-4 py-2 border-b border-slate-200/80 bg-white/70 flex gap-2 shrink-0"><button onClick={() => setAdminView('registrations')} className={`px-4 py-2 rounded-xl text-xs font-bold ${adminView === 'registrations' ? 'bg-indigo-600 text-white' : 'text-slate-600 hover:bg-slate-100'}`}>Registrations</button><button onClick={() => setAdminView('gallery')} className={`px-4 py-2 rounded-xl text-xs font-bold inline-flex items-center gap-2 ${adminView === 'gallery' ? 'bg-indigo-600 text-white' : 'text-slate-600 hover:bg-slate-100'}`}><Images className="w-4 h-4"/>Gallery</button></div>
+
+        {adminView === 'gallery' ? <div className="flex-1 overflow-auto"><AdminGalleryManager /></div> : <>
         {/* 2. REGISTRATION STATISTICS & SUMMARY - Frosted Glass Row */}
         <section className="px-4 py-2.5 sm:px-5 sm:py-3 border-b border-slate-200/80 bg-white/40 backdrop-blur-md overflow-x-auto shrink-0">
           <div className="grid grid-cols-4 min-w-[320px] gap-2 sm:gap-3">
@@ -891,6 +898,7 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
           </div>
         </footer>
 
+        </>}
       </div>
 
       {/* ---------------------------------------------------------------------- */}
