@@ -26,7 +26,7 @@ end; $$;
 
 create or replace function public.admin_save_gallery_item(p_id uuid,p_title text,p_caption text,p_image_url text,p_storage_path text)
 returns public.gallery_items language plpgsql security definer set search_path=public as $$
-declare p text := current_setting('request.headers',true)::json->>'x-rd27-passcode'; r public.gallery_items;
+declare p text := coalesce(current_setting('request.headers',true)::json->>'x-rd27-passcode',''); r public.gallery_items;
 begin
  if coalesce(p,'') not in ('nic27.boy','nicboy.27','nic27.girl') then raise exception 'Unauthorized gallery operation' using errcode='42501'; end if;
  if nullif(trim(p_title),'') is null or nullif(trim(p_image_url),'') is null then raise exception 'Title and image are required'; end if;
@@ -37,7 +37,7 @@ end; $$;
 
 create or replace function public.admin_update_gallery_item(p_id uuid,p_title text,p_caption text)
 returns public.gallery_items language plpgsql security definer set search_path=public as $$
-declare p text := current_setting('request.headers',true)::json->>'x-rd27-passcode'; r public.gallery_items;
+declare p text := coalesce(current_setting('request.headers',true)::json->>'x-rd27-passcode',''); r public.gallery_items;
 begin
  if coalesce(p,'') not in ('nic27.boy','nicboy.27','nic27.girl') then raise exception 'Unauthorized gallery operation' using errcode='42501'; end if;
  update public.gallery_items set title=trim(p_title),caption=nullif(trim(p_caption),''),updated_at=now() where id=p_id returning * into r; return r;
