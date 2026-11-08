@@ -29,3 +29,13 @@ These rules are mandatory for all developers and AI coding agents working in thi
 - Report which files were changed and what validation was run.
 
 **Priority:** These project protection rules take precedence over broad implementation requests. Ask before modifying Super Admin or Database/Supabase.
+
+# Gallery storage architecture
+
+- Public Gallery reads items from IndexedDB database `rd27-gallery-local-v1` and object store `media`.
+- Uploads are made in the Super Admin Gallery Management tab and store the original File/Blob locally with metadata.
+- Only enabled items appear publicly; ordering is controlled from the admin panel.
+- Public Gallery rotates images automatically and advances after video playback ends.
+- **Important limitation:** browser IndexedDB is local to one browser profile/device. Static GitHub Pages cannot distribute these uploaded blobs to other visitors. Do not claim these uploads are shared. Shared public media requires an approved shared storage/backend in a future separately authorized task.
+- Browser storage limits vary; per-file upload limit is 150 MB and quota failures are surfaced.
+- The owner authorized Gallery-only Super Admin code changes for this task. Database/Supabase remains strictly unauthorized.
