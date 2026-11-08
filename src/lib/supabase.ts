@@ -114,7 +114,7 @@ export async function signInAdmin(passcode: string): Promise<AdminProfile> {
     updated_at: new Date().toISOString(),
   };
 
-  // Keep in memory for this active session only
+  // Keep credentials only in memory for this active session.
   activeSessionRole = data.role as AdminRole;
   activeSessionPasscode = cleanPasscode;
   supabase.rest.headers['x-rd27-passcode'] = cleanPasscode;
