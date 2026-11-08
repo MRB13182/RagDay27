@@ -5,6 +5,7 @@ import { getRegistrationList } from '../services/admin';
 import { resolveStudentPhotoUrl } from '../services/storage';
 import { AdminGalleryManager } from './AdminGalleryManager';
 import { Images } from 'lucide-react';
+import { Images } from 'lucide-react';
 import { calculateRegistrationOpenState, setManualRegistrationOverride } from '../lib/superAdminConfig';
 import {
   generateRegistrationListPDF,
