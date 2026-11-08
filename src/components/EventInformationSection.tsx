@@ -1,237 +1,229 @@
-import React, { useState } from 'react';
-import { Ticket, UserCheck, Menu, X, Bell } from 'lucide-react';
-import { GenderType } from '../types';
+import React from 'react';
+import { motion, type Variants } from 'framer-motion';
+import { EventCard } from '../types';
+import {
+  Calendar,
+  MapPin,
+  CreditCard,
+  Clock,
+  Sparkles,
+  Award,
+  Shirt,
+  Users,
+  Music,
+  Info,
+} from 'lucide-react';
 
-interface NavbarProps {
-  activeTab: 'home' | 'register' | 'invitation' | 'gallery';
-  onNavigate: (tab: 'home' | 'register' | 'invitation') => void;
-  websiteLogo?: string;
-  eventName?: string;
-  onOpenNotice?: () => void;
-  themeGender?: GenderType;
+interface EventInformationSectionProps {
+  cards: EventCard[];
+  layout?: 'two-column' | 'one-column' | string;
 }
 
-export const Navbar: React.FC<NavbarProps> = ({
-  activeTab,
-  onNavigate,
-  websiteLogo,
-  eventName = 'RD27 Rag Day 2027',
-  onOpenNotice,
-  themeGender: _themeGender,
+export const renderCardIcon = (iconName: string, className = 'w-5 h-5') => {
+  switch (iconName.toLowerCase()) {
+    case 'calendar':
+      return <Calendar className={className} />;
+    case 'map-pin':
+    case 'location':
+      return <MapPin className={className} />;
+    case 'credit-card':
+    case 'fee':
+    case 'payment':
+      return <CreditCard className={className} />;
+    case 'clock':
+    case 'time':
+    case 'deadline':
+      return <Clock className={className} />;
+    case 'sparkles':
+    case 'magic':
+      return <Sparkles className={className} />;
+    case 'award':
+    case 'trophy':
+      return <Award className={className} />;
+    case 'shirt':
+    case 'jersey':
+      return <Shirt className={className} />;
+    case 'users':
+    case 'students':
+      return <Users className={className} />;
+    case 'music':
+    case 'concert':
+      return <Music className={className} />;
+    default:
+      return <Info className={className} />;
+  }
+};
+
+const getColorConfig = (color: string) => {
+  switch (color.toLowerCase()) {
+    case 'cyan':
+      return {
+        cardBorder: 'border-cyan-200/90 hover:border-cyan-400',
+        badgeBg: 'bg-cyan-500/10 text-cyan-700',
+        accentText: 'text-cyan-600',
+        glow: 'hover:shadow-[0_15px_30px_-10px_rgba(6,182,212,0.18)]',
+      };
+    case 'emerald':
+      return {
+        cardBorder: 'border-emerald-200/90 hover:border-emerald-400',
+        badgeBg: 'bg-emerald-500/10 text-emerald-700',
+        accentText: 'text-emerald-600',
+        glow: 'hover:shadow-[0_15px_30px_-10px_rgba(16,185,129,0.18)]',
+      };
+    case 'amber':
+      return {
+        cardBorder: 'border-amber-200/90 hover:border-amber-400',
+        badgeBg: 'bg-amber-500/10 text-amber-700',
+        accentText: 'text-amber-600',
+        glow: 'hover:shadow-[0_15px_30px_-10px_rgba(245,158,11,0.18)]',
+      };
+    case 'rose':
+      return {
+        cardBorder: 'border-rose-200/90 hover:border-rose-400',
+        badgeBg: 'bg-rose-500/10 text-rose-700',
+        accentText: 'text-rose-600',
+        glow: 'hover:shadow-[0_15px_30px_-10px_rgba(244,63,94,0.18)]',
+      };
+    case 'purple':
+      return {
+        cardBorder: 'border-purple-200/90 hover:border-purple-400',
+        badgeBg: 'bg-purple-500/10 text-purple-700',
+        accentText: 'text-purple-600',
+        glow: 'hover:shadow-[0_15px_30px_-10px_rgba(168,85,247,0.18)]',
+      };
+    case 'blue':
+      return {
+        cardBorder: 'border-blue-200/90 hover:border-blue-400',
+        badgeBg: 'bg-blue-500/10 text-blue-700',
+        accentText: 'text-blue-600',
+        glow: 'hover:shadow-[0_15px_30px_-10px_rgba(59,130,246,0.18)]',
+      };
+    case 'indigo':
+    default:
+      return {
+        cardBorder: 'border-[#5B5FEF]/25 hover:border-[#5B5FEF]/60',
+        badgeBg: 'bg-[#5B5FEF]/10 text-[#5B5FEF]',
+        accentText: 'text-[#5B5FEF]',
+        glow: 'hover:shadow-[0_15px_30px_-10px_rgba(91,95,239,0.2)]',
+      };
+  }
+};
+
+const sectionVariants: Variants = {
+  hidden: { opacity: 0 },
+  visible: {
+    opacity: 1,
+    transition: {
+      staggerChildren: 0.12,
+      delayChildren: 0.05,
+    },
+  },
+};
+
+const headerVariants: Variants = {
+  hidden: { opacity: 0, y: 24 },
+  visible: {
+    opacity: 1,
+    y: 0,
+    transition: {
+      duration: 0.55,
+      ease: [0.22, 1, 0.36, 1],
+    },
+  },
+};
+
+const cardVariants: Variants = {
+  hidden: { opacity: 0, y: 30 },
+  visible: {
+    opacity: 1,
+    y: 0,
+    transition: {
+      duration: 0.6,
+      ease: [0.22, 1, 0.36, 1],
+    },
+  },
+};
+
+export const EventInformationSection: React.FC<EventInformationSectionProps> = ({
+  cards,
+  layout = 'two-column',
 }) => {
-  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const visibleCards = cards
+    .filter(c => c.visible)
+    .sort((a, b) => a.order - b.order);
 
-  const handleNavClick = (tab: 'home' | 'register' | 'invitation') => {
-    onNavigate(tab);
-    setMobileMenuOpen(false);
-  };
+  if (visibleCards.length === 0) return null;
 
-  // Global navigation always keeps the standard white/purple brand theme.
-  const isMaleTheme = false;
-  const isFemaleTheme = false;
-
-  const headerBgClass = isFemaleTheme
-    ? 'bg-[#15051B]/90 backdrop-blur-2xl border border-[#4A195E]/70 shadow-[0_12px_36px_rgba(0,0,0,0.4),inset_0_1px_1.5px_rgba(255,255,255,0.1)] text-white'
-    : isMaleTheme
-    ? 'bg-[#070F1E]/90 backdrop-blur-2xl border border-[#1E3A5F]/70 shadow-[0_12px_36px_rgba(0,0,0,0.4),inset_0_1px_1.5px_rgba(255,255,255,0.1)] text-white'
-    : 'bg-white/68 backdrop-blur-2xl border border-white/95 shadow-[0_18px_44px_-16px_rgba(91,75,160,0.16),0_4px_14px_-6px_rgba(79,70,140,0.08),inset_0_1.5px_1.5px_white] text-slate-900';
+  const isOneColumn = layout === 'one-column';
 
   return (
-    <header className="fixed top-0 left-0 right-0 z-50 w-full transition-all duration-300 px-3 sm:px-6 lg:px-8 pt-2 sm:pt-2.5">
-      <div className={`max-w-7xl mx-auto rounded-2xl sm:rounded-3xl transition-all duration-300 ${headerBgClass} px-3.5 sm:px-6 h-15 sm:h-17 flex items-center justify-between relative`}>
-        {/* Left: Logo: RD27 Rag Day 2027 */}
-        <button
-          onClick={() => handleNavClick('home')}
-          className="flex items-center gap-2.5 sm:gap-3 text-left focus:outline-none group transition-transform hover:scale-[1.01] cursor-pointer z-10"
+    <motion.section
+      initial="hidden"
+      whileInView="visible"
+      viewport={{ once: true, amount: 0.15, margin: '-40px' }}
+      variants={sectionVariants}
+      className="py-6 sm:py-8 relative"
+    >
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <motion.div variants={headerVariants} className="text-center max-w-xl mx-auto mb-6 sm:mb-8">
+          <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-white/80 border border-white/90 shadow-[0_4px_16px_rgba(113,56,245,0.06),inset_0_1px_1px_white] backdrop-blur-xl mb-2.5">
+            <Calendar className="w-3.5 h-3.5 text-[#7138F5]" />
+            <span className="text-xs font-bold text-slate-800 uppercase tracking-wider">
+              Essential Schedule & Key Details
+            </span>
+          </div>
+          <h2 className="font-display text-2xl sm:text-3xl font-extrabold text-[#10143C] tracking-tight">
+            Event <br className="sm:hidden" /> Information
+          </h2>
+        </motion.div>
+
+        {/* Dynamic Cards Grid according to Super Admin event-card-layout */}
+        <motion.div
+          variants={sectionVariants}
+          className={
+            isOneColumn
+              ? 'grid grid-cols-1 max-w-2xl mx-auto gap-4 sm:gap-6'
+              : 'grid grid-cols-1 md:grid-cols-2 max-w-5xl mx-auto gap-4 sm:gap-6'
+          }
         >
-          {websiteLogo ? (
-            <img
-              src={websiteLogo}
-              alt="Logo"
-              className="w-9 h-9 sm:w-10 sm:h-10 rounded-xl object-contain shadow-xs border border-white/90 bg-white/70 backdrop-blur-md p-0.5"
-            />
-          ) : (
-            <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-gradient-to-tr from-[#5B5FEF] via-[#7A6CFF] to-[#00D4FF] p-[1.5px] shadow-sm flex items-center justify-center shrink-0">
-              <div className="w-full h-full bg-[#0F172A] rounded-[10px] flex items-center justify-center">
-                <span className="font-display font-extrabold text-white text-xs sm:text-sm tracking-wider">
-                  RD<span className="text-[#00D4FF]">27</span>
-                </span>
-              </div>
-            </div>
-          )}
-          <div className="flex flex-col min-w-0">
-            <span className={`font-display text-xs sm:text-base font-extrabold tracking-tight leading-tight transition-colors truncate max-w-[120px] xs:max-w-[190px] sm:max-w-xs md:max-w-none ${
-              isFemaleTheme ? 'text-white group-hover:text-[#EC4899]' : isMaleTheme ? 'text-white group-hover:text-[#38BDF8]' : 'text-slate-900 group-hover:text-[#5B5FEF]'
-            }`}>
-              {eventName}
-            </span>
-            <span className={`text-[10px] font-medium tracking-wide flex items-center gap-1 ${
-              isFemaleTheme ? 'text-pink-300/70' : isMaleTheme ? 'text-slate-400' : 'text-slate-500'
-            }`}>
-              <span className="inline-block w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
-              Batch 2027 Portal
-            </span>
-          </div>
-        </button>
+          {visibleCards.map((card) => {
+            const colors = getColorConfig(card.customColor);
+            return (
+              <motion.div
+                key={card.id}
+                variants={cardVariants}
+                className={`relative p-5 sm:p-7 rounded-2xl sm:rounded-3xl bg-white/84 backdrop-blur-2xl border ${colors.cardBorder} shadow-[0_12px_32px_-10px_rgba(15,23,42,0.06),inset_0_1.5px_1.5px_white] transition-all duration-300 hover:-translate-y-1.5 ${colors.glow} flex flex-col justify-between overflow-hidden group`}
+              >
+                <div className="absolute inset-x-0 top-0 h-2/5 bg-gradient-to-b from-white/90 to-transparent pointer-events-none rounded-t-2xl sm:rounded-t-3xl" />
+                <div className="relative z-10">
+                  <div className="flex items-center justify-between mb-4">
+                    <div className={`w-12 h-12 rounded-2xl ${colors.badgeBg} flex items-center justify-center shadow-xs border border-white/90 backdrop-blur-md transition-transform duration-300 group-hover:scale-105`}>
+                      {renderCardIcon(card.icon, 'w-5 h-5')}
+                    </div>
+                    <span className="text-[11px] font-bold uppercase tracking-wider text-slate-400 font-mono px-2.5 py-1 rounded-lg glass-pill">
+                      #{card.order}
+                    </span>
+                  </div>
 
-        {/* Center: Desktop Nav Items with Frosted Glass Navigation Pill */}
-        <nav className={`hidden md:flex items-center justify-center gap-1.5 p-1 rounded-2xl backdrop-blur-md absolute left-1/2 -translate-x-1/2 transition-colors ${
-          isFemaleTheme
-            ? 'bg-[#240A30]/85 border border-[#4A195E]/80 shadow-[inset_0_1px_1.5px_rgba(255,255,255,0.1)]'
-            : isMaleTheme
-            ? 'bg-[#0B1A35]/85 border border-[#1E3A5F]/80 shadow-[inset_0_1px_1.5px_rgba(255,255,255,0.1)]'
-            : 'bg-slate-100/60 border border-white/80 shadow-[inset_0_1px_1.5px_rgba(255,255,255,0.9)]'
-        }`}>
-          <button
-            onClick={() => handleNavClick('home')}
-            className={`px-3.5 py-1.5 text-xs sm:text-sm font-semibold rounded-xl transition-all duration-200 cursor-pointer ${
-              activeTab === 'home'
-                ? isFemaleTheme
-                  ? 'bg-white text-[#EC4899] font-bold shadow-xs'
-                  : isMaleTheme
-                  ? 'bg-white text-[#0284C7] font-bold shadow-xs'
-                  : 'bg-white text-[#5B5FEF] font-bold shadow-xs border border-white/90'
-                : isFemaleTheme
-                ? 'text-pink-200/80 hover:text-white hover:bg-white/10'
-                : isMaleTheme
-                ? 'text-slate-300 hover:text-white hover:bg-white/10'
-                : 'text-slate-600 hover:text-slate-900 hover:bg-white/60'
-            }`}
-          >
-            Home
-          </button>
+                  <h3 className="text-xs font-bold uppercase tracking-wider text-slate-500 mb-1.5">
+                    {card.title}
+                  </h3>
 
-          <button onClick={() => handleNavClick('gallery')} className={`px-3.5 py-1.5 text-xs sm:text-sm font-semibold rounded-xl transition-all cursor-pointer ${activeTab === 'gallery' ? 'bg-white text-[#5B5FEF] shadow-xs' : 'text-slate-600 hover:bg-white/60'}`}>Gallery</button>
+                  <div className="font-display text-lg sm:text-xl font-extrabold text-slate-900 tracking-tight leading-snug">
+                    {card.description}
+                  </div>
+                </div>
 
-          <button
-            onClick={() => handleNavClick('gallery')}
-            className={`w-full text-left px-4 py-3 rounded-xl text-sm font-bold ${activeTab === 'gallery' ? 'bg-[#5B5FEF]/10 text-[#5B5FEF]' : 'text-slate-700 hover:bg-white/80'}`}>Gallery</button>
-          <button
-            onClick={() => handleNavClick('invitation')}
-            className={`px-3.5 py-1.5 text-xs sm:text-sm font-semibold rounded-xl transition-all duration-200 flex items-center gap-1.5 cursor-pointer ${
-              activeTab === 'invitation'
-                ? isFemaleTheme
-                  ? 'bg-white text-[#EC4899] font-bold shadow-xs'
-                  : isMaleTheme
-                  ? 'bg-white text-[#0284C7] font-bold shadow-xs'
-                  : 'bg-white text-[#5B5FEF] font-bold shadow-xs border border-white/90'
-                : isFemaleTheme
-                ? 'text-pink-200/80 hover:text-white hover:bg-white/10'
-                : isMaleTheme
-                ? 'text-slate-300 hover:text-white hover:bg-white/10'
-                : 'text-slate-600 hover:text-slate-900 hover:bg-white/60'
-            }`}
-          >
-            <Ticket className="w-4 h-4" />
-            <span>Invitation Card Download</span>
-          </button>
-
-          <button
-            onClick={() => handleNavClick('register')}
-            className={`px-4 py-1.5 text-xs sm:text-sm font-bold rounded-xl transition-all duration-200 flex items-center gap-1.5 cursor-pointer ${
-              isFemaleTheme
-                ? 'bg-gradient-to-r from-[#D91B74] to-[#EC4899] text-white shadow-md shadow-pink-500/30'
-                : isMaleTheme
-                ? 'bg-gradient-to-r from-[#0070F3] to-[#00D2FF] text-white shadow-md shadow-cyan-500/30'
-                : activeTab === 'register'
-                ? 'bg-[#5B5FEF] text-white shadow-md shadow-[#5B5FEF]/30 ring-2 ring-[#5B5FEF]/30'
-                : 'bg-gradient-to-r from-[#5B5FEF] to-[#7A6CFF] text-white shadow-sm'
-            }`}
-          >
-            <UserCheck className="w-4 h-4" />
-            <span>Register Now</span>
-          </button>
-        </nav>
-
-        {/* Desktop Right Notice Trigger */}
-        {onOpenNotice && (
-          <div className="hidden md:flex items-center gap-2 z-10">
-            <button
-              type="button"
-              onClick={onOpenNotice}
-              className={`px-3 py-1.5 rounded-xl border shadow-xs backdrop-blur-md transition-all flex items-center gap-1.5 cursor-pointer text-xs font-bold ${
-                isFemaleTheme
-                  ? 'bg-[#240A30]/80 hover:bg-[#240A30] text-pink-300 border-[#4A195E]'
-                  : isMaleTheme
-                  ? 'bg-[#0B1A35]/80 hover:bg-[#0B1A35] text-sky-300 border-[#1E3A5F]'
-                  : 'bg-white/70 hover:bg-white/95 text-[#4F46E5] border-violet-200/70'
-              }`}
-              title="Important Notice"
-            >
-              <Bell className="w-3.5 h-3.5" />
-              <span>Notice</span>
-            </button>
-          </div>
-        )}
-
-        {/* Mobile Right Controls matching Reference Image 1 */}
-        <div className="flex items-center gap-2 md:hidden">
-          <button
-            onClick={() => handleNavClick('register')}
-            className="px-3.5 py-1.5 text-xs font-extrabold rounded-xl bg-gradient-to-r from-[#7138F5] via-[#5224D8] to-[#11C8F4] text-white shadow-md shadow-[#7138F5]/25 flex items-center gap-1.5 cursor-pointer active:scale-95 transition-transform"
-          >
-            <UserCheck className="w-3.5 h-3.5" />
-            <span>Register</span>
-          </button>
-
-          <button
-            type="button"
-            onClick={() => setMobileMenuOpen(prev => !prev)}
-            aria-label="Toggle navigation menu"
-            className="p-2 rounded-xl bg-white/80 border border-white/95 text-slate-700 hover:text-slate-900 shadow-2xs focus:outline-none cursor-pointer transition-colors"
-          >
-            {mobileMenuOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
-          </button>
-        </div>
+                {card.subDetail && (
+                  <div className="relative z-10 mt-5 pt-3.5 border-t border-slate-200/60 flex items-center text-xs text-slate-500 font-medium">
+                    <span>{card.subDetail}</span>
+                  </div>
+                )}
+              </motion.div>
+            );
+          })}
+        </motion.div>
       </div>
-
-      {/* Mobile Drawer */}
-      {mobileMenuOpen && (
-        <div className={`md:hidden mt-2 max-w-7xl mx-auto rounded-2xl border px-4 py-4 space-y-2 shadow-2xl animate-fadeIn ${
-          isFemaleTheme
-            ? 'border-[#4A195E]/80 bg-[#15051B]/95 backdrop-blur-2xl text-white'
-            : isMaleTheme
-            ? 'border-[#1E3A5F]/80 bg-[#070F1E]/95 backdrop-blur-2xl text-white'
-            : 'border-white/95 bg-white/78 backdrop-blur-2xl text-slate-900 shadow-[0_24px_55px_-16px_rgba(91,75,160,0.18),inset_0_1.5px_1.5px_white]'
-        }`}>
-          <button
-            onClick={() => handleNavClick('home')}
-            className={`w-full text-left px-4 py-3 rounded-xl text-sm font-bold transition-colors ${
-              activeTab === 'home'
-                ? isFemaleTheme ? 'bg-pink-500/20 text-[#EC4899]' : isMaleTheme ? 'bg-sky-500/20 text-[#38BDF8]' : 'bg-[#5B5FEF]/10 text-[#5B5FEF]'
-                : isFemaleTheme ? 'text-pink-100 hover:bg-white/10' : isMaleTheme ? 'text-slate-200 hover:bg-white/10' : 'text-slate-700 hover:bg-white/80'
-            }`}
-          >
-            Home
-          </button>
-
-          <button
-            onClick={() => handleNavClick('invitation')}
-            className={`w-full text-left px-4 py-3 rounded-xl text-sm font-bold flex items-center justify-between transition-colors ${
-              activeTab === 'invitation'
-                ? isFemaleTheme ? 'bg-pink-500/20 text-[#EC4899]' : isMaleTheme ? 'bg-sky-500/20 text-[#38BDF8]' : 'bg-[#5B5FEF]/10 text-[#5B5FEF]'
-                : isFemaleTheme ? 'text-pink-100 hover:bg-white/10' : isMaleTheme ? 'text-slate-200 hover:bg-white/10' : 'text-slate-700 hover:bg-white/80'
-            }`}
-          >
-            <span>Invitation Card Download</span>
-            <Ticket className="w-4 h-4" />
-          </button>
-
-          <button
-            onClick={() => handleNavClick('register')}
-            className={`w-full text-center px-4 py-3 rounded-xl text-sm font-bold shadow-md flex items-center justify-center gap-2 ${
-              isFemaleTheme
-                ? 'bg-gradient-to-r from-[#D91B74] to-[#EC4899] text-white shadow-pink-500/30'
-                : isMaleTheme
-                ? 'bg-gradient-to-r from-[#0070F3] to-[#00D2FF] text-white shadow-cyan-500/30'
-                : 'bg-gradient-to-r from-[#5B5FEF] to-[#7A6CFF] text-white'
-            }`}
-          >
-            <UserCheck className="w-4 h-4" />
-            <span>Register Now</span>
-          </button>
-        </div>
-      )}
-    </header>
+    </motion.section>
   );
 };
