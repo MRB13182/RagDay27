@@ -165,8 +165,6 @@ export const Navbar: React.FC<NavbarProps> = ({
 
         {/* Mobile Right Controls matching Reference Image 1 */}
         <div className="flex items-center gap-2 md:hidden">
-          <button onClick={() => handleNavClick('gallery')} className={`w-full text-left px-4 py-3 rounded-xl text-sm font-bold ${activeTab === 'gallery' ? 'bg-[#5B5FEF]/10 text-[#5B5FEF]' : 'text-slate-700 hover:bg-white/80'}`}>Gallery</button>
-
           <button
             onClick={() => handleNavClick('register')}
             className="px-3.5 py-1.5 text-xs font-extrabold rounded-xl bg-gradient-to-r from-[#7138F5] via-[#5224D8] to-[#11C8F4] text-white shadow-md shadow-[#7138F5]/25 flex items-center gap-1.5 cursor-pointer active:scale-95 transition-transform"
