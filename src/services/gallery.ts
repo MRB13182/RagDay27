@@ -1,4 +1,4 @@
-import { supabase } from '../lib/supabase';
+import { supabase, getStoredAdminPasscode } from '../lib/supabase';
 import { uploadFileToStorage } from './storage';
 import type { GalleryItem } from '../components/GallerySection';
 
@@ -8,17 +8,20 @@ export async function getPublicGalleryItems(): Promise<GalleryItem[]> {
   return (data||[]) as GalleryItem[];
 }
 export async function getAdminGalleryItems(): Promise<GalleryItem[]> {
-  const {data,error}=await supabase.rpc('admin_list_gallery');
+  const passcode=getStoredAdminPasscode();
+  if(!passcode) throw new Error('Admin session missing. Please sign in again.');
+  const {data,error}=await supabase.rpc('admin_list_gallery',{},{headers:{'x-rd27-passcode':passcode}});
   if(error)throw new Error(error.message);
   return (data||[]) as GalleryItem[];
 }
 export async function saveGalleryItem(file:File,title:string,caption:string,existingId?:string):Promise<void>{
   const upload=await uploadFileToStorage(file,'gallery');
   if(!upload.success)throw new Error(upload.errorMessage||'Image upload failed.');
-  const {error}=await supabase.rpc('admin_save_gallery_item',{p_id:existingId||null,p_title:title.trim(),p_caption:caption.trim()||null,p_image_url:upload.publicUrl,p_storage_path:upload.storagePath});
+  const passcode=getStoredAdminPasscode();if(!passcode)throw new Error('Admin session missing. Please sign in again.');
+  const {error}=await supabase.rpc('admin_save_gallery_item',{p_id:existingId||null,p_title:title.trim(),p_caption:caption.trim()||null,p_image_url:upload.publicUrl,p_storage_path:upload.storagePath},{headers:{'x-rd27-passcode':passcode}});
   if(error)throw new Error(error.message);
 }
 export async function updateGalleryDetails(id:string,title:string,caption:string):Promise<void>{
- const {error}=await supabase.rpc('admin_update_gallery_item',{p_id:id,p_title:title.trim(),p_caption:caption.trim()||null});if(error)throw new Error(error.message);
+ const passcode=getStoredAdminPasscode();if(!passcode)throw new Error('Admin session missing. Please sign in again.');const {error}=await supabase.rpc('admin_update_gallery_item',{p_id:id,p_title:title.trim(),p_caption:caption.trim()||null},{headers:{'x-rd27-passcode':passcode}});if(error)throw new Error(error.message);
 }
-export async function deleteGalleryItem(id:string):Promise<void>{const {error}=await supabase.rpc('admin_delete_gallery_item',{p_id:id});if(error)throw new Error(error.message);}
+export async function deleteGalleryItem(id:string):Promise<void>{const passcode=getStoredAdminPasscode();if(!passcode)throw new Error('Admin session missing. Please sign in again.');const {error}=await supabase.rpc('admin_delete_gallery_item',{p_id:id},{headers:{'x-rd27-passcode':passcode}});if(error)throw new Error(error.message);}
