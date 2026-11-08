@@ -10,7 +10,6 @@ const ENV_SUPABASE_KEY =
 
 export function createSupabaseClient(url: string, key: string): SupabaseClient {
   return createClient(url.trim(), key.trim(), {
-    global: { headers: {} },
     auth: {
       persistSession: true,
       autoRefreshToken: true,
@@ -38,10 +37,6 @@ function resolveSupabaseKey(): string {
 export const SUPABASE_URL = resolveSupabaseUrl();
 export const SUPABASE_PUBLISHABLE_KEY = resolveSupabaseKey();
 export const supabase = createSupabaseClient(SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY);
-
-// Admin RPCs attach the in-memory verified passcode per request; it is never persisted.
-supabase.functions; // keep client initialization explicit
-
 
 import { safeStorage } from './safeStorage';
 
