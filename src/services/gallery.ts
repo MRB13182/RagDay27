@@ -1,11 +1,11 @@
 import { createClient } from '@supabase/supabase-js';
-import { supabase, getStoredAdminPasscode, SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY } from '../lib/supabase';
+import { supabase, getAdminPasscodeForGallery, SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY } from '../lib/supabase';
 import { uploadFileToStorage } from './storage';
 import type { GalleryItem } from '../components/GallerySection';
 
 interface GalleryRpcResponse<T> { data: T | null; error: { message: string } | null; }
 function adminGalleryClient() {
-  const passcode = getStoredAdminPasscode();
+  const passcode = getAdminPasscodeForGallery();
   if (!passcode) throw new Error('Admin session missing. Please sign in again.');
   return createClient(SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY, {
     auth: { persistSession: false, autoRefreshToken: false, detectSessionInUrl: false },
