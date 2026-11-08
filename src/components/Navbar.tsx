@@ -3,7 +3,7 @@ import { Ticket, UserCheck, Menu, X, Bell } from 'lucide-react';
 import { GenderType } from '../types';
 
 interface NavbarProps {
-  activeTab: 'home' | 'register' | 'invitation';
+  activeTab: 'home' | 'register' | 'invitation' | 'gallery';
   onNavigate: (tab: 'home' | 'register' | 'invitation') => void;
   websiteLogo?: string;
   eventName?: string;
@@ -100,6 +100,10 @@ export const Navbar: React.FC<NavbarProps> = ({
           >
             Home
           </button>
+
+          <button onClick={() => handleNavClick('gallery')} className={`px-3.5 py-1.5 text-xs sm:text-sm font-semibold rounded-xl transition-all cursor-pointer ${activeTab === 'gallery' ? 'bg-white text-[#5B5FEF] shadow-xs' : 'text-slate-600 hover:bg-white/60'}`}>Gallery</button>
+
+          <button onClick={() => handleNavClick('gallery')} className={`w-full text-left px-4 py-3 rounded-xl text-sm font-bold ${activeTab === 'gallery' ? 'bg-[#5B5FEF]/10 text-[#5B5FEF]' : 'text-slate-700 hover:bg-white/80'}`}>Gallery</button>
 
           <button
             onClick={() => handleNavClick('invitation')}
