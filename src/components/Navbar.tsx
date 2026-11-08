@@ -123,7 +123,7 @@ export const Navbar: React.FC<NavbarProps> = ({
 
           <button onClick={() => handleNavClick('gallery')} className={`px-3.5 py-1.5 text-xs sm:text-sm font-semibold rounded-xl transition-all cursor-pointer ${activeTab === 'gallery' ? 'bg-white text-[#5B5FEF] shadow-xs' : 'text-slate-600 hover:bg-white/60'}`}>Gallery</button>
 
-          <button onClick={() => handleNavClick('gallery')} className={`px-3.5 py-1.5 text-xs sm:text-sm font-semibold rounded-xl transition-all cursor-pointer ${activeTab === 'gallery' ? 'bg-white text-[#5B5FEF] shadow-xs' : 'text-slate-600 hover:bg-white/60'}`}>Gallery</button>
+
 
           <button
             onClick={() => handleNavClick('register')}
