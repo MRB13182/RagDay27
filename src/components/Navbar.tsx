@@ -101,8 +101,6 @@ export const Navbar: React.FC<NavbarProps> = ({
             Home
           </button>
 
-          <button onClick={() => handleNavClick('gallery')} className={`px-3.5 py-1.5 text-xs sm:text-sm font-semibold rounded-xl transition-all cursor-pointer ${activeTab === 'gallery' ? 'bg-white text-[#5B5FEF] shadow-xs' : 'text-slate-600 hover:bg-white/60'}`}>Gallery</button>
-
           <button
             onClick={() => handleNavClick('invitation')}
             className={`px-3.5 py-1.5 text-xs sm:text-sm font-semibold rounded-xl transition-all duration-200 flex items-center gap-1.5 cursor-pointer ${
@@ -122,6 +120,10 @@ export const Navbar: React.FC<NavbarProps> = ({
             <Ticket className="w-4 h-4" />
             <span>Invitation Card Download</span>
           </button>
+
+          <button onClick={() => handleNavClick('gallery')} className={`px-3.5 py-1.5 text-xs sm:text-sm font-semibold rounded-xl transition-all cursor-pointer ${activeTab === 'gallery' ? 'bg-white text-[#5B5FEF] shadow-xs' : 'text-slate-600 hover:bg-white/60'}`}>Gallery</button>
+
+          <button onClick={() => handleNavClick('gallery')} className={`w-full text-left px-4 py-3 rounded-xl text-sm font-bold ${activeTab === 'gallery' ? 'bg-[#5B5FEF]/10 text-[#5B5FEF]' : 'text-slate-700 hover:bg-white/80'}`}>Gallery</button>
 
           <button
             onClick={() => handleNavClick('register')}
