@@ -459,14 +459,14 @@ export default function App() {
                 </>
               )}
 
-              <GallerySection />
+              <section className="rd-home-gallery-preview"><GallerySection /></section>
 
               {/* For More Information Section */}
               <ContactInformationSection />
             </div>
           )}
 
-          {activeTab === 'gallery' && <GallerySection />}
+          {activeTab === 'gallery' && <div className="animate-fadeIn min-h-[calc(100vh-4.5rem)]"><GallerySection /></div>}
 
           {activeTab === 'register' && (
             <div
