@@ -10,6 +10,7 @@ const ENV_SUPABASE_KEY =
 
 export function createSupabaseClient(url: string, key: string): SupabaseClient {
   return createClient(url.trim(), key.trim(), {
+    global: { headers: {} },
     auth: {
       persistSession: true,
       autoRefreshToken: true,
