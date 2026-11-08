@@ -84,6 +84,10 @@ export interface RegistrationRecord {
   hidden_from_web?: boolean;
   hidden_by?: string | null;
   hidden_at?: string | null;
+  edit_count?: number;
+  edit_locked?: boolean;
+  last_edited_at?: string | null;
+  last_edit_source?: string | null;
   recovery_original_student_id?: string;
   recovery_original_full_name?: string;
   recovery_original_class_roll?: string;
