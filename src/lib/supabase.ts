@@ -10,7 +10,6 @@ const ENV_SUPABASE_KEY =
 
 export function createSupabaseClient(url: string, key: string): SupabaseClient {
   return createClient(url.trim(), key.trim(), {
-    global: { headers: {} },
     auth: {
       persistSession: true,
       autoRefreshToken: true,
@@ -113,7 +112,6 @@ export async function signInAdmin(passcode: string): Promise<AdminProfile> {
   // Keep credentials only in memory for this active session.
   activeSessionRole = data.role as AdminRole;
   activeSessionPasscode = cleanPasscode;
-  supabase.rest.headers['x-rd27-passcode'] = cleanPasscode;
 
   // Clear any persistent storage to prevent leakage across browser restarts or other users
   safeStorage.removeItem('rd27_admin_role');
@@ -125,7 +123,6 @@ export async function signInAdmin(passcode: string): Promise<AdminProfile> {
 export async function signOutAdmin(): Promise<void> {
   activeSessionRole = null;
   activeSessionPasscode = null;
-  delete supabase.rest.headers['x-rd27-passcode'];
   safeStorage.removeItem('rd27_admin_role');
   safeStorage.removeItem('rd27_admin_passcode');
   try {
