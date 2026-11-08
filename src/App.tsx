@@ -459,7 +459,7 @@ export default function App() {
                 </>
               )}
 
-              <section className="rd-home-gallery-preview"><GallerySection /></section>
+              <section className="rd-home-gallery-preview"><GallerySection preview /></section>
 
               {/* For More Information Section */}
               <ContactInformationSection />
