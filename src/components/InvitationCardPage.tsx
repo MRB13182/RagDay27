@@ -16,6 +16,7 @@ import {
   IdCard,
   Hash,
   User,
+  Lock,
 } from 'lucide-react';
 import { toPng } from 'html-to-image';
 import { getPublicInvitation, getRejectedRegistrationForResubmission } from '../services';
