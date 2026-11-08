@@ -4,7 +4,7 @@ import { GenderType } from '../types';
 
 interface NavbarProps {
   activeTab: 'home' | 'register' | 'invitation' | 'gallery';
-  onNavigate: (tab: 'home' | 'register' | 'invitation') => void;
+  onNavigate: (tab: 'home' | 'register' | 'invitation' | 'gallery') => void;
   websiteLogo?: string;
   eventName?: string;
   onOpenNotice?: () => void;
@@ -21,7 +21,7 @@ export const Navbar: React.FC<NavbarProps> = ({
 }) => {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
-  const handleNavClick = (tab: 'home' | 'register' | 'invitation') => {
+  const handleNavClick = (tab: 'home' | 'register' | 'invitation' | 'gallery') => {
     onNavigate(tab);
     setMobileMenuOpen(false);
   };
