@@ -18,7 +18,7 @@ create policy "Published gallery items are public" on public.gallery_items for s
 
 create or replace function public.admin_list_gallery()
 returns setof public.gallery_items language plpgsql security definer set search_path=public as $$
-declare p text := current_setting('request.headers',true)::json->>'x-rd27-passcode';
+declare p text := coalesce(current_setting('request.headers',true)::json->>'x-rd27-passcode','');
 begin
  if coalesce(p,'') not in ('nic27.boy','nicboy.27','nic27.girl') then raise exception 'Unauthorized gallery access' using errcode='42501'; end if;
  return query select * from public.gallery_items order by sort_order,created_at desc;
