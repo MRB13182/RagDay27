@@ -247,6 +247,13 @@ export const RegistrationForm: React.FC<RegistrationFormProps> = ({
   });
 
   const handleGenderSelect = (gender: GenderType) => {
+    if (gender === 'female') {
+      setFormData(prev => ({ ...prev, gender: 'choose_one' }));
+      onGenderChange?.('choose_one');
+      setGenderWarningMessage('ওই বেটা! তুই কি মাইয়া তোর জিনিস নাই । Male-এ চাপ দে! 😄');
+      return;
+    }
+    setGenderWarningMessage('');
     setFormData(prev => ({ ...prev, gender }));
     onGenderChange?.(gender);
   };
@@ -268,6 +275,7 @@ export const RegistrationForm: React.FC<RegistrationFormProps> = ({
 
   // UI & Flow states
   const [copiedAccount, setCopiedAccount] = useState<string | null>(null);
+  const [genderWarningMessage, setGenderWarningMessage] = useState('');
   const [currentStep, setCurrentStep] = useState(0);
   const registrationSteps = ['Personal Information', 'Payment Details', 'Jersey Design', 'Review & Submit'];
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -529,8 +537,6 @@ export const RegistrationForm: React.FC<RegistrationFormProps> = ({
     }
 
     if (!formData.payment_time.trim()) errors.payment_time = 'Payment time is required.';
-    if (!formData.transaction_id.trim()) errors.transaction_id = 'Transaction ID is required.';
-    if (!formData.transaction_id.trim()) errors.transaction_id = 'Transaction ID is required.';
 
     // Jersey Validation
     if (!formData.jersey_back_name.trim()) errors.jersey_back_name = 'Jersey name is required.';
@@ -566,7 +572,6 @@ export const RegistrationForm: React.FC<RegistrationFormProps> = ({
   };
 
   const goToNextStep = () => {
-    if (!validateStep(currentStep)) return;
     setFormErrors({});
     setCurrentStep(step => Math.min(step + 1, registrationSteps.length - 1));
     setSubmitErrorMessage(null);
@@ -584,6 +589,14 @@ export const RegistrationForm: React.FC<RegistrationFormProps> = ({
     // 1. Registration Open / Closed Check
     if (!registrationOpen) {
       setShowClosedModal(true);
+      return;
+    }
+
+    // Female registration is intentionally disabled. Never submit a female registration.
+    if (formData.gender !== 'male') {
+      setSubmitErrorMessage('Registration is currently available for Male students only.');
+      setFormData(prev => ({ ...prev, gender: 'choose_one' }));
+      onGenderChange?.('choose_one');
       return;
     }
 
@@ -851,25 +864,15 @@ export const RegistrationForm: React.FC<RegistrationFormProps> = ({
           </div>
         )}
 
+        {genderWarningMessage && (
+          <div role="alert" aria-live="polite" className="mx-auto mt-4 max-w-xl rounded-2xl border border-amber-300/60 bg-amber-50 px-4 py-3 text-center text-sm sm:text-base font-bold text-amber-950 shadow-lg animate-fadeIn">
+            {genderWarningMessage}
+          </div>
+        )}
+
         {/* State C: Gender selected — guided multi-step registration. */}
-        {formData.gender !== 'choose_one' && (
+        {formData.gender === 'male' && (
           <form onSubmit={handleSubmit} className="mt-8 space-y-6 registration-form-gendered animate-fadeIn">
-            <div className="mb-6 rounded-2xl border border-cyan-400/25 bg-slate-950/40 p-3 sm:p-4">
-              <div className="flex items-center justify-between gap-2 text-[11px] font-bold text-slate-300">
-                <span>REGISTRATION PROGRESS</span><span className="text-cyan-300">Step {currentStep + 1} of {registrationSteps.length}</span>
-              </div>
-              <div className="mt-3 grid grid-cols-4 gap-2">
-                {registrationSteps.map((step,index)=>(
-                  <button key={step} type="button" onClick={()=>index<currentStep&&setCurrentStep(index)} disabled={index>currentStep} aria-current={index===currentStep?'step':undefined}
-                    className={`min-w-0 rounded-xl px-1.5 py-2 text-[10px] sm:text-xs font-bold border transition-all ${
-                      index===currentStep?'bg-cyan-500/20 border-cyan-300 text-cyan-200':index<currentStep?'bg-emerald-500/10 border-emerald-400/40 text-emerald-300':'bg-slate-900/50 border-slate-700 text-slate-500'
-                    }`}>
-                    <span className="block truncate">{step}</span>
-                    <span className="mt-1 block text-[9px] opacity-75">{index<currentStep?'Complete':index===currentStep?'Current':'Upcoming'}</span>
-                  </button>
-                ))}
-              </div>
-            </div>
             <div className="space-y-8 animate-fadeIn">
               {/* ======================================================== */}
               {/* 2. PERSONAL INFORMATION                                  */}
@@ -1378,7 +1381,7 @@ export const RegistrationForm: React.FC<RegistrationFormProps> = ({
                     {/* 11. Transaction ID (Optional) */}
                     <div>
                       <label className={`block text-xs font-bold uppercase tracking-wider mb-1.5 ${labelClasses}`}>
-                        Transaction ID <span className="text-rose-500">*</span>
+                        Transaction ID
                       </label>
                       <div className="registration-field-row">
                       <span className="registration-field-icon"><FileCheck className="w-[18px] h-[18px]" /></span>
@@ -1601,7 +1604,7 @@ export const RegistrationForm: React.FC<RegistrationFormProps> = ({
                 ) : (
                   <button type="submit"
                   disabled={isSubmitting}
-                  className={`w-full py-4 px-6 rounded-2xl font-extrabold text-base text-white shadow-xl transition-all duration-200 flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed ${
+                  className={`w-full min-w-0 whitespace-nowrap py-4 px-4 sm:px-6 rounded-2xl font-extrabold text-sm sm:text-base text-white shadow-xl transition-all duration-200 flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed ${
                     isMale
                       ? 'bg-gradient-to-r from-[#0284C7] via-[#0EA5E9] to-[#38BDF8] hover:shadow-cyan-500/25 shadow-cyan-900/30'
                       : isFemale
@@ -1613,7 +1616,7 @@ export const RegistrationForm: React.FC<RegistrationFormProps> = ({
                     <span>Submitting Registration...</span>
                   ) : (
                     <>
-                      <span>{editingRegNo ? 'Re-Submit Registration' : 'Complete Registration'}</span>
+                      <span className="whitespace-nowrap">{editingRegNo ? 'RE-SUBMIT' : 'SUBMIT'}</span>
                       <ArrowRight className="w-5 h-5" />
                     </>
                   )}
