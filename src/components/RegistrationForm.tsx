@@ -416,6 +416,7 @@ export const RegistrationForm: React.FC<RegistrationFormProps> = ({
     if (formErrors.academic_group) {
       setFormErrors(prev => ({ ...prev, academic_group: '' }));
     }
+    setSubmitErrorMessage(null);
   };
 
   const availableSections = getAvailableSections(formData.gender, formData.academic_group);
@@ -1023,6 +1024,7 @@ export const RegistrationForm: React.FC<RegistrationFormProps> = ({
                     )}
                   </div>
 
+                  <div className={currentStep === 1 ? 'contents' : 'hidden'}>
                   {/* 5. Academic Group */}
                   <div>
                     <label className={`flex items-center gap-1.5 block text-xs font-bold uppercase tracking-wider mb-1.5 ${labelClasses}`}>
@@ -1101,8 +1103,10 @@ export const RegistrationForm: React.FC<RegistrationFormProps> = ({
                     )}
                   </div>
 
+                  </div>
+
                   {/* 7. Student Photo Upload (Optional, Max 3MB) */}
-                  <div className={`sm:col-span-2 pt-1 ${isFlagged('student_photo') ? 'p-3 rounded-2xl border-2 border-rose-400 bg-rose-50/20' : ''}`}>
+                  <div className={`sm:col-span-2 pt-1 ${currentStep === 1 ? '' : 'hidden'} ${isFlagged('student_photo') ? 'p-3 rounded-2xl border-2 border-rose-400 bg-rose-50/20' : ''}`}>
                     <PhotoUploadField
                       student_photo={formData.student_photo}
                       photoUrl={formData.student_photo}
