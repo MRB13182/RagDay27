@@ -301,7 +301,7 @@ export const RegistrationForm: React.FC<RegistrationFormProps> = ({
   useEffect(() => {
     if (!initialRecord) return;
 
-    onGenderChange?.(record.gender || 'male');
+    onGenderChange?.(initialRecord.gender || 'male');
     const flagged = detectFlaggedFields(initialRecord.reject_reason);
     const isPhotoFlagged = flagged.has('student_photo');
 
