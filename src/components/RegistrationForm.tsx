@@ -301,13 +301,13 @@ export const RegistrationForm: React.FC<RegistrationFormProps> = ({
   useEffect(() => {
     if (!initialRecord) return;
 
-    onGenderChange?.('male');
+    onGenderChange?.(record.gender || 'male');
     const flagged = detectFlaggedFields(initialRecord.reject_reason);
     const isPhotoFlagged = flagged.has('student_photo');
 
     setFormData(prev => ({
       ...prev,
-      gender: 'male',
+      gender: initialRecord.gender || 'male',
       full_name: initialRecord.full_name ?? prev.full_name,
       class_roll: initialRecord.class_roll ?? prev.class_roll,
       student_id: initialRecord.student_id ?? prev.student_id,
@@ -530,6 +530,7 @@ export const RegistrationForm: React.FC<RegistrationFormProps> = ({
 
     if (!formData.payment_time.trim()) errors.payment_time = 'Payment time is required.';
     if (!formData.transaction_id.trim()) errors.transaction_id = 'Transaction ID is required.';
+    if (!formData.transaction_id.trim()) errors.transaction_id = 'Transaction ID is required.';
 
     // Jersey Validation
     if (!formData.jersey_back_name.trim()) errors.jersey_back_name = 'Jersey name is required.';
@@ -681,7 +682,7 @@ export const RegistrationForm: React.FC<RegistrationFormProps> = ({
     const isPhotoFlagged = flagged.has('student_photo');
     setFormData(prev => ({
       ...prev,
-      gender: 'male',
+      gender: record.gender || 'male',
       full_name: record.full_name ?? prev.full_name,
       class_roll: record.class_roll ?? prev.class_roll,
       student_id: record.student_id ?? prev.student_id,
@@ -847,39 +848,6 @@ export const RegistrationForm: React.FC<RegistrationFormProps> = ({
             <p className="text-sm sm:text-base font-semibold text-slate-500">
               Please select your gender to register.
             </p>
-          </div>
-        )}
-
-        {/* State B: Female Selected - Humorous Warning Card (Reference Image 4) */}
-        {formData.gender === 'female' && (
-          <div className="mt-6 p-6 sm:p-10 rounded-3xl bg-gradient-to-b from-[#FFF5F7] via-[#FFF0F3] to-[#FFE8ED] border border-rose-200/90 text-center shadow-[0_15px_40px_-15px_rgba(244,63,94,0.15)] animate-fadeIn">
-            {/* Angry Pointing Face with Tension Marks */}
-            <div className="relative inline-flex items-center justify-center my-3 select-none">
-              <span className="text-rose-500 font-extrabold text-2xl select-none animate-pulse mr-2">💢</span>
-              <span className="text-6xl sm:text-7xl leading-none select-none drop-shadow-sm" role="img" aria-label="angry pointing">
-                😠👉
-              </span>
-              <span className="text-rose-500 font-extrabold text-2xl select-none animate-pulse ml-2">💢</span>
-            </div>
-
-            {/* Exact Bengali Humorous Message */}
-            <h3 className="font-display text-xl sm:text-2xl lg:text-[26px] font-black text-slate-900 leading-snug tracking-tight my-4">
-              ওই বেটা তুই কি মহিলা,<br />
-              তোর জিনিস নাই?<br />
-              <span className="text-rose-600 font-black block mt-1.5">Male এ চাপ দে।</span>
-            </h3>
-
-            {/* Action button to re-select */}
-            <div className="pt-2">
-              <button
-                type="button"
-                onClick={() => handleGenderSelect('choose_one')}
-                className="inline-flex items-center gap-2 px-6 py-2.5 rounded-xl glass-button text-[#4F46E5] font-bold text-xs sm:text-sm border border-indigo-200/60 hover:shadow-sm cursor-pointer active:scale-95"
-              >
-                <span>←</span>
-                <span>আবার সিলেক্ট করো</span>
-              </button>
-            </div>
           </div>
         )}
 
@@ -1168,7 +1136,7 @@ export const RegistrationForm: React.FC<RegistrationFormProps> = ({
               </div>
 
               {/* Group-wise account instructions directly below personal and academic information. */}
-              <section className={\`mt-5 space-y-3 \${currentStep === 0 ? '' : 'hidden'}\`}>
+              <section className={`mt-5 space-y-3 ${currentStep === 0 ? '' : 'hidden'}`}>
                 <div className="rounded-2xl border border-cyan-400/30 bg-slate-950/55 p-4 sm:p-5 space-y-3">
                   <div className="flex flex-wrap items-center justify-between gap-2">
                     <h3 className="text-sm font-extrabold text-cyan-200">Payment Information · {formData.academic_group || 'Select your group'}</h3>
