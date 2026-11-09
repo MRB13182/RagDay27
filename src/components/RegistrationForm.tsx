@@ -908,7 +908,7 @@ export const RegistrationForm: React.FC<RegistrationFormProps> = ({
               {/* 2. PERSONAL INFORMATION                                  */}
               {/* ======================================================== */}
               <div className={`space-y-4 ${currentStep === 0 ? '' : 'hidden'}`}>
-                <div className={`pb-2.5 font-display text-base sm:text-lg font-bold flex items-center justify-between ${sectionHeaderClasses}`}
+                <div className={`pb-2.5 font-display text-base sm:text-lg font-bold flex items-center justify-between ${sectionHeaderClasses}`}>
                   <span className="flex items-center gap-2">
                     <IdCard className="w-4 h-4" />
                     2. Personal Information
