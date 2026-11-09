@@ -272,6 +272,8 @@ export const RegistrationForm: React.FC<RegistrationFormProps> = ({
 
   // UI & Flow states
   const [copiedAccount, setCopiedAccount] = useState<string | null>(null);
+  const [currentStep, setCurrentStep] = useState(0);
+  const registrationSteps = ['Personal', 'Academic', 'Payment', 'Jersey'];
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [formErrors, setFormErrors] = useState<{ [key: string]: string }>({});
   const [submitErrorMessage, setSubmitErrorMessage] = useState<string | null>(null);
@@ -550,6 +552,31 @@ export const RegistrationForm: React.FC<RegistrationFormProps> = ({
     return errors;
   };
 
+  const validateStep = (step: number) => {
+    const allErrors = validateForm();
+    const fieldsByStep: Record<number, string[]> = {
+      0: ['full_name', 'class_roll', 'student_id', 'contact_mobile_number'],
+      1: ['academic_group', 'academic_section'],
+      2: ['sender_mobile_no', 'payment_time'],
+      3: ['jersey_back_name', 'jersey_number', 'declaration'],
+    };
+    const stepErrors = Object.fromEntries(fieldsByStep[step].filter(field => allErrors[field]).map(field => [field, allErrors[field]]));
+    setFormErrors(prev => ({ ...prev, ...stepErrors }));
+    return Object.keys(stepErrors).length === 0;
+  };
+
+  const goToNextStep = () => {
+    if (!validateStep(currentStep)) return;
+    setFormErrors({});
+    setCurrentStep(step => Math.min(step + 1, registrationSteps.length - 1));
+    setSubmitErrorMessage(null);
+  };
+
+  const goToPreviousStep = () => {
+    setCurrentStep(step => Math.max(step - 1, 0));
+    setSubmitErrorMessage(null);
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setSubmitErrorMessage(null);
@@ -619,7 +646,7 @@ export const RegistrationForm: React.FC<RegistrationFormProps> = ({
       setSuccessModalData({
         name: confirmedRecord.full_name,
         regNo: confirmedRecord.registration_no,
-        gender: 'male',
+        gender: formData.gender,
       });
 
       // Clear edit state if any
@@ -857,15 +884,31 @@ export const RegistrationForm: React.FC<RegistrationFormProps> = ({
           </div>
         )}
 
-        {/* State C: Male Selected - Full Registration Form (Reference Image 3) */}
-        {formData.gender === 'male' && (
-          <form onSubmit={handleSubmit} className="mt-8 space-y-8 registration-form-gendered animate-fadeIn">
+        {/* State C: Gender selected — guided multi-step registration. */}
+        {formData.gender !== 'choose_one' && (
+          <form onSubmit={handleSubmit} className="mt-8 space-y-6 registration-form-gendered animate-fadeIn">
+            <div className="mb-6 rounded-2xl border border-cyan-400/25 bg-slate-950/40 p-3 sm:p-4">
+              <div className="flex items-center justify-between gap-2 text-[11px] font-bold text-slate-300">
+                <span>REGISTRATION PROGRESS</span><span className="text-cyan-300">Step {currentStep + 1} of {registrationSteps.length}</span>
+              </div>
+              <div className="mt-3 grid grid-cols-4 gap-2">
+                {registrationSteps.map((step,index)=>(
+                  <button key={step} type="button" onClick={()=>index<currentStep&&setCurrentStep(index)} disabled={index>currentStep} aria-current={index===currentStep?'step':undefined}
+                    className={`min-w-0 rounded-xl px-1.5 py-2 text-[10px] sm:text-xs font-bold border transition-all ${
+                      index===currentStep?'bg-cyan-500/20 border-cyan-300 text-cyan-200':index<currentStep?'bg-emerald-500/10 border-emerald-400/40 text-emerald-300':'bg-slate-900/50 border-slate-700 text-slate-500'
+                    }`}>
+                    <span className="block truncate">{step}</span>
+                    <span className="mt-1 block text-[9px] opacity-75">{index<currentStep?'Complete':index===currentStep?'Current':'Upcoming'}</span>
+                  </button>
+                ))}
+              </div>
+            </div>
             <div className="space-y-8 animate-fadeIn">
               {/* ======================================================== */}
               {/* 2. PERSONAL INFORMATION                                  */}
               {/* ======================================================== */}
-              <div className="space-y-4">
-                <div className={`pb-2.5 font-display text-base sm:text-lg font-bold flex items-center justify-between ${sectionHeaderClasses}`}>
+              <div className={`space-y-4 ${currentStep === 0 ? '' : 'hidden'}`}>
+                <div className={`pb-2.5 font-display text-base sm:text-lg font-bold flex items-center justify-between ${sectionHeaderClasses}`}
                   <span className="flex items-center gap-2">
                     <IdCard className="w-4 h-4" />
                     2. Personal Information
@@ -1132,7 +1175,7 @@ export const RegistrationForm: React.FC<RegistrationFormProps> = ({
               {/* ======================================================== */}
               {/* 3. PAYMENT INFORMATION SECTION                           */}
               {/* ======================================================== */}
-              <div className="space-y-4 pt-2">
+              <div className={`space-y-4 pt-2 ${currentStep === 2 ? '' : 'hidden'}`}>
                 <div className={`pb-2.5 font-display text-base sm:text-lg font-bold flex items-center justify-between ${sectionHeaderClasses}`}>
                   <span className="flex items-center gap-2">
                     <CreditCard className="w-4 h-4" />
@@ -1375,7 +1418,7 @@ export const RegistrationForm: React.FC<RegistrationFormProps> = ({
               {/* ======================================================== */}
               {/* 4. JERSEY CUSTOMIZATION & LIVE PREVIEW                   */}
               {/* ======================================================== */}
-              <div className="space-y-4 pt-2">
+              <div className={`space-y-4 pt-2 ${currentStep === 3 ? '' : 'hidden'}`}>
                 <div className={`pb-2.5 font-display text-base sm:text-lg font-bold flex items-center justify-between ${sectionHeaderClasses}`}>
                   <span className="flex items-center gap-2">
                     <Shirt className="w-4 h-4" />
@@ -1528,7 +1571,7 @@ export const RegistrationForm: React.FC<RegistrationFormProps> = ({
               {/* ======================================================== */}
               {/* 5. DECLARATION */}
               {/* ======================================================== */}
-              <div className={`pt-3 border-t ${'border-cyan-300/25'}`}>
+              <div className={`pt-3 border-t ${'border-cyan-300/25'} ${currentStep === 3 ? '' : 'hidden'}`}>
                 <label className="flex items-center gap-3 cursor-pointer select-none text-xs sm:text-sm font-medium py-2">
                   <input
                     type="checkbox"
@@ -1560,10 +1603,17 @@ export const RegistrationForm: React.FC<RegistrationFormProps> = ({
                 </div>
               )}
 
-              {/* Submit Button */}
-              <div className="pt-4">
-                <button
-                  type="submit"
+              {/* Step navigation */}
+              <div className="pt-4 grid grid-cols-2 gap-3">
+                <button type="button" onClick={goToPreviousStep} disabled={currentStep===0||isSubmitting}
+                  className="py-3.5 px-4 rounded-2xl font-bold text-sm border border-slate-600/70 bg-slate-900/60 text-slate-200 disabled:opacity-35">Previous</button>
+                {currentStep < registrationSteps.length-1 ? (
+                  <button type="button" onClick={goToNextStep} disabled={isSubmitting}
+                    className="py-3.5 px-4 rounded-2xl font-extrabold text-sm text-white bg-gradient-to-r from-[#0284C7] via-[#0EA5E9] to-[#38BDF8] shadow-lg shadow-cyan-900/30 disabled:opacity-50">
+                    Next <ArrowRight className="inline w-4 h-4 ml-1" />
+                  </button>
+                ) : (
+                  <button type="submit"
                   disabled={isSubmitting}
                   className={`w-full py-4 px-6 rounded-2xl font-extrabold text-base text-white shadow-xl transition-all duration-200 flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed ${
                     isMale
@@ -1581,7 +1631,8 @@ export const RegistrationForm: React.FC<RegistrationFormProps> = ({
                       <ArrowRight className="w-5 h-5" />
                     </>
                   )}
-                </button>
+                  </button>
+                )}
               </div>
             </div>
           </form>
