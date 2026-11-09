@@ -211,7 +211,7 @@ const RegistrationCountdown: React.FC<{ deadline: string; theme?: 'light' | 'dar
  * Sections depend on gender + academic group and are not hardcoded to five entries.
  */
 export const getAvailableSections = (gender: GenderType, group: string): string[] => {
-  if (gender !== 'male') return [];
+  if (gender === 'choose_one') return [];
   return getConfiguredSections(gender, group);
 };
 
@@ -248,11 +248,7 @@ export const RegistrationForm: React.FC<RegistrationFormProps> = ({
 
   const handleGenderSelect = (gender: GenderType) => {
     setFormData(prev => ({ ...prev, gender }));
-    if (gender === 'male') {
-      onGenderChange?.('male');
-    } else {
-      onGenderChange?.(gender);
-    }
+    onGenderChange?.(gender);
   };
 
   // Re-submission / editing state for rejected registrations
@@ -273,7 +269,7 @@ export const RegistrationForm: React.FC<RegistrationFormProps> = ({
   // UI & Flow states
   const [copiedAccount, setCopiedAccount] = useState<string | null>(null);
   const [currentStep, setCurrentStep] = useState(0);
-  const registrationSteps = ['Personal', 'Academic', 'Payment', 'Jersey'];
+  const registrationSteps = ['Personal Information', 'Payment Details', 'Jersey Design', 'Review & Submit'];
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [formErrors, setFormErrors] = useState<{ [key: string]: string }>({});
   const [submitErrorMessage, setSubmitErrorMessage] = useState<string | null>(null);
@@ -361,7 +357,7 @@ export const RegistrationForm: React.FC<RegistrationFormProps> = ({
 
   const isMale = formData.gender === 'male';
   const isFemale = formData.gender === 'female';
-  const isGenderChosen = isMale;
+  const isGenderChosen = formData.gender !== 'choose_one';
 
   // Container & styling classes based on selected gender
   const containerClasses = 'glass-male text-white border-2 border-cyan-400/40 shadow-[0_25px_60px_-15px_rgba(3,10,28,0.85),0_0_35px_-5px_rgba(56,189,248,0.25)]';
@@ -375,9 +371,11 @@ export const RegistrationForm: React.FC<RegistrationFormProps> = ({
   const subCardClasses = 'glass-male-card backdrop-blur-xl';
 
   // Dynamic payment numbers based on gender
-  const activeBkashNumber = paymentSettings?.maleBkashNumber || '01712-345678';
-
-  const activeNagadNumber = paymentSettings?.maleNagadNumber || '01712-345678';
+  const groupKey = formData.academic_group === 'Commerce' ? 'Business Studies' : formData.academic_group === 'Arts' ? 'Humanities' : formData.academic_group;
+  const groupPayment = paymentSettings?.groupPaymentNumbers?.[groupKey];
+  const activeBkashNumber = groupPayment?.bkash || '';
+  const activeNagadNumber = groupPayment?.nagad || '';
+  const hasGroupPayment = Boolean(activeBkashNumber || activeNagadNumber);
 
   const handleCopyAccount = async (number: string, label: string) => {
     try {
@@ -493,7 +491,7 @@ export const RegistrationForm: React.FC<RegistrationFormProps> = ({
   const validateForm = () => {
     const errors: { [key: string]: string } = {};
 
-    // Gender is fixed to Male in this registration experience.
+    if (!formData.gender || formData.gender === 'choose_one') errors.gender = 'Please select your gender.';
     if (!formData.full_name.trim()) errors.full_name = 'Full name is required.';
 
     const rollTrim = formData.class_roll.trim();
@@ -531,6 +529,7 @@ export const RegistrationForm: React.FC<RegistrationFormProps> = ({
     }
 
     if (!formData.payment_time.trim()) errors.payment_time = 'Payment time is required.';
+    if (!formData.transaction_id.trim()) errors.transaction_id = 'Transaction ID is required.';
 
     // Jersey Validation
     if (!formData.jersey_back_name.trim()) errors.jersey_back_name = 'Jersey name is required.';
@@ -555,10 +554,10 @@ export const RegistrationForm: React.FC<RegistrationFormProps> = ({
   const validateStep = (step: number) => {
     const allErrors = validateForm();
     const fieldsByStep: Record<number, string[]> = {
-      0: ['full_name', 'class_roll', 'student_id', 'contact_mobile_number'],
-      1: ['academic_group', 'academic_section'],
-      2: ['sender_mobile_no', 'payment_time'],
-      3: ['jersey_back_name', 'jersey_number', 'declaration'],
+      0: ['full_name', 'class_roll', 'student_id', 'contact_mobile_number', 'academic_group', 'academic_section'],
+      1: ['sender_mobile_no', 'payment_time', 'transaction_id'],
+      2: ['jersey_back_name', 'jersey_number'],
+      3: ['declaration'],
     };
     const stepErrors = Object.fromEntries(fieldsByStep[step].filter(field => allErrors[field]).map(field => [field, allErrors[field]]));
     setFormErrors(prev => ({ ...prev, ...stepErrors }));
@@ -1067,7 +1066,7 @@ export const RegistrationForm: React.FC<RegistrationFormProps> = ({
                     )}
                   </div>
 
-                  <div className={currentStep === 1 ? 'contents' : 'hidden'}>
+                  <div className="contents">
                   {/* 5. Academic Group */}
                   <div>
                     <label className={`flex items-center gap-1.5 block text-xs font-bold uppercase tracking-wider mb-1.5 ${labelClasses}`}>
@@ -1086,12 +1085,8 @@ export const RegistrationForm: React.FC<RegistrationFormProps> = ({
                       <option value="Science" className={isMale ? 'bg-slate-900 text-white' : 'bg-white text-slate-900'}>
                         Science
                       </option>
-                      <option value="Business Studies" className={isMale ? 'bg-slate-900 text-white' : 'bg-white text-slate-900'}>
-                        Business Studies
-                      </option>
-                      <option value="Humanities" className={isMale ? 'bg-slate-900 text-white' : 'bg-white text-slate-900'}>
-                        Humanities
-                      </option>
+                      <option value="Business Studies" className={isMale ? 'bg-slate-900 text-white' : 'bg-white text-slate-900'}>Commerce</option>
+                      <option value="Humanities" className={isMale ? 'bg-slate-900 text-white' : 'bg-white text-slate-900'}>Arts</option>
                     </select>
                     </div>
                     {formErrors.academic_group && (
@@ -1149,7 +1144,7 @@ export const RegistrationForm: React.FC<RegistrationFormProps> = ({
                   </div>
 
                   {/* 7. Student Photo Upload (Optional, Max 3MB) */}
-                  <div className={`sm:col-span-2 pt-1 ${currentStep === 1 ? '' : 'hidden'} ${isFlagged('student_photo') ? 'p-3 rounded-2xl border-2 border-rose-400 bg-rose-50/20' : ''}`}>
+                  <div className={`sm:col-span-2 pt-1 ${isFlagged('student_photo') ? 'p-3 rounded-2xl border-2 border-rose-400 bg-rose-50/20' : ''}`}>
                     <PhotoUploadField
                       student_photo={formData.student_photo}
                       photoUrl={formData.student_photo}
@@ -1172,14 +1167,37 @@ export const RegistrationForm: React.FC<RegistrationFormProps> = ({
                 </div>
               </div>
 
+              {/* Group-wise account instructions directly below personal and academic information. */}
+              <section className={\`mt-5 space-y-3 \${currentStep === 0 ? '' : 'hidden'}\`}>
+                <div className="rounded-2xl border border-cyan-400/30 bg-slate-950/55 p-4 sm:p-5 space-y-3">
+                  <div className="flex flex-wrap items-center justify-between gap-2">
+                    <h3 className="text-sm font-extrabold text-cyan-200">Payment Information · {formData.academic_group || 'Select your group'}</h3>
+                    <span className="rounded-full bg-emerald-500/15 px-3 py-1 text-xs font-bold text-emerald-300">Fee: {activeFee} BDT</span>
+                  </div>
+                  <p className="text-xs leading-relaxed text-slate-300">Select the correct group for payment. Copy the number below and send the exact registration fee. After payment, enter the sender number, Transaction ID and payment time in the next step.</p>
+                  {!formData.academic_group ? <p className="text-xs text-amber-300">Select an Academic Group above to view its payment accounts.</p> : (!hasGroupPayment ? <p className="text-xs text-rose-300">Payment account numbers are not configured for this group. Please contact the organizers.</p> : null)}
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    <div className="flex items-center justify-between gap-3 rounded-xl border border-pink-500/35 bg-pink-950/25 p-3">
+                      <div className="flex items-center gap-2 min-w-0"><BkashLogo className="w-7 h-7 shrink-0"/><div className="min-w-0"><div className="text-[10px] font-bold uppercase text-pink-300">bKash Personal</div><div className="truncate font-mono text-sm text-white">{activeBkashNumber || 'Not configured'}</div></div></div>
+                      <button type="button" disabled={!activeBkashNumber} onClick={()=>handleCopyAccount(activeBkashNumber.replace(/\D/g,''),'bkash')} className="rounded-lg border border-pink-400/40 px-3 py-2 text-xs font-bold text-pink-200 disabled:opacity-40"><Copy className="mr-1 inline w-3.5 h-3.5"/>Copy</button>
+                    </div>
+                    <div className="flex items-center justify-between gap-3 rounded-xl border border-orange-500/35 bg-orange-950/25 p-3">
+                      <div className="flex items-center gap-2 min-w-0"><NagadLogo className="w-7 h-7 shrink-0"/><div className="min-w-0"><div className="text-[10px] font-bold uppercase text-orange-300">Nagad Personal</div><div className="truncate font-mono text-sm text-white">{activeNagadNumber || 'Not configured'}</div></div></div>
+                      <button type="button" disabled={!activeNagadNumber} onClick={()=>handleCopyAccount(activeNagadNumber.replace(/\D/g,''),'nagad')} className="rounded-lg border border-orange-400/40 px-3 py-2 text-xs font-bold text-orange-200 disabled:opacity-40"><Copy className="mr-1 inline w-3.5 h-3.5"/>Copy</button>
+                    </div>
+                  </div>
+                  <p className="text-[11px] text-slate-400">Manual bKash/Nagad Send Money only. No online payment gateway is used.</p>
+                </div>
+              </section>
+
               {/* ======================================================== */}
               {/* 3. PAYMENT INFORMATION SECTION                           */}
               {/* ======================================================== */}
-              <div className={`space-y-4 pt-2 ${currentStep === 2 ? '' : 'hidden'}`}>
+              <div className={`space-y-4 pt-2 ${currentStep === 1 ? '' : 'hidden'}`}>
                 <div className={`pb-2.5 font-display text-base sm:text-lg font-bold flex items-center justify-between ${sectionHeaderClasses}`}>
                   <span className="flex items-center gap-2">
                     <CreditCard className="w-4 h-4" />
-                    3. Payment Information
+                    2. Payment Details
                   </span>
                   <span className="text-xs font-semibold px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-400">
                     Fee: {paymentSettings.registrationFee} BDT
@@ -1190,7 +1208,7 @@ export const RegistrationForm: React.FC<RegistrationFormProps> = ({
                   <div className="flex flex-wrap items-center justify-between gap-2 border-b border-slate-200/40 pb-3">
                     <div>
                       <span className="text-xs font-bold uppercase tracking-wider text-slate-400 block">
-                        Official Payment Accounts (Boys Wing)
+                        Official Payment Accounts ({formData.academic_group})
                       </span>
                       <p className="text-xs mt-0.5 opacity-80">
                         {paymentSettings.instructions || 'Send Personal payment (Send Money) and retain sender phone number.'}
@@ -1392,7 +1410,7 @@ export const RegistrationForm: React.FC<RegistrationFormProps> = ({
                     {/* 11. Transaction ID (Optional) */}
                     <div>
                       <label className={`block text-xs font-bold uppercase tracking-wider mb-1.5 ${labelClasses}`}>
-                        Transaction ID <span className="text-slate-400 font-normal">(Optional)</span>
+                        Transaction ID <span className="text-rose-500">*</span>
                       </label>
                       <div className="registration-field-row">
                       <span className="registration-field-icon"><FileCheck className="w-[18px] h-[18px]" /></span>
@@ -1418,7 +1436,7 @@ export const RegistrationForm: React.FC<RegistrationFormProps> = ({
               {/* ======================================================== */}
               {/* 4. JERSEY CUSTOMIZATION & LIVE PREVIEW                   */}
               {/* ======================================================== */}
-              <div className={`space-y-4 pt-2 ${currentStep === 3 ? '' : 'hidden'}`}>
+              <div className={`space-y-4 pt-2 ${currentStep === 2 ? '' : 'hidden'}`}>
                 <div className={`pb-2.5 font-display text-base sm:text-lg font-bold flex items-center justify-between ${sectionHeaderClasses}`}>
                   <span className="flex items-center gap-2">
                     <Shirt className="w-4 h-4" />

@@ -147,6 +147,7 @@ export interface PaymentSettings {
   femaleNagadNumber: string;
   instructions?: string;
   paymentInstructions?: string;
+  groupPaymentNumbers?: Record<string, { bkash: string; nagad: string }>;
 }
 
 export interface PdfSettings {

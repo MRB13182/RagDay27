@@ -184,7 +184,8 @@ export default function App() {
     maleBkashNumber: registrationSettingsConfig.maleBkashNumber,
     maleNagadNumber: registrationSettingsConfig.maleNagadNumber,
     femaleBkashNumber: registrationSettingsConfig.maleBkashNumber,
-    femaleNagadNumber: registrationSettingsConfig.maleNagadNumber,
+    femaleNagadNumber: registrationSettingsConfig.femaleNagadNumber,
+    groupPaymentNumbers: registrationSettingsConfig.groupPaymentNumbers,
     instructions: eventSettingsConfig.importantInstructions,
     paymentInstructions: eventSettingsConfig.importantInstructions,
   };

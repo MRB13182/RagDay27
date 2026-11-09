@@ -101,10 +101,12 @@ Humanities: HUG (HuG1, HuG2, HuG3, HuG4, HuG5)`,
     category: '03. Registration Settings',
     label: 'Payment number (Payment number.txt)',
     path: '03. reg-settings/Text/Payment number.txt',
-    defaultValue: `Male Bkash: 01712-345678
-Male Nagad: 01712-345678
-Female Bkash: 01812-345678
-Female Nagad: 01812-345678`,
+    defaultValue: `Science Bkash: 01712-345678
+Science Nagad: 01712-345678
+Business Studies Bkash: 01712-345678
+Business Studies Nagad: 01712-345678
+Humanities Bkash: 01712-345678
+Humanities Nagad: 01712-345678`,
   },
   {
     id: 'last-registration-date',

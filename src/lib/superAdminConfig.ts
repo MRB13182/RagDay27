@@ -63,32 +63,32 @@ import jerseyDesignRaw02 from '../super-admin/02. event-settings/Text/Jersey des
 // ============================================================================
 
 function parsePaymentNumberFile(rawText: string): {
-  maleBkash: string;
-  maleNagad: string;
-  femaleBkash: string;
-  femaleNagad: string;
+  maleBkash: string; maleNagad: string; femaleBkash: string; femaleNagad: string;
+  groups: Record<string, { bkash: string; nagad: string }>;
 } {
-  let maleBkash = '01712-345678';
-  let maleNagad = '01712-345678';
-  let femaleBkash = '01812-345678';
-  let femaleNagad = '01812-345678';
-
-  const lines = rawText.split(/\r?\n/).map(l => l.trim()).filter(Boolean);
-  for (const line of lines) {
-    const mb = line.match(/^male\s*bkash[:\s]+(.+)$/i);
-    if (mb) maleBkash = mb[1].trim();
-
-    const mn = line.match(/^male\s*nagad[:\s]+(.+)$/i);
-    if (mn) maleNagad = mn[1].trim();
-
-    const fb = line.match(/^female\s*bkash[:\s]+(.+)$/i);
-    if (fb) femaleBkash = fb[1].trim();
-
-    const fn = line.match(/^female\s*nagad[:\s]+(.+)$/i);
-    if (fn) femaleNagad = fn[1].trim();
+  let maleBkash = '', maleNagad = '', femaleBkash = '', femaleNagad = '';
+  const groups: Record<string, { bkash: string; nagad: string }> = {
+    Science: { bkash: '', nagad: '' },
+    'Business Studies': { bkash: '', nagad: '' },
+    Humanities: { bkash: '', nagad: '' },
+  };
+  for (const line of rawText.split(/\r?\n/).map(value => value.trim()).filter(Boolean)) {
+    const legacy = line.match(/^(male|female)\s*(bkash|nagad)[:\s]+(.+)$/i);
+    if (legacy) {
+      const gender = legacy[1].toLowerCase(), provider = legacy[2].toLowerCase(), value = legacy[3].trim();
+      if (gender === 'male' && provider === 'bkash') maleBkash = value;
+      if (gender === 'male' && provider === 'nagad') maleNagad = value;
+      if (gender === 'female' && provider === 'bkash') femaleBkash = value;
+      if (gender === 'female' && provider === 'nagad') femaleNagad = value;
+      continue;
+    }
+    const match = line.match(/^(science|business studies|commerce|humanities|arts)\s+(bkash|nagad)[:\s]+(.+)$/i);
+    if (match) {
+      const group = /science/i.test(match[1]) ? 'Science' : /business|commerce/i.test(match[1]) ? 'Business Studies' : 'Humanities';
+      groups[group][match[2].toLowerCase() as 'bkash' | 'nagad'] = match[3].trim();
+    }
   }
-
-  return { maleBkash, maleNagad, femaleBkash, femaleNagad };
+  return { maleBkash, maleNagad, femaleBkash, femaleNagad, groups };
 }
 
 export function parseEventCardsContent(rawText: string): EventCard[] {
@@ -479,6 +479,7 @@ export function getRegistrationSettingsConfig() {
     femalePaymentNumber: payments.femaleBkash,
     femaleBkashNumber: payments.femaleBkash,
     femaleNagadNumber: payments.femaleNagad,
+    groupPaymentNumbers: payments.groups,
     maleJerseyDesign: jersey || defaultMaleJersey,
     femaleJerseyDesign: defaultFemaleJersey,
     jerseyPreviewBackground: backJersey || defaultJerseyBg,
@@ -584,6 +585,7 @@ export const registrationSettingsConfig = {
   get femalePaymentNumber() { return getRegistrationSettingsConfig().femalePaymentNumber; },
   get femaleBkashNumber() { return getRegistrationSettingsConfig().femaleBkashNumber; },
   get femaleNagadNumber() { return getRegistrationSettingsConfig().femaleNagadNumber; },
+  get groupPaymentNumbers() { return getRegistrationSettingsConfig().groupPaymentNumbers; },
   get maleJerseyDesign() { return getRegistrationSettingsConfig().maleJerseyDesign; },
   get femaleJerseyDesign() { return getRegistrationSettingsConfig().femaleJerseyDesign; },
   get jerseyPreviewBackground() { return getRegistrationSettingsConfig().jerseyPreviewBackground; },
