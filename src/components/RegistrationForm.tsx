@@ -856,19 +856,17 @@ export const RegistrationForm: React.FC<RegistrationFormProps> = ({
         </section>
 
         {/* State A: Gender not selected yet (Reference Image 2) */}
-        {formData.gender === 'choose_one' && (
+        {genderWarningMessage ? (
+          <div role="alert" aria-live="polite" className="mx-auto mt-6 max-w-4xl rounded-2xl border-2 border-amber-300/80 bg-gradient-to-r from-amber-50 via-yellow-50 to-amber-50 px-5 py-6 sm:px-8 sm:py-8 text-center text-lg sm:text-2xl font-extrabold leading-relaxed text-amber-950 shadow-[0_12px_30px_-12px_rgba(180,120,0,0.28)] animate-fadeIn">
+            {genderWarningMessage}
+          </div>
+        ) : formData.gender === 'choose_one' ? (
           <div className="mt-6 p-8 sm:p-12 rounded-2xl border border-slate-200/80 bg-white/75 backdrop-blur-sm text-center shadow-2xs animate-fadeIn">
             <p className="text-sm sm:text-base font-semibold text-slate-500">
               Please select your gender to register.
             </p>
           </div>
-        )}
-
-        {genderWarningMessage && (
-          <div role="alert" aria-live="polite" className="mx-auto mt-4 max-w-xl rounded-2xl border border-amber-300/60 bg-amber-50 px-4 py-3 text-center text-sm sm:text-base font-bold text-amber-950 shadow-lg animate-fadeIn">
-            {genderWarningMessage}
-          </div>
-        )}
+        ) : null}
 
         {/* State C: Gender selected — guided multi-step registration. */}
         {formData.gender === 'male' && (
