@@ -76,24 +76,61 @@ export const InvitationCard: React.FC<InvitationCardProps> = ({
           className="absolute inset-0 w-full h-full object-cover pointer-events-none select-none z-0"
         />
 
-        {/* Corrected college identity, layered over the legacy text in the master artwork. */}
+        {/* Corrected college identity overlays for Left and Right sections */}
+        {/* Left Section College Block (x: 160px, y: 68px on 1920x819) */}
         <div
-          className="absolute z-[1] flex flex-col items-start justify-center bg-[#F8F8FA] text-[#0A2568] font-extrabold uppercase leading-[1.08] pointer-events-none"
+          className="absolute z-[2] flex flex-col items-start justify-center bg-[#FAFBFC] text-[#0A2568] pointer-events-none select-none pl-[0.1%]"
           style={{
-            left: '15.5%',
-            top: '6.0%',
-            width: '20.5%',
-            height: '10.8%',
-            padding: '0.35% 0.5%',
-            fontSize: 'clamp(7px, 1.12cqw, 21px)',
-            letterSpacing: '0.015em',
+            left: '8.33%',
+            top: '8.0%',
+            width: '9.1%',
+            height: '15.3%',
+            fontFamily: "'Syne', 'Plus Jakarta Sans', sans-serif",
           }}
         >
-          <span>NATIONAL</span>
-          <span>IDEAL</span>
-          <span>COLLEGE</span>
-          <span className="mt-[2%] text-[0.78em] tracking-[0.12em]">KHILGAON, DHAKA</span>
-          <span className="text-[0.78em] tracking-[0.12em]">ESTD. 2001</span>
+          <span className="font-extrabold tracking-tight uppercase leading-[1.05]" style={{ fontSize: 'clamp(8px, 1.15cqw, 22px)' }}>
+            NATIONAL
+          </span>
+          <span className="font-extrabold tracking-tight uppercase leading-[1.05]" style={{ fontSize: 'clamp(8px, 1.15cqw, 22px)' }}>
+            IDEAL
+          </span>
+          <span className="font-extrabold tracking-tight uppercase leading-[1.05]" style={{ fontSize: 'clamp(8px, 1.15cqw, 22px)' }}>
+            COLLEGE
+          </span>
+          <span className="font-bold tracking-[0.08em] uppercase mt-[4%] text-[#0A2568] leading-tight" style={{ fontSize: 'clamp(4.5px, 0.62cqw, 11.5px)' }}>
+            KHILGAON, DHAKA
+          </span>
+          <span className="font-bold tracking-[0.14em] uppercase text-[#0A2568] leading-tight" style={{ fontSize: 'clamp(4.5px, 0.62cqw, 11.5px)' }}>
+            ESTD. 2001
+          </span>
+        </div>
+
+        {/* Right Section College Block (x: 764px, y: 68px on 1920x819) */}
+        <div
+          className="absolute z-[2] flex flex-col items-start justify-center bg-[#FAFBFC] text-[#0A2568] pointer-events-none select-none pl-[0.1%]"
+          style={{
+            left: '39.75%',
+            top: '8.0%',
+            width: '9.1%',
+            height: '15.3%',
+            fontFamily: "'Syne', 'Plus Jakarta Sans', sans-serif",
+          }}
+        >
+          <span className="font-extrabold tracking-tight uppercase leading-[1.05]" style={{ fontSize: 'clamp(8px, 1.15cqw, 22px)' }}>
+            NATIONAL
+          </span>
+          <span className="font-extrabold tracking-tight uppercase leading-[1.05]" style={{ fontSize: 'clamp(8px, 1.15cqw, 22px)' }}>
+            IDEAL
+          </span>
+          <span className="font-extrabold tracking-tight uppercase leading-[1.05]" style={{ fontSize: 'clamp(8px, 1.15cqw, 22px)' }}>
+            COLLEGE
+          </span>
+          <span className="font-bold tracking-[0.08em] uppercase mt-[4%] text-[#0A2568] leading-tight" style={{ fontSize: 'clamp(4.5px, 0.62cqw, 11.5px)' }}>
+            KHILGAON, DHAKA
+          </span>
+          <span className="font-bold tracking-[0.14em] uppercase text-[#0A2568] leading-tight" style={{ fontSize: 'clamp(4.5px, 0.62cqw, 11.5px)' }}>
+            ESTD. 2001
+          </span>
         </div>
 
         {/* 2. DYNAMIC OVERLAYS LAYER (RELATIVE Z-10) */}
