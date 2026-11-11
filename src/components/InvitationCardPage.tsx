@@ -18,7 +18,7 @@ import {
   User,
   Lock,
 } from 'lucide-react';
-import { toPng } from 'html-to-image';
+import { toPng, toJpeg } from 'html-to-image';
 import { getPublicInvitation, getRejectedRegistrationForResubmission } from '../services';
 import { InvitationCard } from './InvitationCard';
 
@@ -48,6 +48,7 @@ export const InvitationCardPage: React.FC<InvitationCardPageProps> = ({
   const [isDownloading, setIsDownloading] = useState(false);
   const [downloadToast, setDownloadToast] = useState(false);
   const [downloadError, setDownloadError] = useState<string | null>(null);
+  const [downloadFormat, setDownloadFormat] = useState<'png' | 'jpg'>('png');
   const [isRecoveringRejected, setIsRecoveringRejected] = useState(false);
   const [recoveryError, setRecoveryError] = useState<string | null>(null);
   const [showRecoveryDialog, setShowRecoveryDialog] = useState(false);
@@ -105,7 +106,7 @@ export const InvitationCardPage: React.FC<InvitationCardPageProps> = ({
   };
 
 
-  const handleDownloadPass = async () => {
+  const handleDownloadPass = async (format: 'png' | 'jpg' = downloadFormat) => {
     if (!matchedRecord || matchedRecord.status !== 'approved') return;
 
     setIsDownloading(true);
@@ -126,14 +127,25 @@ export const InvitationCardPage: React.FC<InvitationCardPageProps> = ({
       // Small pause to guarantee font rendering and layout paint
       await new Promise(resolve => setTimeout(resolve, 150));
 
-      const dataUrl = await toPng(targetElement, {
-        pixelRatio: 2, // High resolution (2048px width)
-        cacheBust: true,
-        skipFonts: true, // Avoid SecurityError accessing cross-origin Google Fonts stylesheets
-      });
+      let dataUrl: string;
+      if (format === 'jpg') {
+        dataUrl = await toJpeg(targetElement, {
+          quality: 0.98,
+          pixelRatio: 1, // Exact 1920x819 master resolution
+          cacheBust: true,
+          skipFonts: true,
+          backgroundColor: '#FFFFFF',
+        });
+      } else {
+        dataUrl = await toPng(targetElement, {
+          pixelRatio: 1, // Exact 1920x819 master resolution
+          cacheBust: true,
+          skipFonts: true,
+        });
+      }
 
       const cleanReg = (matchedRecord.registration_no || 'RD27').replace(/[^a-zA-Z0-9_-]/g, '_');
-      const filename = `${cleanReg}_Pass.png`;
+      const filename = `${cleanReg}_Pass.${format === 'jpg' ? 'jpg' : 'png'}`;
 
       const link = document.createElement('a');
       link.download = filename;
@@ -149,14 +161,25 @@ export const InvitationCardPage: React.FC<InvitationCardPageProps> = ({
       try {
         const fallbackTarget = displayCardRef.current || exportCardRef.current;
         if (fallbackTarget) {
-          const fallbackDataUrl = await toPng(fallbackTarget, {
-            pixelRatio: 2,
-            cacheBust: true,
-            skipFonts: true,
-          });
+          let fallbackDataUrl: string;
+          if (format === 'jpg') {
+            fallbackDataUrl = await toJpeg(fallbackTarget, {
+              quality: 0.98,
+              pixelRatio: 2,
+              cacheBust: true,
+              skipFonts: true,
+              backgroundColor: '#FFFFFF',
+            });
+          } else {
+            fallbackDataUrl = await toPng(fallbackTarget, {
+              pixelRatio: 2,
+              cacheBust: true,
+              skipFonts: true,
+            });
+          }
 
           const cleanReg = (matchedRecord.registration_no || 'RD27').replace(/[^a-zA-Z0-9_-]/g, '_');
-          const filename = `${cleanReg}_Pass.png`;
+          const filename = `${cleanReg}_Pass.${format === 'jpg' ? 'jpg' : 'png'}`;
 
           const link = document.createElement('a');
           link.download = filename;
@@ -172,7 +195,7 @@ export const InvitationCardPage: React.FC<InvitationCardPageProps> = ({
       } catch (fallbackErr: any) {
         console.error('Fallback export error:', fallbackErr);
       }
-      setDownloadError('Unable to generate PNG pass image. Please try again.');
+      setDownloadError(`Unable to generate ${format.toUpperCase()} pass image. Please try again.`);
     } finally {
       setIsDownloading(false);
     }
@@ -466,20 +489,47 @@ export const InvitationCardPage: React.FC<InvitationCardPageProps> = ({
                   </div>
                 </div>
 
-                {/* THE ONLY BUTTON */}
-                <button
-                  type="button"
-                  onClick={handleDownloadPass}
-                  disabled={isDownloading}
-                  className="w-full sm:w-auto px-8 py-3.5 rounded-2xl bg-gradient-to-r from-[#7138F5] via-[#5224D8] to-[#11C8F4] hover:brightness-105 text-white font-extrabold text-sm shadow-[0_12px_28px_-6px_rgba(113,56,245,0.36),inset_0_1px_1px_rgba(255,255,255,0.4)] hover:shadow-[0_16px_36px_-6px_rgba(113,56,245,0.48)] transition-all flex items-center justify-center gap-2 cursor-pointer hover:-translate-y-0.5 active:translate-y-0 disabled:opacity-60"
-                >
-                  {isDownloading ? (
-                    <Loader2 className="w-4 h-4 animate-spin" />
-                  ) : (
-                    <Download className="w-4 h-4" />
-                  )}
-                  <span>{isDownloading ? 'Generating Pass…' : 'Download Pass'}</span>
-                </button>
+                {/* Download Pass Controls with PNG and JPG options */}
+                <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
+                  <div className="inline-flex items-center p-1 rounded-xl bg-white/90 border border-emerald-300/80 shadow-2xs self-center">
+                    <button
+                      type="button"
+                      onClick={() => setDownloadFormat('png')}
+                      className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer ${
+                        downloadFormat === 'png'
+                          ? 'bg-[#0A2568] text-white shadow-xs'
+                          : 'text-slate-600 hover:text-slate-900'
+                      }`}
+                    >
+                      PNG
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setDownloadFormat('jpg')}
+                      className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer ${
+                        downloadFormat === 'jpg'
+                          ? 'bg-[#0A2568] text-white shadow-xs'
+                          : 'text-slate-600 hover:text-slate-900'
+                      }`}
+                    >
+                      JPG
+                    </button>
+                  </div>
+
+                  <button
+                    type="button"
+                    onClick={() => handleDownloadPass(downloadFormat)}
+                    disabled={isDownloading}
+                    className="w-full sm:w-auto px-8 py-3.5 rounded-2xl bg-gradient-to-r from-[#7138F5] via-[#5224D8] to-[#11C8F4] hover:brightness-105 text-white font-extrabold text-sm shadow-[0_12px_28px_-6px_rgba(113,56,245,0.36),inset_0_1px_1px_rgba(255,255,255,0.4)] hover:shadow-[0_16px_36px_-6px_rgba(113,56,245,0.48)] transition-all flex items-center justify-center gap-2 cursor-pointer hover:-translate-y-0.5 active:translate-y-0 disabled:opacity-60"
+                  >
+                    {isDownloading ? (
+                      <Loader2 className="w-4 h-4 animate-spin" />
+                    ) : (
+                      <Download className="w-4 h-4" />
+                    )}
+                    <span>{isDownloading ? 'Generating Pass…' : `Download Pass (${downloadFormat.toUpperCase()})`}</span>
+                  </button>
+                </div>
               </div>
 
               {/* Institution Card matching Reference Image 2 Screen 11 */}
@@ -534,14 +584,14 @@ export const InvitationCardPage: React.FC<InvitationCardPageProps> = ({
                 />
               </div>
 
-              {/* Off-screen fixed 1024px landscape card used for generating pristine high-res PNG pass */}
+              {/* Off-screen fixed 1920px landscape card matching exact master design aspect ratio */}
               <div
                 aria-hidden="true"
                 style={{
                   position: 'fixed',
                   left: '-9999px',
                   top: 0,
-                  width: '1024px',
+                  width: '1920px',
                   pointerEvents: 'none',
                   zIndex: -9999,
                 }}
