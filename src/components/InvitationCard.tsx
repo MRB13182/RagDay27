@@ -112,7 +112,7 @@ export const InvitationCard: React.FC<InvitationCardProps> = ({
               style={{
                 left: '4.8%',
                 top: '74.5%',
-                width: '18.2%',
+                width: '25.5%',
                 height: '4.8%',
               }}
             >
@@ -120,7 +120,7 @@ export const InvitationCard: React.FC<InvitationCardProps> = ({
                 className="text-[#0A2568] font-bold truncate leading-none text-center"
                 style={{
                   fontFamily: "'Caveat', cursive",
-                  fontSize: 'clamp(14px, 1.8cqw, 36px)',
+                  fontSize: 'clamp(12px, 1.45cqw, 28px)',
                 }}
               >
                 {studentName}
@@ -291,7 +291,7 @@ export const InvitationCard: React.FC<InvitationCardProps> = ({
                 height: '6.3%',
               }}
             >
-              <Check className="w-[85%] h-[85%] text-[#0A2568] stroke-[4]" />
+              <Check className="w-full h-full text-[#0A2568] stroke-[3] translate-x-[2%] translate-y-[-1%]" />
             </div>
           )}
         </div>
