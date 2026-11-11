@@ -76,6 +76,26 @@ export const InvitationCard: React.FC<InvitationCardProps> = ({
           className="absolute inset-0 w-full h-full object-cover pointer-events-none select-none z-0"
         />
 
+        {/* Corrected college identity, layered over the legacy text in the master artwork. */}
+        <div
+          className="absolute z-[1] flex flex-col items-start justify-center bg-[#F8F8FA] text-[#0A2568] font-extrabold uppercase leading-[1.08] pointer-events-none"
+          style={{
+            left: '15.5%',
+            top: '6.0%',
+            width: '20.5%',
+            height: '10.8%',
+            padding: '0.35% 0.5%',
+            fontSize: 'clamp(7px, 1.12cqw, 21px)',
+            letterSpacing: '0.015em',
+          }}
+        >
+          <span>NATIONAL</span>
+          <span>IDEAL</span>
+          <span>COLLEGE</span>
+          <span className="mt-[2%] text-[0.78em] tracking-[0.12em]">KHILGAON, DHAKA</span>
+          <span className="text-[0.78em] tracking-[0.12em]">ESTD. 2001</span>
+        </div>
+
         {/* 2. DYNAMIC OVERLAYS LAYER (RELATIVE Z-10) */}
         <div className="absolute inset-0 z-10 pointer-events-none">
           {/* ======================================================= */}
