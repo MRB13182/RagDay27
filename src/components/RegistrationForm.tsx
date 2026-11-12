@@ -1204,87 +1204,49 @@ export const RegistrationForm: React.FC<RegistrationFormProps> = ({
 
                   {/* Payment Numbers: bKash & Nagad Fintech Glass Cards */}
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
-                    {/* bKash Fintech Card */}
-                    <div className={`relative overflow-hidden p-4 rounded-2xl transition-all duration-300 flex items-center justify-between gap-3 ${
-                      isMale
-                        ? 'bg-gradient-to-br from-[#E2136E]/20 via-slate-900/90 to-slate-950/95 border border-[#E2136E]/40 shadow-[0_12px_30px_-8px_rgba(226,19,110,0.25),inset_0_1.5px_1px_rgba(255,255,255,0.15)] hover:border-[#E2136E]/70'
-                        : 'glass-fintech-bkash'
-                    }`}>
-                      <div className="absolute inset-x-0 top-0 h-1/2 bg-gradient-to-b from-white/20 to-transparent pointer-events-none rounded-t-2xl" />
+                    {/* Group-scoped bKash account */}
+                    <div className="relative overflow-hidden p-4 rounded-2xl border border-[#E2136E]/40 bg-gradient-to-br from-[#E2136E]/15 via-slate-900/90 to-slate-950/95 flex items-center justify-between gap-3">
                       <div className="relative z-10 flex items-center gap-3 min-w-0">
-                        <div className="w-11 h-11 rounded-2xl bg-white/95 backdrop-blur-md flex items-center justify-center p-1.5 shadow-sm border border-pink-200/80 shrink-0">
+                        <div className="w-11 h-11 rounded-2xl bg-white/95 flex items-center justify-center p-1.5 shrink-0">
                           <BkashLogo className="w-7 h-7" />
                         </div>
                         <div className="min-w-0">
-                          <div className={`text-[10px] font-extrabold uppercase tracking-wider ${isMale ? 'text-pink-300' : 'text-pink-700'}`}>
-                            bKash Personal
-                          </div>
-                          <div className={`font-mono font-black text-sm sm:text-base tracking-tight truncate ${isMale ? 'text-white' : 'text-slate-900'}`}>
-                            {activeBkashNumber}
-                          </div>
+                          <div className="text-[10px] font-extrabold uppercase tracking-wider text-pink-300">bKash Personal</div>
+                          <div className="font-mono font-black text-sm sm:text-base text-white truncate">{activeBkashNumber || 'Not configured'}</div>
                         </div>
                       </div>
-                      <button
-                        type="button"
-                        disabled={!activeBkashNumber}
+                      <button type="button" disabled={!activeBkashNumber}
                         onClick={() => {
                           if (!activeBkashNumber) return;
                           handleCopyAccount(activeBkashNumber.replace(/\D/g, '') || activeBkashNumber, 'bkash');
                           setFormData(prev => ({ ...prev, send_method: 'bkash' }));
                         }}
-                        className={`relative z-10 px-3 py-2 rounded-xl text-xs font-extrabold transition-all duration-200 flex items-center gap-1.5 cursor-pointer active:scale-95 shrink-0 ${
-                          copiedAccount === 'bkash'
-                            ? 'bg-emerald-500 text-white shadow-md shadow-emerald-500/30'
-                            : isMale
-                            ? 'bg-[#E2136E]/25 hover:bg-[#E2136E]/40 text-pink-200 border border-[#E2136E]/50'
-                            : 'glass-fintech-bkash text-pink-700'
-                        }`}
-                        title="Click to copy bKash account number"
-                      >
-                        {copiedAccount === 'bkash' ? <Check className="w-3.5 h-3.5" /> : <Copy className="w-3.5 h-3.5" />}
-                        <span>{copiedAccount === 'bkash' ? 'Copied' : 'Copy'}</span>
+                        className="relative z-10 px-3 py-2 rounded-xl text-xs font-extrabold bg-[#E2136E]/25 text-pink-200 border border-[#E2136E]/50 disabled:opacity-40 disabled:cursor-not-allowed">
+                        {copiedAccount === 'bkash' ? <Check className="inline w-3.5 h-3.5" /> : <Copy className="inline w-3.5 h-3.5" />}
+                        {copiedAccount === 'bkash' ? 'Copied' : 'Copy'}
                       </button>
                     </div>
 
-                    {/* Nagad Fintech Card */}
-                    <div className={`relative overflow-hidden p-4 rounded-2xl transition-all duration-300 flex items-center justify-between gap-3 ${
-                      isMale
-                        ? 'bg-gradient-to-br from-[#F7941D]/20 via-slate-900/90 to-slate-950/95 border border-[#F7941D]/40 shadow-[0_12px_30px_-8px_rgba(247,148,29,0.25),inset_0_1.5px_1px_rgba(255,255,255,0.15)] hover:border-[#F7941D]/70'
-                        : 'glass-fintech-nagad'
-                    }`}>
-                      <div className="absolute inset-x-0 top-0 h-1/2 bg-gradient-to-b from-white/20 to-transparent pointer-events-none rounded-t-2xl" />
+                    {/* Group-scoped Nagad account */}
+                    <div className="relative overflow-hidden p-4 rounded-2xl border border-[#F7941D]/40 bg-gradient-to-br from-[#F7941D]/15 via-slate-900/90 to-slate-950/95 flex items-center justify-between gap-3">
                       <div className="relative z-10 flex items-center gap-3 min-w-0">
-                        <div className="w-11 h-11 rounded-2xl bg-white/95 backdrop-blur-md flex items-center justify-center p-1.5 shadow-sm border border-orange-200/80 shrink-0">
+                        <div className="w-11 h-11 rounded-2xl bg-white/95 flex items-center justify-center p-1.5 shrink-0">
                           <NagadLogo className="w-7 h-7" />
                         </div>
                         <div className="min-w-0">
-                          <div className={`text-[10px] font-extrabold uppercase tracking-wider ${isMale ? 'text-amber-300' : 'text-amber-700'}`}>
-                            Nagad Personal
-                          </div>
-                          <div className={`font-mono font-black text-sm sm:text-base tracking-tight truncate ${isMale ? 'text-white' : 'text-slate-900'}`}>
-                            {activeNagadNumber}
-                          </div>
+                          <div className="text-[10px] font-extrabold uppercase tracking-wider text-amber-300">Nagad Personal</div>
+                          <div className="font-mono font-black text-sm sm:text-base text-white truncate">{activeNagadNumber || 'Not configured'}</div>
                         </div>
                       </div>
-                      <button
-                        type="button"
-                        disabled={!activeNagadNumber}
+                      <button type="button" disabled={!activeNagadNumber}
                         onClick={() => {
                           if (!activeNagadNumber) return;
                           handleCopyAccount(activeNagadNumber.replace(/\D/g, '') || activeNagadNumber, 'nagad');
                           setFormData(prev => ({ ...prev, send_method: 'nagad' }));
                         }}
-                        className={`relative z-10 px-3 py-2 rounded-xl text-xs font-extrabold transition-all duration-200 flex items-center gap-1.5 cursor-pointer active:scale-95 shrink-0 ${
-                          copiedAccount === 'nagad'
-                            ? 'bg-emerald-500 text-white shadow-md shadow-emerald-500/30'
-                            : isMale
-                            ? 'bg-[#F7941D]/25 hover:bg-[#F7941D]/40 text-amber-200 border border-[#F7941D]/50'
-                            : 'glass-fintech-nagad'
-                        }`}
-                        title="Click to copy Nagad account number"
-                      >
-                        {copiedAccount === 'nagad' ? <Check className="w-3.5 h-3.5" /> : <Copy className="w-3.5 h-3.5" />}
-                        <span>{copiedAccount === 'nagad' ? 'Copied' : 'Copy'}</span>
+                        className="relative z-10 px-3 py-2 rounded-xl text-xs font-extrabold bg-[#F7941D]/25 text-amber-200 border border-[#F7941D]/50 disabled:opacity-40 disabled:cursor-not-allowed">
+                        {copiedAccount === 'nagad' ? <Check className="inline w-3.5 h-3.5" /> : <Copy className="inline w-3.5 h-3.5" />}
+                        {copiedAccount === 'nagad' ? 'Copied' : 'Copy'}
                       </button>
                     </div>
                   </div>
