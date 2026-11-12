@@ -468,11 +468,25 @@ export function getRegistrationSettingsConfig() {
   const legacyPayments = parsePaymentNumberFile(legacyRaw);
   const parseGroupFile = (path: string, bundled: string, groupName: string) => {
     const raw = getSavedSuperAdminText(path, bundled.trim());
-    const parsed = parsePaymentNumberFile(raw);
-    const prefixPattern = new RegExp('^(?:' + groupName.replace(/[.*+?^${}()|[\]\\]/g, '\\export function getRegistrationSettingsConfig() {
-  const payContent = (paymentNumberRaw || paymentNumberDirectRaw || '').trim();
-  const paymentRaw = getSavedSuperAdminText('03. reg-settings/Text/Payment number.txt', payContent);
-  const payments = parsePaymentNumberFile(paymentRaw);') + ')\\s+(bkash|nagad)[:\\s]+(.+)
+    const values = { bkash: '', nagad: '' };
+    for (const line of raw.split(/\r?\n/).map(value => value.trim()).filter(Boolean)) {
+      const match = line.match(/^(?:(?:Science|Business Studies|Humanities)\s+)?(bkash|nagad)[:\s]+(.+)$/i);
+      if (match) values[match[1].toLowerCase() as 'bkash' | 'nagad'] = match[2].trim();
+    }
+    const oldValue = legacyPayments.groups[groupName];
+    return {
+      bkash: values.bkash || oldValue?.bkash || '',
+      nagad: values.nagad || oldValue?.nagad || '',
+    };
+  };
+  const payments = {
+    ...legacyPayments,
+    groups: {
+      Science: parseGroupFile('03. reg-settings/Text/Payment number SC.txt', paymentNumberSCRaw, 'Science'),
+      'Business Studies': parseGroupFile('03. reg-settings/Text/Payment number BS.txt', paymentNumberBSRaw, 'Business Studies'),
+      Humanities: parseGroupFile('03. reg-settings/Text/Payment number HU.txt', paymentNumberHURaw, 'Humanities'),
+    },
+  };
   const openState = calculateRegistrationOpenState();
   const jersey = getSuperAdminImageUrl('02. event-settings/Pic/jersey-design.png', eventJerseyDesignPic02 || defaultMaleJersey);
   const backJersey = getSuperAdminImageUrl('03. reg-settings/Pic/back jersey preview.png', backJerseyPic || defaultJerseyBg);
