@@ -14,7 +14,7 @@ const bundledGallery:GalleryEntry[]=[{
  type:'image',
  title:'Rag Day Gallery',
  caption:'Batch memories',
- url:'/assets/gallery/file_00000000b180820783d44c1a5d04d553.png'
+ url:`${import.meta.env.BASE_URL}assets/gallery/file_00000000b180820783d44c1a5d04d553.png`
 }];
 
 export const GallerySection:React.FC=()=>{
