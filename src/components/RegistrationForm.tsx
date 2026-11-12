@@ -378,11 +378,15 @@ export const RegistrationForm: React.FC<RegistrationFormProps> = ({
 
   const subCardClasses = 'glass-male-card backdrop-blur-xl';
 
-  // Dynamic payment numbers based on gender
-  const groupKey = formData.academic_group === 'Commerce' ? 'Business Studies' : formData.academic_group === 'Arts' ? 'Humanities' : formData.academic_group;
-  const groupPayment = paymentSettings?.groupPaymentNumbers?.[groupKey];
-  const activeBkashNumber = groupPayment?.bkash || '';
-  const activeNagadNumber = groupPayment?.nagad || '';
+  // Resolve the payment account exclusively from the student's academic group.
+  const normalizedGroup = formData.academic_group.trim().toLowerCase();
+  const groupKey = /science/.test(normalizedGroup) ? 'Science'
+    : /business|commerce/.test(normalizedGroup) ? 'Business Studies'
+    : /humanities|arts/.test(normalizedGroup) ? 'Humanities'
+    : '';
+  const groupPayment = groupKey ? paymentSettings?.groupPaymentNumbers?.[groupKey] : undefined;
+  const activeBkashNumber = groupPayment?.bkash?.trim() || '';
+  const activeNagadNumber = groupPayment?.nagad?.trim() || '';
   const hasGroupPayment = Boolean(activeBkashNumber || activeNagadNumber);
 
   const handleCopyAccount = async (number: string, label: string) => {
@@ -597,6 +601,19 @@ export const RegistrationForm: React.FC<RegistrationFormProps> = ({
       setSubmitErrorMessage('Registration is currently available for Male students only.');
       setFormData(prev => ({ ...prev, gender: 'choose_one' }));
       onGenderChange?.('choose_one');
+      return;
+    }
+
+    // Group-scoped accounts are mandatory: never allow a student to submit
+    // using another group's account or an unconfigured payment destination.
+    const selectedGroupAccount = formData.send_method === 'bkash' ? activeBkashNumber : activeNagadNumber;
+    if (!groupKey || !selectedGroupAccount) {
+      setSubmitErrorMessage(
+        !groupKey
+          ? 'Please select a valid academic group before proceeding with payment.'
+          : `The ${formData.send_method === 'bkash' ? 'bKash' : 'Nagad'} payment number for ${groupKey} is not configured. Please contact the administrator.`
+      );
+      setIsSubmitting(false);
       return;
     }
 
@@ -1209,7 +1226,9 @@ export const RegistrationForm: React.FC<RegistrationFormProps> = ({
                       </div>
                       <button
                         type="button"
+                        disabled={!activeBkashNumber}
                         onClick={() => {
+                          if (!activeBkashNumber) return;
                           handleCopyAccount(activeBkashNumber.replace(/\D/g, '') || activeBkashNumber, 'bkash');
                           setFormData(prev => ({ ...prev, send_method: 'bkash' }));
                         }}
@@ -1249,7 +1268,9 @@ export const RegistrationForm: React.FC<RegistrationFormProps> = ({
                       </div>
                       <button
                         type="button"
+                        disabled={!activeNagadNumber}
                         onClick={() => {
+                          if (!activeNagadNumber) return;
                           handleCopyAccount(activeNagadNumber.replace(/\D/g, '') || activeNagadNumber, 'nagad');
                           setFormData(prev => ({ ...prev, send_method: 'nagad' }));
                         }}
