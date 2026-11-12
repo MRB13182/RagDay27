@@ -20,7 +20,7 @@ export const InvitationCard: React.FC<InvitationCardProps> = ({
   const [photoError, setPhotoError] = useState(false);
   const resolvedPhotoUrl = resolveStudentPhotoUrl(record.student_photo);
 
-  const studentName = record.full_name || 'Participant Name';
+  const studentName = record.full_name || '';
   const roll = record.class_roll || '—';
   const studentId = record.student_id || record.id || record.class_roll || '—';
   const section = record.academic_section || '—';
@@ -76,59 +76,41 @@ export const InvitationCard: React.FC<InvitationCardProps> = ({
           className="absolute inset-0 w-full h-full object-cover pointer-events-none select-none z-0"
         />
 
-        {/* Corrected college identity overlays for Left and Right sections */}
-        {/* Left Section College Block (x: 160px, y: 68px on 1920x819) */}
+        {/* Corrected college identity sub-blocks for Left and Right sections */}
+        {/* Left Section College Sub-Block: KHILGAON, DHAKA / ESTD. 2001 */}
         <div
-          className="absolute z-[2] flex flex-col items-start justify-center bg-[#FAFBFC] text-[#0A2568] pointer-events-none select-none pl-[0.1%]"
+          className="absolute z-[2] flex flex-col items-start justify-center text-[#0A2568] pointer-events-none select-none pl-[0.1%]"
           style={{
             left: '8.33%',
-            top: '8.0%',
-            width: '9.1%',
-            height: '15.3%',
-            fontFamily: "'Syne', 'Plus Jakarta Sans', sans-serif",
+            top: '18.1%',
+            width: '9.3%',
+            height: '6.5%',
+            fontFamily: "'Plus Jakarta Sans', sans-serif",
           }}
         >
-          <span className="font-extrabold tracking-tight uppercase leading-[1.05]" style={{ fontSize: 'clamp(8px, 1.15cqw, 22px)' }}>
-            NATIONAL
-          </span>
-          <span className="font-extrabold tracking-tight uppercase leading-[1.05]" style={{ fontSize: 'clamp(8px, 1.15cqw, 22px)' }}>
-            IDEAL
-          </span>
-          <span className="font-extrabold tracking-tight uppercase leading-[1.05]" style={{ fontSize: 'clamp(8px, 1.15cqw, 22px)' }}>
-            COLLEGE
-          </span>
-          <span className="font-bold tracking-[0.08em] uppercase mt-[4%] text-[#0A2568] leading-tight" style={{ fontSize: 'clamp(4.5px, 0.62cqw, 11.5px)' }}>
+          <span className="font-bold tracking-[0.08em] uppercase text-[#0A2568] leading-tight" style={{ fontSize: 'clamp(4.5px, 0.62cqw, 12px)' }}>
             KHILGAON, DHAKA
           </span>
-          <span className="font-bold tracking-[0.14em] uppercase text-[#0A2568] leading-tight" style={{ fontSize: 'clamp(4.5px, 0.62cqw, 11.5px)' }}>
+          <span className="font-bold tracking-[0.14em] uppercase text-[#0A2568] leading-tight mt-[2px]" style={{ fontSize: 'clamp(4.5px, 0.62cqw, 12px)' }}>
             ESTD. 2001
           </span>
         </div>
 
-        {/* Right Section College Block (x: 764px, y: 68px on 1920x819) */}
+        {/* Right Section College Sub-Block: KHILGAON, DHAKA / ESTD. 2001 */}
         <div
-          className="absolute z-[2] flex flex-col items-start justify-center bg-[#FAFBFC] text-[#0A2568] pointer-events-none select-none pl-[0.1%]"
+          className="absolute z-[2] flex flex-col items-start justify-center text-[#0A2568] pointer-events-none select-none pl-[0.1%]"
           style={{
             left: '39.75%',
-            top: '8.0%',
-            width: '9.1%',
-            height: '15.3%',
-            fontFamily: "'Syne', 'Plus Jakarta Sans', sans-serif",
+            top: '22.8%',
+            width: '9.3%',
+            height: '6.5%',
+            fontFamily: "'Plus Jakarta Sans', sans-serif",
           }}
         >
-          <span className="font-extrabold tracking-tight uppercase leading-[1.05]" style={{ fontSize: 'clamp(8px, 1.15cqw, 22px)' }}>
-            NATIONAL
-          </span>
-          <span className="font-extrabold tracking-tight uppercase leading-[1.05]" style={{ fontSize: 'clamp(8px, 1.15cqw, 22px)' }}>
-            IDEAL
-          </span>
-          <span className="font-extrabold tracking-tight uppercase leading-[1.05]" style={{ fontSize: 'clamp(8px, 1.15cqw, 22px)' }}>
-            COLLEGE
-          </span>
-          <span className="font-bold tracking-[0.08em] uppercase mt-[4%] text-[#0A2568] leading-tight" style={{ fontSize: 'clamp(4.5px, 0.62cqw, 11.5px)' }}>
+          <span className="font-bold tracking-[0.08em] uppercase text-[#0A2568] leading-tight" style={{ fontSize: 'clamp(4.5px, 0.62cqw, 12px)' }}>
             KHILGAON, DHAKA
           </span>
-          <span className="font-bold tracking-[0.14em] uppercase text-[#0A2568] leading-tight" style={{ fontSize: 'clamp(4.5px, 0.62cqw, 11.5px)' }}>
+          <span className="font-bold tracking-[0.14em] uppercase text-[#0A2568] leading-tight mt-[2px]" style={{ fontSize: 'clamp(4.5px, 0.62cqw, 12px)' }}>
             ESTD. 2001
           </span>
         </div>
@@ -161,74 +143,62 @@ export const InvitationCard: React.FC<InvitationCardProps> = ({
             )}
           </div>
 
-          {/* Participant's Name (Signature Style) */}
-          {/* Exact pixel bounds: x:70-460 (20.3%), y:612-650 (4.6%) */}
+          {/* Participant's Name (Signature Style) on the horizontal signature line */}
           {record.full_name && (
             <div
-              className="absolute flex items-center justify-center px-2 bg-[#FAF9F6]"
+              className="absolute flex items-center justify-center px-2 pointer-events-none"
               style={{
                 left: '4.8%',
                 top: '74.5%',
                 width: '25.5%',
-                height: '4.8%',
+                height: '5.2%',
               }}
             >
               <span
                 className="text-[#0A2568] font-bold truncate leading-none text-center"
                 style={{
                   fontFamily: "'Caveat', cursive",
-                  fontSize: 'clamp(12px, 1.45cqw, 28px)',
+                  fontSize: 'clamp(14px, 1.7cqw, 32px)',
                 }}
               >
-                {studentName}
+                {record.full_name}
               </span>
             </div>
           )}
 
           {/* ======================================================= */}
-          {/* RIGHT SECTION OVERLAYS: SERIAL & 5 DATA FIELDS          */}
+          {/* RIGHT SECTION: REGISTRATION NO. IN ORIGINAL ROUNDED BOX */}
           {/* ======================================================= */}
 
-          {/* RD27 - [Serial Box Text] */}
-          {/* Exact pixel bounds: x:1605-1845, y:80-125 */}
+          {/* Registration No. inside the original rounded rectangular box */}
           <div
-            className="absolute flex items-center justify-start pl-2"
+            className="absolute flex items-center justify-start pl-[2.8%] pr-[2%]"
             style={{
-              left: '83.6%',
-              top: '9.8%',
-              width: '12.8%',
-              height: '5.2%',
+              left: '73.85%',
+              top: '7.32%',
+              width: '23.54%',
+              height: '9.89%',
             }}
           >
-            <span
-              className="font-mono font-black text-[#0A2568] tracking-wider truncate leading-none"
-              style={{
-                fontSize: 'clamp(13px, 1.6cqw, 30px)',
-              }}
-            >
-              {serialNumber}
-            </span>
-          </div>
-
-          {/* Reg. / Payment No. Text Line */}
-          {/* Exact pixel bounds: x:1665-1860, y:158-192 */}
-          <div
-            className="absolute flex items-center justify-start pl-1"
-            style={{
-              left: '86.5%',
-              top: '19.3%',
-              width: '10.5%',
-              height: '4.2%',
-            }}
-          >
-            <span
-              className="font-mono font-bold text-[#0A2568] tracking-wide truncate leading-none"
-              style={{
-                fontSize: 'clamp(10px, 1.15cqw, 22px)',
-              }}
-            >
-              {regNo}
-            </span>
+            <div className="flex items-center gap-2 truncate">
+              <span
+                className="font-extrabold text-[#0A2568] uppercase tracking-wide whitespace-nowrap"
+                style={{
+                  fontSize: 'clamp(11px, 1.3cqw, 25px)',
+                  fontFamily: "'Plus Jakarta Sans', sans-serif",
+                }}
+              >
+                Registration No. :
+              </span>
+              <span
+                className="font-mono font-black text-[#0A2568] tracking-wider truncate"
+                style={{
+                  fontSize: 'clamp(12px, 1.45cqw, 28px)',
+                }}
+              >
+                {record.registration_no || regNo}
+              </span>
+            </div>
           </div>
 
           {/* ======================================================= */}
