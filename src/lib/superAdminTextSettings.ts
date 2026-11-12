@@ -97,16 +97,38 @@ Business Studies: BSG (BsG1, BsG2, BsG3, BsG4, BsG5)
 Humanities: HUG (HuG1, HuG2, HuG3, HuG4, HuG5)`,
   },
   {
-    id: 'payment-number',
+    id: 'payment-number-sc',
     category: '03. Registration Settings',
-    label: 'Payment number (Payment number.txt)',
+    label: 'Payment Number SC (Science)',
+    path: '03. reg-settings/Text/Payment number SC.txt',
+    defaultValue: `Bkash: 01712-345678
+Nagad: 01712-345678`,
+  },
+  {
+    id: 'payment-number-bs',
+    category: '03. Registration Settings',
+    label: 'Payment Number BS (Business Studies)',
+    path: '03. reg-settings/Text/Payment number BS.txt',
+    defaultValue: `Bkash: 01712-345678
+Nagad: 01712-345678`,
+  },
+  {
+    id: 'payment-number-hu',
+    category: '03. Registration Settings',
+    label: 'Payment Number HU (Humanities)',
+    path: '03. reg-settings/Text/Payment number HU.txt',
+    defaultValue: `Bkash: 01712-345678
+Nagad: 01712-345678`,
+  },
+  {
+    id: 'payment-number-legacy',
+    category: '03. Registration Settings',
+    label: 'Legacy payment number (Payment number.txt)',
     path: '03. reg-settings/Text/Payment number.txt',
-    defaultValue: `Science Bkash: 01712-345678
-Science Nagad: 01712-345678
-Business Studies Bkash: 01712-345678
-Business Studies Nagad: 01712-345678
-Humanities Bkash: 01712-345678
-Humanities Nagad: 01712-345678`,
+    defaultValue: `Male Bkash: 01712-345678
+Male Nagad: 01712-345678
+Female Bkash: 01812-345678
+Female Nagad: 01812-345678`,
   },
   {
     id: 'last-registration-date',
