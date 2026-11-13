@@ -1,6 +1,18 @@
-import type {GalleryMedia} from '../super-admin/gallery/types';
+export type GalleryMediaType = 'image' | 'video';
+export interface GalleryMedia {
+  id: string;
+  type: GalleryMediaType;
+  title: string;
+  caption: string;
+  filename: string;
+  mime_type: string;
+  blob: Blob;
+  enabled: boolean;
+  sort_order: number;
+  created_at: string;
+}
 const DB_NAME='rd27-gallery-local-v1',STORE='media',VERSION=1,EVENT='rd27-gallery-change';
-function openDb():Promise<IDBDatabase>{return new Promise((resolve,reject)=>{if(!('indexedDB'in window)){reject(new Error('IndexedDB is unavailable in this browser.'));return;}const req=indexedDB.open(DB_NAME,VERSION);req.onupgradeneeded=()=>{const db=req.result;if(!db.objectStoreNames.contains(STORE)){const store=db.createObjectStore(STORE,{keyPath:'id'});store.createIndex('order','sort_order');}};req.onsuccess=()=>resolve(req.result);req.onerror=()=>reject(req.error||new Error('Cannot open local media storage.'));});}
+function openDb():Promise<IDBDatabase>{return new Promise((resolve,reject)=>{if(typeof window==='undefined'||!('indexedDB'in window)){reject(new Error('Gallery storage is unavailable in this browser.'));return;}const req=window.indexedDB.open(DB_NAME,VERSION);req.onupgradeneeded=()=>{const db=req.result;if(!db.objectStoreNames.contains(STORE)){const store=db.createObjectStore(STORE,{keyPath:'id'});store.createIndex('order','sort_order');}};req.onsuccess=()=>resolve(req.result);req.onerror=()=>reject(req.error||new Error('Cannot open local media storage.'));});}
 function request<T>(r:IDBRequest<T>):Promise<T>{return new Promise((resolve,reject)=>{r.onsuccess=()=>resolve(r.result);r.onerror=()=>reject(r.error||new Error('Local media operation failed.'));});}
 export async function getGalleryMedia(includeDisabled=false):Promise<GalleryMedia[]>{const db=await openDb();try{const tx=db.transaction(STORE,'readonly'),rows=await request(tx.objectStore(STORE).getAll()) as GalleryMedia[];return rows.filter(x=>includeDisabled||x.enabled).sort((a,b)=>a.sort_order-b.sort_order||a.created_at.localeCompare(b.created_at));}finally{db.close();}}
 export async function putGalleryMedia(items:GalleryMedia[]):Promise<void>{const db=await openDb();try{const tx=db.transaction(STORE,'readwrite');items.forEach(item=>tx.objectStore(STORE).put(item));await new Promise<void>((resolve,reject)=>{tx.oncomplete=()=>resolve();tx.onerror=()=>reject(tx.error||new Error('Could not save media.'));tx.onabort=()=>reject(tx.error||new Error('Save cancelled.'));});}catch(e){if(e instanceof DOMException&&(e.name==='QuotaExceededError'||e.name==='NS_ERROR_DOM_QUOTA_REACHED'))throw new Error('Browser storage quota is full. Please remove large files or choose smaller uploads.');throw e;}finally{db.close();}window.dispatchEvent(new CustomEvent(EVENT));}
