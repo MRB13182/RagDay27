@@ -49,7 +49,7 @@ export function getSavedSuperAdminText(path: string, fallback: string): string {
 }
 
 export async function saveEditableSuperAdminText(path: string, content: string): Promise<void> {
-  const normalizedPath = path.replace(/^src\\/super-admin\\//, '').replace(/^\\/+/, '');
+  const normalizedPath = path.replace(/^src\/super-admin\//, '').replace(/^\/+/, '');
   setLocalItem(`super_admin_${normalizedPath}`, content);
   if (normalizedPath.startsWith('03. reg-settings/Text/')) {
     const altPath = normalizedPath.replace('03. reg-settings/Text/', '03. reg-settings/');
@@ -78,14 +78,14 @@ export async function saveEditableSuperAdminText(path: string, content: string):
 }
 
 export function getSuperAdminImageUrl(path: string, defaultFallback: string): string {
-  const normalizedPath = path.replace(/^src\\/super-admin\\//, '').replace(/^\\/+/, '');
+  const normalizedPath = path.replace(/^src\/super-admin\//, '').replace(/^\/+/, '');
   return getLocalItem(`super_admin_img_remote_${normalizedPath}`)
-    || getLocalItem(`super_admin_img_${normalizedPath}')
+    || getLocalItem(`super_admin_img_${normalizedPath}`)
     || defaultFallback;
 }
 
 export async function saveEditableSuperAdminImage(path: string, file: File): Promise<string> {
-  const normalizedPath = path.replace(/^src\\/super-admin\\//, '').replace(/^\\/+/, '');
+  const normalizedPath = path.replace(/^src\/super-admin\//, '').replace(/^\/+/, '');
   const dataUrl = await new Promise<string>((resolve, reject) => {
     const reader = new FileReader();
     reader.onload = () => resolve(reader.result as string);
