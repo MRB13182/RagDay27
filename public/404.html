@@ -1,0 +1,23 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>RD27 - Rag Day 27 Official Portal</title>
+    <script>
+      (function () {
+        var path = window.location.pathname || '/';
+        // Never redirect missing static asset files (.js, .css, .png, etc.)
+        if (/\.[a-z0-9]{1,8}$/i.test(path)) return;
+        var base = path.indexOf('/RagDay27/') === 0 || path === '/RagDay27' ? '/RagDay27/' : '/';
+        var isAdmin = /\/admin\b/i.test(path);
+        var search = window.location.search || '';
+        if (isAdmin && search.indexOf('admin=') === -1) {
+          search = search ? search + '&admin=1' : '?admin=1';
+        }
+        window.location.replace(base + search + (window.location.hash || ''));
+      })();
+    </script>
+  </head>
+  <body></body>
+</html>

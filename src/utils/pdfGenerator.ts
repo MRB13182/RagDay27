@@ -2,6 +2,7 @@ import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
 import { InvitationRecord, PdfSettings, WebsiteSettings } from '../types';
 import defaultLogo from '../assets/images/logo.png';
+import { getSafeTimestamp } from '../lib/dateUtils';
 
 export const loadImage = (src: string): Promise<HTMLImageElement> =>
   new Promise((resolve, reject) => {
@@ -36,8 +37,8 @@ export const imageToDataUrl = (img: HTMLImageElement, mime = 'image/png'): strin
  */
 export function assignPermanentSerialNumbers(records: InvitationRecord[]): InvitationRecord[] {
   const sortedAsc = [...records].sort((a, b) => {
-    const timeA = a.created_at ? new Date(a.created_at).getTime() : 0;
-    const timeB = b.created_at ? new Date(b.created_at).getTime() : 0;
+    const timeA = getSafeTimestamp(a.created_at, 0);
+    const timeB = getSafeTimestamp(b.created_at, 0);
     if (timeA !== timeB) return timeA - timeB;
     const numA = parseInt((a.registration_no || '').replace(/\D+/g, ''), 10) || 0;
     const numB = parseInt((b.registration_no || '').replace(/\D+/g, ''), 10) || 0;
@@ -58,8 +59,8 @@ export function assignPermanentSerialNumbers(records: InvitationRecord[]): Invit
 export function sortRegistrationsForAdmin(records: InvitationRecord[]): InvitationRecord[] {
   const withPermanentSL = assignPermanentSerialNumbers(records);
   return [...withPermanentSL].sort((a, b) => {
-    const timeA = a.created_at ? new Date(a.created_at).getTime() : 0;
-    const timeB = b.created_at ? new Date(b.created_at).getTime() : 0;
+    const timeA = getSafeTimestamp(a.created_at, 0);
+    const timeB = getSafeTimestamp(b.created_at, 0);
     if (timeA !== timeB) return timeB - timeA;
     const numA = parseInt((a.registration_no || '').replace(/\D+/g, ''), 10) || 0;
     const numB = parseInt((b.registration_no || '').replace(/\D+/g, ''), 10) || 0;
@@ -75,8 +76,8 @@ export function sortRegistrationsForAdmin(records: InvitationRecord[]): Invitati
 export function sortRegistrationsForPDF(records: InvitationRecord[]): InvitationRecord[] {
   const withPermanentSL = assignPermanentSerialNumbers(records);
   return [...withPermanentSL].sort((a, b) => {
-    const timeA = a.created_at ? new Date(a.created_at).getTime() : 0;
-    const timeB = b.created_at ? new Date(b.created_at).getTime() : 0;
+    const timeA = getSafeTimestamp(a.created_at, 0);
+    const timeB = getSafeTimestamp(b.created_at, 0);
     if (timeA !== timeB) return timeA - timeB;
     const numA = parseInt((a.registration_no || '').replace(/\D+/g, ''), 10) || 0;
     const numB = parseInt((b.registration_no || '').replace(/\D+/g, ''), 10) || 0;
@@ -84,11 +85,34 @@ export function sortRegistrationsForPDF(records: InvitationRecord[]): Invitation
   });
 }
 
+export type RegistrationGroupFilter = 'Science' | 'Business Studies' | 'Humanities';
+
+const GROUP_FILENAME_CODE: Record<RegistrationGroupFilter, string> = {
+  Science: 'SC',
+  'Business Studies': 'BS',
+  Humanities: 'HU',
+};
+
+export function filterApprovedGroupRecords(
+  records: InvitationRecord[],
+  expectedGender: 'male' | 'female',
+  groupFilter: RegistrationGroupFilter
+): InvitationRecord[] {
+  const normalizedTarget = groupFilter.trim().toLowerCase();
+  return records.filter(
+    record =>
+      record.status === 'approved' &&
+      record.gender === expectedGender &&
+      String(record.academic_group || '').trim().toLowerCase() === normalizedTarget
+  );
+}
+
 export const generateRegistrationListPDF = async (
   records: InvitationRecord[],
   pdfSettings: PdfSettings,
   websiteSettings: WebsiteSettings,
-  adminRole: 'male_admin' | 'female_admin'
+  adminRole: 'male_admin' | 'female_admin',
+  groupFilter?: RegistrationGroupFilter
 ) => {
   const expectedGender =
     adminRole === 'male_admin' ? 'male' : adminRole === 'female_admin' ? 'female' : null;
@@ -100,8 +124,16 @@ export const generateRegistrationListPDF = async (
     throw new Error(`Registration ledger contains records outside the ${adminRole} scope.`);
   }
 
+  const targetRecords = groupFilter
+    ? filterApprovedGroupRecords(records, expectedGender, groupFilter)
+    : records;
+
+  if (groupFilter && targetRecords.length === 0) {
+    throw new Error(`No approved registrations found for ${groupFilter}.`);
+  }
+
   // 1. Sort records chronologically (ASC) for PDF ledger with permanent serial numbers
-  const sortedRecords = sortRegistrationsForPDF(records);
+  const sortedRecords = sortRegistrationsForPDF(targetRecords);
 
   const doc = new jsPDF({ orientation: 'landscape', unit: 'mm', format: 'a4' });
   const pageWidth = doc.internal.pageSize.getWidth();
@@ -315,7 +347,11 @@ export const generateRegistrationListPDF = async (
     doc.text(`Page ${i} of ${totalPages}`, pageWidth - 14, pageHeight - 8, { align: 'right' });
   }
 
-  doc.save('RAG_DAY_27_Official_Registration.pdf');
+  const outputFileName = groupFilter
+    ? `RAG_DAY_27_Official_Registration_${GROUP_FILENAME_CODE[groupFilter]}.pdf`
+    : 'RAG_DAY_27_Official_Registration.pdf';
+
+  doc.save(outputFileName);
 };
 
 export const generateInvitationCardPDF = (

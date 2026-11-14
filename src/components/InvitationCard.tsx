@@ -88,10 +88,10 @@ export const InvitationCard: React.FC<InvitationCardProps> = ({
             fontFamily: "'Plus Jakarta Sans', sans-serif",
           }}
         >
-          <span className="font-bold tracking-[0.08em] uppercase text-[#0A2568] leading-tight" style={{ fontSize: 'clamp(4.5px, 0.62cqw, 12px)' }}>
+          <span className="font-bold tracking-[0.08em] uppercase text-[#0A2568] leading-tight rd-card-subtext">
             KHILGAON, DHAKA
           </span>
-          <span className="font-bold tracking-[0.14em] uppercase text-[#0A2568] leading-tight mt-[2px]" style={{ fontSize: 'clamp(4.5px, 0.62cqw, 12px)' }}>
+          <span className="font-bold tracking-[0.14em] uppercase text-[#0A2568] leading-tight mt-[2px] rd-card-subtext">
             ESTD. 2001
           </span>
         </div>
@@ -107,10 +107,10 @@ export const InvitationCard: React.FC<InvitationCardProps> = ({
             fontFamily: "'Plus Jakarta Sans', sans-serif",
           }}
         >
-          <span className="font-bold tracking-[0.08em] uppercase text-[#0A2568] leading-tight" style={{ fontSize: 'clamp(4.5px, 0.62cqw, 12px)' }}>
+          <span className="font-bold tracking-[0.08em] uppercase text-[#0A2568] leading-tight rd-card-subtext">
             KHILGAON, DHAKA
           </span>
-          <span className="font-bold tracking-[0.14em] uppercase text-[#0A2568] leading-tight mt-[2px]" style={{ fontSize: 'clamp(4.5px, 0.62cqw, 12px)' }}>
+          <span className="font-bold tracking-[0.14em] uppercase text-[#0A2568] leading-tight mt-[2px] rd-card-subtext">
             ESTD. 2001
           </span>
         </div>
@@ -155,10 +155,9 @@ export const InvitationCard: React.FC<InvitationCardProps> = ({
               }}
             >
               <span
-                className="text-[#0A2568] font-bold truncate leading-none text-center"
+                className="text-[#0A2568] font-bold truncate leading-none text-center rd-card-signature"
                 style={{
                   fontFamily: "'Caveat', cursive",
-                  fontSize: 'clamp(14px, 1.7cqw, 32px)',
                 }}
               >
                 {record.full_name}
@@ -182,19 +181,15 @@ export const InvitationCard: React.FC<InvitationCardProps> = ({
           >
             <div className="flex items-center gap-2 truncate">
               <span
-                className="font-extrabold text-[#0A2568] uppercase tracking-wide whitespace-nowrap"
+                className="font-extrabold text-[#0A2568] uppercase tracking-wide whitespace-nowrap rd-card-reg-label"
                 style={{
-                  fontSize: 'clamp(11px, 1.3cqw, 25px)',
                   fontFamily: "'Plus Jakarta Sans', sans-serif",
                 }}
               >
                 Registration No. :
               </span>
               <span
-                className="font-mono font-black text-[#0A2568] tracking-wider truncate"
-                style={{
-                  fontSize: 'clamp(12px, 1.45cqw, 28px)',
-                }}
+                className="font-mono font-black text-[#0A2568] tracking-wider truncate rd-card-reg-val"
               >
                 {record.registration_no || regNo}
               </span>
@@ -216,12 +211,7 @@ export const InvitationCard: React.FC<InvitationCardProps> = ({
               height: '5.25%',
             }}
           >
-            <span
-              className="font-bold text-[#0A2568] truncate leading-none"
-              style={{
-                fontSize: 'clamp(11px, 1.25cqw, 24px)',
-              }}
-            >
+            <span className="font-bold text-[#0A2568] truncate leading-none rd-card-field">
               {studentName}
             </span>
           </div>
@@ -236,12 +226,7 @@ export const InvitationCard: React.FC<InvitationCardProps> = ({
               height: '5.25%',
             }}
           >
-            <span
-              className="font-bold font-mono text-[#0A2568] truncate leading-none"
-              style={{
-                fontSize: 'clamp(11px, 1.25cqw, 24px)',
-              }}
-            >
+            <span className="font-bold font-mono text-[#0A2568] truncate leading-none rd-card-field">
               {roll}
             </span>
           </div>
@@ -256,12 +241,7 @@ export const InvitationCard: React.FC<InvitationCardProps> = ({
               height: '5.13%',
             }}
           >
-            <span
-              className="font-bold font-mono text-[#0A2568] truncate leading-none"
-              style={{
-                fontSize: 'clamp(11px, 1.25cqw, 24px)',
-              }}
-            >
+            <span className="font-bold font-mono text-[#0A2568] truncate leading-none rd-card-field">
               {studentId}
             </span>
           </div>
@@ -276,12 +256,7 @@ export const InvitationCard: React.FC<InvitationCardProps> = ({
               height: '4.88%',
             }}
           >
-            <span
-              className="font-bold text-[#0A2568] truncate leading-none"
-              style={{
-                fontSize: 'clamp(11px, 1.25cqw, 24px)',
-              }}
-            >
+            <span className="font-bold text-[#0A2568] truncate leading-none rd-card-field">
               {section}
             </span>
           </div>
@@ -296,12 +271,7 @@ export const InvitationCard: React.FC<InvitationCardProps> = ({
               height: '4.88%',
             }}
           >
-            <span
-              className="font-bold text-[#0A2568] truncate leading-none"
-              style={{
-                fontSize: 'clamp(11px, 1.25cqw, 24px)',
-              }}
-            >
+            <span className="font-bold text-[#0A2568] truncate leading-none rd-card-field">
               {displayGroup}
             </span>
           </div>

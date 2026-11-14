@@ -13,6 +13,31 @@ export default defineConfig(() => {
         '@': path.resolve(import.meta.dirname, '.'),
       },
     },
+    build: {
+      target: ['es2020', 'edge88', 'firefox78', 'chrome87', 'safari14'],
+      rollupOptions: {
+        output: {
+          manualChunks(id) {
+            if (!id.includes('node_modules')) return;
+            if (id.includes('/react/') || id.includes('/react-dom/') || id.includes('/scheduler/')) {
+              return 'vendor-react';
+            }
+            if (id.includes('jspdf') || id.includes('html2canvas') || id.includes('html-to-image')) {
+              return 'vendor-export';
+            }
+            if (id.includes('framer-motion') || id.includes('/motion/')) {
+              return 'vendor-motion';
+            }
+            if (id.includes('@supabase/')) {
+              return 'vendor-supabase';
+            }
+            if (id.includes('lucide-react')) {
+              return 'vendor-icons';
+            }
+          },
+        },
+      },
+    },
     server: {
       // HMR is disabled in AI Studio via DISABLE_HMR env var.
       // Do not modify—file watching is disabled to prevent flickering during agent edits.

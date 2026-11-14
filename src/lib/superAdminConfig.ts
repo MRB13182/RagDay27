@@ -17,6 +17,7 @@ import defaultJerseyOne from '../assets/images/jersey-one.png';
 // Use a bundled asset as the build-safe fallback when that Pic file is absent.
 import { getSavedSuperAdminText, getSuperAdminImageUrl } from './superAdminTextSettings';
 import { safeStorage } from './safeStorage';
+import { parseSafeDate } from './dateUtils';
 
 // 01. Website Identity
 import websiteNameRaw from '../super-admin/01. website-identity/Text/web name.txt?raw';
@@ -362,19 +363,29 @@ export function getConfiguredSections(gender: 'male' | 'female', group: string):
 // ============================================================================
 
 export function getWebsiteIdentityConfig() {
-  const name = getSavedSuperAdminText('01. website-identity/Text/web name.txt', websiteNameRaw.trim()) || 'NIC 27';
-  const subtitle = getSavedSuperAdminText('01. website-identity/Text/web header.txt', websiteHeaderRaw.trim()) || 'Annual Grand Farewell & Batch 27 Celebration';
-  const footer = getSavedSuperAdminText('01. website-identity/Text/web footer.txt', footerTextRaw.trim()) || '© 2027 Rag Day 27 Committee. All Rights Reserved.';
-  const logo = getSuperAdminImageUrl('01. website-identity/Pic/logo.png', websiteLogoPic || logoPic06 || defaultLogo);
-  const favicon = getSuperAdminImageUrl('01. website-identity/Pic/favicon.png', websiteFaviconPic || faviconPic06 || defaultFavicon);
+  try {
+    const name = getSavedSuperAdminText('01. website-identity/Text/web name.txt', String(websiteNameRaw || '').trim()) || 'NIC 27';
+    const subtitle = getSavedSuperAdminText('01. website-identity/Text/web header.txt', String(websiteHeaderRaw || '').trim()) || 'Annual Grand Farewell & Batch 27 Celebration';
+    const footer = getSavedSuperAdminText('01. website-identity/Text/web footer.txt', String(footerTextRaw || '').trim()) || '© 2027 Rag Day 27 Committee. All Rights Reserved.';
+    const logo = getSuperAdminImageUrl('01. website-identity/Pic/logo.png', websiteLogoPic || logoPic06 || defaultLogo);
+    const favicon = getSuperAdminImageUrl('01. website-identity/Pic/favicon.png', websiteFaviconPic || faviconPic06 || defaultFavicon);
 
-  return {
-    websiteName: name,
-    websiteSubtitle: subtitle,
-    footerText: footer,
-    websiteLogo: logo,
-    favicon: favicon,
-  };
+    return {
+      websiteName: name,
+      websiteSubtitle: subtitle,
+      footerText: footer,
+      websiteLogo: logo,
+      favicon: favicon,
+    };
+  } catch {
+    return {
+      websiteName: 'NIC 27',
+      websiteSubtitle: 'Annual Grand Farewell & Batch 27 Celebration',
+      footerText: '© 2027 Rag Day 27 Committee. All Rights Reserved.',
+      websiteLogo: defaultLogo,
+      favicon: defaultFavicon,
+    };
+  }
 }
 
 export function getEventSettingsConfig() {
@@ -421,32 +432,33 @@ export function calculateRegistrationOpenState(): {
   isAuto: boolean;
   reason: 'active' | 'before_start' | 'after_end' | 'manual_enabled' | 'manual_disabled';
 } {
-  const toggleContent = (registrationToggleRaw || registrationToggleDirectRaw || '').trim();
-  const regToggle = getSavedSuperAdminText('03. reg-settings/Text/Enable Disable.txt', toggleContent).toLowerCase().trim();
-  const manualOverride = safeStorage.getItem('rd27_manual_reg_override');
+  try {
+    const toggleContent = String(registrationToggleRaw || registrationToggleDirectRaw || '').trim();
+    const regToggle = getSavedSuperAdminText('03. reg-settings/Text/Enable Disable.txt', toggleContent).toLowerCase().trim();
+    const manualOverride = safeStorage.getItem('rd27_manual_reg_override');
 
-  // Manual admin control overrides automatic schedule
-  if (manualOverride === 'enable' || /^(manual_enable|force_enable|force_open)$/i.test(regToggle)) {
-    return { isOpen: true, isAuto: false, reason: 'manual_enabled' };
-  }
-  if (manualOverride === 'disable' || /^(disable|disabled|close|closed|manual_disable|force_disable)$/i.test(regToggle)) {
-    return { isOpen: false, isAuto: false, reason: 'manual_disabled' };
-  }
+    // Manual admin control overrides automatic schedule
+    if (manualOverride === 'enable' || /^(manual_enable|force_enable|force_open)$/i.test(regToggle)) {
+      return { isOpen: true, isAuto: false, reason: 'manual_enabled' };
+    }
+    if (manualOverride === 'disable' || /^(disable|disabled|close|closed|manual_disable|force_disable)$/i.test(regToggle)) {
+      return { isOpen: false, isAuto: false, reason: 'manual_disabled' };
+    }
 
-  // Automatic schedule check
-  const lastDateContent = (lastRegistrationDateRaw || lastRegistrationDateDirectRaw || '').trim();
-  const deadlineStr = getSavedSuperAdminText(
-    '03. reg-settings/Text/Last registration date countdown.txt',
-    lastDateContent
-  ) || '2026-11-01T23:59:59';
+    // Automatic schedule check
+    const lastDateContent = String(lastRegistrationDateRaw || lastRegistrationDateDirectRaw || '').trim();
+    const deadlineStr = getSavedSuperAdminText(
+      '03. reg-settings/Text/Last registration date countdown.txt',
+      lastDateContent
+    ) || '2026-11-01T23:59:59';
 
-  const now = new Date();
-  const deadlineDate = new Date(deadlineStr);
+    const deadlineDate = parseSafeDate(deadlineStr);
 
-  if (!isNaN(deadlineDate.getTime())) {
-    if (now.getTime() > deadlineDate.getTime()) {
+    if (deadlineDate && Date.now() > deadlineDate.getTime()) {
       return { isOpen: false, isAuto: true, reason: 'after_end' };
     }
+  } catch {
+    // Fallback to open active registration if config parsing fails.
   }
 
   return { isOpen: true, isAuto: true, reason: 'active' };
@@ -515,33 +527,53 @@ export function getRegistrationSettingsConfig() {
 }
 
 export function getCountdownSettingsConfig() {
-  const eventDate = getSavedSuperAdminText('04. countdown-settings/Text/Countdown of Event.txt', countdownEventRaw.trim() || eventDateRaw.trim()) || '2026-11-20T10:00:00';
-  const lastDateContent = (lastRegistrationDateRaw || lastRegistrationDateDirectRaw || '').trim();
-  const deadline = getSavedSuperAdminText('03. reg-settings/Text/Last registration date countdown.txt', lastDateContent) || '2026-11-01T23:59:59';
-  const enableRaw = getSavedSuperAdminText('04. countdown-settings/Text/Enable Disable.txt', countdownEnableDisableRaw.trim()).toLowerCase();
-  const isCountdownEnabled = !/^(disable|disabled)$/i.test(enableRaw);
+  try {
+    const fallbackEventDate = String(countdownEventRaw || '').trim() || String(eventDateRaw || '').trim();
+    const eventDate = getSavedSuperAdminText('04. countdown-settings/Text/Countdown of Event.txt', fallbackEventDate) || '2026-11-20T10:00:00';
+    const lastDateContent = String(lastRegistrationDateRaw || lastRegistrationDateDirectRaw || '').trim();
+    const deadline = getSavedSuperAdminText('03. reg-settings/Text/Last registration date countdown.txt', lastDateContent) || '2026-11-01T23:59:59';
+    const enableRaw = getSavedSuperAdminText('04. countdown-settings/Text/Enable Disable.txt', String(countdownEnableDisableRaw || '').trim()).toLowerCase();
+    const isCountdownEnabled = !/^(disable|disabled)$/i.test(enableRaw);
 
-  return {
-    eventDate,
-    registrationDeadline: deadline,
-    countdownEnabled: isCountdownEnabled,
-  };
+    return {
+      eventDate,
+      registrationDeadline: deadline,
+      countdownEnabled: isCountdownEnabled,
+    };
+  } catch {
+    return {
+      eventDate: '2026-11-20T10:00:00',
+      registrationDeadline: '2026-11-01T23:59:59',
+      countdownEnabled: true,
+    };
+  }
 }
 
 export function getImportantNoticeConfig() {
-  const noticeBoard = getSavedSuperAdminText('05. important-notice/Text/Notice Board.txt', noticeBoardRaw.trim()) || 'Official Batch 27 Registration is now OPEN.';
-  const popupNotice = getSavedSuperAdminText('05. important-notice/Text/Popup Notice.txt', popupNoticeRaw.trim()) || 'Welcome Batch 27! Registration is open.';
-  const enableRaw = getSavedSuperAdminText('05. important-notice/Text/Enable Disable.txt', noticeEnableDisableRaw.trim()).toLowerCase();
-  const isNoticeEnabled = !/^(disable|disabled)$/i.test(enableRaw);
+  try {
+    const noticeBoard = getSavedSuperAdminText('05. important-notice/Text/Notice Board.txt', String(noticeBoardRaw || '').trim()) || 'Official Batch 27 Registration is now OPEN.';
+    const popupNotice = getSavedSuperAdminText('05. important-notice/Text/Popup Notice.txt', String(popupNoticeRaw || '').trim()) || 'Welcome Batch 27! Registration is open.';
+    const enableRaw = getSavedSuperAdminText('05. important-notice/Text/Enable Disable.txt', String(noticeEnableDisableRaw || '').trim()).toLowerCase();
+    const isNoticeEnabled = !/^(disable|disabled)$/i.test(enableRaw);
 
-  return {
-    noticeEnabled: isNoticeEnabled,
-    popupEnabled: isNoticeEnabled && Boolean(popupNotice && popupNotice.trim()),
-    popupTitle: 'Important Notice',
-    popupMessage: popupNotice,
-    noticeContent: noticeBoard,
-    closeButtonText: 'I Understand',
-  };
+    return {
+      noticeEnabled: isNoticeEnabled,
+      popupEnabled: isNoticeEnabled && Boolean(popupNotice && popupNotice.trim()),
+      popupTitle: 'Important Notice',
+      popupMessage: popupNotice,
+      noticeContent: noticeBoard,
+      closeButtonText: 'I Understand',
+    };
+  } catch {
+    return {
+      noticeEnabled: false,
+      popupEnabled: false,
+      popupTitle: 'Important Notice',
+      popupMessage: '',
+      noticeContent: '',
+      closeButtonText: 'I Understand',
+    };
+  }
 }
 
 // 06. Logo Related — retain existing logo/favicon settings only.
@@ -556,27 +588,39 @@ export const logoRelatedConfig = {
 
 // 02. Event Settings — sole source of public jersey showcase cards.
 export function getJerseyShowcaseCards(): JerseyDesignCard[] {
-  const raw = getSavedSuperAdminText(
-    '02. event-settings/Text/Jersey design.txt',
-    jerseyDesignRaw02?.trim() || ''
-  );
   const fallbackImage = eventJerseyDesignPic02 || getEventSettingsConfig().eventJersey || defaultJerseyOne;
-  const cards = parseJerseyDesignContent(raw, fallbackImage);
+  try {
+    const raw = getSavedSuperAdminText(
+      '02. event-settings/Text/Jersey design.txt',
+      String(jerseyDesignRaw02 || '').trim()
+    );
+    const cards = parseJerseyDesignContent(raw, fallbackImage);
 
-  return cards.map(card => {
-    // Each card uses the named image asset from Section 02 when configured.
-    const filename = (card.imageFilename || 'jersey-design.png').split('/').pop() || 'jersey-design.png';
-    const knownSection02Assets: Record<string, string> = {
-      'jersey-design.png': getSuperAdminImageUrl(
-        '02. event-settings/Pic/jersey-design.png',
-        eventJerseyDesignPic02
-      ),
-    };
-    return {
-      ...card,
-      image: knownSection02Assets[filename] || fallbackImage,
-    };
-  });
+    return cards.map(card => {
+      // Each card uses the named image asset from Section 02 when configured.
+      const filename = (card.imageFilename || 'jersey-design.png').split('/').pop() || 'jersey-design.png';
+      const knownSection02Assets: Record<string, string> = {
+        'jersey-design.png': getSuperAdminImageUrl(
+          '02. event-settings/Pic/jersey-design.png',
+          eventJerseyDesignPic02
+        ),
+      };
+      return {
+        ...card,
+        image: knownSection02Assets[filename] || fallbackImage,
+      };
+    });
+  } catch {
+    return [
+      {
+        id: 'jersey-design-card-1',
+        title: 'Official Rag Day Jersey',
+        description: 'Custom Squad Kit with Personalized Back Name & Number Print Included',
+        image: fallbackImage,
+        imageFilename: 'jersey-design.png',
+      },
+    ];
+  }
 }
 
 // 01. Website Identity

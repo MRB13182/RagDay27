@@ -1,15 +1,27 @@
-import React, { useState, useEffect } from 'react';
+import React, { Suspense, useState, useEffect } from 'react';
 import { Navbar } from './components/Navbar';
 import { HeroSection } from './components/HeroSection';
 import { EventInformationSection } from './components/EventInformationSection';
-import { RegistrationForm } from './components/RegistrationForm';
-import { InvitationCardPage } from './components/InvitationCardPage';
 import { Footer } from './components/Footer';
-import { AdminPortal } from './components/AdminPortal';
 import { JerseyShowcaseSection } from './components/JerseyShowcaseSection';
 import { ImportantNoticeModal } from './components/ImportantNoticeModal';
 import { ContactInformationSection } from './components/ContactInformationSection';
-import { GallerySection } from './components/GallerySection';
+import { SectionErrorBoundary } from './components/ErrorBoundary';
+import { lazyWithRetry, safeReplaceHistory, safeScrollToTop } from './lib/browserUtils';
+import { parseSafeDate } from './lib/dateUtils';
+
+const RegistrationForm = lazyWithRetry(() =>
+  import('./components/RegistrationForm').then(m => ({ default: m.RegistrationForm }))
+);
+const InvitationCardPage = lazyWithRetry(() =>
+  import('./components/InvitationCardPage').then(m => ({ default: m.InvitationCardPage }))
+);
+const GallerySection = lazyWithRetry(() =>
+  import('./components/GallerySection').then(m => ({ default: m.GallerySection }))
+);
+const AdminPortal = lazyWithRetry(() =>
+  import('./components/AdminPortal').then(m => ({ default: m.AdminPortal }))
+);
 import {
   websiteIdentityConfig,
   eventSettingsConfig,
@@ -34,9 +46,18 @@ import {
   approveRegistration,
   rejectRegistration,
   deleteRegistration,
-} from './services';
+} from './services/admin';
 
 import { ArrowRight, Bell, CheckCircle2, AlertCircle, Info, X, ShieldAlert, Ticket } from 'lucide-react';
+
+const ViewLoadingFallback: React.FC<{ label?: string }> = ({ label = 'Loading view...' }) => (
+  <div className="min-h-[50vh] flex items-center justify-center px-4 py-16" role="status" aria-live="polite">
+    <div className="flex items-center gap-3 rounded-2xl border border-white/90 bg-white/80 px-5 py-3.5 shadow-sm backdrop-blur-xl">
+      <span className="h-4 w-4 rounded-full border-2 border-indigo-600 border-t-transparent animate-spin" />
+      <span className="text-xs sm:text-sm font-bold text-slate-700">{label}</span>
+    </div>
+  </div>
+);
 
 export default function App() {
   const [activeTab, setActiveTab] = useState<'home' | 'register' | 'invitation' | 'gallery'>('home');
@@ -44,7 +65,13 @@ export default function App() {
   const [invitationStudentNameTarget, setInvitationStudentNameTarget] = useState<string>('');
   const [reRegisterRecord, setReRegisterRecord] = useState<InvitationRecord | null>(null);
   const [isAdminOpen, setIsAdminOpen] = useState(false);
-  const [isNoticePopupOpen, setIsNoticePopupOpen] = useState<boolean>(importantNoticeConfig.popupEnabled);
+  const [isNoticePopupOpen, setIsNoticePopupOpen] = useState<boolean>(() => {
+    try {
+      return importantNoticeConfig.popupEnabled;
+    } catch {
+      return false;
+    }
+  });
   const [isRegClosedPopupOpen, setIsRegClosedPopupOpen] = useState<boolean>(false);
   const [invitations, setInvitations] = useState<InvitationRecord[]>([]);
   
@@ -56,7 +83,7 @@ export default function App() {
     }
     setReRegisterRecord(null);
     setActiveTab('register');
-    window.scrollTo({ top: 0, behavior: 'smooth' });
+    safeScrollToTop();
   };
 
   const [toast, setToast] = useState<{ message: string; type: 'success' | 'error' | 'info' } | null>(null);
@@ -73,40 +100,69 @@ export default function App() {
   useEffect(() => {
     const handleConfigUpdate = () => {
       setConfigVersion(v => v + 1);
-      if (websiteIdentityConfig.websiteName) {
-        document.title = websiteIdentityConfig.websiteName;
-      }
-      if (websiteIdentityConfig.favicon) {
-        let link: HTMLLinkElement | null = document.querySelector("link[rel*='icon']");
-        if (link) link.href = websiteIdentityConfig.favicon;
+      try {
+        if (websiteIdentityConfig.websiteName) {
+          document.title = websiteIdentityConfig.websiteName;
+        }
+        if (websiteIdentityConfig.favicon) {
+          const link: HTMLLinkElement | null = document.querySelector("link[rel*='icon']");
+          if (link) link.href = websiteIdentityConfig.favicon;
+        }
+      } catch {
+        // Ignore document metadata update errors in restricted frames.
       }
     };
     window.addEventListener('superadmin-config-updated', handleConfigUpdate);
     return () => window.removeEventListener('superadmin-config-updated', handleConfigUpdate);
   }, []);
 
+  // Clean up one-time reload query params once the app mounts cleanly
+  useEffect(() => {
+    try {
+      window.sessionStorage?.removeItem('rd27_chunk_reloaded');
+      window.sessionStorage?.removeItem('rd27_preload_reloaded');
+    } catch {
+      // Ignore storage access failures.
+    }
+    try {
+      if (window.location.search.includes('rd27_reload=') || window.location.search.includes('rd27_chunk_retry=')) {
+        const params = new URLSearchParams(window.location.search);
+        params.delete('rd27_reload');
+        params.delete('rd27_chunk_retry');
+        const cleanQuery = params.toString() ? `?${params.toString()}` : '';
+        safeReplaceHistory(window.location.pathname + cleanQuery + window.location.hash);
+      }
+    } catch {
+      // Ignore URL parsing errors.
+    }
+  }, []);
+
   // Guard against direct URL/hash navigation attempts to bypass admin authentication
   useEffect(() => {
     const handleAdminUrlProtection = () => {
-      const hash = window.location.hash.toLowerCase();
-      const search = window.location.search.toLowerCase();
-      const path = window.location.pathname.toLowerCase();
-      const hasAdminAttempt = hash.includes('admin') || search.includes('admin') || path.includes('/admin');
+      try {
+        const hash = (window.location.hash || '').toLowerCase();
+        const search = (window.location.search || '').toLowerCase();
+        const path = (window.location.pathname || '').toLowerCase();
+        const hasAdminAttempt = hash.includes('admin') || search.includes('admin') || path.includes('/admin');
 
-      if (hasAdminAttempt) {
-        // Clean URL without page reload
-        if (hash.includes('admin')) {
-          history.replaceState(null, '', window.location.pathname + window.location.search);
+        if (hasAdminAttempt) {
+          // Clean URL without page reload
+          if (hash.includes('admin')) {
+            safeReplaceHistory(window.location.pathname + window.location.search);
+          }
+          if (search.includes('admin')) {
+            const params = new URLSearchParams(window.location.search);
+            params.delete('admin');
+            params.delete('panel');
+            const cleanQuery = params.toString() ? `?${params.toString()}` : '';
+            safeReplaceHistory(window.location.pathname + cleanQuery);
+          }
+          // Direct URL access opens strictly the login screen, never granting panel access
+          setIsAdminOpen(true);
         }
-        if (search.includes('admin')) {
-          const params = new URLSearchParams(window.location.search);
-          params.delete('admin');
-          params.delete('panel');
-          const cleanQuery = params.toString() ? `?${params.toString()}` : '';
-          history.replaceState(null, '', window.location.pathname + cleanQuery);
-        }
-        // Direct URL access opens strictly the login screen, never granting panel access
-        setIsAdminOpen(true);
+      } catch {
+        // Ignore URL guard errors on restricted WebViews.
       }
     };
 
@@ -120,38 +176,46 @@ export default function App() {
   }, []);
 
   useEffect(() => {
-    if (websiteIdentityConfig.websiteName) {
-      document.title = websiteIdentityConfig.websiteName;
+    try {
+      if (websiteIdentityConfig.websiteName) {
+        document.title = websiteIdentityConfig.websiteName;
+      }
+    } catch {
+      // Ignore document title errors.
     }
   }, []);
 
   useEffect(() => {
-    if (websiteIdentityConfig.favicon) {
-      let link: HTMLLinkElement | null = document.querySelector("link[rel*='icon']");
-      if (!link) {
-        link = document.createElement('link');
-        link.rel = 'shortcut icon';
-        document.getElementsByTagName('head')[0].appendChild(link);
+    try {
+      if (websiteIdentityConfig.favicon) {
+        let link: HTMLLinkElement | null = document.querySelector("link[rel*='icon']");
+        if (!link) {
+          link = document.createElement('link');
+          link.rel = 'shortcut icon';
+          document.getElementsByTagName('head')[0]?.appendChild(link);
+        }
+        link.href = websiteIdentityConfig.favicon;
       }
-      link.href = websiteIdentityConfig.favicon;
+    } catch {
+      // Ignore favicon DOM update errors.
     }
   }, []);
 
-  const eventDateObj = new Date(countdownSettingsConfig.eventDate);
+  const eventDateObj = parseSafeDate(countdownSettingsConfig.eventDate);
   const websiteSettings: WebsiteSettings = {
     eventName: eventSettingsConfig.eventName || websiteIdentityConfig.websiteName,
     eventDescription: eventSettingsConfig.eventDescription,
-    eventDate: isNaN(eventDateObj.getTime())
+    eventDate: !eventDateObj
       ? countdownSettingsConfig.eventDate
       : eventDateObj.toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' }),
-    eventTime: isNaN(eventDateObj.getTime())
+    eventTime: !eventDateObj
       ? '10:00 AM – 11:30 PM'
       : eventDateObj.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' }),
-    eventDay: isNaN(eventDateObj.getTime()) ? 27 : eventDateObj.getDate(),
-    eventMonth: isNaN(eventDateObj.getTime())
+    eventDay: !eventDateObj ? 27 : eventDateObj.getDate(),
+    eventMonth: !eventDateObj
       ? 'November'
       : eventDateObj.toLocaleDateString('en-US', { month: 'long' }),
-    eventYear: isNaN(eventDateObj.getTime()) ? 2027 : eventDateObj.getFullYear(),
+    eventYear: !eventDateObj ? 2027 : eventDateObj.getFullYear(),
     venue: eventSettingsConfig.venue,
     registrationFee: registrationSettingsConfig.registrationFee,
     lastRegDate: countdownSettingsConfig.registrationDeadline,
@@ -251,7 +315,7 @@ export default function App() {
     setInvitationSearchTarget(regNo);
     setInvitationStudentNameTarget(studentName || '');
     setActiveTab('invitation');
-    window.scrollTo({ top: 0, behavior: 'smooth' });
+    safeScrollToTop();
   };
 
   const handleUpdateRegistrationStatus = async (
@@ -363,13 +427,15 @@ export default function App() {
         </aside>
       )}
 
-      <ImportantNoticeModal
-        isOpen={isNoticePopupOpen}
-        onClose={() => setIsNoticePopupOpen(false)}
-        title={importantNoticeConfig.popupTitle || 'Important Notice'}
-        message={importantNoticeConfig.popupMessage}
-        buttonText={importantNoticeConfig.closeButtonText || 'I Understand'}
-      />
+      <SectionErrorBoundary mode="silent" sectionName="Important Notice">
+        <ImportantNoticeModal
+          isOpen={isNoticePopupOpen}
+          onClose={() => setIsNoticePopupOpen(false)}
+          title={importantNoticeConfig.popupTitle || 'Important Notice'}
+          message={importantNoticeConfig.popupMessage}
+          buttonText={importantNoticeConfig.closeButtonText || 'I Understand'}
+        />
+      </SectionErrorBoundary>
 
       {isRegClosedPopupOpen && (
         <div className="fixed inset-0 z-[160] flex items-center justify-center p-4 bg-slate-950/60 backdrop-blur-md animate-fadeIn">
@@ -400,7 +466,7 @@ export default function App() {
             return;
           }
           setActiveTab(tab);
-          window.scrollTo({ top: 0, behavior: 'smooth' });
+          safeScrollToTop();
         }}
         websiteLogo={brandingSettings.websiteLogo}
         eventName={websiteSettings.eventName}
@@ -425,105 +491,137 @@ export default function App() {
         <main className="flex-1">
           {activeTab === 'home' && (
             <div className="animate-fadeIn">
-              <HeroSection
-                onRegisterClick={handleOpenRegistration}
-                onInvitationClick={() => {
-                  setActiveTab('invitation');
-                  window.scrollTo({ top: 0, behavior: 'smooth' });
-                }}
-                websiteSettings={websiteSettings}
-                brandingSettings={brandingSettings}
-                jerseySettings={jerseyShowcaseSettings}
-              />
+              <SectionErrorBoundary sectionName="Event Overview">
+                <HeroSection
+                  onRegisterClick={handleOpenRegistration}
+                  onInvitationClick={() => {
+                    setActiveTab('invitation');
+                    safeScrollToTop();
+                  }}
+                  websiteSettings={websiteSettings}
+                  brandingSettings={brandingSettings}
+                  jerseySettings={jerseyShowcaseSettings}
+                />
+              </SectionErrorBoundary>
 
               {jerseyShowcaseSettings.sectionOrder === 'showcase_first' ? (
                 <>
                   {jerseyShowcaseSettings.enabled && (
-                    <JerseyShowcaseSection
-                      cards={getJerseyShowcaseCards()}
-                      settings={jerseyShowcaseSettings}
-                      onRegisterClick={handleOpenRegistration}
-                    />
+                    <SectionErrorBoundary sectionName="Jersey Showcase">
+                      <JerseyShowcaseSection
+                        cards={getJerseyShowcaseCards()}
+                        settings={jerseyShowcaseSettings}
+                        onRegisterClick={handleOpenRegistration}
+                      />
+                    </SectionErrorBoundary>
                   )}
-                  <EventInformationSection cards={eventCards} layout={eventSettingsConfig.eventCardLayout} />
+                  <SectionErrorBoundary sectionName="Event Information">
+                    <EventInformationSection cards={eventCards} layout={eventSettingsConfig.eventCardLayout} />
+                  </SectionErrorBoundary>
                 </>
               ) : (
                 <>
-                  <EventInformationSection cards={eventCards} layout={eventSettingsConfig.eventCardLayout} />
+                  <SectionErrorBoundary sectionName="Event Information">
+                    <EventInformationSection cards={eventCards} layout={eventSettingsConfig.eventCardLayout} />
+                  </SectionErrorBoundary>
                   {jerseyShowcaseSettings.enabled && (
-                    <JerseyShowcaseSection
-                      cards={getJerseyShowcaseCards()}
-                      settings={jerseyShowcaseSettings}
-                      onRegisterClick={handleOpenRegistration}
-                    />
+                    <SectionErrorBoundary sectionName="Jersey Showcase">
+                      <JerseyShowcaseSection
+                        cards={getJerseyShowcaseCards()}
+                        settings={jerseyShowcaseSettings}
+                        onRegisterClick={handleOpenRegistration}
+                      />
+                    </SectionErrorBoundary>
                   )}
                 </>
               )}
 
               {/* For More Information Section */}
-              <ContactInformationSection />
+              <SectionErrorBoundary mode="silent" sectionName="Contact Information">
+                <ContactInformationSection />
+              </SectionErrorBoundary>
             </div>
           )}
 
-          {activeTab === 'gallery' && <div className="animate-fadeIn min-h-[calc(100vh-4.5rem)]"><GallerySection /></div>}
+          {activeTab === 'gallery' && (
+            <div className="animate-fadeIn min-h-[calc(100vh-4.5rem)]">
+              <SectionErrorBoundary sectionName="Gallery" onReset={() => setActiveTab('home')}>
+                <Suspense fallback={<ViewLoadingFallback label="Loading gallery..." />}>
+                  <GallerySection />
+                </Suspense>
+              </SectionErrorBoundary>
+            </div>
+          )}
 
           {activeTab === 'register' && (
-            <div
-              className="animate-fadeIn min-h-[calc(100vh-4.5rem)] registration-page-shell"
-            >
-              <RegistrationForm
-                onSuccessSubmit={handleSuccessSubmit}
-                onGoToInvitation={handleGoToInvitation}
-                paymentSettings={paymentSettings}
-                existingRegistrations={invitations}
-                initialRecord={reRegisterRecord}
-                registrationDeadline={countdownSettingsConfig.registrationDeadline}
-                onResetReRegister={() => setReRegisterRecord(null)}
-              />
+            <div className="animate-fadeIn min-h-[calc(100vh-4.5rem)] registration-page-shell">
+              <SectionErrorBoundary sectionName="Registration Form" onReset={() => setActiveTab('home')}>
+                <Suspense fallback={<ViewLoadingFallback label="Loading registration form..." />}>
+                  <RegistrationForm
+                    onSuccessSubmit={handleSuccessSubmit}
+                    onGoToInvitation={handleGoToInvitation}
+                    paymentSettings={paymentSettings}
+                    existingRegistrations={invitations}
+                    initialRecord={reRegisterRecord}
+                    registrationDeadline={countdownSettingsConfig.registrationDeadline}
+                    onResetReRegister={() => setReRegisterRecord(null)}
+                  />
+                </Suspense>
+              </SectionErrorBoundary>
             </div>
           )}
 
           {activeTab === 'invitation' && (
             <div className="animate-fadeIn">
-              <InvitationCardPage
-                invitations={invitations}
-                initialSearchRegNo={invitationSearchTarget}
-                initialSearchStudentName={invitationStudentNameTarget}
-                onNavigateToRegister={(record?: InvitationRecord) => {
-                  if (record?.status === 'rejected') {
-                    setReRegisterRecord(record);
-                  } else {
-                    // Pending/approved records must not enter rejected recovery mode.
-                    setReRegisterRecord(null);
-                  }
-                  setActiveTab('register');
-                  window.scrollTo({ top: 0, behavior: 'smooth' });
-                }}
-                pdfSettings={pdfSettings}
-                websiteSettings={websiteSettings}
-              />
+              <SectionErrorBoundary sectionName="Invitation Card Portal" onReset={() => setActiveTab('home')}>
+                <Suspense fallback={<ViewLoadingFallback label="Loading invitation card portal..." />}>
+                  <InvitationCardPage
+                    invitations={invitations}
+                    initialSearchRegNo={invitationSearchTarget}
+                    initialSearchStudentName={invitationStudentNameTarget}
+                    onNavigateToRegister={(record?: InvitationRecord) => {
+                      if (record?.status === 'rejected') {
+                        setReRegisterRecord(record);
+                      } else {
+                        // Pending/approved records must not enter rejected recovery mode.
+                        setReRegisterRecord(null);
+                      }
+                      setActiveTab('register');
+                      safeScrollToTop();
+                    }}
+                    pdfSettings={pdfSettings}
+                    websiteSettings={websiteSettings}
+                  />
+                </Suspense>
+              </SectionErrorBoundary>
             </div>
           )}
         </main>
       </div>
 
-      <Footer
-        onOpenAdmin={() => setIsAdminOpen(true)}
-        websiteSettings={websiteSettings}
-        brandingSettings={brandingSettings}
-        themeGender={undefined}
-      />
+      <SectionErrorBoundary mode="silent" sectionName="Footer">
+        <Footer
+          onOpenAdmin={() => setIsAdminOpen(true)}
+          websiteSettings={websiteSettings}
+          brandingSettings={brandingSettings}
+          themeGender={undefined}
+        />
+      </SectionErrorBoundary>
 
       {isAdminOpen && (
-        <AdminPortal
-          isOpen={isAdminOpen}
-          onClose={() => setIsAdminOpen(false)}
-          invitations={invitations}
-          onUpdateStatus={handleUpdateRegistrationStatus}
-          onDeleteRegistration={handleDeleteRegistration}
-          pdfSettings={pdfSettings}
-          websiteSettings={websiteSettings}
-        />
+        <SectionErrorBoundary sectionName="Admin Portal" onReset={() => setIsAdminOpen(false)}>
+          <Suspense fallback={<ViewLoadingFallback label="Loading admin portal..." />}>
+            <AdminPortal
+              isOpen={isAdminOpen}
+              onClose={() => setIsAdminOpen(false)}
+              invitations={invitations}
+              onUpdateStatus={handleUpdateRegistrationStatus}
+              onDeleteRegistration={handleDeleteRegistration}
+              pdfSettings={pdfSettings}
+              websiteSettings={websiteSettings}
+            />
+          </Suspense>
+        </SectionErrorBoundary>
       )}
     </div>
   );

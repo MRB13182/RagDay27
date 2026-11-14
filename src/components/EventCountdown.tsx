@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Sparkles, Radio } from 'lucide-react';
+import { parseSafeDate } from '../lib/dateUtils';
 
 interface EventCountdownProps {
   day?: number | string;
@@ -110,8 +111,8 @@ export function calculateTargetDate(
 
   // Fallback check if date is invalid
   if (isNaN(target.getTime()) && fallbackDateStr) {
-    const fallbackParsed = new Date(fallbackDateStr);
-    if (!isNaN(fallbackParsed.getTime())) {
+    const fallbackParsed = parseSafeDate(fallbackDateStr);
+    if (fallbackParsed) {
       return fallbackParsed;
     }
   }

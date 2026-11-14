@@ -20,3 +20,9 @@ export {
   setManualRegistrationOverride,
 } from '../lib/superAdminConfig';
 
+export {
+  DEPARTMENT_SOCIAL_CONTACTS,
+  resolveConfiguredSocialUrl,
+  type DepartmentKey,
+  type DepartmentSocialLinks,
+} from './socialContactsConfig';

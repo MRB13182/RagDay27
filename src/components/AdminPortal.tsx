@@ -3,13 +3,13 @@ import type { InvitationRecord, InvitationStatus, AdminProfile, PdfSettings, Web
 import { signInAdmin, signOutAdmin, getCurrentAdmin } from '../lib/supabase';
 import { getRegistrationList } from '../services/admin';
 import { resolveStudentPhotoUrl } from '../services/storage';
-import { GalleryManagement } from '../super-admin/gallery/GalleryManagement';
-import { Images } from 'lucide-react';
 import { calculateRegistrationOpenState, setManualRegistrationOverride } from '../lib/superAdminConfig';
+import { safeFormatDateTime } from '../lib/dateUtils';
 import {
   generateRegistrationListPDF,
   generateInvitationCardPDF,
   sortRegistrationsForAdmin,
+  type RegistrationGroupFilter,
 } from '../utils/pdfGenerator';
 import {
   X, Lock, LogIn, LogOut, Check, XCircle,
@@ -127,7 +127,6 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
   },
 }) => {
   const [admin, setAdmin] = useState<AdminProfile | null>(null);
-  const [adminView, setAdminView] = useState<'registrations' | 'gallery'>('registrations');
   const [passcode, setPasscode] = useState('');
   const [loginError, setLoginError] = useState('');
   const [isLoggingIn, setIsLoggingIn] = useState(false);
@@ -146,6 +145,7 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
   const [isSubmittingReject, setIsSubmittingReject] = useState(false);
   const [approvingRegNo, setApprovingRegNo] = useState<string | null>(null);
   const [hidingRegNo, setHidingRegNo] = useState<string | null>(null);
+  const [exportingGroup, setExportingGroup] = useState<RegistrationGroupFilter | null>(null);
   const [actionMessage, setActionMessage] = useState<{ text: string; type: 'success' | 'error' } | null>(null);
 
   // Expanded details drawer/modal
@@ -179,7 +179,7 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
       setAdminRegistrations([]);
       setSelectedRecord(null);
       setRejectingRecord(null);
-      setAdminView('registrations');
+      setExportingGroup(null);
     }
   }, [isOpen]);
 
@@ -412,10 +412,29 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
   // Export ledger to PDF
   const handleExportPDF = async () => {
     if (!admin?.role) return;
+    setActionMessage(null);
     try {
       await generateRegistrationListPDF(adminRegistrations, pdfSettings, websiteSettings, admin.role);
     } catch (err: any) {
-      alert(err?.message || 'Unable to generate PDF ledger.');
+      setActionMessage({ text: err?.message || 'Unable to generate PDF ledger.', type: 'error' });
+    }
+  };
+
+  // Export group-specific approved male registrations to PDF
+  const handleExportGroupPDF = async (group: RegistrationGroupFilter) => {
+    if (!admin?.role || exportingGroup) return;
+    setActionMessage(null);
+    setExportingGroup(group);
+    try {
+      await generateRegistrationListPDF(adminRegistrations, pdfSettings, websiteSettings, admin.role, group);
+      setActionMessage({ text: `${group} approved registrations PDF downloaded.`, type: 'success' });
+    } catch (err: any) {
+      setActionMessage({
+        text: err?.message || `No approved registrations found for ${group}.`,
+        type: 'error',
+      });
+    } finally {
+      setExportingGroup(null);
     }
   };
 
@@ -608,9 +627,42 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
           </div>
         )}
 
-        <div className="px-4 py-2 border-b border-slate-200/80 bg-white/70 flex gap-2 shrink-0"><button onClick={() => setAdminView('registrations')} className={`px-4 py-2 rounded-xl text-xs font-bold ${adminView === 'registrations' ? 'bg-indigo-600 text-white' : 'text-slate-600 hover:bg-slate-100'}`}>Registrations</button><button onClick={() => setAdminView('gallery')} className={`px-4 py-2 rounded-xl text-xs font-bold inline-flex items-center gap-2 ${adminView === 'gallery' ? 'bg-indigo-600 text-white' : 'text-slate-600 hover:bg-slate-100'}`}><Images className="w-4 h-4"/>Gallery</button></div>
+        <div className="px-3.5 sm:px-5 py-2.5 border-b border-slate-200/80 bg-white/70 flex items-center gap-1.5 sm:gap-2.5 overflow-x-auto shrink-0">
+          <span
+            className="px-3.5 sm:px-4 py-2 rounded-xl text-xs font-bold bg-indigo-600 text-white shadow-2xs whitespace-nowrap shrink-0 select-none"
+          >
+            Registrations
+          </span>
 
-        {adminView === 'gallery' ? <div className="flex-1 overflow-auto"><GalleryManagement /></div> : <>
+          {(
+            [
+              { code: 'SC', group: 'Science' as RegistrationGroupFilter },
+              { code: 'BS', group: 'Business Studies' as RegistrationGroupFilter },
+              { code: 'HU', group: 'Humanities' as RegistrationGroupFilter },
+            ]
+          ).map(({ code, group }) => {
+            const isBusy = exportingGroup === group;
+            return (
+              <button
+                key={code}
+                type="button"
+                onClick={() => handleExportGroupPDF(group)}
+                disabled={exportingGroup !== null}
+                title={`Download approved ${group} registrations PDF`}
+                aria-label={`Download approved ${group} registrations PDF`}
+                className="px-2.5 sm:px-3.5 py-2 rounded-xl border border-slate-200/90 bg-white hover:bg-slate-50 active:scale-[0.98] text-slate-800 text-xs font-extrabold inline-flex items-center gap-1.5 shadow-2xs transition-all cursor-pointer disabled:opacity-60 whitespace-nowrap shrink-0"
+              >
+                {isBusy ? (
+                  <RefreshCw className="w-3.5 h-3.5 text-indigo-600 animate-spin" />
+                ) : (
+                  <Download className="w-3.5 h-3.5 text-indigo-600" />
+                )}
+                <span>{code}</span>
+              </button>
+            );
+          })}
+        </div>
+
         {/* 2. REGISTRATION STATISTICS & SUMMARY - Frosted Glass Row */}
         <section className="px-4 py-2.5 sm:px-5 sm:py-3 border-b border-slate-200/80 bg-white/40 backdrop-blur-md overflow-x-auto shrink-0">
           <div className="grid grid-cols-4 min-w-[320px] gap-2 sm:gap-3">
@@ -897,8 +949,6 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
             Showing <strong className="text-slate-800">{filteredRegistrations.length}</strong> of <strong className="text-slate-800">{adminRegistrations.length}</strong> male registrations
           </div>
         </footer>
-
-        </>}
       </div>
 
       {/* ---------------------------------------------------------------------- */}
@@ -1133,7 +1183,7 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
                   <p className="text-rose-900 font-medium leading-relaxed">{selectedRecord.reject_reason}</p>
                   {selectedRecord.rejected_at && (
                     <span className="text-[10px] text-rose-500 font-mono block mt-1">
-                      Recorded at: {new Date(selectedRecord.rejected_at).toLocaleString()}
+                      Recorded at: {safeFormatDateTime(selectedRecord.rejected_at)}
                     </span>
                   )}
                 </section>
@@ -1141,7 +1191,7 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
 
               {selectedRecord.approved_at && (
                 <section className="p-3 rounded-xl bg-emerald-500/10 backdrop-blur-md border border-emerald-300/50 text-emerald-800 text-[11px]">
-                  <strong>Approved at:</strong> {new Date(selectedRecord.approved_at).toLocaleString()}
+                  <strong>Approved at:</strong> {safeFormatDateTime(selectedRecord.approved_at)}
                 </section>
               )}
 

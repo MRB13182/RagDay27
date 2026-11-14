@@ -42,10 +42,15 @@ function setLocalItem(key: string, value: string): void {
 }
 
 export function getSavedSuperAdminText(path: string, fallback: string): string {
-  const stored = getLocalItem(`super_admin_${path}`);
-  if (fallback !== undefined && fallback !== null && fallback.trim() !== '') return fallback;
-  if (stored !== null && stored.trim() !== '') return stored;
-  return fallback || '';
+  const safeFallback = typeof fallback === 'string' ? fallback : '';
+  try {
+    const stored = getLocalItem(`super_admin_${path}`);
+    if (safeFallback.trim() !== '') return safeFallback;
+    if (typeof stored === 'string' && stored.trim() !== '') return stored;
+    return safeFallback;
+  } catch {
+    return safeFallback;
+  }
 }
 
 export async function saveEditableSuperAdminText(path: string, content: string): Promise<void> {
@@ -78,10 +83,14 @@ export async function saveEditableSuperAdminText(path: string, content: string):
 }
 
 export function getSuperAdminImageUrl(path: string, defaultFallback: string): string {
-  const normalizedPath = path.replace(/^src\/super-admin\//, '').replace(/^\/+/, '');
-  return getLocalItem(`super_admin_img_remote_${normalizedPath}`)
-    || getLocalItem(`super_admin_img_${normalizedPath}`)
-    || defaultFallback;
+  try {
+    const normalizedPath = path.replace(/^src\/super-admin\//, '').replace(/^\/+/, '');
+    return getLocalItem(`super_admin_img_remote_${normalizedPath}`)
+      || getLocalItem(`super_admin_img_${normalizedPath}`)
+      || defaultFallback;
+  } catch {
+    return defaultFallback;
+  }
 }
 
 export async function saveEditableSuperAdminImage(path: string, file: File): Promise<string> {

@@ -9,6 +9,8 @@ import {
 } from '../types';
 import { DEFAULT_PAYMENT_SETTINGS } from '../data/mockData';
 import { getConfiguredSections } from '../lib/superAdminConfig';
+import { parseSafeDate } from '../lib/dateUtils';
+import { safeCopyText } from '../lib/browserUtils';
 import {
   createRegistration,
   uploadStudentPhoto,
@@ -63,8 +65,8 @@ const JERSEY_SIZES: JerseySize[] = ['S', 'M', 'L', 'XL', '2XL', '3XL', '4XL'];
 
 function formatRegistrationClosingDate(dateStr: string): string {
   try {
-    const d = new Date(dateStr);
-    if (!isNaN(d.getTime())) {
+    const d = parseSafeDate(dateStr);
+    if (d) {
       const day = d.getDate();
       const month = d.toLocaleDateString('en-US', { month: 'long' });
       const year = d.getFullYear();
@@ -89,7 +91,8 @@ const RegistrationCountdown: React.FC<{ deadline: string; theme?: 'light' | 'dar
     seconds: number;
     isExpired: boolean;
   }>(() => {
-    const target = new Date(deadline).getTime();
+    const parsedTarget = parseSafeDate(deadline);
+    const target = parsedTarget ? parsedTarget.getTime() : NaN;
     const diff = target - Date.now();
     if (isNaN(target) || diff <= 0) {
       return { days: 0, hours: 0, minutes: 0, seconds: 0, isExpired: true };
@@ -105,7 +108,8 @@ const RegistrationCountdown: React.FC<{ deadline: string; theme?: 'light' | 'dar
 
   useEffect(() => {
     const updateCountdown = () => {
-      const target = new Date(deadline).getTime();
+      const parsedTarget = parseSafeDate(deadline);
+      const target = parsedTarget ? parsedTarget.getTime() : NaN;
       const diff = target - Date.now();
       if (isNaN(target) || diff <= 0) {
         setTimeLeft({ days: 0, hours: 0, minutes: 0, seconds: 0, isExpired: true });
@@ -390,22 +394,7 @@ export const RegistrationForm: React.FC<RegistrationFormProps> = ({
   const hasGroupPayment = Boolean(activeBkashNumber || activeNagadNumber);
 
   const handleCopyAccount = async (number: string, label: string) => {
-    try {
-      if (navigator.clipboard && navigator.clipboard.writeText) {
-        await navigator.clipboard.writeText(number);
-      } else {
-        throw new Error('Clipboard API unavailable');
-      }
-    } catch {
-      const textarea = document.createElement('textarea');
-      textarea.value = number;
-      textarea.style.position = 'fixed';
-      textarea.style.opacity = '0';
-      document.body.appendChild(textarea);
-      textarea.select();
-      document.execCommand('copy');
-      document.body.removeChild(textarea);
-    }
+    await safeCopyText(number);
     setCopiedAccount(label);
     setTimeout(() => setCopiedAccount(null), 2500);
   };
@@ -1713,13 +1702,21 @@ export const RegistrationForm: React.FC<RegistrationFormProps> = ({
               <button
                 type="button"
                 onClick={() => {
-                  navigator.clipboard.writeText(successModalData.regNo);
-                  alert(`Copied ${successModalData.regNo} to clipboard!`);
+                  void handleCopyAccount(successModalData.regNo, 'regNo');
                 }}
                 className="py-3 px-4 rounded-xl glass-button text-slate-700 font-bold text-xs transition-colors flex items-center justify-center gap-1.5 cursor-pointer"
               >
-                <Copy className="w-3.5 h-3.5 text-indigo-600" />
-                <span>Copy Reg No</span>
+                {copiedAccount === 'regNo' ? (
+                  <>
+                    <Check className="w-3.5 h-3.5 text-emerald-600" />
+                    <span>Copied!</span>
+                  </>
+                ) : (
+                  <>
+                    <Copy className="w-3.5 h-3.5 text-indigo-600" />
+                    <span>Copy Reg No</span>
+                  </>
+                )}
               </button>
               <button
                 type="button"
