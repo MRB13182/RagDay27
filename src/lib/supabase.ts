@@ -18,25 +18,82 @@ export function createSupabaseClient(url: string, key: string): SupabaseClient {
   });
 }
 
-function resolveSupabaseUrl(): string {
-  const candidate = String(ENV_SUPABASE_URL || '').trim();
-  if (!candidate) {
-    throw new Error('VITE_SUPABASE_URL is not configured.');
-  }
-  return candidate.replace(/\/+$/, '');
+/**
+ * Missing public backend configuration must never stop the entire React app
+ * from mounting. Public pages can render using the bundled event configuration;
+ * database-dependent actions fail explicitly until Vercel env vars are added.
+ */
+const PLACEHOLDER_VALUES = new Set([
+  '',
+  'YOUR_SUPABASE_PUBLISHABLE_KEY',
+  'YOUR_SUPABASE_ANON_KEY',
+  'undefined',
+  'null',
+]);
+
+export const SUPABASE_URL = String(ENV_SUPABASE_URL || '').trim().replace(/\/+$/, '');
+export const SUPABASE_PUBLISHABLE_KEY = String(ENV_SUPABASE_KEY || '').trim();
+export const isSupabaseConfigured =
+  /^https:\/\/[a-z0-9-]+\.supabase\.co$/i.test(SUPABASE_URL) &&
+  !PLACEHOLDER_VALUES.has(SUPABASE_PUBLISHABLE_KEY);
+
+const supabaseClient = isSupabaseConfigured
+  ? createSupabaseClient(SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY)
+  : null;
+
+function createUnavailableQuery(message: string) {
+  const result = { data: null, error: { message, code: 'RD27_BACKEND_NOT_CONFIGURED' } };
+  const query: any = {
+    select: () => query,
+    insert: () => query,
+    update: () => query,
+    upsert: () => query,
+    delete: () => query,
+    eq: () => query,
+    neq: () => query,
+    is: () => query,
+    in: () => query,
+    gt: () => query,
+    gte: () => query,
+    lt: () => query,
+    lte: () => query,
+    like: () => query,
+    ilike: () => query,
+    order: () => query,
+    limit: () => query,
+    range: () => query,
+    single: async () => result,
+    maybeSingle: async () => result,
+    then: (resolve: (value: typeof result) => unknown, reject?: (reason: unknown) => unknown) =>
+      Promise.resolve(result).then(resolve, reject),
+  };
+  return query;
 }
 
-function resolveSupabaseKey(): string {
-  const candidate = String(ENV_SUPABASE_KEY || '').trim();
-  if (!candidate) {
-    throw new Error('VITE_SUPABASE_PUBLISHABLE_KEY is not configured.');
-  }
-  return candidate;
+const unavailableBackendMessage =
+  'The Rag Day portal is open, but its database connection is not configured yet. Please contact the organizers.';
+
+function createUnavailableClient(): any {
+  return {
+    from: () => createUnavailableQuery(unavailableBackendMessage),
+    rpc: async () => ({ data: null, error: { message: unavailableBackendMessage, code: 'RD27_BACKEND_NOT_CONFIGURED' } }),
+    storage: {
+      from: () => ({
+        upload: async () => ({ data: null, error: { message: unavailableBackendMessage, code: 'RD27_BACKEND_NOT_CONFIGURED' } }),
+        getPublicUrl: () => ({ data: { publicUrl: '' } }),
+        remove: async () => ({ data: null, error: { message: unavailableBackendMessage, code: 'RD27_BACKEND_NOT_CONFIGURED' } }),
+        list: async () => ({ data: [], error: { message: unavailableBackendMessage, code: 'RD27_BACKEND_NOT_CONFIGURED' } }),
+      }),
+    },
+    auth: {
+      signOut: async () => ({ error: null }),
+      getSession: async () => ({ data: { session: null }, error: null }),
+      getUser: async () => ({ data: { user: null }, error: null }),
+    },
+  };
 }
 
-export const SUPABASE_URL = resolveSupabaseUrl();
-export const SUPABASE_PUBLISHABLE_KEY = resolveSupabaseKey();
-export const supabase = createSupabaseClient(SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY);
+export const supabase: SupabaseClient = (supabaseClient || createUnavailableClient()) as SupabaseClient;
 
 import { safeStorage } from './safeStorage';
 
