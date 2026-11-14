@@ -1,74 +1,62 @@
 /**
- * SAFE STORAGE UTILITY
- * 
- * Provides bulletproof storage operations across mobile devices, cross-origin iframes
- * (including Google AI Studio previews), private browsing modes, Chrome, Firefox, Safari, and Edge.
- * Safely guards against:
- * DOMException: Failed to read the 'sessionStorage' property from 'Window': Access is denied for this document.
+ * Browser-safe storage helpers.
+ *
+ * Storage getters can throw in private browsing, embedded contexts, and when
+ * a browser blocks persistence. Keep the in-memory fallback available.
  */
-
 const memoryStore: Record<string, string> = {};
+
+function getStorage(kind: 'localStorage' | 'sessionStorage'): Storage | null {
+  try {
+    if (typeof window === 'undefined') return null;
+    return window[kind] ?? null;
+  } catch {
+    return null;
+  }
+}
 
 export const safeStorage = {
   getItem(key: string): string | null {
-    try {
-      if (typeof window !== 'undefined' && window.sessionStorage) {
-        const val = window.sessionStorage.getItem(key);
-        if (val !== null) return val;
+    for (const kind of ['sessionStorage', 'localStorage'] as const) {
+      try {
+        const value = getStorage(kind)?.getItem(key);
+        if (value !== null && value !== undefined) return value;
+      } catch {
+        // Continue to the next storage provider or in-memory fallback.
       }
-    } catch {
-      // Storage access blocked by browser security policy
     }
-
-    try {
-      if (typeof window !== 'undefined' && window.localStorage) {
-        const val = window.localStorage.getItem(key);
-        if (val !== null) return val;
-      }
-    } catch {
-      // Storage access blocked by browser security policy
-    }
-
     return memoryStore[key] ?? null;
   },
 
   setItem(key: string, value: string): void {
     memoryStore[key] = value;
-
-    try {
-      if (typeof window !== 'undefined' && window.sessionStorage) {
-        window.sessionStorage.setItem(key, value);
+    for (const kind of ['sessionStorage', 'localStorage'] as const) {
+      try {
+        getStorage(kind)?.setItem(key, value);
+      } catch {
+        // Persistence is best-effort; in-memory state remains usable.
       }
-    } catch {
-      // Storage blocked
-    }
-
-    try {
-      if (typeof window !== 'undefined' && window.localStorage) {
-        window.localStorage.setItem(key, value);
-      }
-    } catch {
-      // Storage blocked
     }
   },
 
   removeItem(key: string): void {
     delete memoryStore[key];
-
-    try {
-      if (typeof window !== 'undefined' && window.sessionStorage) {
-        window.sessionStorage.removeItem(key);
+    for (const kind of ['sessionStorage', 'localStorage'] as const) {
+      try {
+        getStorage(kind)?.removeItem(key);
+      } catch {
+        // Continue clearing other storage providers.
       }
-    } catch {
-      // Storage blocked
     }
+  },
 
+  getJSON<T>(key: string, fallback: T): T {
+    const raw = this.getItem(key);
+    if (raw === null) return fallback;
     try {
-      if (typeof window !== 'undefined' && window.localStorage) {
-        window.localStorage.removeItem(key);
-      }
+      return JSON.parse(raw) as T;
     } catch {
-      // Storage blocked
+      return fallback;
     }
   },
 };
