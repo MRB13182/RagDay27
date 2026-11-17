@@ -520,43 +520,53 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
   // AUTHENTICATED MALE ADMIN PANEL
   // --------------------------------------------------------------------------
   const isMaleAdmin = true;
-  const roleBadgeColor = 'bg-blue-500/15 text-blue-700 border-blue-300/40';
   const panelTitle = 'Male Admin Panel';
-  const genderSubtext = 'Boys Wing Registrations';
+  const genderLabel = isMaleAdmin ? 'Male' : 'Female';
+  const genderSubtext = 'Boys Wing';
 
   return (
-    <div className="fixed inset-0 z-[300] bg-slate-950/70 backdrop-blur-md flex items-center justify-center p-2 sm:p-4 md:p-6 animate-fadeIn">
+    <div className="fixed inset-0 z-[300] bg-slate-950/70 backdrop-blur-md flex items-center justify-center p-1.5 sm:p-4 md:p-6 animate-fadeIn">
       <div className="w-full max-w-7xl h-[95vh] rounded-3xl glass-modal shadow-[0_30px_75px_-20px_rgba(0,0,0,0.35),inset_0_1.5px_2px_white] border border-white/95 flex flex-col overflow-hidden animate-scaleUp">
 
         {/* 1. ADMIN HEADER */}
-        <header className="px-4 py-3 sm:px-5 sm:py-3.5 border-b border-slate-200/80 glass-modal-header flex items-center justify-between gap-2.5 shrink-0">
-          <div className="flex items-center gap-2.5 min-w-0">
-            <div className={`w-9 h-9 sm:w-10 sm:h-10 rounded-xl grid place-items-center font-black text-base sm:text-lg border shrink-0 backdrop-blur-md ${roleBadgeColor}`}>
-              {isMaleAdmin ? '♂' : '♀'}
+        <header className="px-3 py-2.5 sm:px-5 sm:py-3.5 border-b border-slate-200/80 glass-modal-header flex flex-wrap items-center justify-between gap-1.5 sm:gap-3 shrink-0">
+          {/* Left: [ Male Icon + Male ] + optional desktop wing subtitle */}
+          <div className="flex items-center gap-2 sm:gap-2.5 min-w-0 shrink-0 sm:shrink">
+            <div
+              className="inline-flex items-center gap-1.5 pl-1.5 pr-2.5 sm:pl-2 sm:pr-3 py-1 sm:py-1.5 rounded-full bg-blue-50/90 border border-blue-200/80 text-slate-900 shadow-2xs shrink-0 whitespace-nowrap"
+              title={`${panelTitle} (${admin.role})`}
+            >
+              <span
+                aria-hidden="true"
+                className="w-5 h-5 sm:w-6 sm:h-6 rounded-full bg-blue-100/90 text-blue-600 grid place-items-center text-xs sm:text-sm font-black shrink-0"
+              >
+                {isMaleAdmin ? '♂' : '♀'}
+              </span>
+              <span className="text-xs sm:text-sm font-bold text-slate-800 leading-none">
+                {genderLabel}
+              </span>
             </div>
-            <div className="min-w-0">
-              <div className="flex items-center gap-2">
-                <h2 className="text-base sm:text-lg font-bold font-sans text-slate-900 tracking-tight leading-tight truncate">
-                  {panelTitle}
-                </h2>
-                <span className={`px-2 py-0.5 rounded-full text-[10px] font-extrabold border shrink-0 ${roleBadgeColor}`}>
-                  {admin.role}
-                </span>
-              </div>
-              <p className="text-[11px] sm:text-xs text-slate-500 truncate leading-tight mt-0.5">
-                Logged in as <strong className="text-slate-700">{admin.full_name}</strong> · {genderSubtext}
-              </p>
+
+            <div className="hidden xl:flex flex-col min-w-0">
+              <span className="text-xs font-bold text-slate-800 leading-tight truncate">
+                {panelTitle}
+              </span>
+              <span className="text-[11px] text-slate-500 leading-tight truncate">
+                {admin.full_name} · {genderSubtext}
+              </span>
             </div>
           </div>
 
-          <div className="flex items-center gap-1.5 shrink-0">
+          {/* Right: [ ● Reg: Open ] [ Document ] [ Refresh ] [ Exit ] [ Close ] */}
+          <div className="flex items-center gap-1 sm:gap-1.5 shrink-0">
             {/* Registration Auto/Manual Status & Toggle */}
             <button
+              type="button"
               onClick={handleToggleRegistrationOpen}
-              className={`p-2 sm:px-3 sm:py-2 rounded-xl text-xs font-bold transition-all inline-flex items-center gap-1.5 cursor-pointer border backdrop-blur-md ${
+              className={`px-2.5 sm:px-3 py-1.5 rounded-full text-[11px] sm:text-xs font-bold transition-all inline-flex items-center gap-1.5 cursor-pointer border backdrop-blur-md whitespace-nowrap shrink-0 ${
                 regState.isOpen
-                  ? 'bg-emerald-500/15 text-emerald-800 border-emerald-300/50 hover:bg-rose-500/15 hover:text-rose-800 hover:border-rose-300/50'
-                  : 'bg-rose-500/15 text-rose-800 border-rose-300/50 hover:bg-emerald-500/15 hover:text-emerald-800 hover:border-emerald-300/50'
+                  ? 'bg-emerald-50/95 text-emerald-800 border-emerald-200/90 hover:bg-rose-50 hover:text-rose-800 hover:border-rose-300/70'
+                  : 'bg-rose-50/95 text-rose-800 border-rose-200/90 hover:bg-emerald-50 hover:text-emerald-800 hover:border-emerald-300/70'
               }`}
               title={`Click to ${regState.isOpen ? 'manually DISABLE' : 'manually ENABLE'} registration. (Mode: ${regState.isAuto ? 'Automatic Schedule' : 'Manual Override'})`}
             >
@@ -570,40 +580,48 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
             </button>
 
             <button
+              type="button"
               onClick={handleExportPDF}
               disabled={adminRegistrations.length === 0}
-              className="p-2 sm:px-3 sm:py-2 rounded-xl glass-button text-slate-700 text-xs font-bold transition-colors inline-flex items-center gap-1.5 disabled:opacity-40 cursor-pointer"
+              className="w-8 h-8 sm:w-9 sm:h-9 lg:w-auto lg:px-3 rounded-full glass-button text-slate-700 text-xs font-bold transition-colors inline-flex items-center justify-center gap-1.5 disabled:opacity-40 cursor-pointer shrink-0 whitespace-nowrap"
               title="Download registration ledger as PDF"
+              aria-label="Download registration ledger as PDF"
             >
-              <FileSpreadsheet className="w-4 h-4 text-slate-600" />
-              <span className="hidden md:inline">Export PDF</span>
+              <FileSpreadsheet className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-slate-600 shrink-0" />
+              <span className="hidden lg:inline">Export PDF</span>
             </button>
 
             <button
+              type="button"
               onClick={loadAdminRegistrations}
               disabled={isLoadingRegistrations}
-              className="p-2 sm:px-3 sm:py-2 rounded-xl glass-button text-slate-700 text-xs font-bold transition-colors inline-flex items-center gap-1.5 cursor-pointer disabled:opacity-50"
+              className="w-8 h-8 sm:w-9 sm:h-9 lg:w-auto lg:px-3 rounded-full glass-button text-slate-700 text-xs font-bold transition-colors inline-flex items-center justify-center gap-1.5 cursor-pointer disabled:opacity-50 shrink-0 whitespace-nowrap"
               title="Refresh registrations from database"
+              aria-label="Refresh registrations from database"
             >
-              <RefreshCw className={`w-4 h-4 ${isLoadingRegistrations ? 'animate-spin text-indigo-600' : 'text-slate-600'}`} />
-              <span className="hidden md:inline">Refresh</span>
+              <RefreshCw className={`w-3.5 h-3.5 sm:w-4 sm:h-4 shrink-0 ${isLoadingRegistrations ? 'animate-spin text-indigo-600' : 'text-slate-600'}`} />
+              <span className="hidden lg:inline">Refresh</span>
             </button>
 
             <button
+              type="button"
               onClick={handleLogout}
-              className="p-2 sm:px-3 sm:py-2 rounded-xl glass-button text-slate-700 hover:bg-rose-500/15 hover:text-rose-700 text-xs font-bold transition-colors inline-flex items-center gap-1.5 cursor-pointer border border-white/80"
+              className="w-8 h-8 sm:w-9 sm:h-9 lg:w-auto lg:px-3 rounded-full glass-button text-slate-700 hover:bg-rose-500/15 hover:text-rose-700 text-xs font-bold transition-colors inline-flex items-center justify-center gap-1.5 cursor-pointer border border-white/80 shrink-0 whitespace-nowrap"
               title="Sign out of admin session"
+              aria-label="Sign out of admin session"
             >
-              <LogOut className="w-4 h-4" />
-              <span className="hidden md:inline">Logout</span>
+              <LogOut className="w-3.5 h-3.5 sm:w-4 sm:h-4 shrink-0" />
+              <span className="hidden lg:inline">Logout</span>
             </button>
 
             <button
+              type="button"
               onClick={handleClose}
-              className="p-2 rounded-xl text-slate-400 hover:text-slate-700 hover:bg-white/80 transition-colors ml-0.5 cursor-pointer"
+              className="w-8 h-8 sm:w-9 sm:h-9 rounded-full text-slate-500 hover:text-slate-800 hover:bg-white/80 transition-colors grid place-items-center cursor-pointer shrink-0"
               title="Close Admin Panel"
+              aria-label="Close Admin Panel"
             >
-              <X className="w-5 h-5" />
+              <X className="w-4 h-4 sm:w-5 sm:h-5" />
             </button>
           </div>
         </header>

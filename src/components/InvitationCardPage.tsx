@@ -33,6 +33,7 @@ interface InvitationCardPageProps {
 }
 
 export const InvitationCardPage: React.FC<InvitationCardPageProps> = ({
+  invitations = [],
   initialSearchRegNo = '',
   initialSearchStudentName = '',
   onNavigateToRegister,
@@ -91,7 +92,22 @@ export const InvitationCardPage: React.FC<InvitationCardPageProps> = ({
     try {
       const result = await getPublicInvitation(cleanedReg, cleanedName);
       if (result.success && result.data) {
-        setMatchedRecord(result.data);
+        const fetched = result.data;
+        const localMatch = invitations.find(
+          item =>
+            item.registration_no?.trim().toUpperCase() === cleanedReg &&
+            item.full_name?.trim().toLowerCase() === cleanedName.toLowerCase()
+        );
+        const mergedRecord: InvitationRecord = localMatch
+          ? {
+              ...fetched,
+              class_roll: fetched.class_roll?.trim() || localMatch.class_roll?.trim() || '',
+              student_id: fetched.student_id?.trim() || localMatch.student_id?.trim() || '',
+              academic_group: fetched.academic_group?.trim() || localMatch.academic_group?.trim() || '',
+              academic_section: fetched.academic_section?.trim() || localMatch.academic_section?.trim() || '',
+            }
+          : fetched;
+        setMatchedRecord(mergedRecord);
         return;
       }
 
@@ -344,15 +360,15 @@ export const InvitationCardPage: React.FC<InvitationCardPageProps> = ({
                 <div className="p-3.5 rounded-xl bg-white/85 backdrop-blur-md border border-amber-200/90 shadow-2xs">
                   <span className="text-slate-500 font-semibold uppercase block text-[10px] tracking-wider">Roll & Student ID</span>
                   <div className="text-sm font-bold text-slate-900 mt-0.5 space-y-0.5">
-                    <div>Roll: {matchedRecord.class_roll || '—'}</div>
-                    <div>Student ID: {matchedRecord.student_id || '—'}</div>
+                    <div>Roll: {matchedRecord.class_roll?.trim() || '—'}</div>
+                    <div>Student ID: {matchedRecord.student_id?.trim() || '—'}</div>
                   </div>
                 </div>
                 <div className="p-3.5 rounded-xl bg-white/85 backdrop-blur-md border border-amber-200/90 shadow-2xs">
                   <span className="text-slate-500 font-semibold uppercase block text-[10px] tracking-wider">Academic Details</span>
                   <div className="text-sm font-bold text-slate-900 mt-0.5 space-y-0.5">
-                    <div>Group: {matchedRecord.academic_group || '—'}</div>
-                    <div>Section: {matchedRecord.academic_section || '—'}</div>
+                    <div>Group: {matchedRecord.academic_group?.trim() || '—'}</div>
+                    <div>Section: {matchedRecord.academic_section?.trim() || '—'}</div>
                   </div>
                 </div>
               </div>
@@ -461,14 +477,14 @@ export const InvitationCardPage: React.FC<InvitationCardPageProps> = ({
                       <GraduationCap className="w-3 h-3 text-[#7138F5]" />
                       <span>Academic Group</span>
                     </div>
-                    <span className="text-[#10143C] font-black text-base sm:text-lg mt-1 block">{matchedRecord.academic_group || '—'}</span>
+                    <span className="text-[#10143C] font-black text-base sm:text-lg mt-1 block">{matchedRecord.academic_group?.trim() || '—'}</span>
                   </div>
                   <div className="p-3 rounded-2xl bg-white/90 border border-slate-200/80 shadow-2xs">
                     <div className="flex items-center gap-1.5 text-slate-400 font-bold uppercase text-[10px]">
                       <Building2 className="w-3 h-3 text-[#7138F5]" />
                       <span>Section</span>
                     </div>
-                    <span className="text-[#10143C] font-black text-base sm:text-lg mt-1 block">{matchedRecord.academic_section || '—'}</span>
+                    <span className="text-[#10143C] font-black text-base sm:text-lg mt-1 block">{matchedRecord.academic_section?.trim() || '—'}</span>
                   </div>
                 </div>
               </div>

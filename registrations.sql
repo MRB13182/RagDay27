@@ -467,12 +467,19 @@ begin
   end if;
 
   if r.status = 'pending' then
+    if p_student_name is not null and lower(trim(p_student_name)) <> lower(trim(r.full_name)) then
+      return json_build_object('found', false, 'status', 'name_mismatch', 'can_download', false);
+    end if;
     return json_build_object(
       'found', true,
       'status', 'pending',
       'can_download', false,
       'registration_no', r.registration_no,
-      'full_name', r.full_name
+      'full_name', r.full_name,
+      'class_roll', r.class_roll,
+      'student_id', r.student_id,
+      'academic_group', r.academic_group,
+      'academic_section', r.academic_section
     );
   elsif r.status = 'rejected' then
     -- Return only the fields required to prefill the rejected student's own form.

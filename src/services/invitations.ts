@@ -76,21 +76,70 @@ export async function getPublicInvitation(
     };
   }
 
-  return processFoundData(data, queryRegNo);
+  return await processFoundData(data, queryRegNo, cleanName);
 }
 
-function processFoundData(data: any, originalRegNo: string): {
+async function processFoundData(
+  data: any,
+  originalRegNo: string,
+  expectedStudentName: string
+): Promise<{
   success: boolean;
   data: InvitationRecord | null;
   errorMessage?: string;
-} {
+}> {
   const mapped = mapRowToInvitation(data);
+  let hydrated: InvitationRecord = {
+    ...mapped,
+    registration_no: mapped.registration_no || originalRegNo,
+  };
+
+  // If the public lookup RPC returned a partial record (e.g. pending status omitting academic details)
+  // and Student ID is known, hydrate academic_group, academic_section, and class_roll from check_registration_risk.
+  const needsAcademicHydration =
+    !hydrated.academic_group?.trim() ||
+    !hydrated.academic_section?.trim() ||
+    !hydrated.class_roll?.trim();
+
+  if (needsAcademicHydration && hydrated.student_id?.trim()) {
+    try {
+      const { data: riskData, error: riskError } = await supabase.rpc('check_registration_risk', {
+        p_student_id: hydrated.student_id.trim(),
+        p_current_registration_no: null,
+      });
+
+      if (!riskError && Array.isArray(riskData?.matches) && riskData.matches.length > 0) {
+        const expectedReg = hydrated.registration_no.trim().toUpperCase();
+        const expectedNameLower = expectedStudentName.trim().toLowerCase();
+
+        const matchedRow = riskData.matches.find((row: any) => {
+          const candidate = mapRowToInvitation(row);
+          const regMatches =
+            candidate.registration_no.trim().toUpperCase() === expectedReg;
+          const nameMatches =
+            candidate.full_name.trim().toLowerCase() === expectedNameLower;
+          return regMatches && nameMatches;
+        });
+
+        if (matchedRow) {
+          const fullRecord = mapRowToInvitation(matchedRow);
+          hydrated = {
+            ...hydrated,
+            class_roll: hydrated.class_roll?.trim() || fullRecord.class_roll,
+            student_id: hydrated.student_id?.trim() || fullRecord.student_id,
+            academic_group: hydrated.academic_group?.trim() || fullRecord.academic_group,
+            academic_section: hydrated.academic_section?.trim() || fullRecord.academic_section,
+          };
+        }
+      }
+    } catch (hydrationErr) {
+      console.warn('Could not hydrate academic details during public lookup:', hydrationErr);
+    }
+  }
+
   return {
     success: true,
-    data: {
-      ...mapped,
-      registration_no: mapped.registration_no || originalRegNo,
-    },
+    data: hydrated,
   };
 }
 

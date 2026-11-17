@@ -3,21 +3,52 @@ import { supabase, getStoredAdminPasscode } from '../lib/supabase';
 import { toNullableUuid } from './registrations';
 import { resolveStudentPhotoUrl } from './storage';
 
+function pickFirstText(...values: unknown[]): string {
+  for (const val of values) {
+    if (val !== undefined && val !== null) {
+      const cleaned = String(val).trim();
+      if (cleaned) return cleaned;
+    }
+  }
+  return '';
+}
+
+export function normalizeAcademicGroupLabel(rawGroup: string): string {
+  const clean = rawGroup.trim();
+  if (!clean) return '';
+  const lower = clean.toLowerCase();
+  if (lower === 'sc' || lower === 'science') return 'Science';
+  if (lower === 'bs' || lower === 'business' || lower === 'business studies' || lower === 'commerce') {
+    return 'Business Studies';
+  }
+  if (lower === 'hu' || lower === 'humanities' || lower === 'arts') return 'Humanities';
+  return clean;
+}
+
 export function mapRowToInvitation(row: any): InvitationRecord {
   const rawGender = String(row?.gender || '').trim().toLowerCase();
   const rawStatus = String(row?.status || '').trim().toLowerCase();
   const validUuid = toNullableUuid(row?.id) || row?.id || undefined;
+  const academicGroup = normalizeAcademicGroupLabel(
+    pickFirstText(row?.academic_group, row?.academicGroup, row?.group_name, row?.group)
+  );
+  const academicSection = pickFirstText(
+    row?.academic_section,
+    row?.academicSection,
+    row?.section_name,
+    row?.section
+  );
   return {
     id: validUuid,
     dbId: validUuid,
     sl_no: row?.sl_no,
-    registration_no: row?.registration_no || '',
-    full_name: row?.full_name || '',
-    class_roll: row?.class_roll || '',
-    student_id: row?.student_id || '',
-    contact_mobile_number: row?.contact_mobile_number || '',
-    academic_group: row?.academic_group || '',
-    academic_section: row?.academic_section || '',
+    registration_no: pickFirstText(row?.registration_no, row?.registrationNo),
+    full_name: pickFirstText(row?.full_name, row?.fullName, row?.student_name, row?.name),
+    class_roll: pickFirstText(row?.class_roll, row?.classRoll, row?.roll),
+    student_id: pickFirstText(row?.student_id, row?.studentId, row?.college_id),
+    contact_mobile_number: pickFirstText(row?.contact_mobile_number, row?.contactMobileNumber),
+    academic_group: academicGroup,
+    academic_section: academicSection,
     student_photo: resolveStudentPhotoUrl(row?.student_photo) ?? null,
     send_method: row?.send_method === 'nagad' ? 'nagad' : 'bkash',
     sender_mobile_no: row?.sender_mobile_no || '',
