@@ -103,39 +103,6 @@ export const EventInformationSection: React.FC<EventInformationSectionProps> = (
 
   const isOneColumn = layout === 'one-column';
 
-  const experienceModules = [
-    {
-      num: '01',
-      label: 'Event Schedule',
-      icon: <Calendar className="w-5 h-5" />,
-      onClick: () => onScrollToSection?.('event-details'),
-    },
-    {
-      num: '02',
-      label: 'Memory Gallery',
-      icon: <ImageIcon className="w-5 h-5" />,
-      onClick: () => (onOpenGallery ? onOpenGallery() : onScrollToSection?.('our-story')),
-    },
-    {
-      num: '03',
-      label: 'Our Batch',
-      icon: <Users className="w-5 h-5" />,
-      onClick: () => onScrollToSection?.('batch-identity'),
-    },
-    {
-      num: '04',
-      label: 'Jersey Reveal',
-      icon: <Shirt className="w-5 h-5" />,
-      onClick: () => onScrollToSection?.('jersey-showcase'),
-    },
-    {
-      num: '05',
-      label: 'Surprise Events',
-      icon: <Gift className="w-5 h-5" />,
-      onClick: () => (onOpenNotice ? onOpenNotice() : onScrollToSection?.('contact-info')),
-    },
-  ];
-
   return (
     <motion.section
       id="events"
