@@ -11,19 +11,9 @@ interface FeatureCardProps {
 }
 
 export const FeatureCard: React.FC<FeatureCardProps> = ({
-  eyebrow,
-  title,
-  description,
-  media,
-  action,
-  className = '',
+  eyebrow, title, description, media, action, className = '',
 }) => (
-  <BaseCard
-    as="article"
-    variant="featured"
-    padding="spacious"
-    className={`rd-feature-card ${className}`}
-  >
+  <BaseCard as="article" variant="featured" padding="spacious" className={`rd-feature-card ${className}`}>
     {media && <div className="rd-feature-card__media">{media}</div>}
     {eyebrow && <div className="rd-card__eyebrow">{eyebrow}</div>}
     <h3 className="rd-feature-card__title">{title}</h3>
