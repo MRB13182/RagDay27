@@ -16,7 +16,7 @@ import {
   Image as ImageIcon,
 } from 'lucide-react';
 import batchPedestalImg from '../assets/images/batch_pedestal_27_1795068445518.jpg';
-import { ActionCard, BaseCard } from './ui';
+import { ActionCard, BaseCard, FeatureCard } from './ui';
 
 interface EventInformationSectionProps {
   cards: EventCard[];
@@ -59,21 +59,6 @@ export const renderCardIcon = (iconName: string, className = 'w-5 h-5') => {
     default:
       return <Info className={className} />;
   }
-};
-
-const getModuleSurfaceConfig = (index: number) => {
-  const isIceAccent = index % 2 === 0;
-  return isIceAccent
-    ? {
-        border: 'border-[#C9D0D9]/24 hover:border-[#8BEAFF]/60',
-        iconBox: 'bg-[#0B0E13]/85 text-[#8BEAFF] border-[#8BEAFF]/35',
-        numText: 'text-[#8BEAFF]',
-      }
-    : {
-        border: 'border-[#C9D0D9]/24 hover:border-[#C9D0D9]/55',
-        iconBox: 'bg-[#0B0E13]/85 text-[#C9D0D9] border-[#C9D0D9]/30 group-hover:text-[#8BEAFF] group-hover:border-[#8BEAFF]/45',
-        numText: 'text-[#C9D0D9] group-hover:text-[#8BEAFF]',
-      };
 };
 
 const sectionVariants: Variants = {
@@ -198,35 +183,26 @@ export const EventInformationSection: React.FC<EventInformationSectionProps> = (
           {/* Batch 27 Sculptural Monolith Pedestal */}
           {!isOneColumn && (
             <motion.div variants={cardVariants} className="lg:col-span-4">
-              <BaseCard as="article" variant="elevated" padding="compact" className="museum-frame rounded-2xl overflow-hidden flex flex-col justify-between h-full">
-              <div className="relative aspect-[4/3] w-full overflow-hidden bg-[#08090D]">
-                <img
-                  src={batchPedestalImg}
-                  alt="NIC 27 Batch Sculptural Emblem"
-                  loading="lazy"
-                  className="w-full h-full object-cover object-center opacity-92"
-                />
-                <div
-                  aria-hidden="true"
-                  className="absolute inset-0 bg-gradient-to-t from-[#0C1119] via-transparent to-transparent"
-                />
-              </div>
-              <div className="relative p-5 sm:p-6 border-t border-[#C9D0D9]/18 flex-1 flex flex-col justify-center">
-                <div className="text-[10px] font-mono font-bold uppercase tracking-[0.28em] text-[#8BEAFF]">
-                  NIC 27 BATCH
-                </div>
-                <h3 className="font-display text-lg font-extrabold text-[#F5F7FA] mt-1 tracking-tight">
-                  NATIONAL IDEAL COLLEGE
-                </h3>
-                <p className="text-xs text-[#C9D0D9]/85 leading-relaxed mt-1.5">
-                  Official digital credential and commemorative details for all HSC Batch 2027 participants.
-                </p>
-                <div
-                  aria-hidden="true"
-                  className="absolute inset-x-8 bottom-0 h-[2px] bg-gradient-to-r from-transparent via-[#8BEAFF]/65 to-transparent shadow-[0_0_12px_rgba(139,234,255,0.45)]"
-                />
-              </div>
-              </BaseCard>
+              <FeatureCard
+                eyebrow="NIC 27 BATCH"
+                title="NATIONAL IDEAL COLLEGE"
+                description="Official digital credential and commemorative details for all HSC Batch 2027 participants."
+                className="museum-frame !p-0 rounded-2xl overflow-hidden flex flex-col justify-between h-full"
+                media={
+                  <div className="relative aspect-[4/3] w-full overflow-hidden bg-[#08090D]">
+                    <img
+                      src={batchPedestalImg}
+                      alt="NIC 27 Batch Sculptural Emblem"
+                      loading="lazy"
+                      className="w-full h-full object-cover object-center opacity-92"
+                    />
+                    <div
+                      aria-hidden="true"
+                      className="absolute inset-0 bg-gradient-to-t from-[#0C1119] via-transparent to-transparent"
+                    />
+                  </div>
+                }
+              />
             </motion.div>
           )}
 
@@ -242,11 +218,10 @@ export const EventInformationSection: React.FC<EventInformationSectionProps> = (
               }
             >
               {visibleCards.map((card, idx) => {
-                const accent = getModuleSurfaceConfig(idx);
                 const displayIndex = String(card.order || idx + 1).padStart(2, '0');
                 return (
                   <motion.div key={card.id} variants={cardVariants} className="h-full"> 
-                  <BaseCard variant={idx === 0 ? 'elevated' : 'default'} padding="spacious" className={`h-full flex flex-col justify-between group ${accent.border}`}>
+                  <BaseCard variant={idx === 0 ? 'elevated' : 'default'} padding="spacious" className="h-full flex flex-col justify-between group">
                     <div
                       aria-hidden="true"
                       className="absolute inset-x-6 bottom-0 h-[2px] bg-gradient-to-r from-transparent via-[#8BEAFF]/75 to-transparent opacity-65 group-hover:opacity-100 shadow-[0_0_14px_rgba(139,234,255,0.5)] transition-opacity"
@@ -254,10 +229,10 @@ export const EventInformationSection: React.FC<EventInformationSectionProps> = (
 
                     <div className="relative z-10">
                       <div className="flex items-center justify-between mb-4">
-                        <div className={`w-11 h-11 rounded-xl border ${accent.iconBox} flex items-center justify-center transition-all duration-300 group-hover:scale-105`}>
+                        <div className="rd-card__icon rd-card__icon--ice">
                           {renderCardIcon(card.icon, 'w-5 h-5')}
                         </div>
-                        <span className={`text-xs font-mono font-bold tracking-[0.22em] transition-colors ${accent.numText}`}>
+                        <span className="rd-card__index">
                           {displayIndex}
                         </span>
                       </div>
