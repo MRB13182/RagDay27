@@ -1,4 +1,16 @@
-import type { GalleryMedia } from '../super-admin/gallery/types';
+export type GalleryMediaType = 'image' | 'video';
+export interface GalleryMedia {
+  id: string;
+  type: GalleryMediaType;
+  title: string;
+  caption: string;
+  filename: string;
+  mime_type: string;
+  blob: Blob;
+  enabled: boolean;
+  sort_order: number;
+  created_at: string;
+}
 import { safeRandomId } from '../lib/browserUtils';
 
 const DB_NAME = 'rd27-gallery-local-v1';

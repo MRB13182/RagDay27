@@ -1,6 +1,6 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { ArrowLeft, ArrowRight, Film, Image as ImageIcon, Images, Pause, Play, X } from 'lucide-react';
-import type { GalleryMedia } from '../super-admin/gallery/types';
+import type { GalleryMedia } from '../services/gallery';
 import { getGalleryMedia, subscribeToGalleryChanges } from '../services/gallery';
 import nicBuildingImg from '../../nic.png';
 
@@ -211,9 +211,16 @@ export const GallerySection: React.FC = () => {
         </header>
 
         {storageWarning && (
-          <p role="status" className="mb-4 rounded-xl border border-amber-400/35 bg-amber-500/10 px-4 py-3 text-sm text-amber-200">
-            {storageWarning}
-          </p>
+          <div role="status" className="mb-4 flex flex-col gap-3 rounded-xl border border-amber-400/35 bg-amber-500/10 px-4 py-3 text-sm text-amber-200 sm:flex-row sm:items-center sm:justify-between">
+            <p>{storageWarning}</p>
+            <button
+              type="button"
+              onClick={() => { setLoading(true); void refresh(); }}
+              className="min-h-11 shrink-0 rounded-xl border border-amber-200/30 bg-amber-300/10 px-4 py-2 text-xs font-bold text-amber-100 transition-colors hover:bg-amber-300/20 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-amber-200"
+            >
+              Retry local gallery
+            </button>
+          </div>
         )}
 
         {loading ? (
