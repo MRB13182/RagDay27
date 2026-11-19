@@ -2,6 +2,7 @@ import React from 'react';
 
 export type CardVariant = 'default' | 'elevated' | 'featured';
 export type CardPadding = 'compact' | 'default' | 'spacious';
+export type BaseCardElement = 'div' | 'article' | 'section';
 
 export interface BaseCardProps {
   children: React.ReactNode;
@@ -9,7 +10,9 @@ export interface BaseCardProps {
   padding?: CardPadding;
   interactive?: boolean;
   className?: string;
-  as?: 'div' | 'article' | 'section';
+  as?: BaseCardElement;
+  id?: string;
+  ariaLabel?: string;
 }
 
 const variantClasses: Record<CardVariant, string> = {
@@ -31,8 +34,12 @@ export const BaseCard: React.FC<BaseCardProps> = ({
   interactive = false,
   className = '',
   as: Element = 'div',
+  id,
+  ariaLabel,
 }) => (
   <Element
+    id={id}
+    aria-label={ariaLabel}
     className={[
       'rd-card',
       variantClasses[variant],
