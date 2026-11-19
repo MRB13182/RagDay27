@@ -229,7 +229,7 @@ export const EventInformationSection: React.FC<EventInformationSectionProps> = (
 
                     <div className="relative z-10">
                       <div className="flex items-center justify-between mb-4">
-                        <div className="rd-card__icon rd-card__icon--ice">
+                        <div className="rd-card__icon rd-card__icon--ice" aria-hidden="true">
                           {renderCardIcon(card.icon, 'w-5 h-5')}
                         </div>
                         <span className="rd-card__index">
@@ -237,17 +237,17 @@ export const EventInformationSection: React.FC<EventInformationSectionProps> = (
                         </span>
                       </div>
 
-                      <h3 className="text-[11px] font-mono font-bold uppercase tracking-[0.18em] text-[#8993A1] mb-1.5">
+                      <h3 className="rd-card__label mb-1.5">
                         {card.title}
                       </h3>
 
-                      <div className="font-display text-lg sm:text-xl font-extrabold text-[#F5F7FA] tracking-tight leading-snug">
+                      <div className="font-display text-lg sm:text-xl font-extrabold text-[#F5F7FA] tracking-tight leading-snug break-words">
                         {card.description}
                       </div>
                     </div>
 
                     {card.subDetail && (
-                      <div className="relative z-10 mt-5 pt-3.5 border-t border-[#C9D0D9]/14 flex items-center text-xs text-[#C9D0D9]/80 font-normal">
+                      <div className="relative z-10 mt-5 pt-3.5 border-t border-[#C9D0D9]/14 flex items-center text-xs text-[#C9D0D9]/80 font-normal break-words">
                         <span>{card.subDetail}</span>
                       </div>
                     )}
