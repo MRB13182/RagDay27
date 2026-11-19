@@ -16,6 +16,7 @@ import {
   Image as ImageIcon,
 } from 'lucide-react';
 import batchPedestalImg from '../assets/images/batch_pedestal_27_1795068445518.jpg';
+import { ActionCard, BaseCard } from './ui';
 
 interface EventInformationSectionProps {
   cards: EventCard[];
@@ -177,31 +178,14 @@ export const EventInformationSection: React.FC<EventInformationSectionProps> = (
 
           <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3 sm:gap-4 max-w-5xl mx-auto">
             {experienceModules.map((mod) => (
-              <button
+              <ActionCard
                 key={mod.num}
-                type="button"
+                index={mod.num}
+                icon={mod.icon}
+                title={mod.label}
                 onClick={mod.onClick}
-                className={`group relative rounded-2xl p-4 sm:p-5 glass-card text-center flex flex-col items-center justify-center gap-3 cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-[#8BEAFF] ${
-                  mod.num === '05' ? 'col-span-2 sm:col-span-1' : ''
-                }`}
-              >
-                <div className="w-11 h-11 rounded-xl border border-[#C9D0D9]/25 bg-[#0B0E13]/80 group-hover:border-[#8BEAFF]/55 flex items-center justify-center text-[#F5F7FA] group-hover:text-[#8BEAFF] transition-colors">
-                  {mod.icon}
-                </div>
-                <div className="space-y-1">
-                  <div className="text-xs font-mono font-bold tracking-[0.22em] text-[#8BEAFF]">
-                    {mod.num}
-                  </div>
-                  <div className="text-[11px] font-bold uppercase tracking-[0.14em] text-[#F5F7FA] leading-snug">
-                    {mod.label}
-                  </div>
-                </div>
-                {/* Luminous Ice-Blue Bottom Edge Architectural Glow */}
-                <span
-                  aria-hidden="true"
-                  className="absolute inset-x-5 bottom-0 h-[2px] bg-gradient-to-r from-transparent via-[#8BEAFF]/80 to-transparent opacity-70 group-hover:opacity-100 shadow-[0_0_12px_rgba(139,234,255,0.5)] transition-opacity"
-                />
-              </button>
+                className={mod.num === '05' ? 'col-span-2 sm:col-span-1' : ''}
+              />
             ))}
           </div>
         </div>
@@ -213,10 +197,8 @@ export const EventInformationSection: React.FC<EventInformationSectionProps> = (
         >
           {/* Batch 27 Sculptural Monolith Pedestal */}
           {!isOneColumn && (
-            <motion.div
-              variants={cardVariants}
-              className="lg:col-span-4 museum-frame rounded-2xl overflow-hidden flex flex-col justify-between"
-            >
+            <motion.div variants={cardVariants} className="lg:col-span-4">
+              <BaseCard as="article" variant="elevated" padding="compact" className="museum-frame rounded-2xl overflow-hidden flex flex-col justify-between h-full">
               <div className="relative aspect-[4/3] w-full overflow-hidden bg-[#08090D]">
                 <img
                   src={batchPedestalImg}
@@ -244,6 +226,7 @@ export const EventInformationSection: React.FC<EventInformationSectionProps> = (
                   className="absolute inset-x-8 bottom-0 h-[2px] bg-gradient-to-r from-transparent via-[#8BEAFF]/65 to-transparent shadow-[0_0_12px_rgba(139,234,255,0.45)]"
                 />
               </div>
+              </BaseCard>
             </motion.div>
           )}
 
@@ -262,11 +245,8 @@ export const EventInformationSection: React.FC<EventInformationSectionProps> = (
                 const accent = getModuleSurfaceConfig(idx);
                 const displayIndex = String(card.order || idx + 1).padStart(2, '0');
                 return (
-                  <motion.div
-                    key={card.id}
-                    variants={cardVariants}
-                    className={`relative p-5 sm:p-6 rounded-2xl glass-card border ${accent.border} flex flex-col justify-between overflow-hidden group`}
-                  >
+                  <motion.div key={card.id} variants={cardVariants} className="h-full"> 
+                  <BaseCard variant={idx === 0 ? 'elevated' : 'default'} padding="spacious" className={`h-full flex flex-col justify-between group ${accent.border}`}>
                     <div
                       aria-hidden="true"
                       className="absolute inset-x-6 bottom-0 h-[2px] bg-gradient-to-r from-transparent via-[#8BEAFF]/75 to-transparent opacity-65 group-hover:opacity-100 shadow-[0_0_14px_rgba(139,234,255,0.5)] transition-opacity"
@@ -296,6 +276,7 @@ export const EventInformationSection: React.FC<EventInformationSectionProps> = (
                         <span>{card.subDetail}</span>
                       </div>
                     )}
+                  </BaseCard>
                   </motion.div>
                 );
               })}
