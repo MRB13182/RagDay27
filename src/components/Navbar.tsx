@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Ticket, UserPlus, Menu, X, Bell } from 'lucide-react';
+import { Ticket, UserPlus, Menu, X } from 'lucide-react';
 import { GenderType } from '../types';
 
 interface NavbarProps {
@@ -8,7 +8,6 @@ interface NavbarProps {
   onNavigate: (tab: 'home' | 'register' | 'invitation' | 'gallery', sectionId?: string) => void;
   websiteLogo?: string;
   eventName?: string;
-  onOpenNotice?: () => void;
   themeGender?: GenderType;
 }
 
@@ -18,7 +17,6 @@ export const Navbar: React.FC<NavbarProps> = ({
   onNavigate,
   websiteLogo,
   eventName = 'RAG DAY of NIC 27',
-  onOpenNotice,
 }) => {
   const [menuOpen, setMenuOpen] = useState(false);
 
@@ -33,7 +31,6 @@ export const Navbar: React.FC<NavbarProps> = ({
     key: string;
     label: string;
     tab: 'home' | 'gallery';
-    sectionId?: string;
     isActive: boolean;
   }[] = [
     {
@@ -43,31 +40,10 @@ export const Navbar: React.FC<NavbarProps> = ({
       isActive: activeTab === 'home' && activeSection === 'home',
     },
     {
-      key: 'our-story',
-      label: 'Our Story',
-      tab: 'home',
-      sectionId: 'our-story',
-      isActive: activeTab === 'home' && activeSection === 'our-story',
-    },
-    {
-      key: 'events',
-      label: 'Events',
-      tab: 'home',
-      sectionId: 'events',
-      isActive: activeTab === 'home' && activeSection === 'events',
-    },
-    {
       key: 'gallery',
       label: 'Gallery',
       tab: 'gallery',
       isActive: activeTab === 'gallery',
-    },
-    {
-      key: 'batch',
-      label: 'Batch',
-      tab: 'home',
-      sectionId: 'batch-identity',
-      isActive: activeTab === 'home' && activeSection === 'batch',
     },
   ];
 
@@ -132,6 +108,21 @@ export const Navbar: React.FC<NavbarProps> = ({
               )}
             </button>
           ))}
+          <button
+            type="button"
+            onClick={() => handleNavClick('invitation')}
+            aria-current={activeTab === 'invitation' ? 'page' : undefined}
+            className={`relative py-2 px-2 text-xs font-bold uppercase tracking-[0.12em] transition-colors whitespace-nowrap shrink-0 cursor-pointer focus:outline-none focus-visible:text-[#8BEAFF] ${
+              activeTab === 'invitation'
+                ? 'text-[#F5F7FA]'
+                : 'text-[#C9D0D9]/80 hover:text-[#F5F7FA]'
+            }`}
+          >
+            <span>Invitation Card Download</span>
+            {activeTab === 'invitation' && (
+              <span aria-hidden="true" className="absolute bottom-0.5 left-1.5 right-1.5 h-[2px] bg-[#8BEAFF] shadow-[0_0_12px_#8BEAFF]" />
+            )}
+          </button>
         </nav>
 
         {/* Right Controls: Register Button + Hamburger Menu */}
@@ -160,70 +151,45 @@ export const Navbar: React.FC<NavbarProps> = ({
       {/* Responsive Obsidian Glass Navigation & Portal Drawer */}
       {menuOpen && (
         <div className="mt-2 max-w-7xl mx-auto lg:flex lg:justify-end">
-          <div className="w-full lg:w-80 rounded-2xl glass-modal p-3.5 space-y-1.5 animate-fadeIn">
-            <div className="lg:hidden space-y-1">
-              {centerItems.map((item) => (
-                <button
-                  key={item.key}
-                  type="button"
-                  onClick={() => handleNavClick(item.tab, item.sectionId)}
-                  className={`w-full text-left px-4 py-2.5 rounded-xl text-xs font-bold uppercase tracking-[0.14em] transition-colors cursor-pointer ${
-                    item.isActive
-                      ? 'bg-[#8BEAFF]/15 text-[#8BEAFF] border border-[#8BEAFF]/35'
-                      : 'text-[#C9D0D9] hover:bg-white/5 hover:text-[#F5F7FA]'
-                  }`}
-                >
-                  {item.label}
-                </button>
-              ))}
-              <div className="my-1.5 h-px bg-[#C9D0D9]/15" />
-            </div>
+          <div className="w-full lg:w-[26rem] rounded-2xl glass-modal p-3.5 sm:p-4 space-y-1.5 animate-fadeIn">
+            {centerItems.map((item) => (
+              <button
+                key={item.key}
+                type="button"
+                onClick={() => handleNavClick(item.tab)}
+                aria-current={item.isActive ? 'page' : undefined}
+                className={`w-full min-w-0 text-left px-4 py-3 rounded-xl text-xs sm:text-sm font-bold uppercase tracking-[0.14em] transition-colors cursor-pointer ${
+                  item.isActive
+                    ? 'bg-[#8BEAFF]/15 text-[#8BEAFF] border border-[#8BEAFF]/35'
+                    : 'text-[#C9D0D9] hover:bg-white/5 hover:text-[#F5F7FA]'
+                }`}
+              >
+                {item.label}
+              </button>
+            ))}
 
             <button
               type="button"
               onClick={() => handleNavClick('invitation')}
-              className={`w-full text-left px-4 py-2.5 rounded-xl text-xs font-bold uppercase tracking-[0.14em] flex items-center justify-between transition-colors cursor-pointer ${
+              aria-current={activeTab === 'invitation' ? 'page' : undefined}
+              className={`w-full min-w-0 text-left px-4 py-3 rounded-xl text-xs sm:text-sm font-bold uppercase tracking-[0.12em] flex items-center justify-between gap-3 transition-colors cursor-pointer ${
                 activeTab === 'invitation'
                   ? 'bg-[#8BEAFF]/15 text-[#8BEAFF] border border-[#8BEAFF]/35'
                   : 'text-[#C9D0D9] hover:bg-white/5 hover:text-[#F5F7FA]'
               }`}
             >
-              <span>Invitation Card Download</span>
-              <Ticket className="w-4 h-4 text-[#8BEAFF]" />
+              <span className="min-w-0">Invitation Card Download</span>
+              <Ticket className="w-4 h-4 shrink-0 text-[#8BEAFF]" />
             </button>
 
             <button
               type="button"
-              onClick={() => handleNavClick('gallery')}
-              className="hidden lg:flex w-full text-left px-4 py-2.5 rounded-xl text-xs font-bold uppercase tracking-[0.14em] items-center justify-between text-[#C9D0D9] hover:bg-white/5 hover:text-[#F5F7FA] transition-colors cursor-pointer"
+              onClick={() => handleNavClick('register')}
+              className="w-full px-4 py-3 rounded-xl text-xs sm:text-sm font-extrabold uppercase tracking-[0.14em] glass-button-primary flex items-center justify-center gap-2 cursor-pointer"
             >
-              <span>Full Memory Gallery</span>
+              <UserPlus className="w-4 h-4" />
+              <span>Register</span>
             </button>
-
-            {onOpenNotice && (
-              <button
-                type="button"
-                onClick={() => {
-                  setMenuOpen(false);
-                  onOpenNotice();
-                }}
-                className="w-full text-left px-4 py-2.5 rounded-xl text-xs font-bold uppercase tracking-[0.14em] flex items-center justify-between text-[#C9D0D9] hover:bg-white/5 hover:text-[#F5F7FA] transition-colors cursor-pointer"
-              >
-                <span>Important Notice</span>
-                <Bell className="w-4 h-4 text-[#8BEAFF]" />
-              </button>
-            )}
-
-            <div className="pt-1.5">
-              <button
-                type="button"
-                onClick={() => handleNavClick('register')}
-                className="w-full text-center px-4 py-3 rounded-xl text-xs font-extrabold uppercase tracking-[0.14em] glass-button-primary flex items-center justify-center gap-2 cursor-pointer"
-              >
-                <UserPlus className="w-4 h-4" />
-                <span>Register Now</span>
-              </button>
-            </div>
           </div>
         </div>
       )}
