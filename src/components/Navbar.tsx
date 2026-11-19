@@ -8,6 +8,7 @@ interface NavbarProps {
   onNavigate: (tab: 'home' | 'register' | 'invitation' | 'gallery', sectionId?: string) => void;
   websiteLogo?: string;
   eventName?: string;
+  onOpenNotice?: () => void;
   themeGender?: GenderType;
 }
 
@@ -31,6 +32,7 @@ export const Navbar: React.FC<NavbarProps> = ({
     key: string;
     label: string;
     tab: 'home' | 'gallery';
+    sectionId?: string;
     isActive: boolean;
   }[] = [
     {
