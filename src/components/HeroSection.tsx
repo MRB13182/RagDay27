@@ -1,5 +1,5 @@
 import React from 'react';
-import { ArrowRight, Ticket } from 'lucide-react';
+import { ArrowRight, CalendarDays, MapPin, CreditCard } from 'lucide-react';
 import { WebsiteSettings, BrandingSettings, JerseyShowcaseSettings } from '../types';
 import { EventCountdown } from './EventCountdown';
 import nicBuildingImg from '../../nic.png';
@@ -115,16 +115,40 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
               {websiteSettings.eventDescription || 'Celebrate our final chapter at National Ideal College — built in memory, cast in silver.'}
             </p>
 
-            {/* Unboxed Architectural Metadata Strip */}
-            <div className="flex flex-wrap items-center gap-x-3.5 gap-y-2 text-xs font-mono text-[#C9D0D9] border-y border-[#C9D0D9]/20 py-2.5 mb-7 w-full max-w-xl tabular-nums bg-[rgba(12,17,25,0.42)] backdrop-blur-sm px-3 rounded-lg">
-              <span className="text-[#F5F7FA] font-semibold">{websiteSettings.eventDate}</span>
-              <span aria-hidden="true" className="text-[#626B79]">·</span>
-              <span>{websiteSettings.venue}</span>
-              <span aria-hidden="true" className="text-[#626B79]">·</span>
-              <span className="text-[#8BEAFF] font-bold">Fee: {websiteSettings.registrationFee}</span>
+            {/* Three independent event information glass cards */}
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5 sm:gap-3 mb-7 w-full max-w-2xl">
+              <article className="min-w-0 min-h-[82px] rounded-xl glass-card px-3 py-3 sm:px-3.5 flex items-center gap-3">
+                <div className="w-9 h-9 rounded-lg border border-[#8BEAFF]/30 bg-[#8BEAFF]/10 text-[#8BEAFF] flex items-center justify-center shrink-0">
+                  <CalendarDays className="w-4 h-4" aria-hidden="true" />
+                </div>
+                <div className="min-w-0 flex-1">
+                  <div className="text-[9px] sm:text-[10px] font-mono font-bold uppercase tracking-[0.18em] text-[#8993A1] mb-1">Date</div>
+                  <div className="text-[11px] sm:text-xs font-semibold text-[#F5F7FA] leading-snug tabular-nums break-words [overflow-wrap:anywhere]">{websiteSettings.eventDate}</div>
+                </div>
+              </article>
+
+              <article className="min-w-0 min-h-[82px] rounded-xl glass-card px-3 py-3 sm:px-3.5 flex items-center gap-3">
+                <div className="w-9 h-9 rounded-lg border border-[#C9D0D9]/25 bg-[#C9D0D9]/[0.07] text-[#C9D0D9] flex items-center justify-center shrink-0">
+                  <MapPin className="w-4 h-4" aria-hidden="true" />
+                </div>
+                <div className="min-w-0 flex-1">
+                  <div className="text-[9px] sm:text-[10px] font-mono font-bold uppercase tracking-[0.18em] text-[#8993A1] mb-1">Venue</div>
+                  <div className="text-[11px] sm:text-xs font-semibold text-[#F5F7FA] leading-snug break-words [overflow-wrap:anywhere]">{websiteSettings.venue}</div>
+                </div>
+              </article>
+
+              <article className="min-w-0 min-h-[82px] rounded-xl glass-card px-3 py-3 sm:px-3.5 flex items-center gap-3">
+                <div className="w-9 h-9 rounded-lg border border-[#8BEAFF]/30 bg-[#8BEAFF]/10 text-[#8BEAFF] flex items-center justify-center shrink-0">
+                  <CreditCard className="w-4 h-4" aria-hidden="true" />
+                </div>
+                <div className="min-w-0 flex-1">
+                  <div className="text-[9px] sm:text-[10px] font-mono font-bold uppercase tracking-[0.18em] text-[#8993A1] mb-1">Fee</div>
+                  <div className="text-[11px] sm:text-xs font-bold text-[#8BEAFF] leading-snug break-words [overflow-wrap:anywhere]">{websiteSettings.registrationFee}</div>
+                </div>
+              </article>
             </div>
 
-            {/* Hero Action Buttons — Matches Reference CTA Hierarchy while preserving Pass Check */}
+            {/* Primary hero actions — invitation access remains in the navigation menu */}
             <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 w-full sm:w-auto">
               <button
                 type="button"
@@ -144,16 +168,6 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
               </button>
             </div>
 
-            {/* Immediate Pass Verification & Download Access */}
-            <button
-              type="button"
-              onClick={onInvitationClick}
-              className="mt-4 inline-flex items-center gap-2 text-xs font-mono uppercase tracking-[0.16em] text-[#C9D0D9] hover:text-[#8BEAFF] transition-colors cursor-pointer group"
-            >
-              <Ticket className="w-3.5 h-3.5 text-[#8BEAFF]" />
-              <span>Check &amp; Download Invitation Card</span>
-              <ArrowRight className="w-3.5 h-3.5 transition-transform group-hover:translate-x-0.5 text-[#8BEAFF]" />
-            </button>
           </div>
 
           {/* Right/Center Sculptural Liquid-Chrome RAGDAY 27 Portal Monument */}
