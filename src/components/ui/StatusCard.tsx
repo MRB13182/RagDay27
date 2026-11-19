@@ -9,19 +9,10 @@ interface StatusCardProps {
   className?: string;
 }
 
-export const StatusCard: React.FC<StatusCardProps> = ({
-  label,
-  status,
-  supportingText,
-  tone = 'neutral',
-  className = '',
-}) => (
+export const StatusCard: React.FC<StatusCardProps> = ({ label, status, supportingText, tone = 'neutral', className = '' }) => (
   <BaseCard as="article" variant="default" padding="default" className={`rd-status-card rd-status-card--${tone} ${className}`}>
     <span className="rd-card__label">{label}</span>
-    <div className="rd-status-card__value">
-      <span className="rd-status-card__dot" aria-hidden="true" />
-      {status}
-    </div>
+    <div className="rd-status-card__value"><span className="rd-status-card__dot" aria-hidden="true" />{status}</div>
     {supportingText && <div className="rd-card__support">{supportingText}</div>}
   </BaseCard>
 );
