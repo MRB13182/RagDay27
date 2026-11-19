@@ -12,11 +12,8 @@ import {
   Users,
   Music,
   Info,
-  Gift,
-  Image as ImageIcon,
 } from 'lucide-react';
-import batchPedestalImg from '../assets/images/batch_pedestal_27_1795068445518.jpg';
-import { ActionCard, BaseCard, FeatureCard } from './ui';
+import { BaseCard } from './ui';
 
 interface EventInformationSectionProps {
   cards: EventCard[];
@@ -72,15 +69,6 @@ const sectionVariants: Variants = {
   },
 };
 
-const headerVariants: Variants = {
-  hidden: { opacity: 0, y: 18 },
-  visible: {
-    opacity: 1,
-    y: 0,
-    transition: { duration: 0.45, ease: [0.22, 1, 0.36, 1] },
-  },
-};
-
 const cardVariants: Variants = {
   hidden: { opacity: 0, y: 20 },
   visible: {
@@ -93,9 +81,6 @@ const cardVariants: Variants = {
 export const EventInformationSection: React.FC<EventInformationSectionProps> = ({
   cards,
   layout = 'two-column',
-  onOpenGallery,
-  onOpenNotice,
-  onScrollToSection,
 }) => {
   const visibleCards = cards
     .filter(c => c.visible)
@@ -112,53 +97,21 @@ export const EventInformationSection: React.FC<EventInformationSectionProps> = (
       variants={sectionVariants}
       className="py-12 sm:py-16 relative overflow-hidden bg-[#08090D]"
     >
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-12">
-        {/* Batch Identity Pedestal + Dynamic Super Admin Event Information Details */}
-        <div
-          id="batch-identity"
-          className={isOneColumn ? 'max-w-2xl mx-auto space-y-6' : 'grid grid-cols-1 lg:grid-cols-12 gap-6 sm:gap-8 items-stretch'}
-        >
-          {/* Batch 27 Sculptural Monolith Pedestal */}
-          {!isOneColumn && (
-            <motion.div variants={cardVariants} className="lg:col-span-4">
-              <FeatureCard
-                eyebrow="NIC 27 BATCH"
-                title="NATIONAL IDEAL COLLEGE"
-                description="Official digital credential and commemorative details for all HSC Batch 2027 participants."
-                className="museum-frame !p-0 rounded-2xl overflow-hidden flex flex-col justify-between h-full"
-                media={
-                  <div className="relative aspect-[4/3] w-full overflow-hidden bg-[#08090D]">
-                    <img
-                      src={batchPedestalImg}
-                      alt="NIC 27 Batch Sculptural Emblem"
-                      loading="lazy"
-                      className="w-full h-full object-cover object-center opacity-92"
-                    />
-                    <div
-                      aria-hidden="true"
-                      className="absolute inset-0 bg-gradient-to-t from-[#0C1119] via-transparent to-transparent"
-                    />
-                  </div>
-                }
-              />
-            </motion.div>
-          )}
-
-          {/* Dynamic Super Admin Event Details Cards Grid */}
-          {visibleCards.length > 0 && (
-            <motion.div
-              id="event-details"
-              variants={sectionVariants}
-              className={
-                isOneColumn
-                  ? 'grid grid-cols-1 gap-4 sm:gap-5'
-                  : 'lg:col-span-8 grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-5'
-              }
-            >
-              {visibleCards.map((card, idx) => {
-                const displayIndex = String(card.order || idx + 1).padStart(2, '0');
-                return (
-                  <motion.div key={card.id} variants={cardVariants} className="h-full"> 
+      {visibleCards.length > 0 && (
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <motion.div
+            id="event-details"
+            variants={sectionVariants}
+            className={
+              isOneColumn
+                ? 'max-w-2xl mx-auto grid grid-cols-1 gap-4 sm:gap-5'
+                : 'grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-5'
+            }
+          >
+            {visibleCards.map((card, idx) => {
+              const displayIndex = String(card.order || idx + 1).padStart(2, '0');
+              return (
+                <motion.div key={card.id} variants={cardVariants} className="h-full">
                   <BaseCard variant={idx === 0 ? 'elevated' : 'default'} padding="spacious" className="h-full flex flex-col justify-between group">
                     <div
                       aria-hidden="true"
@@ -170,14 +123,10 @@ export const EventInformationSection: React.FC<EventInformationSectionProps> = (
                         <div className="rd-card__icon rd-card__icon--ice" aria-hidden="true">
                           {renderCardIcon(card.icon, 'w-5 h-5')}
                         </div>
-                        <span className="rd-card__index">
-                          {displayIndex}
-                        </span>
+                        <span className="rd-card__index">{displayIndex}</span>
                       </div>
 
-                      <h3 className="rd-card__label mb-1.5">
-                        {card.title}
-                      </h3>
+                      <h3 className="rd-card__label mb-1.5">{card.title}</h3>
 
                       <div className="font-display text-lg sm:text-xl font-extrabold text-[#F5F7FA] tracking-tight leading-snug break-words">
                         {card.description}
@@ -190,13 +139,12 @@ export const EventInformationSection: React.FC<EventInformationSectionProps> = (
                       </div>
                     )}
                   </BaseCard>
-                  </motion.div>
-                );
-              })}
-            </motion.div>
-          )}
+                </motion.div>
+              );
+            })}
+          </motion.div>
         </div>
-      </div>
+      )}
     </motion.section>
   );
 };
