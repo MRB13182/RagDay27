@@ -146,35 +146,6 @@ export const EventInformationSection: React.FC<EventInformationSectionProps> = (
       className="py-12 sm:py-16 relative overflow-hidden bg-[#08090D]"
     >
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-12">
-        {/* Five Interactive Glass-Metallic "EVENT EXPERIENCE" Modules (01..05) */}
-        <div>
-          <motion.div variants={headerVariants} className="text-center max-w-2xl mx-auto mb-8 sm:mb-10">
-            <div className="flex items-center justify-center gap-4 mb-2.5">
-              <div className="h-px w-12 sm:w-28 bg-gradient-to-r from-transparent to-[#C9D0D9]/45" />
-              <span className="text-[11px] font-mono font-bold uppercase tracking-[0.34em] text-[#C9D0D9] whitespace-nowrap">
-                Event Experience
-              </span>
-              <div className="h-px w-12 sm:w-28 bg-gradient-to-l from-transparent to-[#C9D0D9]/45" />
-            </div>
-            <h2 className="font-display text-2xl sm:text-4xl font-extrabold tracking-tight chrome-text">
-              Curated Chapters of Batch 27
-            </h2>
-          </motion.div>
-
-          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3 sm:gap-4 max-w-5xl mx-auto">
-            {experienceModules.map((mod) => (
-              <ActionCard
-                key={mod.num}
-                index={mod.num}
-                icon={mod.icon}
-                title={mod.label}
-                onClick={mod.onClick}
-                className={mod.num === '05' ? 'col-span-2 sm:col-span-1' : ''}
-              />
-            ))}
-          </div>
-        </div>
-
         {/* Batch Identity Pedestal + Dynamic Super Admin Event Information Details */}
         <div
           id="batch-identity"
