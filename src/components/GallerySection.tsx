@@ -2,19 +2,29 @@ import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { ArrowLeft, ArrowRight, Film, Image as ImageIcon, Images, Pause, Play, X } from 'lucide-react';
 import type { GalleryMedia } from '../super-admin/gallery/types';
 import { getGalleryMedia, subscribeToGalleryChanges } from '../services/gallery';
+import nicBuildingImg from '../../nic.png';
 
 type Filter = 'all' | 'image' | 'video';
 type GalleryEntry =
   | { id: string; type: 'image'; title: string; caption: string; url: string }
   | { id: string; type: 'video'; title: string; caption: string; url: string };
 
-const bundledGallery: GalleryEntry[] = [{
-  id: 'rd27-gallery-upload-001',
-  type: 'image',
-  title: 'Rag Day Gallery',
-  caption: 'Batch memories',
-  url: new URL('../super-admin/gallery/file_00000000b180820783d44c1a5d04d553.png', import.meta.url).href,
-}];
+const bundledGallery: GalleryEntry[] = [
+  {
+    id: 'rd27-gallery-upload-001',
+    type: 'image',
+    title: 'Rag Day Gallery',
+    caption: 'Batch memories',
+    url: new URL('../super-admin/gallery/file_00000000b180820783d44c1a5d04d553.png', import.meta.url).href,
+  },
+  {
+    id: 'rd27-gallery-campus-001',
+    type: 'image',
+    title: 'National Ideal College — Noorjahan Tower',
+    caption: 'Our campus home · Batch 2027',
+    url: nicBuildingImg,
+  },
+];
 
 export const GallerySection: React.FC = () => {
   const [items, setItems] = useState<GalleryMedia[]>([]);
@@ -136,8 +146,37 @@ export const GallerySection: React.FC = () => {
   };
 
   return (
-    <section className="rd-section min-h-[75vh] px-4 py-12 sm:px-6 sm:py-16">
-      <div className="mx-auto max-w-7xl">
+    <section className="rd-section relative overflow-hidden min-h-[75vh] px-4 py-12 sm:px-6 sm:py-16">
+      {/* Subtle Architectural Campus Backdrop */}
+      <div className="pointer-events-none absolute inset-x-0 top-0 h-[340px] overflow-hidden z-0">
+        <div
+          className="absolute inset-y-0 mx-auto w-[92%] max-w-[380px] sm:max-w-[440px] lg:inset-x-auto lg:right-10 lg:w-[420px] flex items-center justify-center lg:justify-end"
+          style={{
+            WebkitMaskImage:
+              'radial-gradient(ellipse 75% 75% at 50% 45%, rgba(0,0,0,1) 35%, rgba(0,0,0,0.5) 68%, rgba(0,0,0,0) 95%)',
+            maskImage:
+              'radial-gradient(ellipse 75% 75% at 50% 45%, rgba(0,0,0,1) 35%, rgba(0,0,0,0.5) 68%, rgba(0,0,0,0) 95%)',
+          }}
+        >
+          <img
+            src={nicBuildingImg}
+            alt=""
+            aria-hidden="true"
+            decoding="async"
+            className="w-full h-full object-contain object-center lg:object-right opacity-[0.14] select-none"
+          />
+        </div>
+        <div
+          aria-hidden="true"
+          className="absolute inset-0"
+          style={{
+            background:
+              'linear-gradient(180deg, rgba(8,9,13,0.45) 0%, rgba(139,234,255,0.06) 45%, #08090D 100%)',
+          }}
+        />
+      </div>
+
+      <div className="relative z-10 mx-auto max-w-7xl">
         <header className="mb-8 flex flex-col gap-5 lg:flex-row lg:items-end lg:justify-between border-b border-[#C9D0D9]/15 pb-7">
           <div>
             <span className="rd-eyebrow">

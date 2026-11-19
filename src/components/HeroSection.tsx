@@ -2,6 +2,7 @@ import React from 'react';
 import { ArrowRight, Ticket } from 'lucide-react';
 import { WebsiteSettings, BrandingSettings, JerseyShowcaseSettings } from '../types';
 import { EventCountdown } from './EventCountdown';
+import nicBuildingImg from '../../nic.png';
 
 interface HeroSectionProps {
   onRegisterClick: () => void;
@@ -11,8 +12,6 @@ interface HeroSectionProps {
   brandingSettings: BrandingSettings;
   jerseySettings?: JerseyShowcaseSettings;
 }
-
-const REFERENCE_CAMPUS_SCENE = '/assets/aistudio/file_00000000f018821194c55f34f60c8caa_8ca85e77.png';
 
 export const HeroSection: React.FC<HeroSectionProps> = ({
   onRegisterClick,
@@ -26,41 +25,34 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
       id="hero-stage"
       className="relative pt-6 sm:pt-10 pb-14 sm:pb-20 overflow-hidden bg-[#08090D]"
     >
-      {/* Prominent National Ideal College Building Architectural Backdrop */}
+      {/* Main Background Illustration: Authentic National Ideal College Building (nic.png) */}
       <div className="absolute inset-0 pointer-events-none z-0 overflow-hidden">
-        {/* Desktop & Tablet Wide Architectural Positioning (Center-Right prominently framing National Ideal College) */}
+        {/* Responsive Building Frame: Centered on Mobile/Tablet, Elegantly Anchored Right on Desktop */}
         <div
-          className="absolute inset-y-0 right-0 w-full lg:w-[68%] opacity-80 sm:opacity-90"
+          className="absolute inset-x-0 top-2 bottom-20 mx-auto w-[94%] max-w-[420px] sm:max-w-[520px] lg:inset-x-auto lg:left-auto lg:right-4 xl:right-10 lg:top-4 lg:bottom-16 lg:w-[48%] lg:max-w-[640px] flex items-center justify-center lg:justify-end"
           style={{
             WebkitMaskImage:
-              'linear-gradient(to right, transparent 0%, rgba(0,0,0,0.45) 18%, rgba(0,0,0,0.95) 42%, black 100%), linear-gradient(to bottom, rgba(0,0,0,0.85) 0%, black 22%, black 70%, transparent 100%)',
-            WebkitMaskComposite: 'source-in',
+              'radial-gradient(ellipse 78% 76% at 50% 50%, rgba(0,0,0,1) 42%, rgba(0,0,0,0.65) 70%, rgba(0,0,0,0) 96%)',
             maskImage:
-              'linear-gradient(to right, transparent 0%, rgba(0,0,0,0.45) 18%, rgba(0,0,0,0.95) 42%, black 100%), linear-gradient(to bottom, rgba(0,0,0,0.85) 0%, black 22%, black 70%, transparent 100%)',
-            maskComposite: 'intersect',
+              'radial-gradient(ellipse 78% 76% at 50% 50%, rgba(0,0,0,1) 42%, rgba(0,0,0,0.65) 70%, rgba(0,0,0,0) 96%)',
           }}
         >
-          <svg
-            viewBox="1084 94 580 250"
-            preserveAspectRatio="xMidYMid slice"
+          <img
+            src={nicBuildingImg}
+            alt=""
             aria-hidden="true"
-            className="w-full h-full object-cover"
-          >
-            <image
-              href={REFERENCE_CAMPUS_SCENE}
-              width="1672"
-              height="941"
-            />
-          </svg>
+            decoding="async"
+            className="w-full h-full object-contain object-center lg:object-right opacity-[0.20] sm:opacity-[0.22] brightness-105 contrast-105 select-none"
+          />
         </div>
 
-        {/* Soft Ice-Blue Architectural Portal Illumination Behind Center Monument */}
+        {/* Soft Blue Ambient Gradient Wash */}
         <div
           aria-hidden="true"
           className="absolute inset-0"
           style={{
             background:
-              'radial-gradient(ellipse 46% 52% at 62% 38%, rgba(139, 234, 255, 0.14) 0%, rgba(139, 234, 255, 0.04) 48%, transparent 74%)',
+              'radial-gradient(ellipse 62% 58% at 50% 42%, rgba(139, 234, 255, 0.12) 0%, rgba(28, 86, 138, 0.16) 46%, transparent 78%)',
           }}
         />
 
@@ -71,13 +63,23 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
           />
         )}
 
-        {/* Measured Contrast Scrim — Dark Behind Editorial Text Only, Leaving College Architecture Crisp & Recognizable */}
+        {/* Desktop Directional Scrim Behind Left Editorial Typography Only */}
+        <div
+          aria-hidden="true"
+          className="hidden lg:block absolute inset-0"
+          style={{
+            background:
+              'linear-gradient(90deg, rgba(8,9,13,0.90) 0%, rgba(8,9,13,0.68) 38%, rgba(8,9,13,0.10) 70%, rgba(8,9,13,0.28) 100%)',
+          }}
+        />
+
+        {/* Subtle Top/Bottom Edge Seamless Blend Across All Breakpoints */}
         <div
           aria-hidden="true"
           className="absolute inset-0"
           style={{
             background:
-              'linear-gradient(90deg, rgba(8,9,13,0.92) 0%, rgba(8,9,13,0.78) 34%, rgba(8,9,13,0.38) 62%, rgba(8,9,13,0.22) 100%), linear-gradient(180deg, rgba(8,9,13,0.52) 0%, rgba(8,9,13,0.10) 38%, rgba(8,9,13,0.72) 78%, #08090D 100%)',
+              'linear-gradient(180deg, rgba(8,9,13,0.62) 0%, rgba(8,9,13,0.18) 26%, rgba(8,9,13,0.22) 72%, #08090D 100%)',
           }}
         />
       </div>

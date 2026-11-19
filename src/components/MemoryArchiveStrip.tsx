@@ -3,6 +3,8 @@ import { ArrowRight, ChevronLeft, ChevronRight, Film, Image as ImageIcon, Images
 import type { GalleryMedia } from '../super-admin/gallery/types';
 import { getGalleryMedia, subscribeToGalleryChanges } from '../services/gallery';
 import batchPedestalImg from '../assets/images/batch_pedestal_27_1795068445518.jpg';
+import jerseyStageBg from '../assets/images/jersey_stage_bg_1795068445588.jpg';
+import nicBuildingImg from '../../nic.png';
 
 interface MemoryArchiveStripProps {
   onOpenGallery: () => void;
@@ -15,9 +17,10 @@ type PreviewItem = {
   title: string;
   caption: string;
   url: string;
+  imageClassName?: string;
+  isCampusContain?: boolean;
 };
 
-const REFERENCE_CAMPUS_SCENE = '/assets/aistudio/file_00000000f018821194c55f34f60c8caa_8ca85e77.png';
 const GALLERY_UPLOAD_POSTER = new URL('../super-admin/gallery/file_00000000b180820783d44c1a5d04d553.png', import.meta.url).href;
 
 const CHAPTER_LABELS = [
@@ -33,8 +36,9 @@ const BUNDLED_ARCHIVE_ENTRIES: PreviewItem[] = [
     type: 'image',
     chapterLabel: 'FIRST DAY',
     title: 'National Ideal College',
-    caption: 'The courtyard where Batch 2027 began',
-    url: GALLERY_UPLOAD_POSTER,
+    caption: 'The campus where Batch 2027 began',
+    url: nicBuildingImg,
+    isCampusContain: true,
   },
   {
     id: 'rd27-archive-stories',
@@ -50,7 +54,8 @@ const BUNDLED_ARCHIVE_ENTRIES: PreviewItem[] = [
     chapterLabel: 'FRIENDSHIP',
     title: 'Rag Day Brotherhood',
     caption: 'Together from the first bell to farewell',
-    url: REFERENCE_CAMPUS_SCENE,
+    url: GALLERY_UPLOAD_POSTER,
+    imageClassName: 'object-cover object-bottom',
   },
   {
     id: 'rd27-archive-moments',
@@ -58,7 +63,7 @@ const BUNDLED_ARCHIVE_ENTRIES: PreviewItem[] = [
     chapterLabel: 'UNFORGETTABLE MOMENTS',
     title: 'Future Is A Memory',
     caption: 'Every frame encoded inside the archive',
-    url: GALLERY_UPLOAD_POSTER,
+    url: jerseyStageBg,
   },
 ];
 
@@ -210,9 +215,6 @@ export const MemoryArchiveStrip: React.FC<MemoryArchiveStripProps> = ({ onOpenGa
                     ? 'aspect-[16/11] xl:-translate-y-1'
                     : 'aspect-[4/3] xl:translate-y-1';
 
-                // Special crop focus for the reference building panel so it shows only clean campus + silhouettes
-                const isRefScene = item.url === REFERENCE_CAMPUS_SCENE;
-
                 return (
                   <button
                     key={`${item.id}-${idx}`}
@@ -222,22 +224,29 @@ export const MemoryArchiveStrip: React.FC<MemoryArchiveStripProps> = ({ onOpenGa
                   >
                     <div className="relative w-full h-full overflow-hidden bg-[#0B0E13]">
                       {!isFailed && item.type === 'image' ? (
-                        isRefScene ? (
-                          <svg
-                            viewBox="1084 100 578 242"
-                            preserveAspectRatio="xMidYMid slice"
-                            aria-hidden="true"
-                            className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-[1.04]"
-                          >
-                            <image href={item.url} width="1672" height="941" />
-                          </svg>
+                        item.isCampusContain ? (
+                          <div className="relative w-full h-full flex items-center justify-center bg-[radial-gradient(ellipse_at_center,rgba(139,234,255,0.16)_0%,rgba(12,17,25,0.92)_68%,#08090D_100%)] p-1.5">
+                            <img
+                              src={item.url}
+                              alt={item.title}
+                              loading="lazy"
+                              onError={() => setFailedIds((prev) => new Set(prev).add(item.id))}
+                              className="w-full h-full object-contain object-center transition-transform duration-500 group-hover:scale-[1.04]"
+                              style={{
+                                WebkitMaskImage:
+                                  'radial-gradient(ellipse 84% 88% at 50% 50%, rgba(0,0,0,1) 62%, rgba(0,0,0,0) 100%)',
+                                maskImage:
+                                  'radial-gradient(ellipse 84% 88% at 50% 50%, rgba(0,0,0,1) 62%, rgba(0,0,0,0) 100%)',
+                              }}
+                            />
+                          </div>
                         ) : (
                           <img
                             src={item.url}
                             alt={item.title}
                             loading="lazy"
                             onError={() => setFailedIds((prev) => new Set(prev).add(item.id))}
-                            className="w-full h-full object-cover object-center transition-transform duration-500 group-hover:scale-[1.04]"
+                            className={`w-full h-full ${item.imageClassName || 'object-cover object-center'} transition-transform duration-500 group-hover:scale-[1.04]`}
                           />
                         )
                       ) : !isFailed && item.type === 'video' ? (
