@@ -198,7 +198,7 @@ export const EventInformationSection: React.FC<EventInformationSectionProps> = (
           {/* Batch 27 Sculptural Monolith Pedestal */}
           {!isOneColumn && (
             <motion.div variants={cardVariants} className="lg:col-span-4">
-            <BaseCard as="article" variant="elevated" padding="compact" className="museum-frame rounded-2xl overflow-hidden flex flex-col justify-between h-full">
+              <BaseCard as="article" variant="elevated" padding="compact" className="museum-frame rounded-2xl overflow-hidden flex flex-col justify-between h-full">
               <div className="relative aspect-[4/3] w-full overflow-hidden bg-[#08090D]">
                 <img
                   src={batchPedestalImg}
@@ -226,7 +226,7 @@ export const EventInformationSection: React.FC<EventInformationSectionProps> = (
                   className="absolute inset-x-8 bottom-0 h-[2px] bg-gradient-to-r from-transparent via-[#8BEAFF]/65 to-transparent shadow-[0_0_12px_rgba(139,234,255,0.45)]"
                 />
               </div>
-            </BaseCard>
+              </BaseCard>
             </motion.div>
           )}
 
