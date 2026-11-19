@@ -1,10 +1,11 @@
 import React, { useState } from 'react';
-import { Ticket, UserCheck, Menu, X, Bell } from 'lucide-react';
+import { Ticket, UserPlus, Menu, X, Bell } from 'lucide-react';
 import { GenderType } from '../types';
 
 interface NavbarProps {
   activeTab: 'home' | 'register' | 'invitation' | 'gallery';
-  onNavigate: (tab: 'home' | 'register' | 'invitation' | 'gallery') => void;
+  activeSection?: 'home' | 'our-story' | 'events' | 'batch';
+  onNavigate: (tab: 'home' | 'register' | 'invitation' | 'gallery', sectionId?: string) => void;
   websiteLogo?: string;
   eventName?: string;
   onOpenNotice?: () => void;
@@ -13,226 +14,217 @@ interface NavbarProps {
 
 export const Navbar: React.FC<NavbarProps> = ({
   activeTab,
+  activeSection = 'home',
   onNavigate,
   websiteLogo,
-  eventName = 'RD27 Rag Day 2027',
+  eventName = 'RAG DAY of NIC 27',
   onOpenNotice,
-  themeGender: _themeGender,
 }) => {
-  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [menuOpen, setMenuOpen] = useState(false);
 
-  const handleNavClick = (tab: 'home' | 'register' | 'invitation' | 'gallery') => {
-    onNavigate(tab);
-    setMobileMenuOpen(false);
+  const handleNavClick = (tab: 'home' | 'register' | 'invitation' | 'gallery', sectionId?: string) => {
+    onNavigate(tab, sectionId);
+    setMenuOpen(false);
   };
 
-  // Global navigation always keeps the standard white/purple brand theme.
-  const isMaleTheme = false;
-  const isFemaleTheme = false;
+  const primaryTitle = /rag\s*day.*nic\s*27/i.test(eventName) ? 'RAGDAY 27' : eventName;
 
-  const headerBgClass = isFemaleTheme
-    ? 'bg-[#15051B]/90 backdrop-blur-2xl border border-[#4A195E]/70 shadow-[0_12px_36px_rgba(0,0,0,0.4),inset_0_1px_1.5px_rgba(255,255,255,0.1)] text-white'
-    : isMaleTheme
-    ? 'bg-[#070F1E]/90 backdrop-blur-2xl border border-[#1E3A5F]/70 shadow-[0_12px_36px_rgba(0,0,0,0.4),inset_0_1px_1.5px_rgba(255,255,255,0.1)] text-white'
-    : 'bg-white/68 backdrop-blur-2xl border border-white/95 shadow-[0_18px_44px_-16px_rgba(91,75,160,0.16),0_4px_14px_-6px_rgba(79,70,140,0.08),inset_0_1.5px_1.5px_white] text-slate-900';
+  const centerItems: {
+    key: string;
+    label: string;
+    tab: 'home' | 'gallery';
+    sectionId?: string;
+    isActive: boolean;
+  }[] = [
+    {
+      key: 'home',
+      label: 'Home',
+      tab: 'home',
+      isActive: activeTab === 'home' && activeSection === 'home',
+    },
+    {
+      key: 'our-story',
+      label: 'Our Story',
+      tab: 'home',
+      sectionId: 'our-story',
+      isActive: activeTab === 'home' && activeSection === 'our-story',
+    },
+    {
+      key: 'events',
+      label: 'Events',
+      tab: 'home',
+      sectionId: 'events',
+      isActive: activeTab === 'home' && activeSection === 'events',
+    },
+    {
+      key: 'gallery',
+      label: 'Gallery',
+      tab: 'gallery',
+      isActive: activeTab === 'gallery',
+    },
+    {
+      key: 'batch',
+      label: 'Batch',
+      tab: 'home',
+      sectionId: 'batch-identity',
+      isActive: activeTab === 'home' && activeSection === 'batch',
+    },
+  ];
 
   return (
-    <header className="fixed top-0 left-0 right-0 z-50 w-full transition-all duration-300 px-3 sm:px-6 lg:px-8 pt-2 sm:pt-2.5">
-      <div className={`max-w-7xl mx-auto rounded-2xl sm:rounded-3xl transition-all duration-300 ${headerBgClass} px-3.5 sm:px-6 h-15 sm:h-17 flex items-center justify-between relative`}>
-        {/* Left: Logo: RD27 Rag Day 2027 */}
+    <header className="fixed top-0 left-0 right-0 z-50 w-full px-2 sm:px-6 lg:px-8 pt-2 sm:pt-3">
+      <div className="max-w-7xl mx-auto rounded-2xl glass-navbar px-2.5 sm:px-5 lg:px-6 h-[3.6rem] sm:h-[4.25rem] flex items-center justify-between gap-2 sm:gap-4 relative">
+        {/* Left: Institutional Brand Lockup — Never Truncated */}
         <button
+          type="button"
           onClick={() => handleNavClick('home')}
-          className="flex items-center gap-2.5 sm:gap-3 text-left focus:outline-none group transition-transform hover:scale-[1.01] cursor-pointer z-10"
+          className="flex items-center gap-1.5 sm:gap-3 text-left focus:outline-none focus-visible:ring-2 focus-visible:ring-[#8BEAFF] rounded-xl group cursor-pointer z-10 shrink-0"
         >
           {websiteLogo ? (
-            <img
-              src={websiteLogo}
-              alt="Logo"
-              className="w-9 h-9 sm:w-10 sm:h-10 rounded-xl object-contain shadow-xs border border-white/90 bg-white/70 backdrop-blur-md p-0.5"
-            />
+            <div className="w-7 h-7 sm:w-10 sm:h-10 rounded-lg sm:rounded-xl border border-[#C9D0D9]/25 bg-[#0C1119]/85 p-1 shrink-0 flex items-center justify-center shadow-[inset_0_1px_0_rgba(245,247,250,0.12)]">
+              <img
+                src={websiteLogo}
+                alt="National Ideal College Logo"
+                className="w-full h-full object-contain"
+              />
+            </div>
           ) : (
-            <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-gradient-to-tr from-[#5B5FEF] via-[#7A6CFF] to-[#00D4FF] p-[1.5px] shadow-sm flex items-center justify-center shrink-0">
-              <div className="w-full h-full bg-[#0F172A] rounded-[10px] flex items-center justify-center">
-                <span className="font-display font-extrabold text-white text-xs sm:text-sm tracking-wider">
-                  RD<span className="text-[#00D4FF]">27</span>
-                </span>
-              </div>
+            <div className="w-7 h-7 sm:w-10 sm:h-10 rounded-lg sm:rounded-xl border border-[#8BEAFF]/40 bg-[#0C1119]/85 flex items-center justify-center shrink-0">
+              <span className="font-display font-extrabold text-[#F5F7FA] text-[10px] sm:text-xs tracking-wider">
+                NIC<span className="text-[#8BEAFF]">27</span>
+              </span>
             </div>
           )}
-          <div className="flex flex-col min-w-0">
-            <span className={`font-display text-xs sm:text-base font-extrabold tracking-tight leading-tight transition-colors truncate max-w-[120px] xs:max-w-[190px] sm:max-w-xs md:max-w-none ${
-              isFemaleTheme ? 'text-white group-hover:text-[#EC4899]' : isMaleTheme ? 'text-white group-hover:text-[#38BDF8]' : 'text-slate-900 group-hover:text-[#5B5FEF]'
-            }`}>
-              {eventName}
+
+          <div className="flex flex-col shrink-0">
+            <span className="font-display text-[10.5px] sm:text-sm lg:text-[15px] font-extrabold tracking-[0.08em] sm:tracking-[0.14em] uppercase text-[#F5F7FA] group-hover:text-[#8BEAFF] transition-colors whitespace-nowrap leading-none">
+              {primaryTitle}
             </span>
-            <span className={`text-[10px] font-medium tracking-wide flex items-center gap-1 ${
-              isFemaleTheme ? 'text-pink-300/70' : isMaleTheme ? 'text-slate-400' : 'text-slate-500'
-            }`}>
-              <span className="inline-block w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
-              Batch 2027 Portal
+            <span className="text-[7.5px] sm:text-[10px] font-semibold tracking-[0.05em] sm:tracking-[0.18em] uppercase text-[#C9D0D9]/85 group-hover:text-[#F5F7FA] transition-colors whitespace-nowrap leading-none mt-1">
+              National Ideal College
             </span>
           </div>
         </button>
 
-        {/* Center: Desktop Nav Items with Frosted Glass Navigation Pill */}
-        <nav className={`hidden md:flex items-center justify-center gap-1.5 p-1 rounded-2xl backdrop-blur-md absolute left-1/2 -translate-x-1/2 transition-colors ${
-          isFemaleTheme
-            ? 'bg-[#240A30]/85 border border-[#4A195E]/80 shadow-[inset_0_1px_1.5px_rgba(255,255,255,0.1)]'
-            : isMaleTheme
-            ? 'bg-[#0B1A35]/85 border border-[#1E3A5F]/80 shadow-[inset_0_1px_1.5px_rgba(255,255,255,0.1)]'
-            : 'bg-slate-100/60 border border-white/80 shadow-[inset_0_1px_1.5px_rgba(255,255,255,0.9)]'
-        }`}>
-          <button
-            onClick={() => handleNavClick('home')}
-            className={`px-3.5 py-1.5 text-xs sm:text-sm font-semibold rounded-xl transition-all duration-200 cursor-pointer ${
-              activeTab === 'home'
-                ? isFemaleTheme
-                  ? 'bg-white text-[#EC4899] font-bold shadow-xs'
-                  : isMaleTheme
-                  ? 'bg-white text-[#0284C7] font-bold shadow-xs'
-                  : 'bg-white text-[#5B5FEF] font-bold shadow-xs border border-white/90'
-                : isFemaleTheme
-                ? 'text-pink-200/80 hover:text-white hover:bg-white/10'
-                : isMaleTheme
-                ? 'text-slate-300 hover:text-white hover:bg-white/10'
-                : 'text-slate-600 hover:text-slate-900 hover:bg-white/60'
-            }`}
-          >
-            Home
-          </button>
-
-          <button
-            onClick={() => handleNavClick('invitation')}
-            className={`px-3.5 py-1.5 text-xs sm:text-sm font-semibold rounded-xl transition-all duration-200 flex items-center gap-1.5 cursor-pointer ${
-              activeTab === 'invitation'
-                ? isFemaleTheme
-                  ? 'bg-white text-[#EC4899] font-bold shadow-xs'
-                  : isMaleTheme
-                  ? 'bg-white text-[#0284C7] font-bold shadow-xs'
-                  : 'bg-white text-[#5B5FEF] font-bold shadow-xs border border-white/90'
-                : isFemaleTheme
-                ? 'text-pink-200/80 hover:text-white hover:bg-white/10'
-                : isMaleTheme
-                ? 'text-slate-300 hover:text-white hover:bg-white/10'
-                : 'text-slate-600 hover:text-slate-900 hover:bg-white/60'
-            }`}
-          >
-            <Ticket className="w-4 h-4" />
-            <span>Invitation Card Download</span>
-          </button>
-
-
-
-
-
-          <button onClick={() => handleNavClick('gallery')} className={`px-3.5 py-1.5 text-xs sm:text-sm font-semibold rounded-xl transition-all cursor-pointer ${activeTab === 'gallery' ? 'bg-white text-[#5B5FEF] shadow-xs' : 'text-slate-600 hover:bg-white/60'}`}>Gallery</button>
-
-          <button
-            onClick={() => handleNavClick('register')}
-            className={`px-4 py-1.5 text-xs sm:text-sm font-bold rounded-xl transition-all duration-200 flex items-center gap-1.5 cursor-pointer ${
-              isFemaleTheme
-                ? 'bg-gradient-to-r from-[#D91B74] to-[#EC4899] text-white shadow-md shadow-pink-500/30'
-                : isMaleTheme
-                ? 'bg-gradient-to-r from-[#0070F3] to-[#00D2FF] text-white shadow-md shadow-cyan-500/30'
-                : activeTab === 'register'
-                ? 'bg-[#5B5FEF] text-white shadow-md shadow-[#5B5FEF]/30 ring-2 ring-[#5B5FEF]/30'
-                : 'bg-gradient-to-r from-[#5B5FEF] to-[#7A6CFF] text-white shadow-sm'
-            }`}
-          >
-            <UserCheck className="w-4 h-4" />
-            <span>Register Now</span>
-          </button>
+        {/* Center: Clean Editorial Desktop Navigation */}
+        <nav
+          aria-label="Primary Navigation"
+          className="hidden lg:flex items-center justify-center gap-2 xl:gap-5"
+        >
+          {centerItems.map((item) => (
+            <button
+              key={item.key}
+              type="button"
+              onClick={() => handleNavClick(item.tab, item.sectionId)}
+              aria-current={item.isActive ? 'page' : undefined}
+              className={`relative py-2 px-2 text-xs font-bold uppercase tracking-[0.15em] transition-colors whitespace-nowrap shrink-0 cursor-pointer focus:outline-none focus-visible:text-[#8BEAFF] ${
+                item.isActive
+                  ? 'text-[#F5F7FA]'
+                  : 'text-[#C9D0D9]/80 hover:text-[#F5F7FA]'
+              }`}
+            >
+              <span>{item.label}</span>
+              {item.isActive && (
+                <span
+                  aria-hidden="true"
+                  className="absolute bottom-0.5 left-1.5 right-1.5 h-[2px] bg-[#8BEAFF] shadow-[0_0_12px_#8BEAFF]"
+                />
+              )}
+            </button>
+          ))}
         </nav>
 
-        {/* Desktop Right Notice Trigger */}
-        {onOpenNotice && (
-          <div className="hidden md:flex items-center gap-2 z-10">
-            <button
-              type="button"
-              onClick={onOpenNotice}
-              className={`px-3 py-1.5 rounded-xl border shadow-xs backdrop-blur-md transition-all flex items-center gap-1.5 cursor-pointer text-xs font-bold ${
-                isFemaleTheme
-                  ? 'bg-[#240A30]/80 hover:bg-[#240A30] text-pink-300 border-[#4A195E]'
-                  : isMaleTheme
-                  ? 'bg-[#0B1A35]/80 hover:bg-[#0B1A35] text-sky-300 border-[#1E3A5F]'
-                  : 'bg-white/70 hover:bg-white/95 text-[#4F46E5] border-violet-200/70'
-              }`}
-              title="Important Notice"
-            >
-              <Bell className="w-3.5 h-3.5" />
-              <span>Notice</span>
-            </button>
-          </div>
-        )}
-
-        {/* Mobile Right Controls matching Reference Image 1 */}
-        <div className="flex items-center gap-2 md:hidden">
+        {/* Right Controls: Register Button + Hamburger Menu */}
+        <div className="flex items-center gap-1.5 sm:gap-2.5 shrink-0 z-10">
           <button
+            type="button"
             onClick={() => handleNavClick('register')}
-            className="px-3.5 py-1.5 text-xs font-extrabold rounded-xl bg-gradient-to-r from-[#7138F5] via-[#5224D8] to-[#11C8F4] text-white shadow-md shadow-[#7138F5]/25 flex items-center gap-1.5 cursor-pointer active:scale-95 transition-transform"
+            className="px-2.5 sm:px-4 py-1.5 sm:py-2 text-[10px] sm:text-xs font-extrabold uppercase tracking-[0.08em] sm:tracking-[0.14em] rounded-full glass-button-primary flex items-center gap-1 sm:gap-2 cursor-pointer whitespace-nowrap shrink-0"
           >
-            <UserCheck className="w-3.5 h-3.5" />
+            <UserPlus className="w-3.5 h-3.5 sm:w-4 sm:h-4 shrink-0" />
             <span>Register</span>
           </button>
 
           <button
             type="button"
-            onClick={() => setMobileMenuOpen(prev => !prev)}
+            onClick={() => setMenuOpen(prev => !prev)}
             aria-label="Toggle navigation menu"
-            className="p-2 rounded-xl bg-white/80 border border-white/95 text-slate-700 hover:text-slate-900 shadow-2xs focus:outline-none cursor-pointer transition-colors"
+            aria-expanded={menuOpen}
+            className="w-8.5 h-8.5 sm:w-10 sm:h-10 rounded-full border border-[#C9D0D9]/24 bg-[rgba(12,17,25,0.68)] hover:border-[#8BEAFF]/55 text-[#F5F7FA] hover:text-[#8BEAFF] flex items-center justify-center focus:outline-none focus-visible:ring-2 focus-visible:ring-[#8BEAFF] cursor-pointer transition-colors shrink-0 shadow-[inset_0_1px_0_rgba(245,247,250,0.1)]"
           >
-            {mobileMenuOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
+            {menuOpen ? <X className="w-4 h-4 sm:w-5 sm:h-5" /> : <Menu className="w-4 h-4 sm:w-5 sm:h-5" />}
           </button>
         </div>
       </div>
 
-      {/* Mobile Drawer */}
-      {mobileMenuOpen && (
-        <div className={`md:hidden mt-2 max-w-7xl mx-auto rounded-2xl border px-4 py-4 space-y-2 shadow-2xl animate-fadeIn ${
-          isFemaleTheme
-            ? 'border-[#4A195E]/80 bg-[#15051B]/95 backdrop-blur-2xl text-white'
-            : isMaleTheme
-            ? 'border-[#1E3A5F]/80 bg-[#070F1E]/95 backdrop-blur-2xl text-white'
-            : 'border-white/95 bg-white/78 backdrop-blur-2xl text-slate-900 shadow-[0_24px_55px_-16px_rgba(91,75,160,0.18),inset_0_1.5px_1.5px_white]'
-        }`}>
-          <button
-            onClick={() => handleNavClick('home')}
-            className={`w-full text-left px-4 py-3 rounded-xl text-sm font-bold transition-colors ${
-              activeTab === 'home'
-                ? isFemaleTheme ? 'bg-pink-500/20 text-[#EC4899]' : isMaleTheme ? 'bg-sky-500/20 text-[#38BDF8]' : 'bg-[#5B5FEF]/10 text-[#5B5FEF]'
-                : isFemaleTheme ? 'text-pink-100 hover:bg-white/10' : isMaleTheme ? 'text-slate-200 hover:bg-white/10' : 'text-slate-700 hover:bg-white/80'
-            }`}
-          >
-            Home
-          </button>
+      {/* Responsive Obsidian Glass Navigation & Portal Drawer */}
+      {menuOpen && (
+        <div className="mt-2 max-w-7xl mx-auto lg:flex lg:justify-end">
+          <div className="w-full lg:w-80 rounded-2xl glass-modal p-3.5 space-y-1.5 animate-fadeIn">
+            <div className="lg:hidden space-y-1">
+              {centerItems.map((item) => (
+                <button
+                  key={item.key}
+                  type="button"
+                  onClick={() => handleNavClick(item.tab, item.sectionId)}
+                  className={`w-full text-left px-4 py-2.5 rounded-xl text-xs font-bold uppercase tracking-[0.14em] transition-colors cursor-pointer ${
+                    item.isActive
+                      ? 'bg-[#8BEAFF]/15 text-[#8BEAFF] border border-[#8BEAFF]/35'
+                      : 'text-[#C9D0D9] hover:bg-white/5 hover:text-[#F5F7FA]'
+                  }`}
+                >
+                  {item.label}
+                </button>
+              ))}
+              <div className="my-1.5 h-px bg-[#C9D0D9]/15" />
+            </div>
 
-          <button
-            onClick={() => handleNavClick('invitation')}
-            className={`w-full text-left px-4 py-3 rounded-xl text-sm font-bold flex items-center justify-between transition-colors ${
-              activeTab === 'invitation'
-                ? isFemaleTheme ? 'bg-pink-500/20 text-[#EC4899]' : isMaleTheme ? 'bg-sky-500/20 text-[#38BDF8]' : 'bg-[#5B5FEF]/10 text-[#5B5FEF]'
-                : isFemaleTheme ? 'text-pink-100 hover:bg-white/10' : isMaleTheme ? 'text-slate-200 hover:bg-white/10' : 'text-slate-700 hover:bg-white/80'
-            }`}
-          >
-            <span>Invitation Card Download</span>
-            <Ticket className="w-4 h-4" />
-          </button>
+            <button
+              type="button"
+              onClick={() => handleNavClick('invitation')}
+              className={`w-full text-left px-4 py-2.5 rounded-xl text-xs font-bold uppercase tracking-[0.14em] flex items-center justify-between transition-colors cursor-pointer ${
+                activeTab === 'invitation'
+                  ? 'bg-[#8BEAFF]/15 text-[#8BEAFF] border border-[#8BEAFF]/35'
+                  : 'text-[#C9D0D9] hover:bg-white/5 hover:text-[#F5F7FA]'
+              }`}
+            >
+              <span>Invitation Card Download</span>
+              <Ticket className="w-4 h-4 text-[#8BEAFF]" />
+            </button>
 
-          <button onClick={() => handleNavClick('gallery')} className={`w-full text-left px-4 py-3 rounded-xl text-sm font-bold ${activeTab === 'gallery' ? 'bg-[#5B5FEF]/10 text-[#5B5FEF]' : 'text-slate-700 hover:bg-white/80'}`}>Gallery</button>
+            <button
+              type="button"
+              onClick={() => handleNavClick('gallery')}
+              className="hidden lg:flex w-full text-left px-4 py-2.5 rounded-xl text-xs font-bold uppercase tracking-[0.14em] items-center justify-between text-[#C9D0D9] hover:bg-white/5 hover:text-[#F5F7FA] transition-colors cursor-pointer"
+            >
+              <span>Full Memory Gallery</span>
+            </button>
 
-          <button
-            onClick={() => handleNavClick('register')}
-            className={`w-full text-center px-4 py-3 rounded-xl text-sm font-bold shadow-md flex items-center justify-center gap-2 ${
-              isFemaleTheme
-                ? 'bg-gradient-to-r from-[#D91B74] to-[#EC4899] text-white shadow-pink-500/30'
-                : isMaleTheme
-                ? 'bg-gradient-to-r from-[#0070F3] to-[#00D2FF] text-white shadow-cyan-500/30'
-                : 'bg-gradient-to-r from-[#5B5FEF] to-[#7A6CFF] text-white'
-            }`}
-          >
-            <UserCheck className="w-4 h-4" />
-            <span>Register Now</span>
-          </button>
+            {onOpenNotice && (
+              <button
+                type="button"
+                onClick={() => {
+                  setMenuOpen(false);
+                  onOpenNotice();
+                }}
+                className="w-full text-left px-4 py-2.5 rounded-xl text-xs font-bold uppercase tracking-[0.14em] flex items-center justify-between text-[#C9D0D9] hover:bg-white/5 hover:text-[#F5F7FA] transition-colors cursor-pointer"
+              >
+                <span>Important Notice</span>
+                <Bell className="w-4 h-4 text-[#8BEAFF]" />
+              </button>
+            )}
+
+            <div className="pt-1.5">
+              <button
+                type="button"
+                onClick={() => handleNavClick('register')}
+                className="w-full text-center px-4 py-3 rounded-xl text-xs font-extrabold uppercase tracking-[0.14em] glass-button-primary flex items-center justify-center gap-2 cursor-pointer"
+              >
+                <UserPlus className="w-4 h-4" />
+                <span>Register Now</span>
+              </button>
+            </div>
+          </div>
         </div>
       )}
     </header>

@@ -1,6 +1,7 @@
 import React, { Suspense, useState, useEffect } from 'react';
 import { Navbar } from './components/Navbar';
 import { HeroSection } from './components/HeroSection';
+import { MemoryArchiveStrip } from './components/MemoryArchiveStrip';
 import { EventInformationSection } from './components/EventInformationSection';
 import { Footer } from './components/Footer';
 import { JerseyShowcaseSection } from './components/JerseyShowcaseSection';
@@ -52,15 +53,16 @@ import { ArrowRight, Bell, CheckCircle2, AlertCircle, Info, X, ShieldAlert, Tick
 
 const ViewLoadingFallback: React.FC<{ label?: string }> = ({ label = 'Loading view...' }) => (
   <div className="min-h-[50vh] flex items-center justify-center px-4 py-16" role="status" aria-live="polite">
-    <div className="flex items-center gap-3 rounded-2xl border border-white/90 bg-white/80 px-5 py-3.5 shadow-sm backdrop-blur-xl">
-      <span className="h-4 w-4 rounded-full border-2 border-indigo-600 border-t-transparent animate-spin" />
-      <span className="text-xs sm:text-sm font-bold text-slate-700">{label}</span>
+    <div className="flex items-center gap-3 rounded-xl border border-[#C9D0D9]/20 bg-[#10141B]/95 px-5 py-3.5 shadow-[0_20px_50px_rgba(0,0,0,0.85)] backdrop-blur-xl">
+      <span className="h-4 w-4 rounded-full border-2 border-[#8BEAFF] border-t-transparent animate-spin" />
+      <span className="text-xs sm:text-sm font-semibold tracking-wide text-[#F5F7FA]">{label}</span>
     </div>
   </div>
 );
 
 export default function App() {
   const [activeTab, setActiveTab] = useState<'home' | 'register' | 'invitation' | 'gallery'>('home');
+  const [activeSection, setActiveSection] = useState<'home' | 'our-story' | 'events' | 'batch'>('home');
   const [invitationSearchTarget, setInvitationSearchTarget] = useState<string>('');
   const [invitationStudentNameTarget, setInvitationStudentNameTarget] = useState<string>('');
   const [reRegisterRecord, setReRegisterRecord] = useState<InvitationRecord | null>(null);
@@ -84,6 +86,28 @@ export default function App() {
     setReRegisterRecord(null);
     setActiveTab('register');
     safeScrollToTop();
+  };
+
+  const scrollToHomeSection = (sectionId: string) => {
+    const mapSection: Record<string, 'home' | 'our-story' | 'events' | 'batch'> = {
+      'our-story': 'our-story',
+      events: 'events',
+      'event-details': 'events',
+      'batch-identity': 'batch',
+      'jersey-showcase': 'batch',
+    };
+    setActiveSection(mapSection[sectionId] || 'home');
+    setActiveTab('home');
+    window.setTimeout(() => {
+      try {
+        const target = document.getElementById(sectionId);
+        if (target) {
+          target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }
+      } catch {
+        safeScrollToTop();
+      }
+    }, 60);
   };
 
   const [toast, setToast] = useState<{ message: string; type: 'success' | 'error' | 'info' } | null>(null);
@@ -388,39 +412,39 @@ export default function App() {
   };
 
   return (
-    <div className="min-h-screen flex flex-col bg-[#FBFAFF] text-[#111827] selection:bg-[#5B5FEF] selection:text-white relative isolate public-glass-page">
-      {/* Public pages use a bright lavender-white glass atmosphere. RegistrationForm keeps its original dark glass theme. */}
+    <div className="min-h-screen flex flex-col bg-[#08090D] text-[#F5F7FA] selection:bg-[#8BEAFF] selection:text-[#08090D] relative isolate public-glass-page overflow-x-clip">
+      {/* Subtle obsidian architectural atmosphere */}
       <div aria-hidden="true" className="fixed inset-0 pointer-events-none -z-10 overflow-hidden public-glass-atmosphere" />
-      <div aria-hidden="true" className="fixed -top-52 -left-44 w-[620px] h-[620px] rounded-full public-glass-orb public-glass-orb-lavender pointer-events-none -z-10" />
-      <div aria-hidden="true" className="fixed top-[18%] -right-56 w-[680px] h-[680px] rounded-full public-glass-orb public-glass-orb-blue pointer-events-none -z-10" />
-      <div aria-hidden="true" className="fixed top-[58%] -left-48 w-[560px] h-[560px] rounded-full public-glass-orb public-glass-orb-pink pointer-events-none -z-10" />
-      <div aria-hidden="true" className="fixed -bottom-64 right-[8%] w-[620px] h-[620px] rounded-full public-glass-orb public-glass-orb-mixed pointer-events-none -z-10" />
+      <div aria-hidden="true" className="fixed -top-52 left-1/4 w-[680px] h-[560px] rounded-full public-glass-orb public-glass-orb-ice pointer-events-none -z-10" />
+      <div aria-hidden="true" className="fixed top-[22%] -right-56 w-[620px] h-[620px] rounded-full public-glass-orb public-glass-orb-silver pointer-events-none -z-10" />
+      <div aria-hidden="true" className="fixed -bottom-64 -left-32 w-[560px] h-[560px] rounded-full public-glass-orb public-glass-orb-steel pointer-events-none -z-10" />
       <div aria-hidden="true" className="fixed inset-0 pointer-events-none -z-10 public-glass-sheen" />
 
       {toast && (
         <aside
           aria-label="Notification"
-          className="fixed top-20 right-4 sm:right-6 z-[100] max-w-sm sm:max-w-md animate-slideDown glass-toast rounded-2xl p-4 flex items-center gap-3"
+          className="fixed top-20 right-4 sm:right-6 z-[100] max-w-sm sm:max-w-md animate-slideDown glass-toast rounded-xl p-4 flex items-center gap-3"
         >
           {toast.type === 'success' && (
-            <div className="w-8 h-8 rounded-xl bg-emerald-500/15 text-emerald-600 flex items-center justify-center shrink-0 border border-emerald-500/20 shadow-2xs">
+            <div className="w-8 h-8 rounded-lg bg-emerald-500/15 text-emerald-300 flex items-center justify-center shrink-0 border border-emerald-400/30">
               <CheckCircle2 className="w-5 h-5" />
             </div>
           )}
           {toast.type === 'error' && (
-            <div className="w-8 h-8 rounded-xl bg-rose-500/15 text-rose-600 flex items-center justify-center shrink-0 border border-rose-500/20 shadow-2xs">
+            <div className="w-8 h-8 rounded-lg bg-rose-500/15 text-rose-300 flex items-center justify-center shrink-0 border border-rose-400/30">
               <AlertCircle className="w-5 h-5" />
             </div>
           )}
           {toast.type === 'info' && (
-            <div className="w-8 h-8 rounded-xl bg-indigo-500/15 text-indigo-600 flex items-center justify-center shrink-0 border border-indigo-500/20 shadow-2xs">
+            <div className="w-8 h-8 rounded-lg bg-[#8BEAFF]/15 text-[#8BEAFF] flex items-center justify-center shrink-0 border border-[#8BEAFF]/30">
               <Info className="w-5 h-5" />
             </div>
           )}
-          <div className="flex-1 text-xs sm:text-sm font-bold text-slate-900 leading-snug">{toast.message}</div>
+          <div className="flex-1 text-xs sm:text-sm font-semibold text-[#F5F7FA] leading-snug">{toast.message}</div>
           <button
             onClick={() => setToast(null)}
-            className="p-1.5 rounded-lg text-slate-400 hover:text-slate-800 hover:bg-black/5 transition-colors cursor-pointer"
+            aria-label="Dismiss notification"
+            className="p-1.5 rounded-lg text-[#C9D0D9]/70 hover:text-[#F5F7FA] hover:bg-white/10 transition-colors cursor-pointer"
           >
             <X className="w-4 h-4" />
           </button>
@@ -438,18 +462,20 @@ export default function App() {
       </SectionErrorBoundary>
 
       {isRegClosedPopupOpen && (
-        <div className="fixed inset-0 z-[160] flex items-center justify-center p-4 bg-slate-950/60 backdrop-blur-md animate-fadeIn">
-          <div className="w-full max-w-md glass-modal rounded-3xl p-6 sm:p-8 space-y-4 text-center">
-            <div className="w-14 h-14 rounded-2xl bg-amber-500/15 text-amber-600 grid place-items-center mx-auto shadow-2xs border border-amber-500/25">
+        <div className="fixed inset-0 z-[160] flex items-center justify-center p-4 bg-[#08090D]/80 backdrop-blur-md animate-fadeIn">
+          <div className="w-full max-w-md glass-modal rounded-2xl p-6 sm:p-8 space-y-4 text-center">
+            <div className="w-14 h-14 rounded-xl bg-amber-500/15 text-amber-300 grid place-items-center mx-auto border border-amber-400/30">
               <ShieldAlert className="w-7 h-7" />
             </div>
-            <h3 className="font-display text-2xl font-black text-slate-900">Registration Closed</h3>
-            <p className="text-xs sm:text-sm text-slate-600 leading-relaxed font-medium">Registration is currently closed. Please contact the organizers manually.</p>
+            <h3 className="font-display text-2xl font-extrabold text-[#F5F7FA]">Registration Closed</h3>
+            <p className="text-xs sm:text-sm text-[#C9D0D9] leading-relaxed font-medium">
+              Registration is currently closed. Please contact the organizers manually.
+            </p>
             <div className="pt-2">
               <button
                 type="button"
                 onClick={() => setIsRegClosedPopupOpen(false)}
-                className="w-full py-3.5 rounded-2xl glass-button-primary font-bold text-xs shadow-md cursor-pointer transition-all active:scale-95"
+                className="w-full py-3.5 rounded-xl glass-button-primary font-bold text-xs uppercase tracking-wider cursor-pointer transition-all active:scale-95"
               >
                 Close
               </button>
@@ -460,10 +486,18 @@ export default function App() {
 
       <Navbar
         activeTab={activeTab}
-        onNavigate={tab => {
+        activeSection={activeSection}
+        onNavigate={(tab, sectionId) => {
           if (tab === 'register') {
             handleOpenRegistration();
             return;
+          }
+          if (tab === 'home' && sectionId) {
+            scrollToHomeSection(sectionId);
+            return;
+          }
+          if (tab === 'home') {
+            setActiveSection('home');
           }
           setActiveTab(tab);
           safeScrollToTop();
@@ -474,17 +508,19 @@ export default function App() {
         themeGender={undefined}
       />
 
-      <div className="pt-16 sm:pt-18 flex-1 flex flex-col">
+      <div className="pt-[4.25rem] sm:pt-[4.75rem] flex-1 flex flex-col">
         {importantNoticeConfig.noticeEnabled && importantNoticeConfig.noticeContent && (
           <aside
             aria-label="Announcement"
             onClick={() => setIsNoticePopupOpen(true)}
-            className="w-full bg-gradient-to-r from-[#5B5FEF] to-[#7A6CFF] text-white px-4 py-2 text-xs font-semibold shadow-sm flex items-center justify-center gap-2 cursor-pointer hover:brightness-105 transition-all select-none"
+            className="w-full border-y border-[#C9D0D9]/18 bg-[rgba(12,17,25,0.68)] backdrop-blur-md text-[#F5F7FA] px-3 sm:px-4 py-2 text-xs font-semibold flex items-center justify-center gap-2 sm:gap-2.5 cursor-pointer hover:border-[#8BEAFF]/50 transition-colors select-none"
             title="Click to view full Important Notice"
           >
-            <Bell className="w-3.5 h-3.5 shrink-0" />
-            <span className="truncate">{importantNoticeConfig.noticeContent}</span>
-            <span className="hidden sm:inline text-[10px] bg-white/20 px-2 py-0.5 rounded-full font-bold ml-1">View Details</span>
+            <Bell className="w-3.5 h-3.5 shrink-0 text-[#8BEAFF]" />
+            <span className="text-[#C9D0D9] text-center leading-snug line-clamp-1 sm:line-clamp-none">{importantNoticeConfig.noticeContent}</span>
+            <span className="hidden sm:inline text-[10px] tracking-[0.14em] uppercase text-[#8BEAFF] border-b border-[#8BEAFF]/50 font-bold ml-1 whitespace-nowrap shrink-0">
+              View Notice
+            </span>
           </aside>
         )}
 
@@ -498,9 +534,19 @@ export default function App() {
                     setActiveTab('invitation');
                     safeScrollToTop();
                   }}
+                  onExploreBatchClick={() => scrollToHomeSection('batch-identity')}
                   websiteSettings={websiteSettings}
                   brandingSettings={brandingSettings}
                   jerseySettings={jerseyShowcaseSettings}
+                />
+              </SectionErrorBoundary>
+
+              <SectionErrorBoundary mode="silent" sectionName="Memory Archive">
+                <MemoryArchiveStrip
+                  onOpenGallery={() => {
+                    setActiveTab('gallery');
+                    safeScrollToTop();
+                  }}
                 />
               </SectionErrorBoundary>
 
@@ -516,13 +562,31 @@ export default function App() {
                     </SectionErrorBoundary>
                   )}
                   <SectionErrorBoundary sectionName="Event Information">
-                    <EventInformationSection cards={eventCards} layout={eventSettingsConfig.eventCardLayout} />
+                    <EventInformationSection
+                      cards={eventCards}
+                      layout={eventSettingsConfig.eventCardLayout}
+                      onOpenGallery={() => {
+                        setActiveTab('gallery');
+                        safeScrollToTop();
+                      }}
+                      onOpenNotice={importantNoticeConfig.popupEnabled ? () => setIsNoticePopupOpen(true) : undefined}
+                      onScrollToSection={scrollToHomeSection}
+                    />
                   </SectionErrorBoundary>
                 </>
               ) : (
                 <>
                   <SectionErrorBoundary sectionName="Event Information">
-                    <EventInformationSection cards={eventCards} layout={eventSettingsConfig.eventCardLayout} />
+                    <EventInformationSection
+                      cards={eventCards}
+                      layout={eventSettingsConfig.eventCardLayout}
+                      onOpenGallery={() => {
+                        setActiveTab('gallery');
+                        safeScrollToTop();
+                      }}
+                      onOpenNotice={importantNoticeConfig.popupEnabled ? () => setIsNoticePopupOpen(true) : undefined}
+                      onScrollToSection={scrollToHomeSection}
+                    />
                   </SectionErrorBoundary>
                   {jerseyShowcaseSettings.enabled && (
                     <SectionErrorBoundary sectionName="Jersey Showcase">

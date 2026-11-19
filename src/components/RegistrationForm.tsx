@@ -131,80 +131,40 @@ const RegistrationCountdown: React.FC<{ deadline: string; theme?: 'light' | 'dar
 
   const formattedClosingDate = formatRegistrationClosingDate(deadline);
 
-  if (theme === 'dark') {
-    return (
-      <div className="mb-6 p-4 rounded-2xl bg-[#0B1528]/95 backdrop-blur-md border border-[#1E3A5F] shadow-inner text-center animate-fadeIn">
-        <div className="flex items-center justify-center gap-1.5 text-xs font-bold text-[#38BDF8] uppercase tracking-wider mb-2">
-          <Clock className="w-3.5 h-3.5 text-[#38BDF8]" />
-          <span>{timeLeft.isExpired ? 'Registration Closed' : 'Registration Ends In'}</span>
-        </div>
-
-        {!timeLeft.isExpired ? (
-          <div className="flex items-center justify-center gap-1 sm:gap-2 font-mono font-bold text-white text-xs sm:text-sm flex-wrap">
-            <span className="px-2.5 py-1.5 rounded-lg bg-[#060D19] border border-cyan-500/30 shadow-2xs">
-              {timeLeft.days} <span className="text-[10px] font-sans font-medium text-slate-400">Days</span>
-            </span>
-            <span className="text-slate-500 font-sans font-normal">:</span>
-            <span className="px-2.5 py-1.5 rounded-lg bg-[#060D19] border border-cyan-500/30 shadow-2xs">
-              {String(timeLeft.hours).padStart(2, '0')} <span className="text-[10px] font-sans font-medium text-slate-400">Hours</span>
-            </span>
-            <span className="text-slate-500 font-sans font-normal">:</span>
-            <span className="px-2.5 py-1.5 rounded-lg bg-[#060D19] border border-cyan-500/30 shadow-2xs">
-              {String(timeLeft.minutes).padStart(2, '0')} <span className="text-[10px] font-sans font-medium text-slate-400">Minutes</span>
-            </span>
-            <span className="text-slate-500 font-sans font-normal">:</span>
-            <span className="px-2.5 py-1.5 rounded-lg bg-[#060D19] border border-cyan-500/30 shadow-2xs">
-              {String(timeLeft.seconds).padStart(2, '0')} <span className="text-[10px] font-sans font-medium text-slate-400">Seconds</span>
-            </span>
-          </div>
-        ) : (
-          <p className="text-xs font-bold text-rose-400 py-0.5">
-            The registration deadline has passed.
-          </p>
-        )}
-
-        <div className="text-[11px] text-slate-400 mt-2">
-          <span>Closing Date: </span>
-          <strong className="text-slate-200">{formattedClosingDate}</strong>
-        </div>
-      </div>
-    );
-  }
-
   return (
-    <div className="mb-6 p-4 rounded-2xl bg-white/70 backdrop-blur-md border border-slate-200/80 shadow-xs text-center animate-fadeIn">
-      <div className="flex items-center justify-center gap-1.5 text-xs font-bold text-indigo-600 uppercase tracking-wider mb-2">
-        <Clock className="w-3.5 h-3.5" />
+    <div className="mb-6 p-4 sm:p-5 rounded-2xl bg-[#090C13]/95 backdrop-blur-md border border-[#C9D0D9]/15 shadow-inner text-center animate-fadeIn">
+      <div className="flex items-center justify-center gap-1.5 text-[11px] font-bold text-[#8BEAFF] uppercase tracking-[0.2em] mb-2.5 font-mono">
+        <Clock className="w-3.5 h-3.5 text-[#8BEAFF]" />
         <span>{timeLeft.isExpired ? 'Registration Closed' : 'Registration Ends In'}</span>
       </div>
 
       {!timeLeft.isExpired ? (
-        <div className="flex items-center justify-center gap-1 sm:gap-2 font-mono font-bold text-slate-800 text-xs sm:text-sm flex-wrap">
-          <span className="px-2 py-1 rounded-lg glass-pill">
-            {timeLeft.days} <span className="text-[10px] font-sans font-medium text-slate-500">Days</span>
+        <div className="flex items-center justify-center gap-1.5 sm:gap-2 font-mono font-bold text-[#F5F7FA] text-xs sm:text-sm flex-wrap tabular-nums">
+          <span className="px-2.5 py-1.5 rounded-lg bg-[#0E131E] border border-[#8BEAFF]/25 shadow-2xs">
+            {timeLeft.days} <span className="text-[10px] font-sans font-medium text-[#8B95A5]">Days</span>
           </span>
-          <span className="text-slate-400 font-sans font-normal">:</span>
-          <span className="px-2 py-1 rounded-lg glass-pill">
-            {String(timeLeft.hours).padStart(2, '0')} <span className="text-[10px] font-sans font-medium text-slate-500">Hours</span>
+          <span className="text-[#626B79] font-sans font-normal">:</span>
+          <span className="px-2.5 py-1.5 rounded-lg bg-[#0E131E] border border-[#8BEAFF]/25 shadow-2xs">
+            {String(timeLeft.hours).padStart(2, '0')} <span className="text-[10px] font-sans font-medium text-[#8B95A5]">Hours</span>
           </span>
-          <span className="text-slate-400 font-sans font-normal">:</span>
-          <span className="px-2 py-1 rounded-lg glass-pill">
-            {String(timeLeft.minutes).padStart(2, '0')} <span className="text-[10px] font-sans font-medium text-slate-500">Minutes</span>
+          <span className="text-[#626B79] font-sans font-normal">:</span>
+          <span className="px-2.5 py-1.5 rounded-lg bg-[#0E131E] border border-[#8BEAFF]/25 shadow-2xs">
+            {String(timeLeft.minutes).padStart(2, '0')} <span className="text-[10px] font-sans font-medium text-[#8B95A5]">Minutes</span>
           </span>
-          <span className="text-slate-400 font-sans font-normal">:</span>
-          <span className="px-2 py-1 rounded-lg glass-pill">
-            {String(timeLeft.seconds).padStart(2, '0')} <span className="text-[10px] font-sans font-medium text-slate-500">Seconds</span>
+          <span className="text-[#626B79] font-sans font-normal">:</span>
+          <span className="px-2.5 py-1.5 rounded-lg bg-[#0E131E] border border-[#8BEAFF]/25 shadow-2xs">
+            {String(timeLeft.seconds).padStart(2, '0')} <span className="text-[10px] font-sans font-medium text-[#8B95A5]">Seconds</span>
           </span>
         </div>
       ) : (
-        <p className="text-xs font-bold text-rose-600 py-0.5">
+        <p className="text-xs font-bold text-rose-400 py-0.5">
           The registration deadline has passed.
         </p>
       )}
 
-      <div className="text-[11px] text-slate-500 mt-2">
+      <div className="text-[11px] text-[#8B95A5] mt-2.5 font-mono">
         <span>Closing Date: </span>
-        <strong className="text-slate-700">{formattedClosingDate}</strong>
+        <strong className="text-[#C9D0D9]">{formattedClosingDate}</strong>
       </div>
     </div>
   );
@@ -371,16 +331,16 @@ export const RegistrationForm: React.FC<RegistrationFormProps> = ({
   const isFemale = formData.gender === 'female';
   const isGenderChosen = formData.gender !== 'choose_one';
 
-  // Container & styling classes based on selected gender
-  const containerClasses = 'glass-male text-white border-2 border-cyan-400/40 shadow-[0_25px_60px_-15px_rgba(3,10,28,0.85),0_0_35px_-5px_rgba(56,189,248,0.25)]';
+  // Container & styling classes aligned with Obsidian Black / Liquid Silver / Ice Blue system
+  const containerClasses = 'museum-frame bg-[#0C1018]/92 text-[#F5F7FA] border border-[#8BEAFF]/35 shadow-[0_32px_90px_rgba(0,0,0,0.7),0_0_40px_rgba(139,234,255,0.12)]';
 
-  const sectionHeaderClasses = 'text-[#38BDF8] border-b border-cyan-500/25';
+  const sectionHeaderClasses = 'text-[#8BEAFF] border-b border-[#C9D0D9]/15';
 
-  const labelClasses = 'text-slate-200';
+  const labelClasses = 'text-[#C9D0D9]';
 
-  const inputClasses = 'glass-male-input text-white placeholder-slate-400 focus:border-[#38BDF8] focus:ring-2 focus:ring-[#38BDF8]/30';
+  const inputClasses = 'bg-[#080B12]/90 border border-[#C9D0D9]/18 text-[#F5F7FA] placeholder-[#626B79] focus:border-[#8BEAFF] focus:ring-2 focus:ring-[#8BEAFF]/25';
 
-  const subCardClasses = 'glass-male-card backdrop-blur-xl';
+  const subCardClasses = 'bg-[#090C13]/85 border border-[#C9D0D9]/15 backdrop-blur-xl';
 
   // Resolve the payment account exclusively from the student's academic group.
   const normalizedGroup = formData.academic_group.trim().toLowerCase();
@@ -736,39 +696,39 @@ export const RegistrationForm: React.FC<RegistrationFormProps> = ({
     <div className="py-6 sm:py-10 max-w-4xl mx-auto px-3 sm:px-6 lg:px-8">
       {/* Re-submission Banner if editing previously rejected record */}
       {editingRegNo && (
-        <div className="mb-6 p-4.5 rounded-2xl bg-amber-50/90 backdrop-blur-xl border border-amber-300/90 text-amber-900 shadow-[0_10px_30px_-10px_rgba(245,158,11,0.2),inset_0_1px_1px_rgba(255,255,255,0.8)] flex items-start justify-between gap-3 animate-fadeIn">
+        <div className="mb-6 p-4.5 rounded-2xl bg-amber-950/60 backdrop-blur-xl border border-amber-400/35 text-amber-100 shadow-[0_18px_40px_rgba(0,0,0,0.45)] flex items-start justify-between gap-3 animate-fadeIn">
           <div className="flex items-start gap-3 flex-1 min-w-0">
-            <div className="w-9 h-9 rounded-xl bg-amber-500 text-white flex items-center justify-center font-bold shrink-0 mt-0.5 shadow-sm">
+            <div className="w-9 h-9 rounded-xl bg-amber-500 text-[#08090D] flex items-center justify-center font-bold shrink-0 mt-0.5 shadow-sm">
               <FileCheck className="w-5 h-5" />
             </div>
             <div className="space-y-2 flex-1 min-w-0">
               <div>
-                <div className="text-xs font-bold uppercase tracking-wider text-amber-700">
+                <div className="text-xs font-bold uppercase tracking-wider text-amber-300">
                   Re-Submitting Registration
                 </div>
-                <div className="text-sm font-extrabold">
-                  Registration No: <span className="font-mono text-indigo-700">{editingRegNo}</span>
+                <div className="text-sm font-extrabold text-[#F5F7FA]">
+                  Registration No: <span className="font-mono text-[#8BEAFF]">{editingRegNo}</span>
                 </div>
               </div>
 
               {rejectionReason && (
-                <div className="p-3 rounded-xl bg-white/90 backdrop-blur-md border border-rose-200/90 text-xs shadow-2xs">
-                  <span className="font-bold text-rose-800 uppercase block text-[10px] tracking-wider">
+                <div className="p-3 rounded-xl bg-[#090C13]/90 backdrop-blur-md border border-rose-500/35 text-xs">
+                  <span className="font-bold text-rose-300 uppercase block text-[10px] tracking-wider">
                     Rejection Reason:
                   </span>
-                  <p className="font-semibold text-rose-950 mt-0.5 whitespace-pre-wrap">{rejectionReason}</p>
+                  <p className="font-semibold text-rose-100 mt-0.5 whitespace-pre-wrap">{rejectionReason}</p>
                 </div>
               )}
 
               {!hasSpecificFlaggedFields && (
-                <p className="text-rose-600 text-xs font-bold flex items-center gap-1.5 pt-0.5">
-                  <AlertCircle className="w-4 h-4 shrink-0 text-rose-600" />
+                <p className="text-rose-300 text-xs font-bold flex items-center gap-1.5 pt-0.5">
+                  <AlertCircle className="w-4 h-4 shrink-0 text-rose-400" />
                   <span>Previously, you made a mistake here. Please correct this.</span>
                 </p>
               )}
 
               {hasSpecificFlaggedFields && (
-                <p className="text-xs text-amber-800">
+                <p className="text-xs text-amber-200">
                   Please review and correct the highlighted fields marked below. Your registration number remains permanent.
                 </p>
               )}
@@ -777,7 +737,7 @@ export const RegistrationForm: React.FC<RegistrationFormProps> = ({
           <button
             type="button"
             onClick={handleCancelReRegistration}
-            className="p-2 text-amber-700 hover:text-amber-900 rounded-lg hover:bg-amber-100 transition-colors cursor-pointer shrink-0"
+            className="p-2 text-amber-300 hover:text-white rounded-lg hover:bg-white/10 transition-colors cursor-pointer shrink-0"
             title="Cancel re-submission"
           >
             <X className="w-4 h-4" />
@@ -785,42 +745,32 @@ export const RegistrationForm: React.FC<RegistrationFormProps> = ({
         </div>
       )}
 
-      {/* Main Registration Container (Adapts Theme to Selected Gender) */}
-      <div className={`registration-theme rounded-3xl p-4 sm:p-8 lg:p-10 transition-all duration-500 ease-out ${isMale ? containerClasses : 'glass-panel text-slate-900 border-white/90 shadow-[0_20px_50px_-15px_rgba(91,95,239,0.1)]'}`}>
+      {/* Main Registration Container */}
+      <div className={`registration-theme rounded-3xl p-4 sm:p-8 lg:p-10 transition-all duration-500 ease-out ${isMale ? containerClasses : 'museum-frame bg-[#0C1018]/92 text-[#F5F7FA] border border-[#C9D0D9]/18 shadow-[0_32px_90px_rgba(0,0,0,0.65)]'}`}>
         {/* Registration Header */}
         <div className="mb-6 text-center sm:text-left">
-          <div className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider mb-2 backdrop-blur-xl ${
-            isMale
-              ? 'bg-cyan-950/60 border border-cyan-400/40 text-cyan-300 shadow-sm'
-              : 'bg-white/75 border border-white/90 text-slate-700 shadow-sm'
-          }`}>
-            <Sparkles className={`w-3.5 h-3.5 ${isMale ? 'text-cyan-400' : 'text-indigo-500'}`} />
+          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-md text-[10px] sm:text-xs font-mono uppercase tracking-[0.2em] mb-3 bg-[#090C13]/90 border border-[#8BEAFF]/30 text-[#8BEAFF]">
+            <Sparkles className="w-3.5 h-3.5 text-[#8BEAFF]" />
             <span>Official Batch 27 Enrollment</span>
           </div>
-          <h1 className={`font-display text-2xl sm:text-3xl font-extrabold tracking-tight ${
-            isMale ? 'text-white' : 'text-slate-900'
-          }`}>
+          <h1 className="font-display text-2xl sm:text-3xl font-extrabold tracking-tight text-[#F5F7FA]">
             Rag Day 27 Student Registration
           </h1>
-          <p className={`text-xs sm:text-sm mt-1.5 ${
-            isMale ? 'text-slate-300' : 'text-slate-600'
-          }`}>
+          <p className="text-xs sm:text-sm mt-1.5 text-[#94A0B2]">
             Select your wing gender first to unlock the enrollment form and personalized jersey preview.
           </p>
         </div>
 
         {/* Compact Registration Countdown */}
         {registrationDeadline && (
-          <RegistrationCountdown deadline={registrationDeadline} theme={isMale ? 'dark' : 'light'} />
+          <RegistrationCountdown deadline={registrationDeadline} theme="dark" />
         )}
 
         {/* Step 1: Select Your Gender */}
         <section className="space-y-4">
-          <div className={`pb-2.5 font-display text-base sm:text-lg font-bold flex items-center justify-between ${
-            isMale ? 'text-[#38BDF8] border-b border-slate-800' : 'text-slate-900 border-b border-slate-200/80'
-          }`}>
+          <div className="pb-2.5 font-display text-base sm:text-lg font-bold flex items-center justify-between text-[#8BEAFF] border-b border-[#C9D0D9]/15">
             <span className="flex items-center gap-2">
-              <User className={`w-4 h-4 ${isMale ? 'text-[#38BDF8]' : 'text-indigo-600'}`} />
+              <User className="w-4 h-4 text-[#8BEAFF]" />
               Step 1: Select Your Gender
             </span>
           </div>
@@ -832,15 +782,13 @@ export const RegistrationForm: React.FC<RegistrationFormProps> = ({
               onClick={() => handleGenderSelect('male')}
               className={`p-3.5 sm:p-4 rounded-2xl flex items-center justify-center gap-2 font-bold text-sm sm:text-base transition-all duration-200 cursor-pointer ${
                 formData.gender === 'male'
-                  ? 'bg-gradient-to-r from-[#0284C7]/40 to-[#0369A1]/40 border-2 border-[#38BDF8] text-white shadow-[0_0_20px_rgba(56,189,248,0.35)] ring-2 ring-[#38BDF8]/20'
-                  : isMale
-                  ? 'bg-slate-900/60 border border-slate-800 text-slate-300 hover:border-slate-700'
-                  : 'bg-white/90 border border-slate-200/90 text-slate-700 hover:border-slate-300 hover:bg-white shadow-2xs'
+                  ? 'bg-[#8BEAFF]/15 border-2 border-[#8BEAFF] text-[#F5F7FA] shadow-[0_0_24px_rgba(139,234,255,0.22)] ring-2 ring-[#8BEAFF]/20'
+                  : 'bg-[#090C13]/90 border border-[#C9D0D9]/18 text-[#C9D0D9] hover:border-[#8BEAFF]/45 hover:text-[#F5F7FA]'
               }`}
             >
-              <Mars className={`w-5 h-5 ${formData.gender === 'male' ? 'text-cyan-300' : isMale ? 'text-slate-400' : 'text-indigo-600'}`} />
+              <Mars className={`w-5 h-5 ${formData.gender === 'male' ? 'text-[#8BEAFF]' : 'text-[#8BEAFF]/75'}`} />
               <span>Male</span>
-              {formData.gender === 'male' && <Check className="w-4 h-4 ml-1 text-cyan-300" />}
+              {formData.gender === 'male' && <Check className="w-4 h-4 ml-1 text-[#8BEAFF]" />}
             </button>
 
             {/* Female Option Card */}
@@ -849,26 +797,24 @@ export const RegistrationForm: React.FC<RegistrationFormProps> = ({
               onClick={() => handleGenderSelect('female')}
               className={`p-3.5 sm:p-4 rounded-2xl flex items-center justify-center gap-2 font-bold text-sm sm:text-base transition-all duration-200 cursor-pointer ${
                 formData.gender === 'female'
-                  ? 'bg-pink-50/90 border-2 border-pink-400 text-pink-700 shadow-sm ring-2 ring-pink-400/20'
-                  : isMale
-                  ? 'bg-slate-900/60 border border-slate-800 text-slate-400 hover:text-white hover:border-slate-700'
-                  : 'bg-white/90 border border-slate-200/90 text-slate-700 hover:border-pink-300 hover:bg-white shadow-2xs'
+                  ? 'bg-[#151B23] border-2 border-[#C9D0D9] text-[#F5F7FA] shadow-sm ring-2 ring-[#C9D0D9]/20'
+                  : 'bg-[#090C13]/90 border border-[#C9D0D9]/18 text-[#8993A1] hover:border-[#C9D0D9]/45 hover:text-[#F5F7FA]'
               }`}
             >
-              <Venus className={`w-5 h-5 ${formData.gender === 'female' ? 'text-pink-600' : isMale ? 'text-slate-500' : 'text-pink-500'}`} />
+              <Venus className={`w-5 h-5 ${formData.gender === 'female' ? 'text-[#C9D0D9]' : 'text-[#8993A1]'}`} />
               <span>Female</span>
             </button>
           </div>
         </section>
 
-        {/* State A: Gender not selected yet (Reference Image 2) */}
+        {/* State A: Gender not selected yet */}
         {genderWarningMessage ? (
-          <div role="alert" aria-live="polite" className="mx-auto mt-6 max-w-4xl rounded-2xl border-2 border-amber-300/80 bg-gradient-to-r from-amber-50 via-yellow-50 to-amber-50 px-5 py-6 sm:px-8 sm:py-8 text-center text-lg sm:text-2xl font-extrabold leading-relaxed text-amber-950 shadow-[0_12px_30px_-12px_rgba(180,120,0,0.28)] animate-fadeIn">
+          <div role="alert" aria-live="polite" className="mx-auto mt-6 max-w-4xl rounded-2xl border-2 border-amber-400/50 bg-amber-950/60 px-5 py-6 sm:px-8 sm:py-8 text-center text-lg sm:text-2xl font-extrabold leading-relaxed text-amber-200 shadow-[0_14px_34px_rgba(0,0,0,0.5)] animate-fadeIn">
             {genderWarningMessage}
           </div>
         ) : formData.gender === 'choose_one' ? (
-          <div className="mt-6 p-8 sm:p-12 rounded-2xl border border-slate-200/80 bg-white/75 backdrop-blur-sm text-center shadow-2xs animate-fadeIn">
-            <p className="text-sm sm:text-base font-semibold text-slate-500">
+          <div className="mt-6 p-8 sm:p-12 rounded-2xl border border-[#C9D0D9]/15 bg-[#090C13]/85 backdrop-blur-sm text-center animate-fadeIn">
+            <p className="text-sm sm:text-base font-semibold text-[#94A0B2]">
               Please select your gender to register.
             </p>
           </div>
@@ -887,17 +833,17 @@ export const RegistrationForm: React.FC<RegistrationFormProps> = ({
                     <IdCard className="w-4 h-4" />
                     2. Personal Information
                   </span>
-                  <span className="text-xs font-normal opacity-75">Required fields *</span>
+                  <span className="text-xs font-normal text-[#8B95A5]">Required fields *</span>
                 </div>
 
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   {/* 1. Full Name */}
                   <div className="sm:col-span-2">
                     <label className={`flex items-center gap-1.5 block text-xs font-bold uppercase tracking-wider mb-1.5 ${labelClasses}`}>
-                      Full Name <span className="text-rose-500">*</span>
+                      Full Name <span className="text-rose-400">*</span>
                     </label>
                     <div className="flex items-stretch gap-2">
-                      <span className={`flex w-12 shrink-0 items-center justify-center rounded-xl border backdrop-blur-xl ${isMale ? 'border-cyan-300/40 bg-gradient-to-br from-cyan-500/25 to-blue-600/25 text-cyan-300 shadow-md shadow-cyan-900/10' : isFemale ? 'border-fuchsia-300/70 bg-gradient-to-br from-fuchsia-500/25 to-pink-600/25 text-fuchsia-700 shadow-md shadow-pink-900/10' : 'border-slate-200 bg-white/75 text-indigo-500'}`}><User className="w-[18px] h-[18px]" /></span>
+                      <span className="flex w-12 shrink-0 items-center justify-center rounded-xl border border-[#8BEAFF]/25 bg-[#080B12] text-[#8BEAFF]"><User className="w-[18px] h-[18px]" /></span>
                       <input
                       type="text"
                       placeholder="e.g. John Doe"
@@ -913,7 +859,7 @@ export const RegistrationForm: React.FC<RegistrationFormProps> = ({
                       <p className="text-rose-500 text-xs mt-1 font-semibold">{formErrors.full_name}</p>
                     )}
                     {isFlagged('full_name') && (
-                      <p className="text-rose-600 text-xs mt-1.5 font-bold flex items-center gap-1">
+                      <p className="text-rose-400 text-xs mt-1.5 font-bold flex items-center gap-1">
                         <AlertCircle className="w-3.5 h-3.5 shrink-0" />
                         <span>Previously, you made a mistake here. Please correct this.</span>
                       </p>
@@ -926,7 +872,7 @@ export const RegistrationForm: React.FC<RegistrationFormProps> = ({
                       Class Roll <span className="text-rose-500">*</span>
                     </label>
                     <div className="flex items-stretch gap-2">
-                    <span className={`flex w-12 shrink-0 items-center justify-center rounded-xl border backdrop-blur-xl ${isMale ? 'border-cyan-300/40 bg-gradient-to-br from-cyan-500/25 to-blue-600/25 text-cyan-300' : isFemale ? 'border-fuchsia-300/70 bg-gradient-to-br from-fuchsia-500/25 to-pink-600/25 text-fuchsia-700' : 'border-slate-200 bg-white/75 text-indigo-500'}`}><Hash className="w-[18px] h-[18px]" /></span>
+                    <span className="flex w-12 shrink-0 items-center justify-center rounded-xl border border-[#8BEAFF]/25 bg-[#080B12] text-[#8BEAFF]"><Hash className="w-[18px] h-[18px]" /></span>
                     <input
                       type="text"
                       inputMode="numeric"
@@ -952,7 +898,7 @@ export const RegistrationForm: React.FC<RegistrationFormProps> = ({
                       <p className="text-rose-500 text-xs mt-1 font-semibold">{formErrors.class_roll}</p>
                     )}
                     {isFlagged('class_roll') && (
-                      <p className="text-rose-600 text-xs mt-1.5 font-bold flex items-center gap-1">
+                      <p className="text-rose-400 text-xs mt-1.5 font-bold flex items-center gap-1">
                         <AlertCircle className="w-3.5 h-3.5 shrink-0" />
                         <span>Previously, you made a mistake here. Please correct this.</span>
                       </p>
@@ -965,7 +911,7 @@ export const RegistrationForm: React.FC<RegistrationFormProps> = ({
                       Student ID <span className="text-rose-500">*</span>
                     </label>
                     <div className="flex items-stretch gap-2">
-                    <span className={`flex w-12 shrink-0 items-center justify-center rounded-xl border backdrop-blur-xl ${isMale ? 'border-cyan-300/40 bg-gradient-to-br from-cyan-500/25 to-blue-600/25 text-cyan-300' : isFemale ? 'border-fuchsia-300/70 bg-gradient-to-br from-fuchsia-500/25 to-pink-600/25 text-fuchsia-700' : 'border-slate-200 bg-white/75 text-indigo-500'}`}><IdCard className="w-[18px] h-[18px]" /></span>
+                    <span className="flex w-12 shrink-0 items-center justify-center rounded-xl border border-[#8BEAFF]/25 bg-[#080B12] text-[#8BEAFF]"><IdCard className="w-[18px] h-[18px]" /></span>
                     <input
                       type="text"
                       inputMode="numeric"
@@ -992,7 +938,7 @@ export const RegistrationForm: React.FC<RegistrationFormProps> = ({
                       <p className="text-rose-500 text-xs mt-1 font-semibold">{formErrors.student_id}</p>
                     )}
                     {isFlagged('student_id') && (
-                      <p className="text-rose-600 text-xs mt-1.5 font-bold flex items-center gap-1">
+                      <p className="text-rose-400 text-xs mt-1.5 font-bold flex items-center gap-1">
                         <AlertCircle className="w-3.5 h-3.5 shrink-0" />
                         <span>Previously, you made a mistake here. Please correct this.</span>
                       </p>
@@ -1034,7 +980,7 @@ export const RegistrationForm: React.FC<RegistrationFormProps> = ({
                       </p>
                     )}
                     {isFlagged('contact_mobile_number') && (
-                      <p className="text-rose-600 text-xs mt-1.5 font-bold flex items-center gap-1">
+                      <p className="text-rose-400 text-xs mt-1.5 font-bold flex items-center gap-1">
                         <AlertCircle className="w-3.5 h-3.5 shrink-0" />
                         <span>Previously, you made a mistake here. Please correct this.</span>
                       </p>
@@ -1054,21 +1000,21 @@ export const RegistrationForm: React.FC<RegistrationFormProps> = ({
                       onChange={handleGroupSelect}
                       className={`min-w-0 flex-1 px-4 py-3 rounded-xl text-sm font-medium transition-colors outline-none cursor-pointer ${inputClasses} ${getFieldHighlightClass('academic_group')}`}
                     >
-                      <option value="" className={isMale ? 'bg-slate-900 text-white' : 'bg-white text-slate-900'}>
+                      <option value="" className="bg-[#0B0F17] text-[#F5F7FA]">
                         Select Academic Group...
                       </option>
-                      <option value="Science" className={isMale ? 'bg-slate-900 text-white' : 'bg-white text-slate-900'}>
+                      <option value="Science" className="bg-[#0B0F17] text-[#F5F7FA]">
                         Science
                       </option>
-                      <option value="Business Studies" className={isMale ? 'bg-slate-900 text-white' : 'bg-white text-slate-900'}>Commerce</option>
-                      <option value="Humanities" className={isMale ? 'bg-slate-900 text-white' : 'bg-white text-slate-900'}>Arts</option>
+                      <option value="Business Studies" className="bg-[#0B0F17] text-[#F5F7FA]">Commerce</option>
+                      <option value="Humanities" className="bg-[#0B0F17] text-[#F5F7FA]">Arts</option>
                     </select>
                     </div>
                     {formErrors.academic_group && (
-                      <p className="text-rose-500 text-xs mt-1 font-semibold">{formErrors.academic_group}</p>
+                      <p className="text-rose-400 text-xs mt-1 font-semibold">{formErrors.academic_group}</p>
                     )}
                     {isFlagged('academic_group') && (
-                      <p className="text-rose-600 text-xs mt-1.5 font-bold flex items-center gap-1">
+                      <p className="text-rose-400 text-xs mt-1.5 font-bold flex items-center gap-1">
                         <AlertCircle className="w-3.5 h-3.5 shrink-0" />
                         <span>Previously, you made a mistake here. Please correct this.</span>
                       </p>
@@ -1091,14 +1037,14 @@ export const RegistrationForm: React.FC<RegistrationFormProps> = ({
                       }}
                       className={`min-w-0 flex-1 px-4 py-3 rounded-xl text-sm font-medium transition-colors outline-none cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed ${inputClasses} ${getFieldHighlightClass('academic_section')}`}
                     >
-                      <option value="" className={isMale ? 'bg-slate-900 text-white' : 'bg-white text-slate-900'}>
+                      <option value="" className="bg-[#0B0F17] text-[#F5F7FA]">
                         {formData.academic_group ? 'Choose Section...' : 'Select Group First'}
                       </option>
                       {availableSections.map(sec => (
                         <option
                           key={sec}
                           value={sec}
-                          className={isMale ? 'bg-slate-900 text-white' : 'bg-white text-slate-900'}
+                          className="bg-[#0B0F17] text-[#F5F7FA]"
                         >
                           Section {sec}
                         </option>
@@ -1106,10 +1052,10 @@ export const RegistrationForm: React.FC<RegistrationFormProps> = ({
                     </select>
                     </div>
                     {formErrors.academic_section && (
-                      <p className="text-rose-500 text-xs mt-1 font-semibold">{formErrors.academic_section}</p>
+                      <p className="text-rose-400 text-xs mt-1 font-semibold">{formErrors.academic_section}</p>
                     )}
                     {isFlagged('academic_section') && (
-                      <p className="text-rose-600 text-xs mt-1.5 font-bold flex items-center gap-1">
+                      <p className="text-rose-400 text-xs mt-1.5 font-bold flex items-center gap-1">
                         <AlertCircle className="w-3.5 h-3.5 shrink-0" />
                         <span>Previously, you made a mistake here. Please correct this.</span>
                       </p>
@@ -1119,7 +1065,7 @@ export const RegistrationForm: React.FC<RegistrationFormProps> = ({
                   </div>
 
                   {/* 7. Student Photo Upload (Optional, Max 3MB) */}
-                  <div className={`sm:col-span-2 pt-1 ${isFlagged('student_photo') ? 'p-3 rounded-2xl border-2 border-rose-400 bg-rose-50/20' : ''}`}>
+                  <div className={`sm:col-span-2 pt-1 ${isFlagged('student_photo') ? 'p-3 rounded-2xl border-2 border-rose-500/60 bg-rose-950/25' : ''}`}>
                     <PhotoUploadField
                       student_photo={formData.student_photo}
                       photoUrl={formData.student_photo}
@@ -1133,7 +1079,7 @@ export const RegistrationForm: React.FC<RegistrationFormProps> = ({
                       }}
                     />
                     {isFlagged('student_photo') && (
-                      <p className="text-rose-600 text-xs mt-2 font-bold flex items-center gap-1">
+                      <p className="text-rose-400 text-xs mt-2 font-bold flex items-center gap-1">
                         <AlertCircle className="w-3.5 h-3.5 shrink-0" />
                         <span>Previously, you made a mistake here. Please correct this.</span>
                       </p>
@@ -1144,24 +1090,30 @@ export const RegistrationForm: React.FC<RegistrationFormProps> = ({
 
               {/* Group-wise account instructions directly below personal and academic information. */}
               <section className={`mt-5 space-y-3 ${currentStep === 0 ? '' : 'hidden'}`}>
-                <div className="rounded-2xl border border-cyan-400/30 bg-slate-950/55 p-4 sm:p-5 space-y-3">
+                <div className="rounded-2xl border border-[#C9D0D9]/16 bg-[#090C13]/92 p-4 sm:p-5 space-y-3">
                   <div className="flex flex-wrap items-center justify-between gap-2">
-                    <h3 className="text-sm font-extrabold text-cyan-200">Payment Information · {formData.academic_group || 'Select your group'}</h3>
-                    <span className="rounded-full bg-emerald-500/15 px-3 py-1 text-xs font-bold text-emerald-300">Fee: {activeFee} BDT</span>
+                    <h3 className="text-sm font-extrabold text-[#F5F7FA]">Payment Information · <span className="text-[#8BEAFF]">{formData.academic_group || 'Select your group'}</span></h3>
+                    <span className="rounded-md bg-[#8BEAFF]/12 border border-[#8BEAFF]/30 px-2.5 py-1 text-xs font-mono font-bold text-[#8BEAFF]">Fee: {activeFee} BDT</span>
                   </div>
-                  <p className="text-xs leading-relaxed text-slate-300">Select the correct group for payment. Copy the number below and send the exact registration fee. After payment, enter the sender number, Transaction ID and payment time in the next step.</p>
+                  <p className="text-xs leading-relaxed text-[#94A0B2]">Select the correct group for payment. Copy the number below and send the exact registration fee. After payment, enter the sender number, Transaction ID and payment time in the next step.</p>
                   {!formData.academic_group ? <p className="text-xs text-amber-300">Select an Academic Group above to view its payment accounts.</p> : (!hasGroupPayment ? <p className="text-xs text-rose-300">Payment account numbers are not configured for this group. Please contact the organizers.</p> : null)}
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                    <div className="flex items-center justify-between gap-3 rounded-xl border border-pink-500/35 bg-pink-950/25 p-3">
-                      <div className="flex items-center gap-2 min-w-0"><BkashLogo className="w-7 h-7 shrink-0"/><div className="min-w-0"><div className="text-[10px] font-bold uppercase text-pink-300">bKash Personal</div><div className="truncate font-mono text-sm text-white">{activeBkashNumber || 'Not configured'}</div></div></div>
-                      <button type="button" disabled={!activeBkashNumber} onClick={()=>handleCopyAccount(activeBkashNumber.replace(/\D/g,''),'bkash')} className="rounded-lg border border-pink-400/40 px-3 py-2 text-xs font-bold text-pink-200 disabled:opacity-40"><Copy className="mr-1 inline w-3.5 h-3.5"/>Copy</button>
+                    <div className="flex items-center justify-between gap-3 rounded-xl border border-[#C9D0D9]/22 bg-[#10141B] p-3">
+                      <div className="flex items-center gap-2.5 min-w-0">
+                        <span className="w-9 h-9 rounded-lg bg-white/95 flex items-center justify-center p-1 shrink-0"><BkashLogo className="w-6 h-6"/></span>
+                        <div className="min-w-0"><div className="text-[10px] font-bold uppercase tracking-wider text-[#C9D0D9]">bKash Personal</div><div className="truncate font-mono text-sm text-[#F5F7FA] tabular-nums">{activeBkashNumber || 'Not configured'}</div></div>
+                      </div>
+                      <button type="button" disabled={!activeBkashNumber} onClick={()=>handleCopyAccount(activeBkashNumber.replace(/\D/g,''),'bkash')} className="rounded-lg border border-[#8BEAFF]/35 bg-[#8BEAFF]/12 hover:bg-[#8BEAFF]/22 px-3 py-2 text-xs font-bold text-[#8BEAFF] disabled:opacity-40 cursor-pointer shrink-0"><Copy className="mr-1 inline w-3.5 h-3.5"/>Copy</button>
                     </div>
-                    <div className="flex items-center justify-between gap-3 rounded-xl border border-orange-500/35 bg-orange-950/25 p-3">
-                      <div className="flex items-center gap-2 min-w-0"><NagadLogo className="w-7 h-7 shrink-0"/><div className="min-w-0"><div className="text-[10px] font-bold uppercase text-orange-300">Nagad Personal</div><div className="truncate font-mono text-sm text-white">{activeNagadNumber || 'Not configured'}</div></div></div>
-                      <button type="button" disabled={!activeNagadNumber} onClick={()=>handleCopyAccount(activeNagadNumber.replace(/\D/g,''),'nagad')} className="rounded-lg border border-orange-400/40 px-3 py-2 text-xs font-bold text-orange-200 disabled:opacity-40"><Copy className="mr-1 inline w-3.5 h-3.5"/>Copy</button>
+                    <div className="flex items-center justify-between gap-3 rounded-xl border border-[#C9D0D9]/22 bg-[#10141B] p-3">
+                      <div className="flex items-center gap-2.5 min-w-0">
+                        <span className="w-9 h-9 rounded-lg bg-white/95 flex items-center justify-center p-1 shrink-0"><NagadLogo className="w-6 h-6"/></span>
+                        <div className="min-w-0"><div className="text-[10px] font-bold uppercase tracking-wider text-[#C9D0D9]">Nagad Personal</div><div className="truncate font-mono text-sm text-[#F5F7FA] tabular-nums">{activeNagadNumber || 'Not configured'}</div></div>
+                      </div>
+                      <button type="button" disabled={!activeNagadNumber} onClick={()=>handleCopyAccount(activeNagadNumber.replace(/\D/g,''),'nagad')} className="rounded-lg border border-[#8BEAFF]/35 bg-[#8BEAFF]/12 hover:bg-[#8BEAFF]/22 px-3 py-2 text-xs font-bold text-[#8BEAFF] disabled:opacity-40 cursor-pointer shrink-0"><Copy className="mr-1 inline w-3.5 h-3.5"/>Copy</button>
                     </div>
                   </div>
-                  <p className="text-[11px] text-slate-400">Manual bKash/Nagad Send Money only. No online payment gateway is used.</p>
+                  <p className="text-[11px] text-[#8B95A5]">Manual bKash/Nagad Send Money only. No online payment gateway is used.</p>
                 </div>
               </section>
 
@@ -1174,34 +1126,34 @@ export const RegistrationForm: React.FC<RegistrationFormProps> = ({
                     <CreditCard className="w-4 h-4" />
                     2. Payment Details
                   </span>
-                  <span className="text-xs font-semibold px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-400">
+                  <span className="text-xs font-mono font-bold px-2.5 py-0.5 rounded-md bg-[#8BEAFF]/12 border border-[#8BEAFF]/30 text-[#8BEAFF]">
                     Fee: {paymentSettings.registrationFee} BDT
                   </span>
                 </div>
 
                 <div className={`p-4 sm:p-5 rounded-2xl ${subCardClasses} space-y-4`}>
-                  <div className="flex flex-wrap items-center justify-between gap-2 border-b border-slate-200/40 pb-3">
+                  <div className="flex flex-wrap items-center justify-between gap-2 border-b border-[#C9D0D9]/12 pb-3">
                     <div>
-                      <span className="text-xs font-bold uppercase tracking-wider text-slate-400 block">
+                      <span className="text-xs font-bold uppercase tracking-wider text-[#C9D0D9] block">
                         Official Payment Accounts ({formData.academic_group})
                       </span>
-                      <p className="text-xs mt-0.5 opacity-80">
+                      <p className="text-xs mt-0.5 text-[#8B95A5]">
                         {paymentSettings.instructions || 'Send Personal payment (Send Money) and retain sender phone number.'}
                       </p>
                     </div>
                   </div>
 
-                  {/* Payment Numbers: bKash & Nagad Fintech Glass Cards */}
+                  {/* Payment Numbers: bKash & Nagad Obsidian Cards */}
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
                     {/* Group-scoped bKash account */}
-                    <div className="relative overflow-hidden p-4 rounded-2xl border border-[#E2136E]/40 bg-gradient-to-br from-[#E2136E]/15 via-slate-900/90 to-slate-950/95 flex items-center justify-between gap-3">
+                    <div className="relative overflow-hidden p-4 rounded-2xl border border-[#C9D0D9]/22 bg-[#10141B] flex items-center justify-between gap-3">
                       <div className="relative z-10 flex items-center gap-3 min-w-0">
-                        <div className="w-11 h-11 rounded-2xl bg-white/95 flex items-center justify-center p-1.5 shrink-0">
+                        <div className="w-11 h-11 rounded-xl bg-white/95 flex items-center justify-center p-1.5 shrink-0">
                           <BkashLogo className="w-7 h-7" />
                         </div>
                         <div className="min-w-0">
-                          <div className="text-[10px] font-extrabold uppercase tracking-wider text-pink-300">bKash Personal</div>
-                          <div className="font-mono font-black text-sm sm:text-base text-white truncate">{activeBkashNumber || 'Not configured'}</div>
+                          <div className="text-[10px] font-extrabold uppercase tracking-wider text-[#C9D0D9]">bKash Personal</div>
+                          <div className="font-mono font-black text-sm sm:text-base text-[#F5F7FA] truncate tabular-nums">{activeBkashNumber || 'Not configured'}</div>
                         </div>
                       </div>
                       <button type="button" disabled={!activeBkashNumber}
@@ -1210,21 +1162,21 @@ export const RegistrationForm: React.FC<RegistrationFormProps> = ({
                           handleCopyAccount(activeBkashNumber.replace(/\D/g, '') || activeBkashNumber, 'bkash');
                           setFormData(prev => ({ ...prev, send_method: 'bkash' }));
                         }}
-                        className="relative z-10 px-3 py-2 rounded-xl text-xs font-extrabold bg-[#E2136E]/25 text-pink-200 border border-[#E2136E]/50 disabled:opacity-40 disabled:cursor-not-allowed">
+                        className="relative z-10 px-3 py-2 rounded-xl text-xs font-extrabold bg-[#8BEAFF]/12 hover:bg-[#8BEAFF]/22 text-[#8BEAFF] border border-[#8BEAFF]/35 disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer inline-flex items-center gap-1 shrink-0">
                         {copiedAccount === 'bkash' ? <Check className="inline w-3.5 h-3.5" /> : <Copy className="inline w-3.5 h-3.5" />}
                         {copiedAccount === 'bkash' ? 'Copied' : 'Copy'}
                       </button>
                     </div>
 
                     {/* Group-scoped Nagad account */}
-                    <div className="relative overflow-hidden p-4 rounded-2xl border border-[#F7941D]/40 bg-gradient-to-br from-[#F7941D]/15 via-slate-900/90 to-slate-950/95 flex items-center justify-between gap-3">
+                    <div className="relative overflow-hidden p-4 rounded-2xl border border-[#C9D0D9]/22 bg-[#10141B] flex items-center justify-between gap-3">
                       <div className="relative z-10 flex items-center gap-3 min-w-0">
-                        <div className="w-11 h-11 rounded-2xl bg-white/95 flex items-center justify-center p-1.5 shrink-0">
+                        <div className="w-11 h-11 rounded-xl bg-white/95 flex items-center justify-center p-1.5 shrink-0">
                           <NagadLogo className="w-7 h-7" />
                         </div>
                         <div className="min-w-0">
-                          <div className="text-[10px] font-extrabold uppercase tracking-wider text-amber-300">Nagad Personal</div>
-                          <div className="font-mono font-black text-sm sm:text-base text-white truncate">{activeNagadNumber || 'Not configured'}</div>
+                          <div className="text-[10px] font-extrabold uppercase tracking-wider text-[#C9D0D9]">Nagad Personal</div>
+                          <div className="font-mono font-black text-sm sm:text-base text-[#F5F7FA] truncate tabular-nums">{activeNagadNumber || 'Not configured'}</div>
                         </div>
                       </div>
                       <button type="button" disabled={!activeNagadNumber}
@@ -1233,7 +1185,7 @@ export const RegistrationForm: React.FC<RegistrationFormProps> = ({
                           handleCopyAccount(activeNagadNumber.replace(/\D/g, '') || activeNagadNumber, 'nagad');
                           setFormData(prev => ({ ...prev, send_method: 'nagad' }));
                         }}
-                        className="relative z-10 px-3 py-2 rounded-xl text-xs font-extrabold bg-[#F7941D]/25 text-amber-200 border border-[#F7941D]/50 disabled:opacity-40 disabled:cursor-not-allowed">
+                        className="relative z-10 px-3 py-2 rounded-xl text-xs font-extrabold bg-[#8BEAFF]/12 hover:bg-[#8BEAFF]/22 text-[#8BEAFF] border border-[#8BEAFF]/35 disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer inline-flex items-center gap-1 shrink-0">
                         {copiedAccount === 'nagad' ? <Check className="inline w-3.5 h-3.5" /> : <Copy className="inline w-3.5 h-3.5" />}
                         {copiedAccount === 'nagad' ? 'Copied' : 'Copy'}
                       </button>
@@ -1242,8 +1194,8 @@ export const RegistrationForm: React.FC<RegistrationFormProps> = ({
 
                   {/* Highlight for Incomplete Payment if flagged */}
                   {isFlagged('payment_amount') && (
-                    <div className="p-3 rounded-xl bg-rose-50 border border-rose-300 text-rose-700 text-xs font-bold flex items-center gap-2">
-                      <AlertCircle className="w-4 h-4 shrink-0" />
+                    <div className="p-3 rounded-xl bg-rose-950/60 border border-rose-500/40 text-rose-200 text-xs font-bold flex items-center gap-2">
+                      <AlertCircle className="w-4 h-4 shrink-0 text-rose-400" />
                       <span>Previously, you made a mistake here. Please correct this.</span>
                     </div>
                   )}
@@ -1253,7 +1205,7 @@ export const RegistrationForm: React.FC<RegistrationFormProps> = ({
                     {/* 8. Send Method */}
                     <div>
                       <label className={`block text-xs font-bold uppercase tracking-wider mb-1.5 ${labelClasses}`}>
-                        Send Method <span className="text-rose-500">*</span>
+                        Send Method <span className="text-rose-400">*</span>
                       </label>
                       <div className="registration-field-row">
                       <span className="registration-field-icon"><CreditCard className="w-[18px] h-[18px]" /></span>
@@ -1262,16 +1214,16 @@ export const RegistrationForm: React.FC<RegistrationFormProps> = ({
                         onChange={e => setFormData({ ...formData, send_method: e.target.value as 'bkash' | 'nagad' })}
                         className={`min-w-0 flex-1 px-4 py-3 rounded-xl text-sm font-semibold transition-colors outline-none cursor-pointer ${inputClasses} ${getFieldHighlightClass('send_method')}`}
                       >
-                        <option value="bkash" className={isMale ? 'bg-slate-900 text-white' : 'bg-white text-slate-900'}>
+                        <option value="bkash" className="bg-[#0B0F17] text-[#F5F7FA]">
                           bKash
                         </option>
-                        <option value="nagad" className={isMale ? 'bg-slate-900 text-white' : 'bg-white text-slate-900'}>
+                        <option value="nagad" className="bg-[#0B0F17] text-[#F5F7FA]">
                           Nagad
                         </option>
                       </select>
                       </div>
                       {isFlagged('send_method') && (
-                        <p className="text-rose-600 text-xs mt-1.5 font-bold flex items-center gap-1">
+                        <p className="text-rose-400 text-xs mt-1.5 font-bold flex items-center gap-1">
                           <AlertCircle className="w-3.5 h-3.5 shrink-0" />
                           <span>Previously, you made a mistake here. Please correct this.</span>
                         </p>
@@ -1313,7 +1265,7 @@ export const RegistrationForm: React.FC<RegistrationFormProps> = ({
                         </p>
                       )}
                       {isFlagged('sender_mobile_no') && (
-                        <p className="text-rose-600 text-xs mt-1.5 font-bold flex items-center gap-1">
+                        <p className="text-rose-400 text-xs mt-1.5 font-bold flex items-center gap-1">
                           <AlertCircle className="w-3.5 h-3.5 shrink-0" />
                           <span>Previously, you made a mistake here. Please correct this.</span>
                         </p>
@@ -1341,7 +1293,7 @@ export const RegistrationForm: React.FC<RegistrationFormProps> = ({
                         <p className="text-rose-500 text-xs mt-1 font-semibold">{formErrors.payment_time}</p>
                       )}
                       {isFlagged('payment_time') && (
-                        <p className="text-rose-600 text-xs mt-1.5 font-bold flex items-center gap-1">
+                        <p className="text-rose-400 text-xs mt-1.5 font-bold flex items-center gap-1">
                           <AlertCircle className="w-3.5 h-3.5 shrink-0" />
                           <span>Previously, you made a mistake here. Please correct this.</span>
                         </p>
@@ -1364,7 +1316,7 @@ export const RegistrationForm: React.FC<RegistrationFormProps> = ({
                       />
                       </div>
                       {isFlagged('transaction_id') && (
-                        <p className="text-rose-600 text-xs mt-1.5 font-bold flex items-center gap-1">
+                        <p className="text-rose-400 text-xs mt-1.5 font-bold flex items-center gap-1">
                           <AlertCircle className="w-3.5 h-3.5 shrink-0" />
                           <span>Previously, you made a mistake here. Please correct this.</span>
                         </p>
@@ -1388,15 +1340,15 @@ export const RegistrationForm: React.FC<RegistrationFormProps> = ({
 
                 <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-center">
                   {/* Left: Live Interactive Jersey Graphic */}
-                  <div className="lg:col-span-5 flex flex-col items-center justify-center p-4 rounded-3xl glass-male-card border border-cyan-400/25 shadow-inner">
+                  <div className="lg:col-span-5 flex flex-col items-center justify-center p-4 rounded-3xl bg-[#090C13]/90 border border-[#8BEAFF]/25 shadow-inner">
                     <JerseyGraphic
                       name={formData.jersey_back_name}
                       number={formData.jersey_number}
                       gender="male"
                       className="w-full max-w-[280px] h-[300px]"
                     />
-                    <div className="mt-2 text-center text-xs opacity-75 font-mono">
-                      {formData.jersey_back_name || 'YOUR NAME'} · #{formData.jersey_number !== '' ? formData.jersey_number : '27'} · Size: {formData.jersey_size}
+                    <div className="mt-2 text-center text-xs text-[#C9D0D9] font-mono tabular-nums">
+                      {formData.jersey_back_name || 'YOUR NAME'} · <span className="text-[#8BEAFF]">#{formData.jersey_number !== '' ? formData.jersey_number : '27'}</span> · Size: {formData.jersey_size}
                     </div>
                   </div>
 
@@ -1490,7 +1442,7 @@ export const RegistrationForm: React.FC<RegistrationFormProps> = ({
                           aria-invalid={Boolean(formErrors.jersey_number)}
                         />
                         </div>
-                        <p className={`text-[10px] mt-1 ${'text-cyan-200/75'}`}>
+                        <p className="text-[10px] mt-1 text-[#8993A1]">
                           1 to 3 digits (0–999) · e.g. 5, 05, 005, 10, 99, 100 · Leading zeros preserved
                         </p>
                         {formErrors.jersey_number && (
@@ -1514,7 +1466,7 @@ export const RegistrationForm: React.FC<RegistrationFormProps> = ({
                             <option
                               key={sz}
                               value={sz}
-                              className={isMale ? 'bg-slate-900 text-white' : 'bg-white text-slate-900'}
+                              className="bg-[#0B0F17] text-[#F5F7FA]"
                             >
                               Size {sz}
                             </option>
@@ -1530,8 +1482,8 @@ export const RegistrationForm: React.FC<RegistrationFormProps> = ({
               {/* ======================================================== */}
               {/* 5. DECLARATION */}
               {/* ======================================================== */}
-              <div className={`pt-3 border-t ${'border-cyan-300/25'} ${currentStep === 3 ? '' : 'hidden'}`}>
-                <label className="flex items-center gap-3 cursor-pointer select-none text-xs sm:text-sm font-medium py-2">
+              <div className={`pt-4 border-t border-[#C9D0D9]/15 ${currentStep === 3 ? '' : 'hidden'}`}>
+                <label className="flex items-center gap-3 cursor-pointer select-none text-xs sm:text-sm font-medium py-2 text-[#C9D0D9]">
                   <input
                     type="checkbox"
                     checked={declarationChecked}
@@ -1539,15 +1491,15 @@ export const RegistrationForm: React.FC<RegistrationFormProps> = ({
                       setDeclarationChecked(e.target.checked);
                       if (formErrors.declaration) setFormErrors(prev => ({ ...prev, declaration: '' }));
                     }}
-                    className="w-4 h-4 rounded border-slate-300 text-indigo-600 focus:ring-indigo-500 cursor-pointer shrink-0"
+                    className="w-4 h-4 rounded border-[#C9D0D9]/30 bg-[#080B12] text-[#8BEAFF] focus:ring-[#8BEAFF]/40 cursor-pointer shrink-0"
                   />
-                  <span className={`inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border backdrop-blur-xl ${isMale ? 'border-cyan-300/40 bg-cyan-500/20 text-cyan-300' : isFemale ? 'border-pink-300/70 bg-pink-500/20 text-pink-700' : 'border-slate-200 bg-white/75 text-indigo-500'}`}><ShieldCheck className="w-5 h-5" /></span>
+                  <span className="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-[#8BEAFF]/30 bg-[#8BEAFF]/10 text-[#8BEAFF]"><ShieldCheck className="w-5 h-5" /></span>
                   <span className="leading-tight">
                     I confirm that all provided information is correct. I understand that incorrect information may cause rejection.
                   </span>
                 </label>
                 {formErrors.declaration && (
-                  <p className="text-rose-500 text-xs mt-1 font-semibold flex items-center gap-1">
+                  <p className="text-rose-400 text-xs mt-1 font-semibold flex items-center gap-1">
                     <AlertCircle className="w-3.5 h-3.5" />
                     <span>{formErrors.declaration}</span>
                   </p>
@@ -1556,8 +1508,8 @@ export const RegistrationForm: React.FC<RegistrationFormProps> = ({
 
               {/* Global Error Banner */}
               {submitErrorMessage && (
-                <div className="p-4 rounded-2xl bg-rose-50 border border-rose-200 text-rose-800 text-xs font-semibold flex items-center gap-2">
-                  <AlertCircle className="w-4 h-4 shrink-0 text-rose-600" />
+                <div className="p-4 rounded-2xl bg-rose-950/70 border border-rose-500/40 text-rose-200 text-xs font-semibold flex items-center gap-2">
+                  <AlertCircle className="w-4 h-4 shrink-0 text-rose-400" />
                   <span>{submitErrorMessage}</span>
                 </div>
               )}
@@ -1565,22 +1517,16 @@ export const RegistrationForm: React.FC<RegistrationFormProps> = ({
               {/* Step navigation */}
               <div className="pt-4 grid grid-cols-2 gap-3">
                 <button type="button" onClick={goToPreviousStep} disabled={currentStep===0||isSubmitting}
-                  className="py-3.5 px-4 rounded-2xl font-bold text-sm border border-slate-600/70 bg-slate-900/60 text-slate-200 disabled:opacity-35">Previous</button>
+                  className="py-3.5 px-4 rounded-2xl font-bold text-sm border border-[#C9D0D9]/20 bg-[#090C13] hover:bg-[#121723] text-[#C9D0D9] disabled:opacity-35 cursor-pointer transition-colors">Previous</button>
                 {currentStep < registrationSteps.length-1 ? (
                   <button type="button" onClick={goToNextStep} disabled={isSubmitting}
-                    className="py-3.5 px-4 rounded-2xl font-extrabold text-sm text-white bg-gradient-to-r from-[#0284C7] via-[#0EA5E9] to-[#38BDF8] shadow-lg shadow-cyan-900/30 disabled:opacity-50">
+                    className="py-3.5 px-4 rounded-2xl font-extrabold text-sm text-[#08090D] bg-gradient-to-r from-[#8BEAFF] to-[#B7F2FF] shadow-[0_10px_28px_rgba(139,234,255,0.22)] hover:brightness-105 cursor-pointer disabled:opacity-50 transition-all">
                     Next <ArrowRight className="inline w-4 h-4 ml-1" />
                   </button>
                 ) : (
                   <button type="submit"
                   disabled={isSubmitting}
-                  className={`w-full min-w-0 whitespace-nowrap py-4 px-4 sm:px-6 rounded-2xl font-extrabold text-sm sm:text-base text-white shadow-xl transition-all duration-200 flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed ${
-                    isMale
-                      ? 'bg-gradient-to-r from-[#0284C7] via-[#0EA5E9] to-[#38BDF8] hover:shadow-cyan-500/25 shadow-cyan-900/30'
-                      : isFemale
-                      ? 'bg-gradient-to-r from-[#DB2777] via-[#EC4899] to-[#F472B6] hover:shadow-pink-500/25 shadow-pink-900/20'
-                      : 'bg-indigo-600 hover:bg-indigo-700'
-                  }`}
+                  className="w-full min-w-0 whitespace-nowrap py-4 px-4 sm:px-6 rounded-2xl font-extrabold text-sm sm:text-base text-[#08090D] bg-gradient-to-r from-[#8BEAFF] to-[#B7F2FF] shadow-[0_12px_32px_rgba(139,234,255,0.26)] hover:brightness-105 transition-all duration-200 flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   {isSubmitting ? (
                     <span>Submitting Registration...</span>
@@ -1614,20 +1560,20 @@ export const RegistrationForm: React.FC<RegistrationFormProps> = ({
       {/* REGISTRATION CLOSED MODAL                                */}
       {/* ======================================================== */}
       {showClosedModal && (
-        <div className="fixed inset-0 z-[250] flex items-center justify-center p-4 bg-slate-950/70 backdrop-blur-md animate-fadeIn">
-          <div className="w-full max-w-md glass-modal rounded-3xl p-6 sm:p-7 shadow-[0_25px_60px_-15px_rgba(0,0,0,0.3),inset_0_1.5px_2px_white] border border-white/95 text-slate-900 space-y-4 text-center animate-scaleUp">
-            <div className="w-14 h-14 rounded-2xl bg-amber-500/15 border border-amber-300/40 text-amber-600 grid place-items-center mx-auto shadow-xs backdrop-blur-md">
+        <div className="fixed inset-0 z-[250] flex items-center justify-center p-4 bg-[#08090D]/82 backdrop-blur-lg animate-fadeIn">
+          <div className="w-full max-w-md glass-modal rounded-3xl p-6 sm:p-7 shadow-[0_32px_90px_rgba(0,0,0,0.75)] border border-[#C9D0D9]/20 text-[#F5F7FA] space-y-4 text-center animate-scaleUp">
+            <div className="w-14 h-14 rounded-2xl bg-amber-500/15 border border-amber-400/35 text-amber-300 grid place-items-center mx-auto">
               <ShieldAlert className="w-7 h-7" />
             </div>
-            <h3 className="text-xl font-display font-extrabold text-slate-900">Registration Closed</h3>
-            <p className="text-xs sm:text-sm text-slate-600 leading-relaxed">
+            <h3 className="text-xl font-display font-extrabold text-[#F5F7FA]">Registration Closed</h3>
+            <p className="text-xs sm:text-sm text-[#94A0B2] leading-relaxed">
               Registration is currently closed. Please contact the organizers manually.
             </p>
             <div className="pt-2">
               <button
                 type="button"
                 onClick={() => setShowClosedModal(false)}
-                className="w-full py-3 rounded-xl glass-button text-slate-900 font-bold text-xs shadow-md cursor-pointer"
+                className="w-full py-3 rounded-xl glass-button text-[#F5F7FA] font-bold text-xs cursor-pointer"
               >
                 Close
               </button>
@@ -1637,65 +1583,65 @@ export const RegistrationForm: React.FC<RegistrationFormProps> = ({
       )}
 
       {/* ======================================================== */}
-      {/* SUCCESS SUBMISSION MODAL (Frosted Glass)                 */}
+      {/* SUCCESS SUBMISSION MODAL                                 */}
       {/* ======================================================== */}
       {successModalData && (
-        <div className="fixed inset-0 z-[250] flex items-center justify-center p-4 bg-slate-950/75 backdrop-blur-md animate-fadeIn">
-          <div className="relative w-full max-w-md glass-modal rounded-3xl p-6 sm:p-8 shadow-[0_30px_75px_-15px_rgba(16,185,129,0.25),inset_0_1.5px_2px_white] border border-white/95 text-slate-900 text-center space-y-5 animate-scaleUp">
+        <div className="fixed inset-0 z-[250] flex items-center justify-center p-4 bg-[#08090D]/82 backdrop-blur-lg animate-fadeIn">
+          <div className="relative w-full max-w-md glass-modal rounded-3xl p-6 sm:p-8 shadow-[0_32px_90px_rgba(0,0,0,0.75)] border border-[#8BEAFF]/30 text-[#F5F7FA] text-center space-y-5 animate-scaleUp">
             {/* Close Button at top-right */}
             <button
               type="button"
               onClick={() => setSuccessModalData(null)}
-              className="absolute top-4 right-4 sm:top-5 sm:right-5 w-8 h-8 rounded-full bg-white/70 hover:bg-white text-slate-500 hover:text-slate-800 flex items-center justify-center transition-colors cursor-pointer border border-slate-200/60"
+              className="absolute top-4 right-4 sm:top-5 sm:right-5 w-8 h-8 rounded-full bg-[#121723] hover:bg-[#192030] text-[#94A0B2] hover:text-[#F5F7FA] flex items-center justify-center transition-colors cursor-pointer border border-[#C9D0D9]/18"
               aria-label="Close"
             >
               <X className="w-4 h-4" />
             </button>
 
-            <div className="w-16 h-16 rounded-2xl bg-emerald-500/15 border border-emerald-300/40 text-emerald-600 grid place-items-center mx-auto shadow-xs backdrop-blur-md">
+            <div className="w-16 h-16 rounded-2xl bg-emerald-500/15 border border-emerald-400/35 text-emerald-300 grid place-items-center mx-auto">
               <Check className="w-8 h-8 stroke-[3]" />
             </div>
 
             <div>
-              <span className="text-[11px] font-extrabold uppercase tracking-widest text-emerald-700 bg-emerald-500/15 px-3 py-1 rounded-full border border-emerald-300/40 backdrop-blur-md">
+              <span className="text-[11px] font-mono font-extrabold uppercase tracking-widest text-emerald-300 bg-emerald-500/15 px-3 py-1 rounded-md border border-emerald-400/30">
                 Enrollment Submitted
               </span>
-              <h2 className="text-2xl font-display font-black text-slate-900 mt-3">
+              <h2 className="text-2xl font-display font-black text-[#F5F7FA] mt-3">
                 Registration Successful!
               </h2>
-              <p className="text-xs text-slate-600 mt-1">
-                Congratulations <strong className="text-slate-900">{successModalData.name}</strong>, your registration has been recorded.
+              <p className="text-xs text-[#94A0B2] mt-1">
+                Congratulations <strong className="text-[#F5F7FA]">{successModalData.name}</strong>, your registration has been recorded.
               </p>
             </div>
 
-            <div className="p-4 rounded-2xl bg-white/75 backdrop-blur-md border border-slate-200/80 shadow-2xs space-y-2">
-              <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400 block">
+            <div className="p-4 rounded-2xl bg-[#090C13]/95 border border-[#C9D0D9]/15 space-y-2">
+              <span className="text-[10px] font-mono font-bold uppercase tracking-wider text-[#8B95A5] block">
                 Permanent Registration Number
               </span>
-              <div className="font-mono text-2xl font-black text-indigo-600 tracking-wider">
+              <div className="font-mono text-2xl font-black text-[#8BEAFF] tracking-wider tabular-nums">
                 {successModalData.regNo}
               </div>
-              <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-amber-500/15 border border-amber-300/40 text-amber-800 text-xs font-bold backdrop-blur-md">
+              <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-md bg-amber-500/15 border border-amber-400/30 text-amber-300 text-xs font-bold">
                 <Clock className="w-3.5 h-3.5" />
                 <span>Status: Pending Review</span>
               </div>
             </div>
 
-            {/* Red Notice */}
-            <div className="p-3 sm:p-3.5 rounded-2xl bg-rose-500/10 backdrop-blur-md border border-rose-300/40 text-rose-800 text-xs font-medium text-left flex items-start gap-2.5">
+            {/* Important Notice */}
+            <div className="p-3 sm:p-3.5 rounded-2xl bg-rose-950/50 border border-rose-500/35 text-rose-200 text-xs font-medium text-left flex items-start gap-2.5">
               <span className="text-base shrink-0 leading-none mt-0.5">⚠️</span>
               <div className="leading-relaxed">
-                <span className="font-bold block">
+                <span className="font-bold block text-rose-100">
                   Please Note Your Registration Number and Full Name.
                 </span>
-                <span className="text-rose-700">
+                <span className="text-rose-300">
                   You will need them to check your application status and download your invitation card.
                 </span>
               </div>
             </div>
 
-            <p className="text-xs text-slate-600 leading-relaxed">
-              Please save your <strong>Registration Number</strong>. The committee will verify your payment and grant your official invitation card pass.
+            <p className="text-xs text-[#94A0B2] leading-relaxed">
+              Please save your <strong className="text-[#F5F7FA]">Registration Number</strong>. The committee will verify your payment and grant your official invitation card pass.
             </p>
 
             <div className="grid grid-cols-2 gap-3 pt-2">
@@ -1704,16 +1650,16 @@ export const RegistrationForm: React.FC<RegistrationFormProps> = ({
                 onClick={() => {
                   void handleCopyAccount(successModalData.regNo, 'regNo');
                 }}
-                className="py-3 px-4 rounded-xl glass-button text-slate-700 font-bold text-xs transition-colors flex items-center justify-center gap-1.5 cursor-pointer"
+                className="py-3 px-4 rounded-xl glass-button text-[#F5F7FA] font-bold text-xs transition-colors flex items-center justify-center gap-1.5 cursor-pointer"
               >
                 {copiedAccount === 'regNo' ? (
                   <>
-                    <Check className="w-3.5 h-3.5 text-emerald-600" />
+                    <Check className="w-3.5 h-3.5 text-emerald-300" />
                     <span>Copied!</span>
                   </>
                 ) : (
                   <>
-                    <Copy className="w-3.5 h-3.5 text-indigo-600" />
+                    <Copy className="w-3.5 h-3.5 text-[#8BEAFF]" />
                     <span>Copy Reg No</span>
                   </>
                 )}

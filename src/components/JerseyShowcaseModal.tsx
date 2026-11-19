@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
-import { X, ZoomIn, ZoomOut, RotateCcw, Maximize2, Sparkles, Shirt } from 'lucide-react';
+import { X, ZoomIn, ZoomOut, RotateCcw, Sparkles, Shirt } from 'lucide-react';
 
 interface JerseyShowcaseModalProps {
   isOpen: boolean;
@@ -30,13 +30,11 @@ export const JerseyShowcaseModal: React.FC<JerseyShowcaseModalProps> = ({
   const containerRef = useRef<HTMLDivElement>(null);
   const wasDraggingRef = useRef<boolean>(false);
 
-  // Sync image source when prop changes
   useEffect(() => {
     setCurrentSrc(imageSrc);
     setHasError(false);
   }, [imageSrc]);
 
-  // Reset zoom & pan when opening/closing
   useEffect(() => {
     if (isOpen) {
       setZoom(1);
@@ -46,7 +44,6 @@ export const JerseyShowcaseModal: React.FC<JerseyShowcaseModalProps> = ({
     }
   }, [isOpen]);
 
-  // Prevent background body scrolling when modal is open
   useEffect(() => {
     if (!isOpen) return;
 
@@ -65,7 +62,6 @@ export const JerseyShowcaseModal: React.FC<JerseyShowcaseModalProps> = ({
     };
   }, [isOpen]);
 
-  // Keyboard navigation: Escape to close, +/- to zoom, 0 to reset
   useEffect(() => {
     if (!isOpen) return;
 
@@ -94,7 +90,6 @@ export const JerseyShowcaseModal: React.FC<JerseyShowcaseModalProps> = ({
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [isOpen, onClose]);
 
-  // Non-passive wheel listener for smooth desktop mouse-wheel zoom
   useEffect(() => {
     const container = containerRef.current;
     if (!isOpen || !container) return;
@@ -115,10 +110,7 @@ export const JerseyShowcaseModal: React.FC<JerseyShowcaseModalProps> = ({
     };
   }, [isOpen]);
 
-  const handleZoomIn = () => {
-    setZoom(prev => Math.min(+(prev + 0.35).toFixed(2), 4));
-  };
-
+  const handleZoomIn = () => setZoom(prev => Math.min(+(prev + 0.35).toFixed(2), 4));
   const handleZoomOut = () => {
     setZoom(prev => {
       const next = Math.max(+(prev - 0.35).toFixed(2), 1);
@@ -126,12 +118,10 @@ export const JerseyShowcaseModal: React.FC<JerseyShowcaseModalProps> = ({
       return next;
     });
   };
-
   const handleResetZoom = () => {
     setZoom(1);
     setPan({ x: 0, y: 0 });
   };
-
   const toggleDoubleZoom = () => {
     if (zoom > 1) {
       setZoom(1);
@@ -141,16 +131,12 @@ export const JerseyShowcaseModal: React.FC<JerseyShowcaseModalProps> = ({
     }
   };
 
-  // Mouse drag handlers
   const handleMouseDown = (e: React.MouseEvent) => {
     if (zoom <= 1) return;
     e.preventDefault();
     setIsDragging(true);
     wasDraggingRef.current = false;
-    dragStartRef.current = {
-      x: e.clientX - pan.x,
-      y: e.clientY - pan.y,
-    };
+    dragStartRef.current = { x: e.clientX - pan.x, y: e.clientY - pan.y };
   };
 
   const handleMouseMove = useCallback((e: React.MouseEvent) => {
@@ -163,11 +149,8 @@ export const JerseyShowcaseModal: React.FC<JerseyShowcaseModalProps> = ({
     setPan({ x: newX, y: newY });
   }, [isDragging, zoom, pan]);
 
-  const handleMouseUp = () => {
-    setIsDragging(false);
-  };
+  const handleMouseUp = () => setIsDragging(false);
 
-  // Touch handlers for mobile (pinch-to-zoom + pan)
   const handleTouchStart = (e: React.TouchEvent) => {
     if (e.touches.length === 2) {
       const dist = Math.hypot(
@@ -176,7 +159,6 @@ export const JerseyShowcaseModal: React.FC<JerseyShowcaseModalProps> = ({
       );
       lastTouchDistanceRef.current = dist;
     } else if (e.touches.length === 1) {
-      // Double tap detection
       const now = Date.now();
       if (now - lastTapRef.current < 300) {
         toggleDoubleZoom();
@@ -184,14 +166,10 @@ export const JerseyShowcaseModal: React.FC<JerseyShowcaseModalProps> = ({
         return;
       }
       lastTapRef.current = now;
-
       if (zoom > 1) {
         setIsDragging(true);
         wasDraggingRef.current = false;
-        dragStartRef.current = {
-          x: e.touches[0].clientX - pan.x,
-          y: e.touches[0].clientY - pan.y,
-        };
+        dragStartRef.current = { x: e.touches[0].clientX - pan.x, y: e.touches[0].clientY - pan.y };
       }
     }
   };
@@ -225,7 +203,6 @@ export const JerseyShowcaseModal: React.FC<JerseyShowcaseModalProps> = ({
   };
 
   const handleBackdropClick = (e: React.MouseEvent) => {
-    // Only close if user clicked directly on backdrop and was not dragging
     if (e.target === e.currentTarget && !wasDraggingRef.current) {
       onClose();
     }
@@ -247,54 +224,47 @@ export const JerseyShowcaseModal: React.FC<JerseyShowcaseModalProps> = ({
       aria-modal="true"
       aria-label="Jersey design preview modal"
       onClick={handleBackdropClick}
-      className="fixed inset-0 z-[200] flex items-center justify-center p-2 sm:p-4 md:p-6 bg-slate-950/80 backdrop-blur-xl animate-fadeIn select-none"
+      className="fixed inset-0 z-[200] flex items-center justify-center p-2 sm:p-4 md:p-6 bg-[#08090D]/90 backdrop-blur-xl animate-fadeIn select-none"
     >
-      {/* Modal Card Frame: Premium Frosted Dark Glass */}
       <div
-        className="relative w-full max-w-6xl max-h-[94vh] flex flex-col rounded-2xl sm:rounded-3xl bg-[#08142c]/88 backdrop-blur-3xl border border-cyan-400/40 shadow-[0_30px_90px_rgba(0,0,0,0.85),0_0_45px_rgba(56,189,248,0.2),inset_0_1.5px_2px_rgba(255,255,255,0.15)] overflow-hidden"
+        className="relative w-full max-w-6xl max-h-[94vh] flex flex-col rounded-2xl glass-modal border border-[#8BEAFF]/35 overflow-hidden"
         onClick={e => e.stopPropagation()}
       >
-        {/* Subtle top ambient sheen */}
-        <div className="absolute inset-x-0 top-0 h-1/3 bg-gradient-to-b from-cyan-400/15 via-blue-600/5 to-transparent pointer-events-none" />
-
-        {/* Top Control Bar: Frosted Glass Toolbar */}
-        <div className="relative z-20 flex items-center justify-between gap-3 px-4 sm:px-6 py-3.5 border-b border-cyan-500/20 bg-slate-800/45 backdrop-blur-2xl">
-          {/* Left: Branding & Title */}
-          <div className="flex items-center gap-2.5 min-w-0">
-            <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-[#2563EB] to-[#0284C7] text-white flex items-center justify-center shadow-md shadow-blue-500/20 border border-cyan-300/30 shrink-0">
+        {/* Top Control Bar */}
+        <div className="relative z-20 flex items-center justify-between gap-3 px-4 sm:px-6 py-3.5 border-b border-[#C9D0D9]/15 bg-[#0C0F16]/90 backdrop-blur-2xl">
+          <div className="flex items-center gap-3 min-w-0">
+            <div className="w-9 h-9 rounded-xl bg-[#8BEAFF]/15 border border-[#8BEAFF]/35 text-[#8BEAFF] flex items-center justify-center shrink-0">
               <Shirt className="w-4 h-4" />
             </div>
             <div className="min-w-0">
-              <div className="flex items-center gap-1.5">
-                <span className="text-[10px] font-bold uppercase tracking-wider text-cyan-300 bg-cyan-950/60 px-2.5 py-0.5 rounded-full border border-cyan-400/30 backdrop-blur-md">
-                  OFFICIAL ARTWORK
+              <div className="flex items-center gap-2">
+                <span className="text-[10px] font-mono font-bold uppercase tracking-[0.2em] text-[#8BEAFF]">
+                  Official Artwork
                 </span>
-                <span className="hidden sm:inline-flex items-center gap-1 text-[10px] font-semibold text-cyan-200/80">
-                  <Sparkles className="w-3 h-3 text-cyan-300" /> High-Resolution Showcase
+                <span className="hidden sm:inline-flex items-center gap-1 text-[10px] font-medium text-[#C9D0D9]/75">
+                  <Sparkles className="w-3 h-3 text-[#8BEAFF]" /> 4K Inspection
                 </span>
               </div>
-              <h3 className="font-display text-sm sm:text-base font-extrabold text-white tracking-tight truncate mt-0.5">
+              <h3 className="font-display text-sm sm:text-base font-extrabold text-[#F5F7FA] tracking-tight truncate mt-0.5">
                 {title}
               </h3>
             </div>
           </div>
 
-          {/* Right: Zoom controls & Primary Close Button */}
           <div className="flex items-center gap-2 shrink-0">
-            {/* Zoom Controls: Frosted Glass Capsule */}
-            <div className="hidden sm:flex items-center gap-1 bg-slate-800/40 border border-cyan-300/25 rounded-2xl p-1 shadow-inner backdrop-blur-2xl">
+            <div className="hidden sm:flex items-center gap-1 bg-[#10141F] border border-[#C9D0D9]/20 rounded-xl p-1">
               <button
                 type="button"
                 onClick={handleZoomOut}
                 disabled={zoom <= 1}
                 title="Zoom Out (-)"
-                className="w-8 h-8 rounded-xl flex items-center justify-center text-slate-300 hover:text-white hover:bg-white/10 disabled:opacity-40 disabled:cursor-not-allowed transition-all cursor-pointer"
+                className="w-8 h-8 rounded-lg flex items-center justify-center text-[#C9D0D9] hover:text-[#F5F7FA] hover:bg-white/10 disabled:opacity-40 cursor-pointer"
                 aria-label="Zoom out"
               >
                 <ZoomOut className="w-4 h-4" />
               </button>
 
-              <span className="px-2 font-mono text-xs font-bold text-cyan-300 min-w-[50px] text-center select-none">
+              <span className="px-2 font-mono text-xs font-bold text-[#8BEAFF] min-w-[50px] text-center tabular-nums">
                 {Math.round(zoom * 100)}%
               </span>
 
@@ -303,7 +273,7 @@ export const JerseyShowcaseModal: React.FC<JerseyShowcaseModalProps> = ({
                 onClick={handleZoomIn}
                 disabled={zoom >= 4}
                 title="Zoom In (+)"
-                className="w-8 h-8 rounded-xl flex items-center justify-center text-slate-300 hover:text-white hover:bg-white/10 disabled:opacity-40 disabled:cursor-not-allowed transition-all cursor-pointer"
+                className="w-8 h-8 rounded-lg flex items-center justify-center text-[#C9D0D9] hover:text-[#F5F7FA] hover:bg-white/10 disabled:opacity-40 cursor-pointer"
                 aria-label="Zoom in"
               >
                 <ZoomIn className="w-4 h-4" />
@@ -314,27 +284,26 @@ export const JerseyShowcaseModal: React.FC<JerseyShowcaseModalProps> = ({
                 onClick={handleResetZoom}
                 disabled={zoom === 1 && pan.x === 0 && pan.y === 0}
                 title="Reset Zoom (0)"
-                className="w-8 h-8 rounded-xl flex items-center justify-center text-slate-300 hover:text-white hover:bg-white/10 disabled:opacity-40 disabled:cursor-not-allowed transition-all cursor-pointer"
+                className="w-8 h-8 rounded-lg flex items-center justify-center text-[#C9D0D9] hover:text-[#F5F7FA] hover:bg-white/10 disabled:opacity-40 cursor-pointer"
                 aria-label="Reset zoom"
               >
                 <RotateCcw className="w-3.5 h-3.5" />
               </button>
             </div>
 
-            {/* Signature Electric Blue Close Button with specular gloss */}
             <button
               type="button"
               onClick={onClose}
-              className="w-10 h-10 sm:w-11 sm:h-11 rounded-2xl bg-gradient-to-br from-[#2563EB] to-[#1D4ED8] hover:from-[#1D4ED8] hover:to-[#1E40AF] active:scale-95 text-white flex items-center justify-center shadow-lg shadow-blue-600/40 border border-blue-300/40 transition-all duration-150 cursor-pointer backdrop-blur-md"
+              className="w-10 h-10 sm:w-11 sm:h-11 rounded-xl glass-button-primary flex items-center justify-center cursor-pointer"
               title="Close Preview (Esc)"
               aria-label="Close jersey preview"
             >
-              <X className="w-5 h-5 sm:w-6 sm:h-6 stroke-[2.5]" />
+              <X className="w-5 h-5 stroke-[2.5]" />
             </button>
           </div>
         </div>
 
-        {/* Interactive Viewer Viewport */}
+        {/* Viewport */}
         <div
           ref={containerRef}
           onMouseDown={handleMouseDown}
@@ -345,12 +314,11 @@ export const JerseyShowcaseModal: React.FC<JerseyShowcaseModalProps> = ({
           onTouchMove={handleTouchMove}
           onTouchEnd={handleTouchEnd}
           onDoubleClick={toggleDoubleZoom}
-          className={`relative z-10 flex-1 w-full min-h-[320px] max-h-[78vh] overflow-hidden flex items-center justify-center p-3 sm:p-6 bg-radial from-[#0E1D3B] via-[#091427] to-[#050C1B] ${
+          className={`relative z-10 flex-1 w-full min-h-[320px] max-h-[78vh] overflow-hidden flex items-center justify-center p-3 sm:p-6 bg-[#07090D] ${
             zoom > 1 ? (isDragging ? 'cursor-grabbing' : 'cursor-grab') : 'cursor-zoom-in'
           }`}
         >
-          {/* Subtle grid line accents */}
-          <div className="absolute inset-0 bg-[linear-gradient(to_right,#1e293b12_1px,transparent_1px),linear-gradient(to_bottom,#1e293b12_1px,transparent_1px)] bg-[size:32px_32px] pointer-events-none opacity-40" />
+          <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,rgba(139,234,255,0.08)_0%,transparent_65%)] pointer-events-none" />
 
           {!hasError ? (
             <div
@@ -366,22 +334,22 @@ export const JerseyShowcaseModal: React.FC<JerseyShowcaseModalProps> = ({
                 alt={title}
                 onError={handleImageError}
                 draggable={false}
-                className="max-h-[72vh] w-auto max-w-full object-contain rounded-xl drop-shadow-[0_20px_45px_rgba(0,0,0,0.7)] pointer-events-none"
+                className="max-h-[72vh] w-auto max-w-full object-contain rounded-lg drop-shadow-[0_24px_55px_rgba(0,0,0,0.85)] pointer-events-none"
               />
             </div>
           ) : (
-            <div className="flex flex-col items-center justify-center text-center p-8 text-slate-400 max-w-sm">
-              <div className="w-16 h-16 rounded-2xl bg-slate-700/35 backdrop-blur-xl border border-white/15 flex items-center justify-center text-cyan-400 mb-3 shadow-inner">
+            <div className="flex flex-col items-center justify-center text-center p-8 text-[#C9D0D9] max-w-sm">
+              <div className="w-16 h-16 rounded-2xl bg-[#111521] border border-[#C9D0D9]/20 flex items-center justify-center text-[#8BEAFF] mb-3">
                 <Shirt className="w-8 h-8" />
               </div>
-              <h4 className="text-base font-bold text-white mb-1">Preview Loading</h4>
-              <p className="text-xs text-slate-400 mb-4">
-                The jersey showcase artwork is loading. You can also view it in the official merchandise cards.
+              <h4 className="text-base font-bold text-[#F5F7FA] mb-1">Preview Unavailable</h4>
+              <p className="text-xs text-[#C9D0D9]/75 mb-4">
+                The jersey showcase artwork could not be loaded right now.
               </p>
               <button
                 type="button"
                 onClick={onClose}
-                className="px-5 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold transition-colors cursor-pointer"
+                className="px-5 py-2.5 rounded-lg glass-button-primary text-xs font-bold uppercase tracking-wider cursor-pointer"
               >
                 Close Preview
               </button>
@@ -389,47 +357,41 @@ export const JerseyShowcaseModal: React.FC<JerseyShowcaseModalProps> = ({
           )}
         </div>
 
-        {/* Bottom Status & Mobile Controls Footer: Frosted Glass */}
-        <div className="relative z-20 px-4 py-2.5 sm:py-3 bg-slate-800/45 backdrop-blur-2xl border-t border-cyan-500/20 flex items-center justify-between text-[11px] text-slate-400 flex-wrap gap-2">
-          <div className="flex items-center gap-2">
-            <span className="w-2 h-2 rounded-full bg-cyan-400 animate-pulse shadow-[0_0_8px_#22d3ee]" />
-            <span className="text-slate-300 font-medium truncate max-w-xs sm:max-w-md">
-              {description}
-            </span>
-          </div>
+        {/* Footer */}
+        <div className="relative z-20 px-4 py-2.5 sm:py-3 bg-[#0C0F16]/90 border-t border-[#C9D0D9]/15 flex items-center justify-between text-[11px] text-[#C9D0D9]/80 flex-wrap gap-2">
+          <span className="truncate max-w-xs sm:max-w-md font-medium">{description}</span>
 
           <div className="flex items-center gap-3 ml-auto">
-            {/* Mobile zoom controls */}
-            <div className="flex sm:hidden items-center gap-1 bg-slate-800/45 p-0.5 rounded-xl border border-cyan-300/25 backdrop-blur-xl">
+            <div className="flex sm:hidden items-center gap-1 bg-[#111521] p-1 rounded-lg border border-[#C9D0D9]/20">
               <button
                 type="button"
                 onClick={handleZoomOut}
                 disabled={zoom <= 1}
-                className="px-2.5 py-1 rounded-lg bg-white/10 hover:bg-white/20 text-white font-bold text-xs disabled:opacity-40 transition-colors"
+                className="px-2.5 py-1 rounded bg-white/10 text-[#F5F7FA] font-bold text-xs disabled:opacity-40"
               >
                 -
               </button>
-              <span className="font-mono text-[10px] text-cyan-300 px-1 font-bold">
+              <span className="font-mono text-[10px] text-[#8BEAFF] px-1 font-bold tabular-nums">
                 {Math.round(zoom * 100)}%
               </span>
               <button
                 type="button"
                 onClick={handleZoomIn}
                 disabled={zoom >= 4}
-                className="px-2.5 py-1 rounded-lg bg-white/10 hover:bg-white/20 text-white font-bold text-xs disabled:opacity-40 transition-colors"
+                className="px-2.5 py-1 rounded bg-white/10 text-[#F5F7FA] font-bold text-xs disabled:opacity-40"
               >
                 +
               </button>
               <button
                 type="button"
                 onClick={handleResetZoom}
-                className="px-2 py-1 rounded-lg bg-white/10 hover:bg-white/20 text-cyan-300 text-[10px] font-bold transition-colors"
+                className="px-2 py-1 rounded bg-white/10 text-[#8BEAFF] text-[10px] font-bold"
               >
                 1:1
               </button>
             </div>
 
-            <span className="hidden md:inline text-[10px] text-slate-400">
+            <span className="hidden md:inline text-[10px] font-mono text-[#626B79]">
               Scroll or pinch to zoom · Drag to pan · Double-click to toggle · Esc to close
             </span>
           </div>

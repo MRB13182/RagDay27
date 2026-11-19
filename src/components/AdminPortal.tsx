@@ -43,13 +43,13 @@ const AdminStudentPhoto: React.FC<{
   if (!resolvedUrl || loadError) {
     if (size === 'lg') {
       return (
-        <div className="w-16 h-16 rounded-2xl bg-slate-200 text-slate-400 grid place-items-center font-bold text-xs select-none">
+        <div className="w-16 h-16 rounded-2xl bg-[#111622] border border-[#C9D0D9]/20 text-[#8B95A5] grid place-items-center font-bold text-xs select-none">
           No Photo
         </div>
       );
     }
     return (
-      <div className="w-9 h-9 rounded-xl bg-slate-100 text-slate-400 grid place-items-center font-bold text-[10px] select-none">
+      <div className="w-9 h-9 rounded-xl bg-[#111622] border border-[#C9D0D9]/18 text-[#8B95A5] grid place-items-center font-bold text-[10px] select-none">
         N/A
       </div>
     );
@@ -61,7 +61,7 @@ const AdminStudentPhoto: React.FC<{
         src={resolvedUrl}
         alt={name}
         onError={() => setLoadError(true)}
-        className="w-16 h-16 rounded-2xl object-cover border border-slate-300 shadow-sm"
+        className="w-16 h-16 rounded-2xl object-cover border border-[#8BEAFF]/35 shadow-sm bg-[#08090D]"
       />
     );
   }
@@ -71,7 +71,7 @@ const AdminStudentPhoto: React.FC<{
       src={resolvedUrl}
       alt={name}
       onError={() => setLoadError(true)}
-      className="w-9 h-9 rounded-xl object-cover border border-slate-200 shadow-2xs"
+      className="w-9 h-9 rounded-xl object-cover border border-[#C9D0D9]/25 shadow-2xs bg-[#08090D]"
       loading="lazy"
     />
   );
@@ -445,28 +445,28 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
   // --------------------------------------------------------------------------
   if (!admin) {
     return (
-      <div className="fixed inset-0 z-[300] bg-slate-950/70 backdrop-blur-md flex items-center justify-center p-4 animate-fadeIn">
-        <div className="w-full max-w-md glass-modal rounded-3xl shadow-[0_30px_70px_-15px_rgba(0,0,0,0.4),inset_0_1.5px_2px_white] p-6 sm:p-8 relative border border-white/95 animate-scaleUp">
+      <div className="fixed inset-0 z-[300] bg-[#08090D]/82 backdrop-blur-lg flex items-center justify-center p-4 animate-fadeIn">
+        <div className="w-full max-w-md glass-modal rounded-3xl shadow-[0_32px_90px_rgba(0,0,0,0.75)] p-6 sm:p-8 relative border border-[#C9D0D9]/20 text-[#F5F7FA] animate-scaleUp">
           <button
             onClick={handleClose}
-            className="absolute top-4 right-4 p-2 rounded-xl text-slate-400 hover:text-slate-700 hover:bg-white/80 transition-colors cursor-pointer"
+            className="absolute top-4 right-4 p-2 rounded-xl text-[#8B95A5] hover:text-[#F5F7FA] hover:bg-white/10 transition-colors cursor-pointer"
           >
             <X className="w-5 h-5" />
           </button>
 
           <div className="flex items-center gap-3.5 mb-6">
-            <div className="w-12 h-12 rounded-2xl bg-indigo-500/15 border border-indigo-300/40 text-[#5B5FEF] grid place-items-center shadow-xs backdrop-blur-md">
+            <div className="w-12 h-12 rounded-2xl bg-[#8BEAFF]/12 border border-[#8BEAFF]/30 text-[#8BEAFF] grid place-items-center">
               <Lock className="w-6 h-6" />
             </div>
             <div>
-              <h2 className="text-xl font-display font-extrabold text-slate-900 tracking-tight">Admin Access</h2>
-              <p className="text-xs text-slate-500 mt-0.5">Enter committee passcode to unlock your admin panel.</p>
+              <h2 className="text-xl font-display font-extrabold text-[#F5F7FA] tracking-tight">Admin Access</h2>
+              <p className="text-xs text-[#94A0B2] mt-0.5">Enter committee passcode to unlock your admin panel.</p>
             </div>
           </div>
 
           <form onSubmit={handleLogin} className="space-y-4">
             <div>
-              <label className="block text-xs font-bold uppercase tracking-wider text-slate-700 mb-1.5">
+              <label className="block text-xs font-bold uppercase tracking-wider text-[#C9D0D9] mb-1.5">
                 Passcode
               </label>
               <input
@@ -474,15 +474,15 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
                 value={passcode}
                 onChange={e => setPasscode(e.target.value)}
                 placeholder="Enter Male Admin passcode"
-                className="w-full px-4 py-3.5 rounded-xl glass-input text-sm font-mono font-medium focus:border-[#5B5FEF] focus:ring-2 focus:ring-[#5B5FEF]/20 outline-none transition-all placeholder:text-slate-400"
+                className="w-full px-4 py-3.5 rounded-xl glass-input text-sm font-mono font-medium outline-none transition-all"
                 autoFocus
                 required
               />
             </div>
 
             {loginError && (
-              <div className="p-3 rounded-xl bg-rose-500/15 border border-rose-300/50 text-rose-700 text-xs font-semibold flex items-center gap-2 backdrop-blur-md">
-                <AlertCircle className="w-4 h-4 shrink-0" />
+              <div className="p-3 rounded-xl bg-rose-950/60 border border-rose-500/40 text-rose-200 text-xs font-semibold flex items-center gap-2">
+                <AlertCircle className="w-4 h-4 shrink-0 text-rose-400" />
                 <span>{loginError}</span>
               </div>
             )}
@@ -490,7 +490,7 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
             <button
               type="submit"
               disabled={isLoggingIn || !passcode.trim()}
-              className="w-full py-3.5 rounded-xl glass-button-primary font-bold text-sm shadow-md transition-all flex items-center justify-center gap-2 disabled:opacity-50 cursor-pointer"
+              className="w-full py-3.5 rounded-xl glass-button-primary font-bold text-sm transition-all flex items-center justify-center gap-2 disabled:opacity-50 cursor-pointer"
             >
               {isLoggingIn ? (
                 <>
@@ -506,8 +506,8 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
             </button>
           </form>
 
-          <div className="mt-6 pt-5 border-t border-slate-200/60 text-center">
-            <span className="text-[11px] text-slate-500 font-medium">
+          <div className="mt-6 pt-5 border-t border-[#C9D0D9]/12 text-center">
+            <span className="text-[11px] text-[#8B95A5] font-medium">
               Admin access is restricted to the Boys Wing.
             </span>
           </div>
@@ -525,33 +525,33 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
   const genderSubtext = 'Boys Wing';
 
   return (
-    <div className="fixed inset-0 z-[300] bg-slate-950/70 backdrop-blur-md flex items-center justify-center p-1.5 sm:p-4 md:p-6 animate-fadeIn">
-      <div className="w-full max-w-7xl h-[95vh] rounded-3xl glass-modal shadow-[0_30px_75px_-20px_rgba(0,0,0,0.35),inset_0_1.5px_2px_white] border border-white/95 flex flex-col overflow-hidden animate-scaleUp">
+    <div className="fixed inset-0 z-[300] bg-[#08090D]/82 backdrop-blur-lg flex items-center justify-center p-1.5 sm:p-4 md:p-6 animate-fadeIn">
+      <div className="w-full max-w-7xl h-[95vh] rounded-3xl glass-modal shadow-[0_32px_90px_rgba(0,0,0,0.78)] border border-[#C9D0D9]/20 text-[#F5F7FA] flex flex-col overflow-hidden animate-scaleUp">
 
         {/* 1. ADMIN HEADER */}
-        <header className="px-3 py-2.5 sm:px-5 sm:py-3.5 border-b border-slate-200/80 glass-modal-header flex flex-wrap items-center justify-between gap-1.5 sm:gap-3 shrink-0">
+        <header className="px-3 py-2.5 sm:px-5 sm:py-3.5 border-b border-[#C9D0D9]/15 glass-modal-header flex flex-wrap items-center justify-between gap-1.5 sm:gap-3 shrink-0">
           {/* Left: [ Male Icon + Male ] + optional desktop wing subtitle */}
           <div className="flex items-center gap-2 sm:gap-2.5 min-w-0 shrink-0 sm:shrink">
             <div
-              className="inline-flex items-center gap-1.5 pl-1.5 pr-2.5 sm:pl-2 sm:pr-3 py-1 sm:py-1.5 rounded-full bg-blue-50/90 border border-blue-200/80 text-slate-900 shadow-2xs shrink-0 whitespace-nowrap"
+              className="inline-flex items-center gap-1.5 pl-1.5 pr-2.5 sm:pl-2 sm:pr-3 py-1 sm:py-1.5 rounded-full bg-[#8BEAFF]/12 border border-[#8BEAFF]/35 text-[#F5F7FA] shrink-0 whitespace-nowrap"
               title={`${panelTitle} (${admin.role})`}
             >
               <span
                 aria-hidden="true"
-                className="w-5 h-5 sm:w-6 sm:h-6 rounded-full bg-blue-100/90 text-blue-600 grid place-items-center text-xs sm:text-sm font-black shrink-0"
+                className="w-5 h-5 sm:w-6 sm:h-6 rounded-full bg-[#8BEAFF]/20 text-[#8BEAFF] grid place-items-center text-xs sm:text-sm font-black shrink-0"
               >
                 {isMaleAdmin ? '♂' : '♀'}
               </span>
-              <span className="text-xs sm:text-sm font-bold text-slate-800 leading-none">
+              <span className="text-xs sm:text-sm font-bold text-[#F5F7FA] leading-none">
                 {genderLabel}
               </span>
             </div>
 
             <div className="hidden xl:flex flex-col min-w-0">
-              <span className="text-xs font-bold text-slate-800 leading-tight truncate">
+              <span className="text-xs font-bold text-[#F5F7FA] leading-tight truncate">
                 {panelTitle}
               </span>
-              <span className="text-[11px] text-slate-500 leading-tight truncate">
+              <span className="text-[11px] text-[#94A0B2] leading-tight truncate">
                 {admin.full_name} · {genderSubtext}
               </span>
             </div>
@@ -563,14 +563,14 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
             <button
               type="button"
               onClick={handleToggleRegistrationOpen}
-              className={`px-2.5 sm:px-3 py-1.5 rounded-full text-[11px] sm:text-xs font-bold transition-all inline-flex items-center gap-1.5 cursor-pointer border backdrop-blur-md whitespace-nowrap shrink-0 ${
+              className={`px-2.5 sm:px-3 py-1.5 rounded-full text-[11px] sm:text-xs font-bold transition-all inline-flex items-center gap-1.5 cursor-pointer border whitespace-nowrap shrink-0 ${
                 regState.isOpen
-                  ? 'bg-emerald-50/95 text-emerald-800 border-emerald-200/90 hover:bg-rose-50 hover:text-rose-800 hover:border-rose-300/70'
-                  : 'bg-rose-50/95 text-rose-800 border-rose-200/90 hover:bg-emerald-50 hover:text-emerald-800 hover:border-emerald-300/70'
+                  ? 'bg-emerald-950/60 text-emerald-300 border-emerald-400/35 hover:bg-rose-950/60 hover:text-rose-200 hover:border-rose-400/40'
+                  : 'bg-rose-950/60 text-rose-300 border-rose-400/35 hover:bg-emerald-950/60 hover:text-emerald-200 hover:border-emerald-400/40'
               }`}
               title={`Click to ${regState.isOpen ? 'manually DISABLE' : 'manually ENABLE'} registration. (Mode: ${regState.isAuto ? 'Automatic Schedule' : 'Manual Override'})`}
             >
-              <span className={`w-2 h-2 rounded-full shrink-0 ${regState.isOpen ? 'bg-emerald-500 animate-pulse' : 'bg-rose-500'}`} />
+              <span className={`w-2 h-2 rounded-full shrink-0 ${regState.isOpen ? 'bg-emerald-400' : 'bg-rose-400'}`} />
               <span className="hidden lg:inline">
                 Reg: {regState.isOpen ? 'Open' : 'Closed'} ({regState.isAuto ? 'Auto' : 'Manual'})
               </span>
@@ -583,11 +583,11 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
               type="button"
               onClick={handleExportPDF}
               disabled={adminRegistrations.length === 0}
-              className="w-8 h-8 sm:w-9 sm:h-9 lg:w-auto lg:px-3 rounded-full glass-button text-slate-700 text-xs font-bold transition-colors inline-flex items-center justify-center gap-1.5 disabled:opacity-40 cursor-pointer shrink-0 whitespace-nowrap"
+              className="w-8 h-8 sm:w-9 sm:h-9 lg:w-auto lg:px-3 rounded-full glass-button text-[#C9D0D9] text-xs font-bold transition-colors inline-flex items-center justify-center gap-1.5 disabled:opacity-40 cursor-pointer shrink-0 whitespace-nowrap"
               title="Download registration ledger as PDF"
               aria-label="Download registration ledger as PDF"
             >
-              <FileSpreadsheet className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-slate-600 shrink-0" />
+              <FileSpreadsheet className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-[#8BEAFF] shrink-0" />
               <span className="hidden lg:inline">Export PDF</span>
             </button>
 
@@ -595,18 +595,18 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
               type="button"
               onClick={loadAdminRegistrations}
               disabled={isLoadingRegistrations}
-              className="w-8 h-8 sm:w-9 sm:h-9 lg:w-auto lg:px-3 rounded-full glass-button text-slate-700 text-xs font-bold transition-colors inline-flex items-center justify-center gap-1.5 cursor-pointer disabled:opacity-50 shrink-0 whitespace-nowrap"
+              className="w-8 h-8 sm:w-9 sm:h-9 lg:w-auto lg:px-3 rounded-full glass-button text-[#C9D0D9] text-xs font-bold transition-colors inline-flex items-center justify-center gap-1.5 cursor-pointer disabled:opacity-50 shrink-0 whitespace-nowrap"
               title="Refresh registrations from database"
               aria-label="Refresh registrations from database"
             >
-              <RefreshCw className={`w-3.5 h-3.5 sm:w-4 sm:h-4 shrink-0 ${isLoadingRegistrations ? 'animate-spin text-indigo-600' : 'text-slate-600'}`} />
+              <RefreshCw className={`w-3.5 h-3.5 sm:w-4 sm:h-4 shrink-0 ${isLoadingRegistrations ? 'animate-spin text-[#8BEAFF]' : 'text-[#C9D0D9]'}`} />
               <span className="hidden lg:inline">Refresh</span>
             </button>
 
             <button
               type="button"
               onClick={handleLogout}
-              className="w-8 h-8 sm:w-9 sm:h-9 lg:w-auto lg:px-3 rounded-full glass-button text-slate-700 hover:bg-rose-500/15 hover:text-rose-700 text-xs font-bold transition-colors inline-flex items-center justify-center gap-1.5 cursor-pointer border border-white/80 shrink-0 whitespace-nowrap"
+              className="w-8 h-8 sm:w-9 sm:h-9 lg:w-auto lg:px-3 rounded-full glass-button text-[#C9D0D9] hover:bg-rose-950/60 hover:text-rose-200 hover:border-rose-400/40 text-xs font-bold transition-colors inline-flex items-center justify-center gap-1.5 cursor-pointer shrink-0 whitespace-nowrap"
               title="Sign out of admin session"
               aria-label="Sign out of admin session"
             >
@@ -617,7 +617,7 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
             <button
               type="button"
               onClick={handleClose}
-              className="w-8 h-8 sm:w-9 sm:h-9 rounded-full text-slate-500 hover:text-slate-800 hover:bg-white/80 transition-colors grid place-items-center cursor-pointer shrink-0"
+              className="w-8 h-8 sm:w-9 sm:h-9 rounded-full text-[#8B95A5] hover:text-[#F5F7FA] hover:bg-white/10 transition-colors grid place-items-center cursor-pointer shrink-0"
               title="Close Admin Panel"
               aria-label="Close Admin Panel"
             >
@@ -631,12 +631,12 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
           <div
             className={`px-4 py-2 text-xs font-semibold flex items-center justify-between border-b ${
               actionMessage.type === 'success'
-                ? 'bg-emerald-50 text-emerald-800 border-emerald-200'
-                : 'bg-rose-50 text-rose-800 border-rose-200'
+                ? 'bg-emerald-950/60 text-emerald-200 border-emerald-400/30'
+                : 'bg-rose-950/60 text-rose-200 border-rose-400/30'
             }`}
           >
             <div className="flex items-center gap-2">
-              {actionMessage.type === 'success' ? <Check className="w-4 h-4 text-emerald-600" /> : <AlertCircle className="w-4 h-4 text-rose-600" />}
+              {actionMessage.type === 'success' ? <Check className="w-4 h-4 text-emerald-400" /> : <AlertCircle className="w-4 h-4 text-rose-400" />}
               <span>{actionMessage.text}</span>
             </div>
             <button onClick={() => setActionMessage(null)} className="text-xs font-bold underline cursor-pointer">
@@ -645,9 +645,9 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
           </div>
         )}
 
-        <div className="px-3.5 sm:px-5 py-2.5 border-b border-slate-200/80 bg-white/70 flex items-center gap-1.5 sm:gap-2.5 overflow-x-auto shrink-0">
+        <div className="px-3.5 sm:px-5 py-2.5 border-b border-[#C9D0D9]/15 bg-[#090C13]/95 flex items-center gap-1.5 sm:gap-2.5 overflow-x-auto shrink-0">
           <span
-            className="px-3.5 sm:px-4 py-2 rounded-xl text-xs font-bold bg-indigo-600 text-white shadow-2xs whitespace-nowrap shrink-0 select-none"
+            className="px-3.5 sm:px-4 py-2 rounded-xl text-xs font-extrabold bg-[#8BEAFF] text-[#08090D] shadow-2xs whitespace-nowrap shrink-0 select-none"
           >
             Registrations
           </span>
@@ -668,12 +668,12 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
                 disabled={exportingGroup !== null}
                 title={`Download approved ${group} registrations PDF`}
                 aria-label={`Download approved ${group} registrations PDF`}
-                className="px-2.5 sm:px-3.5 py-2 rounded-xl border border-slate-200/90 bg-white hover:bg-slate-50 active:scale-[0.98] text-slate-800 text-xs font-extrabold inline-flex items-center gap-1.5 shadow-2xs transition-all cursor-pointer disabled:opacity-60 whitespace-nowrap shrink-0"
+                className="px-2.5 sm:px-3.5 py-2 rounded-xl border border-[#C9D0D9]/20 bg-[#101521] hover:bg-[#161D2C] hover:border-[#8BEAFF]/50 active:scale-[0.98] text-[#F5F7FA] text-xs font-extrabold inline-flex items-center gap-1.5 transition-all cursor-pointer disabled:opacity-60 whitespace-nowrap shrink-0"
               >
                 {isBusy ? (
-                  <RefreshCw className="w-3.5 h-3.5 text-indigo-600 animate-spin" />
+                  <RefreshCw className="w-3.5 h-3.5 text-[#8BEAFF] animate-spin" />
                 ) : (
-                  <Download className="w-3.5 h-3.5 text-indigo-600" />
+                  <Download className="w-3.5 h-3.5 text-[#8BEAFF]" />
                 )}
                 <span>{code}</span>
               </button>
@@ -681,38 +681,38 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
           })}
         </div>
 
-        {/* 2. REGISTRATION STATISTICS & SUMMARY - Frosted Glass Row */}
-        <section className="px-4 py-2.5 sm:px-5 sm:py-3 border-b border-slate-200/80 bg-white/40 backdrop-blur-md overflow-x-auto shrink-0">
-          <div className="grid grid-cols-4 min-w-[320px] gap-2 sm:gap-3">
-            <div className="p-2 sm:p-2.5 rounded-xl sm:rounded-2xl glass-card border border-slate-200/90 shadow-2xs">
-              <span className="text-[9px] sm:text-[10px] font-extrabold uppercase tracking-wider text-slate-500 block leading-tight truncate">
+        {/* 2. REGISTRATION STATISTICS & SUMMARY */}
+        <section className="px-4 py-2.5 sm:px-5 sm:py-3 border-b border-[#C9D0D9]/15 bg-[#0A0E16]/90 shrink-0">
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 sm:gap-3 tabular-nums">
+            <div className="p-2.5 rounded-xl sm:rounded-2xl bg-[#0F1521] border border-[#C9D0D9]/18">
+              <span className="text-[10px] font-extrabold uppercase tracking-wider text-[#94A0B2] block leading-tight">
                 Total Male
               </span>
-              <div className="text-base sm:text-lg font-black text-slate-900 mt-0.5 leading-tight">{stats.total}</div>
+              <div className="text-base sm:text-lg font-black text-[#F5F7FA] mt-0.5 leading-tight">{stats.total}</div>
             </div>
-            <div className="p-2 sm:p-2.5 rounded-xl sm:rounded-2xl bg-amber-500/10 backdrop-blur-md border border-amber-300/60 shadow-2xs">
-              <span className="text-[9px] sm:text-[10px] font-extrabold uppercase tracking-wider text-amber-700 block leading-tight truncate">
+            <div className="p-2.5 rounded-xl sm:rounded-2xl bg-amber-950/35 border border-amber-400/30">
+              <span className="text-[10px] font-extrabold uppercase tracking-wider text-amber-300 block leading-tight">
                 Pending Review
               </span>
-              <div className="text-base sm:text-lg font-black text-amber-800 mt-0.5 leading-tight">{stats.pending}</div>
+              <div className="text-base sm:text-lg font-black text-amber-200 mt-0.5 leading-tight">{stats.pending}</div>
             </div>
-            <div className="p-2 sm:p-2.5 rounded-xl sm:rounded-2xl bg-emerald-500/10 backdrop-blur-md border border-emerald-300/60 shadow-2xs">
-              <span className="text-[9px] sm:text-[10px] font-extrabold uppercase tracking-wider text-emerald-700 block leading-tight truncate">
+            <div className="p-2.5 rounded-xl sm:rounded-2xl bg-emerald-950/35 border border-emerald-400/30">
+              <span className="text-[10px] font-extrabold uppercase tracking-wider text-emerald-300 block leading-tight">
                 Approved
               </span>
-              <div className="text-base sm:text-lg font-black text-emerald-800 mt-0.5 leading-tight">{stats.approved}</div>
+              <div className="text-base sm:text-lg font-black text-emerald-200 mt-0.5 leading-tight">{stats.approved}</div>
             </div>
-            <div className="p-2 sm:p-2.5 rounded-xl sm:rounded-2xl bg-rose-500/10 backdrop-blur-md border border-rose-300/60 shadow-2xs">
-              <span className="text-[9px] sm:text-[10px] font-extrabold uppercase tracking-wider text-rose-700 block leading-tight truncate">
+            <div className="p-2.5 rounded-xl sm:rounded-2xl bg-rose-950/35 border border-rose-400/30">
+              <span className="text-[10px] font-extrabold uppercase tracking-wider text-rose-300 block leading-tight">
                 Rejected
               </span>
-              <div className="text-base sm:text-lg font-black text-rose-800 mt-0.5 leading-tight">{stats.rejected}</div>
+              <div className="text-base sm:text-lg font-black text-rose-200 mt-0.5 leading-tight">{stats.rejected}</div>
             </div>
           </div>
         </section>
 
         {/* 3. CONTROLS: STATUS FILTERS & SEARCH */}
-        <div className="px-5 py-3 border-b border-slate-200/80 bg-white/60 backdrop-blur-md flex flex-wrap items-center justify-between gap-3 shrink-0">
+        <div className="px-5 py-3 border-b border-[#C9D0D9]/15 bg-[#0B0F18] flex flex-wrap items-center justify-between gap-3 shrink-0">
           <div className="flex items-center gap-1.5 overflow-x-auto p-1 rounded-2xl glass-surface-subtle">
             {(['all', 'pending', 'approved', 'rejected'] as const).map(tab => {
               const active = statusFilter === tab;
@@ -723,12 +723,12 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
                   onClick={() => setStatusFilter(tab)}
                   className={`px-3 py-1.5 rounded-xl text-xs font-bold capitalize transition-all flex items-center gap-1.5 cursor-pointer ${
                     active
-                      ? 'glass-tab-active text-[#4338CA] shadow-sm'
-                      : 'text-slate-600 hover:text-slate-900 hover:bg-white/60'
+                      ? 'glass-tab-active text-[#F5F7FA]'
+                      : 'text-[#94A0B2] hover:text-[#F5F7FA] hover:bg-white/5'
                   }`}
                 >
                   <span>{tab}</span>
-                  <span className={`px-1.5 py-0.2 rounded-full text-[10px] font-mono ${active ? 'bg-white/25 text-white' : 'bg-white/65 backdrop-blur-md border border-white/80 text-slate-700'}`}>
+                  <span className={`px-1.5 py-0.2 rounded-full text-[10px] font-mono tabular-nums ${active ? 'bg-[#8BEAFF] text-[#08090D]' : 'bg-[#08090D]/80 border border-[#C9D0D9]/18 text-[#C9D0D9]'}`}>
                     {count}
                   </span>
                 </button>
@@ -737,18 +737,18 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
           </div>
 
           <div className="relative min-w-56 sm:w-72">
-            <Search className="w-3.5 h-3.5 absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
+            <Search className="w-3.5 h-3.5 absolute left-3 top-1/2 -translate-y-1/2 text-[#8B95A5]" />
             <input
               type="text"
               value={searchTerm}
               onChange={e => setSearchTerm(e.target.value)}
               placeholder="Search reg no, name, roll, txn…"
-              className="w-full pl-8 pr-3 py-2 rounded-xl glass-input text-xs text-slate-900 placeholder-slate-400 focus:border-[#5B5FEF] focus:ring-2 focus:ring-[#5B5FEF]/20 outline-none transition-all"
+              className="w-full pl-8 pr-8 py-2 rounded-xl glass-input text-xs outline-none transition-all"
             />
             {searchTerm && (
               <button
                 onClick={() => setSearchTerm('')}
-                className="absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 cursor-pointer"
+                className="absolute right-2.5 top-1/2 -translate-y-1/2 text-[#8B95A5] hover:text-[#F5F7FA] cursor-pointer"
               >
                 <X className="w-3.5 h-3.5" />
               </button>
@@ -757,37 +757,37 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
         </div>
 
         {/* 4. REGISTRATION TABLE / LIST */}
-        <div className="flex-1 overflow-auto bg-slate-50/20 backdrop-blur-xs">
+        <div className="flex-1 overflow-auto bg-[#080A10]">
           {isLoadingRegistrations ? (
-            <div className="h-64 flex flex-col items-center justify-center gap-2 text-slate-400">
-              <RefreshCw className="w-6 h-6 animate-spin text-indigo-600" />
+            <div className="h-64 flex flex-col items-center justify-center gap-2 text-[#94A0B2]">
+              <RefreshCw className="w-6 h-6 animate-spin text-[#8BEAFF]" />
               <span className="text-xs font-semibold">Loading {panelTitle} records from Supabase…</span>
             </div>
           ) : registrationLoadError ? (
-            <div className="p-8 text-center max-w-md mx-auto my-12 glass-card rounded-3xl border border-rose-300 shadow-sm">
-              <AlertCircle className="w-8 h-8 text-rose-600 mx-auto mb-2" />
-              <h3 className="text-sm font-bold text-slate-900">Database Connection Issue</h3>
-              <p className="text-xs text-rose-600 mt-1">{registrationLoadError}</p>
+            <div className="p-8 text-center max-w-md mx-auto my-12 glass-card rounded-3xl border border-rose-500/40">
+              <AlertCircle className="w-8 h-8 text-rose-400 mx-auto mb-2" />
+              <h3 className="text-sm font-bold text-[#F5F7FA]">Database Connection Issue</h3>
+              <p className="text-xs text-rose-300 mt-1">{registrationLoadError}</p>
               <button
                 onClick={loadAdminRegistrations}
-                className="mt-4 px-4 py-2 rounded-xl glass-button-primary text-white text-xs font-bold cursor-pointer"
+                className="mt-4 px-4 py-2 rounded-xl glass-button-primary text-xs font-bold cursor-pointer"
               >
                 Retry Query
               </button>
             </div>
           ) : filteredRegistrations.length === 0 ? (
-            <div className="h-64 flex flex-col items-center justify-center gap-2 text-slate-400">
-              <User className="w-8 h-8 text-slate-300" />
+            <div className="h-64 flex flex-col items-center justify-center gap-2 text-[#8B95A5]">
+              <User className="w-8 h-8 text-[#626B79]" />
               <span className="text-xs font-semibold">No {statusFilter !== 'all' ? statusFilter : ''} registrations found.</span>
-              {searchTerm && <span className="text-[11px] text-slate-400">Try clearing your search query.</span>}
+              {searchTerm && <span className="text-[11px] text-[#626B79]">Try clearing your search query.</span>}
             </div>
           ) : (
             <div className="min-w-full inline-block align-middle">
-              <table className="min-w-full text-left text-xs divide-y divide-slate-200/80">
-                <thead className="bg-white/60 text-slate-700 font-bold sticky top-0 z-10 backdrop-blur-xl border-b border-white/80">
+              <table className="min-w-full text-left text-xs divide-y divide-[#C9D0D9]/12">
+                <thead className="bg-[#0F1420] text-[#C9D0D9] font-bold sticky top-0 z-10 border-b border-[#C9D0D9]/18">
                   <tr>
                     <th className="px-3.5 py-3 whitespace-nowrap">SL</th>
-                    <th className="px-3 py-3 whitespace-nowrap">Photo</th>
+                    <th className="px-3.5 py-3 whitespace-nowrap">Photo</th>
                     <th className="px-3.5 py-3 whitespace-nowrap">Reg No</th>
                     <th className="px-3.5 py-3 whitespace-nowrap">Student Name</th>
                     <th className="px-3.5 py-3 whitespace-nowrap">Roll / Section</th>
@@ -798,7 +798,7 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
                     <th className="px-3.5 py-3 text-right whitespace-nowrap">Actions</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-white/55 bg-white/20 backdrop-blur-md">
+                <tbody className="divide-y divide-[#C9D0D9]/10 bg-[#0A0E16]/95">
                   {filteredRegistrations.map(r => {
                     const isApproved = r.status === 'approved';
                     const isRejected = r.status === 'rejected';
@@ -807,11 +807,11 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
                     return (
                       <tr
                         key={r.registration_no}
-                        className="hover:bg-white/45 transition-colors cursor-pointer group"
+                        className="hover:bg-[#131926] transition-colors cursor-pointer group"
                         onClick={() => setSelectedRecord(r)}
                       >
                         {/* SL No */}
-                        <td className="px-3.5 py-3 font-mono text-slate-500 font-bold">
+                        <td className="px-3.5 py-3 font-mono text-[#8B95A5] font-bold tabular-nums">
                           {r.sl_no ?? '—'}
                         </td>
 
@@ -825,57 +825,57 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
                         </td>
 
                         {/* Registration Number */}
-                        <td className="px-3.5 py-3 font-mono font-black text-indigo-600 text-xs whitespace-nowrap">
+                        <td className="px-3.5 py-3 font-mono font-black text-[#8BEAFF] text-xs whitespace-nowrap tabular-nums">
                           {r.registration_no}
                         </td>
 
                         {/* Student Name & Contact */}
                         <td className="px-3.5 py-3">
-                          <div className="font-bold text-slate-900 group-hover:text-indigo-600 transition-colors">
+                          <div className="font-bold text-[#F5F7FA] group-hover:text-[#8BEAFF] transition-colors">
                             {r.full_name}
                           </div>
-                          <div className="text-[11px] text-slate-400 font-mono">
+                          <div className="text-[11px] text-[#8B95A5] font-mono tabular-nums">
                             {r.contact_mobile_number || '—'}
                           </div>
                         </td>
 
                         {/* Roll, Group & Section */}
                         <td className="px-3 py-3 whitespace-nowrap">
-                          <div className="font-bold text-slate-800">Roll: {r.class_roll}</div>
-                          <div className="text-[11px] text-slate-500">
-                            {r.academic_group} · <span className="font-bold text-slate-700">{r.academic_section}</span>
+                          <div className="font-bold text-[#F5F7FA] tabular-nums">Roll: {r.class_roll}</div>
+                          <div className="text-[11px] text-[#8B95A5]">
+                            {r.academic_group} · <span className="font-bold text-[#C9D0D9]">{r.academic_section}</span>
                           </div>
                         </td>
 
                         {/* Student ID */}
-                        <td className="px-3 py-3 font-mono text-slate-600 whitespace-nowrap">
+                        <td className="px-3 py-3 font-mono text-[#C9D0D9] whitespace-nowrap tabular-nums">
                           {r.student_id}
                         </td>
 
                         {/* Jersey Info */}
                         <td className="px-3.5 py-3 whitespace-nowrap">
-                          <div className="font-extrabold text-slate-800 flex items-center gap-1.5">
-                            <span className="font-mono text-indigo-600">#{r.jersey_number}</span>
+                          <div className="font-extrabold text-[#F5F7FA] flex items-center gap-1.5">
+                            <span className="font-mono text-[#8BEAFF]">#{r.jersey_number}</span>
                             <span>{r.jersey_back_name}</span>
                           </div>
-                          <div className="text-[11px] text-slate-500">
-                            Size: <strong className="text-slate-700">{r.jersey_size}</strong>
+                          <div className="text-[11px] text-[#8B95A5]">
+                            Size: <strong className="text-[#C9D0D9]">{r.jersey_size}</strong>
                           </div>
                         </td>
 
                         {/* Payment Info */}
                         <td className="px-3.5 py-3 whitespace-nowrap">
-                          <div className="font-bold text-slate-800 capitalize flex items-center gap-1">
-                            <span className={r.send_method === 'bkash' ? 'text-pink-600 font-black' : 'text-orange-600 font-black'}>
+                          <div className="font-bold text-[#F5F7FA] capitalize flex items-center gap-1">
+                            <span className={r.send_method === 'bkash' ? 'text-[#8BEAFF] font-black' : 'text-[#C9D0D9] font-black'}>
                               {r.send_method}
                             </span>
-                            <span className="text-[11px] text-slate-400">({r.payment_time})</span>
+                            <span className="text-[11px] text-[#8B95A5]">({r.payment_time})</span>
                           </div>
-                          <div className="text-[11px] font-mono text-slate-500">
+                          <div className="text-[11px] font-mono text-[#94A0B2] tabular-nums">
                             {r.sender_mobile_no}
                           </div>
                           {r.transaction_id && (
-                            <div className="text-[10px] font-mono text-indigo-600 truncate max-w-28" title={r.transaction_id}>
+                            <div className="text-[10px] font-mono text-[#8BEAFF] truncate max-w-28" title={r.transaction_id}>
                               Txn: {r.transaction_id}
                             </div>
                           )}
@@ -896,7 +896,7 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
                                 Rejected
                               </span>
                               {r.reject_reason && (
-                                <p className="text-[10px] text-rose-600 font-medium max-w-36 truncate mt-0.5" title={r.reject_reason}>
+                                <p className="text-[10px] text-rose-300 font-medium max-w-36 truncate mt-0.5" title={r.reject_reason}>
                                   {r.reject_reason}
                                 </p>
                               )}
@@ -920,8 +920,8 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
                               title="Approve Registration"
                               className={`p-2 rounded-xl transition-all cursor-pointer ${
                                 isApproved
-                                  ? 'bg-slate-100 text-slate-400 cursor-not-allowed opacity-50'
-                                  : 'bg-emerald-500/10 text-emerald-700 hover:bg-emerald-500/25 hover:text-emerald-800 border border-emerald-300/50 backdrop-blur-md shadow-2xs'
+                                  ? 'bg-[#121722] text-[#626B79] cursor-not-allowed opacity-50'
+                                  : 'bg-emerald-500/12 text-emerald-300 hover:bg-emerald-500/25 border border-emerald-400/35'
                               }`}
                             >
                               <Check className="w-4 h-4" />
@@ -934,8 +934,8 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
                               title="Reject Registration (Reason Required)"
                               className={`p-2 rounded-xl transition-all cursor-pointer ${
                                 isRejected
-                                  ? 'bg-slate-100 text-slate-400 cursor-not-allowed opacity-50'
-                                  : 'bg-rose-500/10 text-rose-700 hover:bg-rose-500/25 hover:text-rose-800 border border-rose-300/50 backdrop-blur-md shadow-2xs'
+                                  ? 'bg-[#121722] text-[#626B79] cursor-not-allowed opacity-50'
+                                  : 'bg-rose-500/12 text-rose-300 hover:bg-rose-500/25 border border-rose-400/35'
                               }`}
                             >
                               <XCircle className="w-4 h-4" />
@@ -946,7 +946,7 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
                               onClick={() => handleHide(r.registration_no)}
                               disabled={hidingRegNo === r.registration_no}
                               title="Delete from Web View (Kept in Database)"
-                              className="p-2 rounded-xl glass-button text-slate-600 hover:bg-rose-500/15 hover:text-rose-700 transition-all cursor-pointer"
+                              className="p-2 rounded-xl glass-button text-[#94A0B2] hover:bg-rose-950/60 hover:text-rose-300 hover:border-rose-400/35 transition-all cursor-pointer"
                             >
                               <Trash2 className="w-4 h-4" />
                             </button>
@@ -961,50 +961,50 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
           )}
         </div>
 
-        {/* 5. FOOTER STATUS BAR: Frosted Glass */}
-        <footer className="px-5 py-2.5 border-t border-slate-200/80 bg-white/60 backdrop-blur-md text-[11px] text-slate-500 shrink-0">
+        {/* 5. FOOTER STATUS BAR */}
+        <footer className="px-5 py-2.5 border-t border-[#C9D0D9]/15 bg-[#0B0F17] text-[11px] text-[#94A0B2] shrink-0">
           <div>
-            Showing <strong className="text-slate-800">{filteredRegistrations.length}</strong> of <strong className="text-slate-800">{adminRegistrations.length}</strong> male registrations
+            Showing <strong className="text-[#F5F7FA]">{filteredRegistrations.length}</strong> of <strong className="text-[#F5F7FA]">{adminRegistrations.length}</strong> male registrations
           </div>
         </footer>
       </div>
 
       {/* ---------------------------------------------------------------------- */}
-      {/* MODAL: REJECT REGISTRATION WITH REASON (Frosted Glass) */}
+      {/* MODAL: REJECT REGISTRATION WITH REASON */}
       {/* ---------------------------------------------------------------------- */}
       {rejectingRecord && (
-        <div className="fixed inset-0 z-[320] bg-slate-950/65 backdrop-blur-md flex items-center justify-center p-4 animate-fadeIn">
-          <div className="w-full max-w-lg glass-modal rounded-3xl shadow-[0_30px_70px_-15px_rgba(244,63,94,0.3),inset_0_1.5px_2px_white] p-6 border border-rose-300/60 animate-scaleUp">
+        <div className="fixed inset-0 z-[320] bg-[#08090D]/82 backdrop-blur-lg flex items-center justify-center p-4 animate-fadeIn">
+          <div className="w-full max-w-lg glass-modal rounded-3xl shadow-[0_32px_90px_rgba(0,0,0,0.78)] p-6 border border-rose-400/35 text-[#F5F7FA] animate-scaleUp">
             <div className="flex items-center justify-between mb-4">
               <div className="flex items-center gap-2.5">
-                <div className="w-10 h-10 rounded-2xl bg-rose-500/15 text-rose-600 grid place-items-center border border-rose-300/40 shadow-xs backdrop-blur-md">
+                <div className="w-10 h-10 rounded-2xl bg-rose-500/15 text-rose-300 grid place-items-center border border-rose-400/35">
                   <XCircle className="w-5 h-5" />
                 </div>
                 <div>
-                  <h3 className="text-base font-display font-black text-slate-900">Reject Registration</h3>
-                  <p className="text-xs text-slate-500 font-mono">
+                  <h3 className="text-base font-display font-black text-[#F5F7FA]">Reject Registration</h3>
+                  <p className="text-xs text-[#94A0B2] font-mono">
                     {rejectingRecord.registration_no} · {rejectingRecord.full_name}
                   </p>
                 </div>
               </div>
               <button
                 onClick={() => { setRejectingRecord(null); setRejectReason(''); }}
-                className="p-1.5 rounded-xl text-slate-400 hover:text-slate-700 hover:bg-white/80 cursor-pointer transition-colors"
+                className="p-1.5 rounded-xl text-[#8B95A5] hover:text-[#F5F7FA] hover:bg-white/10 cursor-pointer transition-colors"
               >
                 <X className="w-4 h-4" />
               </button>
             </div>
 
             <div className="mb-4">
-              <label className="block text-xs font-bold uppercase tracking-wider text-slate-700 mb-1.5">
-                Rejection Reason <span className="text-rose-600">*</span>
+              <label className="block text-xs font-bold uppercase tracking-wider text-[#C9D0D9] mb-1.5">
+                Rejection Reason <span className="text-rose-400">*</span>
               </label>
               <textarea
                 value={rejectReason}
                 onChange={e => setRejectReason(e.target.value)}
                 placeholder="State clearly why this registration is rejected (e.g. Transaction ID mismatch, incomplete payment, invalid student ID)..."
                 rows={3}
-                className="w-full px-3.5 py-2.5 rounded-xl glass-input text-xs font-sans leading-relaxed outline-none focus:border-rose-600 focus:ring-2 focus:ring-rose-200/50 transition-all placeholder:text-slate-400"
+                className="w-full px-3.5 py-2.5 rounded-xl glass-input text-xs font-sans leading-relaxed outline-none focus:border-rose-400 focus:ring-2 focus:ring-rose-500/25 transition-all"
                 autoFocus
                 required
               />
@@ -1012,14 +1012,14 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
               {/* Compact, clickable keyword chips */}
               <div className="mt-2.5 space-y-1.5">
                 <div className="flex items-center justify-between">
-                  <span className="text-[10px] font-bold uppercase tracking-wider text-slate-500">
+                  <span className="text-[10px] font-bold uppercase tracking-wider text-[#8B95A5]">
                     Common Rejection Reasons (Click to insert):
                   </span>
                   {rejectReason && (
                     <button
                       type="button"
                       onClick={() => setRejectReason('')}
-                      className="text-[10px] font-semibold text-slate-400 hover:text-rose-600 transition-colors cursor-pointer"
+                      className="text-[10px] font-semibold text-[#8B95A5] hover:text-rose-300 transition-colors cursor-pointer"
                     >
                       Clear
                     </button>
@@ -1033,10 +1033,10 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
                         key={chip.label}
                         type="button"
                         onClick={() => handleInsertRejectionChip(chip.text)}
-                        className={`px-2.5 py-1 rounded-lg text-[11px] border transition-all cursor-pointer backdrop-blur-md ${
+                        className={`px-2.5 py-1 rounded-lg text-[11px] border transition-all cursor-pointer ${
                           isSelected
-                            ? 'bg-rose-500/20 border-rose-400/60 text-rose-800 font-bold shadow-2xs'
-                            : 'glass-button text-slate-700 hover:text-slate-900'
+                            ? 'bg-rose-500/20 border-rose-400/50 text-rose-200 font-bold'
+                            : 'glass-button text-[#C9D0D9] hover:text-[#F5F7FA]'
                         }`}
                       >
                         {chip.label}
@@ -1046,16 +1046,16 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
                 </div>
               </div>
 
-              <p className="text-[11px] text-slate-500 mt-2">
+              <p className="text-[11px] text-[#8B95A5] mt-2">
                 This reason will be recorded in Supabase and shown to the student on the official gate pass lookup page.
               </p>
             </div>
 
-            <div className="flex items-center justify-end gap-2.5 pt-2 border-t border-slate-200/60">
+            <div className="flex items-center justify-end gap-2.5 pt-2 border-t border-[#C9D0D9]/15">
               <button
                 type="button"
                 onClick={() => { setRejectingRecord(null); setRejectReason(''); }}
-                className="px-4 py-2.5 rounded-xl glass-button text-slate-700 text-xs font-bold transition-colors cursor-pointer"
+                className="px-4 py-2.5 rounded-xl glass-button text-[#C9D0D9] text-xs font-bold transition-colors cursor-pointer"
               >
                 Cancel
               </button>
@@ -1063,7 +1063,7 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
                 type="button"
                 onClick={handleConfirmReject}
                 disabled={isSubmittingReject || !rejectReason.trim()}
-                className="px-5 py-2.5 rounded-xl glass-button-primary bg-gradient-to-r from-rose-600 via-rose-500 to-red-600 text-white text-xs font-bold transition-all shadow-md shadow-rose-300 disabled:opacity-50 cursor-pointer inline-flex items-center gap-1.5"
+                className="px-5 py-2.5 rounded-xl bg-gradient-to-r from-rose-500 to-red-500 hover:brightness-110 text-white text-xs font-bold transition-all disabled:opacity-50 cursor-pointer inline-flex items-center gap-1.5"
               >
                 {isSubmittingReject ? (
                   <>
@@ -1083,20 +1083,20 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
       )}
 
       {/* ---------------------------------------------------------------------- */}
-      {/* DRAWER: DETAILED REGISTRATION VIEW (Frosted Glass) */}
+      {/* DRAWER: DETAILED REGISTRATION VIEW */}
       {/* ---------------------------------------------------------------------- */}
       {selectedRecord && (
-        <div className="fixed inset-0 z-[310] bg-slate-950/50 backdrop-blur-md flex items-center justify-end p-2 sm:p-4 animate-fadeIn">
-          <div className="w-full max-w-lg h-full max-h-[92vh] glass-modal rounded-3xl shadow-[0_30px_70px_-15px_rgba(0,0,0,0.35),inset_0_1.5px_2px_white] border border-white/95 flex flex-col overflow-hidden animate-slideLeft">
+        <div className="fixed inset-0 z-[310] bg-[#08090D]/75 backdrop-blur-lg flex items-center justify-end p-2 sm:p-4 animate-fadeIn">
+          <div className="w-full max-w-lg h-full max-h-[92vh] glass-modal rounded-3xl shadow-[0_32px_90px_rgba(0,0,0,0.8)] border border-[#C9D0D9]/20 text-[#F5F7FA] flex flex-col overflow-hidden animate-slideLeft">
             
-            <header className="px-5 py-4 border-b border-slate-200/80 glass-modal-header flex items-center justify-between">
+            <header className="px-5 py-4 border-b border-[#C9D0D9]/15 glass-modal-header flex items-center justify-between">
               <div>
-                <span className="text-[10px] font-extrabold uppercase tracking-wider text-slate-400 block">Registration Details</span>
-                <div className="font-mono text-base font-black text-indigo-600">{selectedRecord.registration_no}</div>
+                <span className="text-[10px] font-mono font-extrabold uppercase tracking-wider text-[#8B95A5] block">Registration Details</span>
+                <div className="font-mono text-base font-black text-[#8BEAFF] tabular-nums">{selectedRecord.registration_no}</div>
               </div>
               <button
                 onClick={() => setSelectedRecord(null)}
-                className="p-2 rounded-xl text-slate-400 hover:text-slate-700 hover:bg-white/80 cursor-pointer transition-colors"
+                className="p-2 rounded-xl text-[#8B95A5] hover:text-[#F5F7FA] hover:bg-white/10 cursor-pointer transition-colors"
               >
                 <X className="w-5 h-5" />
               </button>
@@ -1104,24 +1104,24 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
 
             <div className="flex-1 overflow-auto p-5 space-y-5 text-xs">
               {/* Photo & Identity Banner */}
-              <div className="flex items-center gap-4 p-4 rounded-2xl glass-card border border-slate-200/80">
+              <div className="flex items-center gap-4 p-4 rounded-2xl glass-card">
                 <AdminStudentPhoto
                   photo={selectedRecord.student_photo}
                   name={selectedRecord.full_name}
                   size="lg"
                 />
                 <div className="min-w-0 flex-1">
-                  <h4 className="text-sm font-extrabold text-slate-900 truncate">{selectedRecord.full_name}</h4>
-                  <p className="text-slate-500 font-mono mt-0.5">SL: #{selectedRecord.sl_no} · ID: {selectedRecord.student_id}</p>
+                  <h4 className="text-sm font-extrabold text-[#F5F7FA] truncate">{selectedRecord.full_name}</h4>
+                  <p className="text-[#94A0B2] font-mono mt-0.5 tabular-nums">SL: #{selectedRecord.sl_no} · ID: {selectedRecord.student_id}</p>
                   <div className="mt-1.5 flex items-center gap-2">
-                    <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold backdrop-blur-md border ${
-                      selectedRecord.status === 'approved' ? 'bg-emerald-500/15 text-emerald-800 border-emerald-300/40' :
-                      selectedRecord.status === 'rejected' ? 'bg-rose-500/15 text-rose-800 border-rose-300/40' :
-                      'bg-amber-500/15 text-amber-800 border-amber-300/40'
+                    <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold border ${
+                      selectedRecord.status === 'approved' ? 'bg-emerald-950/60 text-emerald-300 border-emerald-400/35' :
+                      selectedRecord.status === 'rejected' ? 'bg-rose-950/60 text-rose-300 border-rose-400/35' :
+                      'bg-amber-950/60 text-amber-300 border-amber-400/35'
                     }`}>
                       Status: {selectedRecord.status.toUpperCase()}
                     </span>
-                    <span className="px-2 py-0.5 rounded-full text-[10px] font-bold glass-pill text-slate-700 uppercase">
+                    <span className="px-2 py-0.5 rounded-full text-[10px] font-bold glass-pill text-[#C9D0D9] uppercase">
                       {selectedRecord.gender}
                     </span>
                   </div>
@@ -1130,77 +1130,77 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
 
               {/* Academic Information */}
               <section className="space-y-2">
-                <h5 className="font-extrabold text-slate-900 uppercase text-[10px] tracking-wider text-slate-400">Academic Profile</h5>
+                <h5 className="font-extrabold uppercase text-[10px] tracking-wider text-[#8B95A5]">Academic Profile</h5>
                 <div className="grid grid-cols-2 gap-2.5">
-                  <div className="p-3 rounded-xl glass-card border border-slate-200/70">
-                    <span className="text-[10px] text-slate-400 block font-bold uppercase">Class Roll</span>
-                    <strong className="text-slate-800 font-mono text-xs">{selectedRecord.class_roll}</strong>
+                  <div className="p-3 rounded-xl glass-card">
+                    <span className="text-[10px] text-[#8B95A5] block font-bold uppercase">Class Roll</span>
+                    <strong className="text-[#F5F7FA] font-mono text-xs tabular-nums">{selectedRecord.class_roll}</strong>
                   </div>
-                  <div className="p-3 rounded-xl glass-card border border-slate-200/70">
-                    <span className="text-[10px] text-slate-400 block font-bold uppercase">College ID</span>
-                    <strong className="text-slate-800 font-mono text-xs">{selectedRecord.student_id}</strong>
+                  <div className="p-3 rounded-xl glass-card">
+                    <span className="text-[10px] text-[#8B95A5] block font-bold uppercase">College ID</span>
+                    <strong className="text-[#F5F7FA] font-mono text-xs tabular-nums">{selectedRecord.student_id}</strong>
                   </div>
-                  <div className="p-3 rounded-xl glass-card border border-slate-200/70">
-                    <span className="text-[10px] text-slate-400 block font-bold uppercase">Academic Group</span>
-                    <strong className="text-slate-800 text-xs">{selectedRecord.academic_group}</strong>
+                  <div className="p-3 rounded-xl glass-card">
+                    <span className="text-[10px] text-[#8B95A5] block font-bold uppercase">Academic Group</span>
+                    <strong className="text-[#F5F7FA] text-xs">{selectedRecord.academic_group}</strong>
                   </div>
-                  <div className="p-3 rounded-xl glass-card border border-slate-200/70">
-                    <span className="text-[10px] text-slate-400 block font-bold uppercase">Section</span>
-                    <strong className="text-slate-800 text-xs">{selectedRecord.academic_section}</strong>
+                  <div className="p-3 rounded-xl glass-card">
+                    <span className="text-[10px] text-[#8B95A5] block font-bold uppercase">Section</span>
+                    <strong className="text-[#F5F7FA] text-xs">{selectedRecord.academic_section}</strong>
                   </div>
                 </div>
               </section>
 
               {/* Jersey Customization */}
               <section className="space-y-2">
-                <h5 className="font-extrabold text-slate-900 uppercase text-[10px] tracking-wider text-slate-400">Jersey Customization</h5>
-                <div className="p-3.5 rounded-2xl bg-indigo-500/10 backdrop-blur-md border border-indigo-200/60 shadow-2xs flex items-center justify-between">
+                <h5 className="font-extrabold uppercase text-[10px] tracking-wider text-[#8B95A5]">Jersey Customization</h5>
+                <div className="p-3.5 rounded-2xl bg-[#090C13] border border-[#8BEAFF]/25 flex items-center justify-between">
                   <div>
-                    <span className="text-[10px] text-indigo-500 block uppercase font-bold">Back Print</span>
-                    <div className="text-sm font-black text-indigo-950 flex items-center gap-2">
-                      <span className="font-mono text-base text-[#5B5FEF]">#{selectedRecord.jersey_number}</span>
+                    <span className="text-[10px] text-[#8BEAFF] block uppercase font-bold">Back Print</span>
+                    <div className="text-sm font-black text-[#F5F7FA] flex items-center gap-2">
+                      <span className="font-mono text-base text-[#8BEAFF]">#{selectedRecord.jersey_number}</span>
                       <span>{selectedRecord.jersey_back_name}</span>
                     </div>
                   </div>
                   <div className="text-right">
-                    <span className="text-[10px] text-indigo-500 block uppercase font-bold">Selected Size</span>
-                    <div className="text-base font-black text-indigo-950 font-mono">{selectedRecord.jersey_size}</div>
+                    <span className="text-[10px] text-[#8BEAFF] block uppercase font-bold">Selected Size</span>
+                    <div className="text-base font-black text-[#F5F7FA] font-mono">{selectedRecord.jersey_size}</div>
                   </div>
                 </div>
               </section>
 
               {/* Payment Verification */}
               <section className="space-y-2">
-                <h5 className="font-extrabold text-slate-900 uppercase text-[10px] tracking-wider text-slate-400">Payment Audit</h5>
+                <h5 className="font-extrabold uppercase text-[10px] tracking-wider text-[#8B95A5]">Payment Audit</h5>
                 <div className="space-y-2">
-                  <div className="p-3 rounded-xl glass-card border border-slate-200/70 flex items-center justify-between">
-                    <span className="text-slate-500">Method:</span>
-                    <strong className="capitalize font-black text-slate-800">{selectedRecord.send_method}</strong>
+                  <div className="p-3 rounded-xl glass-card flex items-center justify-between">
+                    <span className="text-[#94A0B2]">Method:</span>
+                    <strong className="capitalize font-black text-[#F5F7FA]">{selectedRecord.send_method}</strong>
                   </div>
-                  <div className="p-3 rounded-xl glass-card border border-slate-200/70 flex items-center justify-between">
-                    <span className="text-slate-500">Sender Mobile No:</span>
-                    <strong className="font-mono text-slate-800">{selectedRecord.sender_mobile_no}</strong>
+                  <div className="p-3 rounded-xl glass-card flex items-center justify-between">
+                    <span className="text-[#94A0B2]">Sender Mobile No:</span>
+                    <strong className="font-mono text-[#F5F7FA] tabular-nums">{selectedRecord.sender_mobile_no}</strong>
                   </div>
-                  <div className="p-3 rounded-xl glass-card border border-slate-200/70 flex items-center justify-between">
-                    <span className="text-slate-500">Payment Time:</span>
-                    <strong className="font-mono text-slate-800">{selectedRecord.payment_time}</strong>
+                  <div className="p-3 rounded-xl glass-card flex items-center justify-between">
+                    <span className="text-[#94A0B2]">Payment Time:</span>
+                    <strong className="font-mono text-[#F5F7FA] tabular-nums">{selectedRecord.payment_time}</strong>
                   </div>
-                  <div className="p-3 rounded-xl glass-card border border-slate-200/70 flex items-center justify-between">
-                    <span className="text-slate-500">Transaction ID:</span>
-                    <strong className="font-mono text-indigo-600 font-black">{selectedRecord.transaction_id || 'Not Provided'}</strong>
+                  <div className="p-3 rounded-xl glass-card flex items-center justify-between">
+                    <span className="text-[#94A0B2]">Transaction ID:</span>
+                    <strong className="font-mono text-[#8BEAFF] font-black">{selectedRecord.transaction_id || 'Not Provided'}</strong>
                   </div>
                 </div>
               </section>
 
               {/* Rejection / Approval Audit Records */}
               {selectedRecord.reject_reason && (
-                <section className="p-3.5 rounded-2xl bg-rose-500/10 backdrop-blur-md border border-rose-300/50">
-                  <span className="text-[10px] font-bold uppercase tracking-wider text-rose-700 block mb-1">
+                <section className="p-3.5 rounded-2xl bg-rose-950/50 border border-rose-400/35">
+                  <span className="text-[10px] font-bold uppercase tracking-wider text-rose-300 block mb-1">
                     Recorded Rejection Reason
                   </span>
-                  <p className="text-rose-900 font-medium leading-relaxed">{selectedRecord.reject_reason}</p>
+                  <p className="text-rose-100 font-medium leading-relaxed">{selectedRecord.reject_reason}</p>
                   {selectedRecord.rejected_at && (
-                    <span className="text-[10px] text-rose-500 font-mono block mt-1">
+                    <span className="text-[10px] text-rose-300 font-mono block mt-1">
                       Recorded at: {safeFormatDateTime(selectedRecord.rejected_at)}
                     </span>
                   )}
@@ -1208,7 +1208,7 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
               )}
 
               {selectedRecord.approved_at && (
-                <section className="p-3 rounded-xl bg-emerald-500/10 backdrop-blur-md border border-emerald-300/50 text-emerald-800 text-[11px]">
+                <section className="p-3 rounded-xl bg-emerald-950/50 border border-emerald-400/35 text-emerald-200 text-[11px]">
                   <strong>Approved at:</strong> {safeFormatDateTime(selectedRecord.approved_at)}
                 </section>
               )}
@@ -1218,7 +1218,7 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
                 <div className="pt-2">
                   <button
                     onClick={() => generateInvitationCardPDF(selectedRecord, pdfSettings, websiteSettings)}
-                    className="w-full py-3 rounded-xl glass-button-primary font-bold text-xs shadow-md transition-all flex items-center justify-center gap-2 cursor-pointer"
+                    className="w-full py-3 rounded-xl glass-button-primary font-bold text-xs transition-all flex items-center justify-center gap-2 cursor-pointer"
                   >
                     <Download className="w-4 h-4" />
                     <span>Download Official Invitation Pass (PDF)</span>
@@ -1227,11 +1227,11 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
               )}
             </div>
 
-            {/* Drawer Actions: Frosted Glass Footer */}
-            <footer className="p-4 border-t border-slate-200/80 glass-modal-header flex items-center justify-between gap-2">
+            {/* Drawer Actions */}
+            <footer className="p-4 border-t border-[#C9D0D9]/15 glass-modal-header flex items-center justify-between gap-2">
               <button
                 onClick={() => handleHide(selectedRecord.registration_no)}
-                className="px-3.5 py-2.5 rounded-xl glass-button hover:text-rose-700 text-slate-600 text-xs font-bold transition-colors inline-flex items-center gap-1.5 cursor-pointer"
+                className="px-3.5 py-2.5 rounded-xl glass-button hover:text-rose-300 text-[#94A0B2] text-xs font-bold transition-colors inline-flex items-center gap-1.5 cursor-pointer"
               >
                 <Trash2 className="w-3.5 h-3.5" />
                 <span>Remove From Web</span>
@@ -1241,7 +1241,7 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
                 {selectedRecord.status !== 'rejected' && (
                   <button
                     onClick={() => openRejectModal(selectedRecord)}
-                    className="px-4 py-2.5 rounded-xl bg-rose-500/15 hover:bg-rose-600 hover:text-white text-rose-700 border border-rose-300/60 text-xs font-bold transition-all cursor-pointer backdrop-blur-md"
+                    className="px-4 py-2.5 rounded-xl bg-rose-500/15 hover:bg-rose-600 hover:text-white text-rose-300 border border-rose-400/40 text-xs font-bold transition-all cursor-pointer"
                   >
                     Reject
                   </button>
@@ -1249,7 +1249,7 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
                 {selectedRecord.status !== 'approved' && (
                   <button
                     onClick={() => handleApprove(selectedRecord.registration_no)}
-                    className="px-5 py-2.5 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white text-xs font-bold shadow-md shadow-emerald-500/20 transition-all inline-flex items-center gap-1.5 cursor-pointer"
+                    className="px-5 py-2.5 rounded-xl bg-gradient-to-r from-emerald-500 to-teal-400 hover:brightness-105 text-[#08090D] text-xs font-extrabold transition-all inline-flex items-center gap-1.5 cursor-pointer"
                   >
                     <Check className="w-3.5 h-3.5" />
                     <span>Approve</span>

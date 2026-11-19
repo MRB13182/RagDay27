@@ -116,41 +116,36 @@ export const PhotoUploadField: React.FC<PhotoUploadFieldProps> = ({
     }
   };
 
+  // Obsidian/Ice-Blue architectural dropzone treatment (preserves prop contract)
+  void gender;
+
   return (
     <div className={`space-y-1.5 ${className}`}>
       {/* Label & Status Row */}
       <div className="flex items-center justify-between">
         <label className={`block text-xs font-bold uppercase tracking-wider ${labelClasses}`}>
-          Student Photo <span className="text-slate-400 font-normal lowercase">(optional)</span>
+          Student Photo <span className="text-[#8993A1] font-normal lowercase">(optional)</span>
         </label>
 
         {/* Success message: ✓ Photo Uploaded */}
         {showSuccessBadge && !errorMessage && !isProcessing && (
-          <span className="inline-flex items-center gap-1 text-[11px] font-bold text-emerald-500 animate-fadeIn tracking-wide">
+          <span className="inline-flex items-center gap-1 text-[11px] font-bold text-emerald-300 animate-fadeIn tracking-wide">
             <Check className="w-3.5 h-3.5 stroke-[2.5]" />
             Photo Uploaded
           </span>
         )}
       </div>
 
-      {/* Modern Glassmorphism Upload Area */}
+      {/* Obsidian Architectural Upload Dropzone */}
       <div
         onClick={() => !isProcessing && fileInputRef.current?.click()}
         onDragOver={handleDragOver}
         onDragLeave={handleDragLeave}
         onDrop={handleDrop}
-        className={`group relative p-3 sm:p-4 rounded-2xl border transition-all duration-300 cursor-pointer backdrop-blur-xl select-none ${
+        className={`group relative p-3.5 sm:p-4 rounded-2xl border transition-all duration-300 cursor-pointer backdrop-blur-xl select-none ${
           isDragging
-            ? isMale
-              ? 'border-[#38BDF8] bg-[#0B1E3F]/70 shadow-[0_0_24px_rgba(56,189,248,0.35)] scale-[1.01]'
-              : isFemale
-              ? 'border-[#EC4899] bg-pink-500/20 shadow-[0_0_24px_rgba(236,72,153,0.35)] scale-[1.01]'
-              : 'border-indigo-400 bg-white/80 scale-[1.01]'
-            : isMale
-            ? 'border-cyan-400/30 hover:border-cyan-400/60 bg-slate-900/40 hover:bg-slate-900/60 shadow-[0_8px_24px_rgba(3,10,28,0.4),inset_0_1px_1px_rgba(255,255,255,0.08)]'
-            : isFemale
-            ? 'border-pink-300/60 hover:border-pink-400 bg-pink-500/10 backdrop-blur-2xl hover:bg-pink-500/15 shadow-[0_8px_20px_rgba(236,72,153,0.1),inset_0_1px_1px_rgba(255,255,255,.75)]'
-            : 'glass-upload'
+            ? 'border-[#8BEAFF] bg-[#151B23] shadow-[0_0_24px_rgba(139,234,255,0.28)] scale-[1.01]'
+            : 'border-[#C9D0D9]/18 hover:border-[#8BEAFF]/55 bg-[#0B0E13] hover:bg-[#10141B] shadow-[inset_0_1px_0_rgba(255,255,255,0.05)]'
         } ${isProcessing ? 'pointer-events-none opacity-80' : ''}`}
       >
         <div className="flex items-center justify-between gap-3">
@@ -161,24 +156,16 @@ export const PhotoUploadField: React.FC<PhotoUploadFieldProps> = ({
                 <img
                   src={effectivePhoto}
                   alt="Student Portrait Preview"
-                  className="w-12 h-12 sm:w-14 sm:h-14 rounded-xl object-cover border border-white/30 shadow-md transition-transform duration-200 group-hover/preview:scale-105 bg-slate-950/60"
+                  className="w-12 h-12 sm:w-14 sm:h-14 rounded-xl object-cover border border-[#8BEAFF]/40 shadow-md transition-transform duration-200 group-hover/preview:scale-105 bg-[#08090D]"
                 />
                 {isProcessing && (
-                  <div className="absolute inset-0 rounded-xl bg-black/60 backdrop-blur-xs flex items-center justify-center">
-                    <Loader2 className="w-5 h-5 text-white animate-spin" />
+                  <div className="absolute inset-0 rounded-xl bg-black/70 backdrop-blur-xs flex items-center justify-center">
+                    <Loader2 className="w-5 h-5 text-[#8BEAFF] animate-spin" />
                   </div>
                 )}
               </div>
             ) : (
-              <div
-                className={`w-11 h-11 sm:w-12 sm:h-12 rounded-xl flex items-center justify-center flex-shrink-0 transition-all duration-300 backdrop-blur-md ${
-                  isMale
-                    ? 'bg-cyan-500/15 text-cyan-300 border border-cyan-400/30 group-hover:shadow-[0_0_15px_rgba(56,189,248,0.3)]'
-                    : isFemale
-                    ? 'bg-pink-500/15 text-pink-600 border border-pink-300/50 group-hover:shadow-[0_0_15px_rgba(236,72,153,0.3)]'
-                    : 'bg-indigo-500/10 text-indigo-600 border border-indigo-200/60'
-                }`}
-              >
+              <div className="w-11 h-11 sm:w-12 sm:h-12 rounded-xl flex items-center justify-center flex-shrink-0 transition-all duration-300 bg-[#8BEAFF]/10 text-[#8BEAFF] border border-[#8BEAFF]/25 group-hover:border-[#8BEAFF]/50">
                 {isProcessing ? (
                   <Loader2 className="w-5 h-5 animate-spin" />
                 ) : (
@@ -189,18 +176,14 @@ export const PhotoUploadField: React.FC<PhotoUploadFieldProps> = ({
 
             {/* Middle: Clean Text & Instructions */}
             <div className="min-w-0">
-              <div className={`text-xs sm:text-sm font-bold tracking-tight truncate ${isMale ? 'text-white' : 'text-slate-900'}`}>
+              <div className="text-xs sm:text-sm font-bold tracking-tight truncate text-[#F5F7FA]">
                 {isProcessing
                   ? 'Processing photo...'
                   : effectivePhoto
                   ? 'Photo Uploaded'
                   : 'Click or Drag & Drop Photo'}
               </div>
-              <p
-                className={`text-[11px] truncate mt-0.5 ${
-                  isMale ? 'text-slate-400' : isFemale ? 'text-pink-600/70' : 'text-slate-500'
-                }`}
-              >
+              <p className="text-[11px] truncate mt-0.5 text-[#8993A1]">
                 {effectivePhoto
                   ? 'Click to change or select another photo'
                   : 'JPG, PNG, or WEBP (Max 3 MB)'}
@@ -215,13 +198,7 @@ export const PhotoUploadField: React.FC<PhotoUploadFieldProps> = ({
                 <button
                   type="button"
                   onClick={() => fileInputRef.current?.click()}
-                  className={`px-3 py-1.5 rounded-xl text-xs font-semibold flex items-center gap-1 transition-all cursor-pointer backdrop-blur-md ${
-                    isMale
-                      ? 'bg-sky-500/20 hover:bg-sky-500/35 text-sky-200 border border-sky-400/40 shadow-xs'
-                      : isFemale
-                      ? 'bg-pink-500/20 hover:bg-pink-500/35 text-pink-700 border border-pink-400/40 shadow-xs'
-                      : 'glass-button text-slate-700'
-                  }`}
+                  className="px-3 py-1.5 rounded-xl text-xs font-semibold flex items-center gap-1 transition-all cursor-pointer bg-[#8BEAFF]/12 hover:bg-[#8BEAFF]/22 text-[#8BEAFF] border border-[#8BEAFF]/35"
                   title="Change photo"
                 >
                   <RefreshCw className="w-3 h-3" />
@@ -230,22 +207,14 @@ export const PhotoUploadField: React.FC<PhotoUploadFieldProps> = ({
                 <button
                   type="button"
                   onClick={handleRemovePhoto}
-                  className="p-1.5 rounded-xl text-xs font-semibold text-rose-300 hover:text-white bg-rose-500/20 hover:bg-rose-500/40 border border-rose-400/40 transition-all cursor-pointer backdrop-blur-md"
+                  className="p-1.5 rounded-xl text-xs font-semibold text-rose-300 hover:text-white bg-rose-500/15 hover:bg-rose-500/35 border border-rose-400/35 transition-all cursor-pointer"
                   title="Remove photo"
                 >
                   <X className="w-3.5 h-3.5" />
                 </button>
               </div>
             ) : (
-              <span
-                className={`text-xs font-bold px-3.5 py-2 rounded-xl border transition-all duration-200 flex items-center gap-1.5 shadow-sm backdrop-blur-md ${
-                  isMale
-                    ? 'bg-gradient-to-r from-[#0284C7] to-[#0369A1] hover:from-[#0369A1] hover:to-[#0284C7] text-white border-cyan-400/40 shadow-[0_4px_14px_rgba(2,132,199,0.35),inset_0_1px_1px_rgba(255,255,255,0.3)]'
-                    : isFemale
-                    ? 'bg-gradient-to-r from-[#DB2777] to-[#BE185D] text-white border-pink-400/40 shadow-[0_4px_14px_rgba(219,39,119,0.35)]'
-                    : 'glass-button-primary'
-                }`}
-              >
+              <span className="text-xs font-bold px-3.5 py-2 rounded-xl border transition-all duration-200 flex items-center gap-1.5 bg-gradient-to-r from-[#8BEAFF] to-[#B6F2FF] text-[#08090D] border-[#8BEAFF]/60 shadow-[0_6px_18px_rgba(139,234,255,0.22)]">
                 <Upload className="w-3.5 h-3.5" />
                 <span>Browse</span>
               </span>
@@ -264,9 +233,9 @@ export const PhotoUploadField: React.FC<PhotoUploadFieldProps> = ({
         />
       </div>
 
-      {/* Error Message: Professional, Red, Clear */}
+      {/* Error Message: High-Contrast Red on Obsidian */}
       {errorMessage && (
-        <div className="flex items-center gap-1 text-xs font-medium text-rose-500 animate-fadeIn pt-0.5">
+        <div className="flex items-center gap-1 text-xs font-medium text-rose-400 animate-fadeIn pt-0.5">
           <span>{errorMessage}</span>
         </div>
       )}

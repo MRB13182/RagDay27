@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Sparkles, Radio } from 'lucide-react';
+import { Sparkles } from 'lucide-react';
 import { parseSafeDate } from '../lib/dateUtils';
 
 interface EventCountdownProps {
@@ -49,11 +49,6 @@ const MONTH_MAP: Record<string, number> = {
 
 /**
  * Robust target date calculation from Super Admin settings.
- * Supports:
- * - Day (1-31)
- * - Month (e.g. 'February' or 2)
- * - Year (e.g. 2027)
- * - Time (e.g. '09:00 AM' or empty, defaulting to 12:00 AM)
  */
 export function calculateTargetDate(
   day?: number | string,
@@ -83,14 +78,12 @@ export function calculateTargetDate(
   let parsedDay = day ? Number(day) : 27;
   if (isNaN(parsedDay) || parsedDay < 1 || parsedDay > 31) parsedDay = 27;
 
-  // Time parsing - default to 12:00 AM if empty
   let hours = 0;
   let minutes = 0;
   let seconds = 0;
 
   if (time && time.trim()) {
     const trimmedTime = time.trim();
-    // Match e.g. "09:00 AM", "9:30pm", "10:00 AM – 11:30 PM", "14:30"
     const match = trimmedTime.match(/(\d{1,2})(?::(\d{2}))?(?::(\d{2}))?\s*(am|pm)?/i);
     if (match) {
       let h = parseInt(match[1], 10);
@@ -109,7 +102,6 @@ export function calculateTargetDate(
 
   const target = new Date(parsedYear, parsedMonthIndex, parsedDay, hours, minutes, seconds);
 
-  // Fallback check if date is invalid
   if (isNaN(target.getTime()) && fallbackDateStr) {
     const fallbackParsed = parseSafeDate(fallbackDateStr);
     if (fallbackParsed) {
@@ -160,7 +152,6 @@ export const EventCountdown: React.FC<EventCountdownProps> = ({
       const now = new Date().getTime();
       const diff = target.getTime() - now;
 
-      // When countdown reaches zero or is in the past:
       if (diff <= 0) {
         setTimeLeft({
           days: 0,
@@ -183,108 +174,105 @@ export const EventCountdown: React.FC<EventCountdownProps> = ({
       });
     };
 
-    // Calculate immediately when props change
     updateCountdown();
-
-    // Recalculate every second
     const interval = setInterval(updateCountdown, 1000);
-
     return () => clearInterval(interval);
   }, [day, month, year, time, fallbackDateStr]);
 
-  // Clean event title extraction (without parentheses)
   const cleanEventTitle = eventName.split('(')[0].trim() || 'RAG DAY 27';
 
-  // 1. EVENT STARTED / LIVE STATE
   if (timeLeft.isStarted) {
     return (
-      <div className="w-full max-w-lg mb-8 animate-fadeIn">
-        <div className="relative overflow-hidden rounded-3xl p-5 sm:p-6 bg-gradient-to-r from-emerald-500/10 via-[#5B5FEF]/10 to-[#00D4FF]/10 backdrop-blur-xl border border-emerald-500/30 shadow-[0_12px_35px_rgba(16,185,129,0.15)]">
-          <div className="flex items-center gap-3">
-            <span className="relative flex h-3.5 w-3.5">
-              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
-              <span className="relative inline-flex rounded-full h-3.5 w-3.5 bg-emerald-500"></span>
-            </span>
-            <span className="text-xs font-black uppercase tracking-widest text-emerald-600 bg-emerald-100/80 px-2.5 py-0.5 rounded-full border border-emerald-300/60 shadow-sm">
-              EVENT STARTED
-            </span>
+      <div className="w-full max-w-2xl mx-auto animate-fadeIn">
+        <div className="relative overflow-hidden rounded-2xl p-6 sm:p-7 museum-frame border border-[#8BEAFF]/40 text-center">
+          <div className="inline-flex items-center gap-2 font-mono text-[11px] font-bold uppercase tracking-[0.26em] text-[#8BEAFF]">
+            <Sparkles className="w-4 h-4 text-[#8BEAFF]" />
+            <span>Celebration Live Now</span>
           </div>
 
-          <div className="mt-3">
-            <h2 className="font-display text-2xl sm:text-3xl font-extrabold tracking-tight text-slate-900 flex items-center gap-2">
-              <span>{cleanEventTitle.toUpperCase()} IS LIVE</span>
-              <Sparkles className="w-5 h-5 text-emerald-500" />
-            </h2>
-            <p className="text-xs sm:text-sm text-slate-600 mt-1 font-medium">
-              The grand celebration has officially begun! Welcome Batch 2027 students and faculty.
-            </p>
-          </div>
+          <h2 className="font-display text-2xl sm:text-3xl font-extrabold tracking-tight chrome-text mt-2.5">
+            {cleanEventTitle.toUpperCase()} IS LIVE
+          </h2>
+          <p className="text-xs sm:text-sm text-[#C9D0D9] mt-2 font-medium max-w-md mx-auto">
+            The grand celebration has officially begun. Welcome Batch 2027 students and faculty.
+          </p>
         </div>
       </div>
     );
   }
 
-  // 2. LIVE COUNTDOWN DISPLAY
+  const units = [
+    { label: 'DAYS', value: timeLeft.days < 10 ? `0${timeLeft.days}` : String(timeLeft.days) },
+    { label: 'HOURS', value: String(timeLeft.hours).padStart(2, '0') },
+    { label: 'MINUTES', value: String(timeLeft.minutes).padStart(2, '0') },
+    { label: 'SECONDS', value: String(timeLeft.seconds).padStart(2, '0') },
+  ];
+
   return (
-    <div className="w-full max-w-lg mb-8">
-      {/* Countdown Label with glowing beacon matching Reference Image 1 */}
-      <div className="flex items-center justify-between mb-3 px-1">
-        <div className="inline-flex items-center gap-2">
-          <span className="text-xs sm:text-sm font-extrabold uppercase tracking-wider text-[#10143C]">
-            Event Countdown
-          </span>
-        </div>
-        <span className="text-[11px] sm:text-xs font-semibold text-slate-500 flex items-center gap-1.5">
-          <Radio className="w-3.5 h-3.5 text-[#5B5FEF] animate-pulse" />
-          <span>Live Countdown</span>
+    <div className="w-full max-w-3xl mx-auto">
+      {/* Architectural Header Divider */}
+      <div className="flex items-center justify-center gap-3 sm:gap-5 mb-6 sm:mb-8">
+        <div className="h-px flex-1 max-w-[160px] bg-gradient-to-r from-transparent via-[#C9D0D9]/35 to-[#8BEAFF]/55" />
+        <span className="text-[10px] sm:text-[11px] font-mono font-bold uppercase tracking-[0.32em] text-[#C9D0D9] whitespace-nowrap">
+          The Digital Time Capsule
         </span>
+        <div className="h-px flex-1 max-w-[160px] bg-gradient-to-l from-transparent via-[#C9D0D9]/35 to-[#8BEAFF]/55" />
       </div>
 
-      {/* 4 Glassmorphism Cards: Days, Hours, Minutes, Seconds */}
-      <div className="grid grid-cols-4 gap-2 sm:gap-3.5">
-        {/* Days */}
-        <div className="group relative flex flex-col items-center justify-center p-3 sm:p-4 rounded-2xl bg-white/85 backdrop-blur-xl border border-white/95 shadow-[0_8px_24px_-6px_rgba(15,23,42,0.06),inset_0_1.5px_1px_white] hover:-translate-y-0.5 transition-all duration-200 overflow-hidden text-center">
-          <div className="absolute inset-x-0 top-0 h-2/5 bg-gradient-to-b from-white/90 to-transparent pointer-events-none rounded-t-2xl" />
-          <div className="relative font-display text-2xl sm:text-3xl lg:text-4xl font-extrabold text-[#10143C] tracking-tight tabular-nums">
-            {timeLeft.days < 10 ? `0${timeLeft.days}` : timeLeft.days}
-          </div>
-          <div className="relative text-[10px] sm:text-xs font-bold uppercase tracking-wider text-slate-500 mt-1">
-            Days
-          </div>
-        </div>
+      {/* 4 Orbital Metallic Capsule Modules */}
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 sm:gap-6 items-center justify-items-center">
+        {units.map((unit) => (
+          <div
+            key={unit.label}
+            className="group relative w-full max-w-[164px] aspect-[1.28/1] flex items-center justify-center"
+          >
+            {/* Outer Orbital Silver Ring */}
+            <svg
+              viewBox="0 0 180 124"
+              aria-hidden="true"
+              className="absolute inset-0 w-full h-full pointer-events-none overflow-visible"
+            >
+              <defs>
+                <linearGradient id={`orbit-${unit.label}`} x1="0%" y1="0%" x2="100%" y2="100%">
+                  <stop offset="0%" stopColor="#F5F7FA" stopOpacity="0.72" />
+                  <stop offset="50%" stopColor="#8BEAFF" stopOpacity="0.90" />
+                  <stop offset="100%" stopColor="#626B79" stopOpacity="0.35" />
+                </linearGradient>
+              </defs>
+              <ellipse
+                cx="90"
+                cy="62"
+                rx="84"
+                ry="44"
+                transform="rotate(-14 90 62)"
+                fill="none"
+                stroke={`url(#orbit-${unit.label})`}
+                strokeWidth="1.25"
+                className="opacity-75 group-hover:opacity-100 transition-opacity duration-300"
+              />
+              <ellipse
+                cx="90"
+                cy="62"
+                rx="84"
+                ry="44"
+                transform="rotate(14 90 62)"
+                fill="none"
+                stroke="rgba(201,208,217,0.38)"
+                strokeWidth="0.95"
+              />
+            </svg>
 
-        {/* Hours */}
-        <div className="group relative flex flex-col items-center justify-center p-3 sm:p-4 rounded-2xl bg-white/85 backdrop-blur-xl border border-white/95 shadow-[0_8px_24px_-6px_rgba(15,23,42,0.06),inset_0_1.5px_1px_white] hover:-translate-y-0.5 transition-all duration-200 overflow-hidden text-center">
-          <div className="absolute inset-x-0 top-0 h-2/5 bg-gradient-to-b from-white/90 to-transparent pointer-events-none rounded-t-2xl" />
-          <div className="relative font-display text-2xl sm:text-3xl lg:text-4xl font-extrabold text-[#10143C] tracking-tight tabular-nums">
-            {String(timeLeft.hours).padStart(2, '0')}
+            {/* Core Metallic Sphere Face */}
+            <div className="relative z-10 w-[76%] h-[78%] rounded-full orbital-ring-card flex flex-col items-center justify-center px-3 py-2 text-center transition-transform duration-300 group-hover:scale-[1.03]">
+              <span className="font-mono text-2xl sm:text-3xl font-bold text-[#F5F7FA] tracking-tight tabular-nums leading-none">
+                {unit.value}
+              </span>
+              <span className="text-[9px] sm:text-[10px] font-bold uppercase tracking-[0.22em] text-[#8993A1] group-hover:text-[#C9D0D9] mt-1.5 leading-none transition-colors">
+                {unit.label}
+              </span>
+            </div>
           </div>
-          <div className="relative text-[10px] sm:text-xs font-bold uppercase tracking-wider text-slate-500 mt-1">
-            Hours
-          </div>
-        </div>
-
-        {/* Minutes */}
-        <div className="group relative flex flex-col items-center justify-center p-3 sm:p-4 rounded-2xl bg-white/85 backdrop-blur-xl border border-white/95 shadow-[0_8px_24px_-6px_rgba(15,23,42,0.06),inset_0_1.5px_1px_white] hover:-translate-y-0.5 transition-all duration-200 overflow-hidden text-center">
-          <div className="absolute inset-x-0 top-0 h-2/5 bg-gradient-to-b from-white/90 to-transparent pointer-events-none rounded-t-2xl" />
-          <div className="relative font-display text-2xl sm:text-3xl lg:text-4xl font-extrabold text-[#10143C] tracking-tight tabular-nums">
-            {String(timeLeft.minutes).padStart(2, '0')}
-          </div>
-          <div className="relative text-[10px] sm:text-xs font-bold uppercase tracking-wider text-slate-500 mt-1">
-            Minutes
-          </div>
-        </div>
-
-        {/* Seconds */}
-        <div className="group relative flex flex-col items-center justify-center p-3 sm:p-4 rounded-2xl bg-white/85 backdrop-blur-xl border border-white/95 shadow-[0_8px_24px_-6px_rgba(15,23,42,0.06),inset_0_1.5px_1px_white] hover:-translate-y-0.5 transition-all duration-200 overflow-hidden text-center">
-          <div className="absolute inset-x-0 top-0 h-2/5 bg-gradient-to-b from-white/90 to-transparent pointer-events-none rounded-t-2xl" />
-          <div className="relative font-display text-2xl sm:text-3xl lg:text-4xl font-extrabold text-[#10143C] tracking-tight tabular-nums">
-            {String(timeLeft.seconds).padStart(2, '0')}
-          </div>
-          <div className="relative text-[10px] sm:text-xs font-bold uppercase tracking-wider text-slate-500 mt-1">
-            Seconds
-          </div>
-        </div>
+        ))}
       </div>
     </div>
   );

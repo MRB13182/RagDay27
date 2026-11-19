@@ -12,11 +12,17 @@ import {
   Users,
   Music,
   Info,
+  Gift,
+  Image as ImageIcon,
 } from 'lucide-react';
+import batchPedestalImg from '../assets/images/batch_pedestal_27_1795068445518.jpg';
 
 interface EventInformationSectionProps {
   cards: EventCard[];
   layout?: 'two-column' | 'one-column' | string;
+  onOpenGallery?: () => void;
+  onOpenNotice?: () => void;
+  onScrollToSection?: (sectionId: string) => void;
 }
 
 export const renderCardIcon = (iconName: string, className = 'w-5 h-5') => {
@@ -54,59 +60,19 @@ export const renderCardIcon = (iconName: string, className = 'w-5 h-5') => {
   }
 };
 
-const getColorConfig = (color: string) => {
-  switch (color.toLowerCase()) {
-    case 'cyan':
-      return {
-        cardBorder: 'border-cyan-200/90 hover:border-cyan-400',
-        badgeBg: 'bg-cyan-500/10 text-cyan-700',
-        accentText: 'text-cyan-600',
-        glow: 'hover:shadow-[0_15px_30px_-10px_rgba(6,182,212,0.18)]',
+const getModuleSurfaceConfig = (index: number) => {
+  const isIceAccent = index % 2 === 0;
+  return isIceAccent
+    ? {
+        border: 'border-[#C9D0D9]/24 hover:border-[#8BEAFF]/60',
+        iconBox: 'bg-[#0B0E13]/85 text-[#8BEAFF] border-[#8BEAFF]/35',
+        numText: 'text-[#8BEAFF]',
+      }
+    : {
+        border: 'border-[#C9D0D9]/24 hover:border-[#C9D0D9]/55',
+        iconBox: 'bg-[#0B0E13]/85 text-[#C9D0D9] border-[#C9D0D9]/30 group-hover:text-[#8BEAFF] group-hover:border-[#8BEAFF]/45',
+        numText: 'text-[#C9D0D9] group-hover:text-[#8BEAFF]',
       };
-    case 'emerald':
-      return {
-        cardBorder: 'border-emerald-200/90 hover:border-emerald-400',
-        badgeBg: 'bg-emerald-500/10 text-emerald-700',
-        accentText: 'text-emerald-600',
-        glow: 'hover:shadow-[0_15px_30px_-10px_rgba(16,185,129,0.18)]',
-      };
-    case 'amber':
-      return {
-        cardBorder: 'border-amber-200/90 hover:border-amber-400',
-        badgeBg: 'bg-amber-500/10 text-amber-700',
-        accentText: 'text-amber-600',
-        glow: 'hover:shadow-[0_15px_30px_-10px_rgba(245,158,11,0.18)]',
-      };
-    case 'rose':
-      return {
-        cardBorder: 'border-rose-200/90 hover:border-rose-400',
-        badgeBg: 'bg-rose-500/10 text-rose-700',
-        accentText: 'text-rose-600',
-        glow: 'hover:shadow-[0_15px_30px_-10px_rgba(244,63,94,0.18)]',
-      };
-    case 'purple':
-      return {
-        cardBorder: 'border-purple-200/90 hover:border-purple-400',
-        badgeBg: 'bg-purple-500/10 text-purple-700',
-        accentText: 'text-purple-600',
-        glow: 'hover:shadow-[0_15px_30px_-10px_rgba(168,85,247,0.18)]',
-      };
-    case 'blue':
-      return {
-        cardBorder: 'border-blue-200/90 hover:border-blue-400',
-        badgeBg: 'bg-blue-500/10 text-blue-700',
-        accentText: 'text-blue-600',
-        glow: 'hover:shadow-[0_15px_30px_-10px_rgba(59,130,246,0.18)]',
-      };
-    case 'indigo':
-    default:
-      return {
-        cardBorder: 'border-[#5B5FEF]/25 hover:border-[#5B5FEF]/60',
-        badgeBg: 'bg-[#5B5FEF]/10 text-[#5B5FEF]',
-        accentText: 'text-[#5B5FEF]',
-        glow: 'hover:shadow-[0_15px_30px_-10px_rgba(91,95,239,0.2)]',
-      };
-  }
 };
 
 const sectionVariants: Variants = {
@@ -114,115 +80,228 @@ const sectionVariants: Variants = {
   visible: {
     opacity: 1,
     transition: {
-      staggerChildren: 0.12,
-      delayChildren: 0.05,
+      staggerChildren: 0.08,
+      delayChildren: 0.04,
     },
   },
 };
 
 const headerVariants: Variants = {
-  hidden: { opacity: 0, y: 24 },
+  hidden: { opacity: 0, y: 18 },
   visible: {
     opacity: 1,
     y: 0,
-    transition: {
-      duration: 0.55,
-      ease: [0.22, 1, 0.36, 1],
-    },
+    transition: { duration: 0.45, ease: [0.22, 1, 0.36, 1] },
   },
 };
 
 const cardVariants: Variants = {
-  hidden: { opacity: 0, y: 30 },
+  hidden: { opacity: 0, y: 20 },
   visible: {
     opacity: 1,
     y: 0,
-    transition: {
-      duration: 0.6,
-      ease: [0.22, 1, 0.36, 1],
-    },
+    transition: { duration: 0.5, ease: [0.22, 1, 0.36, 1] },
   },
 };
 
 export const EventInformationSection: React.FC<EventInformationSectionProps> = ({
   cards,
   layout = 'two-column',
+  onOpenGallery,
+  onOpenNotice,
+  onScrollToSection,
 }) => {
   const visibleCards = cards
     .filter(c => c.visible)
     .sort((a, b) => a.order - b.order);
 
-  if (visibleCards.length === 0) return null;
-
   const isOneColumn = layout === 'one-column';
+
+  const experienceModules = [
+    {
+      num: '01',
+      label: 'Event Schedule',
+      icon: <Calendar className="w-5 h-5" />,
+      onClick: () => onScrollToSection?.('event-details'),
+    },
+    {
+      num: '02',
+      label: 'Memory Gallery',
+      icon: <ImageIcon className="w-5 h-5" />,
+      onClick: () => (onOpenGallery ? onOpenGallery() : onScrollToSection?.('our-story')),
+    },
+    {
+      num: '03',
+      label: 'Our Batch',
+      icon: <Users className="w-5 h-5" />,
+      onClick: () => onScrollToSection?.('batch-identity'),
+    },
+    {
+      num: '04',
+      label: 'Jersey Reveal',
+      icon: <Shirt className="w-5 h-5" />,
+      onClick: () => onScrollToSection?.('jersey-showcase'),
+    },
+    {
+      num: '05',
+      label: 'Surprise Events',
+      icon: <Gift className="w-5 h-5" />,
+      onClick: () => (onOpenNotice ? onOpenNotice() : onScrollToSection?.('contact-info')),
+    },
+  ];
 
   return (
     <motion.section
+      id="events"
       initial="hidden"
       whileInView="visible"
-      viewport={{ once: true, amount: 0.15, margin: '-40px' }}
+      viewport={{ once: true, amount: 0.1, margin: '-40px' }}
       variants={sectionVariants}
-      className="py-6 sm:py-8 relative"
+      className="py-12 sm:py-16 relative overflow-hidden bg-[#08090D]"
     >
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <motion.div variants={headerVariants} className="text-center max-w-xl mx-auto mb-6 sm:mb-8">
-          <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-white/80 border border-white/90 shadow-[0_4px_16px_rgba(113,56,245,0.06),inset_0_1px_1px_white] backdrop-blur-xl mb-2.5">
-            <Calendar className="w-3.5 h-3.5 text-[#7138F5]" />
-            <span className="text-xs font-bold text-slate-800 uppercase tracking-wider">
-              Essential Schedule & Key Details
-            </span>
-          </div>
-          <h2 className="font-display text-2xl sm:text-3xl font-extrabold text-[#10143C] tracking-tight">
-            Event <br className="sm:hidden" /> Information
-          </h2>
-        </motion.div>
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-12">
+        {/* Five Interactive Glass-Metallic "EVENT EXPERIENCE" Modules (01..05) */}
+        <div>
+          <motion.div variants={headerVariants} className="text-center max-w-2xl mx-auto mb-8 sm:mb-10">
+            <div className="flex items-center justify-center gap-4 mb-2.5">
+              <div className="h-px w-12 sm:w-28 bg-gradient-to-r from-transparent to-[#C9D0D9]/45" />
+              <span className="text-[11px] font-mono font-bold uppercase tracking-[0.34em] text-[#C9D0D9] whitespace-nowrap">
+                Event Experience
+              </span>
+              <div className="h-px w-12 sm:w-28 bg-gradient-to-l from-transparent to-[#C9D0D9]/45" />
+            </div>
+            <h2 className="font-display text-2xl sm:text-4xl font-extrabold tracking-tight chrome-text">
+              Curated Chapters of Batch 27
+            </h2>
+          </motion.div>
 
-        {/* Dynamic Cards Grid according to Super Admin event-card-layout */}
-        <motion.div
-          variants={sectionVariants}
-          className={
-            isOneColumn
-              ? 'grid grid-cols-1 max-w-2xl mx-auto gap-4 sm:gap-6'
-              : 'grid grid-cols-1 md:grid-cols-2 max-w-5xl mx-auto gap-4 sm:gap-6'
-          }
-        >
-          {visibleCards.map((card) => {
-            const colors = getColorConfig(card.customColor);
-            return (
-              <motion.div
-                key={card.id}
-                variants={cardVariants}
-                className={`relative p-5 sm:p-7 rounded-2xl sm:rounded-3xl bg-white/84 backdrop-blur-2xl border ${colors.cardBorder} shadow-[0_12px_32px_-10px_rgba(15,23,42,0.06),inset_0_1.5px_1.5px_white] transition-all duration-300 hover:-translate-y-1.5 ${colors.glow} flex flex-col justify-between overflow-hidden group`}
+          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3 sm:gap-4 max-w-5xl mx-auto">
+            {experienceModules.map((mod) => (
+              <button
+                key={mod.num}
+                type="button"
+                onClick={mod.onClick}
+                className={`group relative rounded-2xl p-4 sm:p-5 glass-card text-center flex flex-col items-center justify-center gap-3 cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-[#8BEAFF] ${
+                  mod.num === '05' ? 'col-span-2 sm:col-span-1' : ''
+                }`}
               >
-                <div className="absolute inset-x-0 top-0 h-2/5 bg-gradient-to-b from-white/90 to-transparent pointer-events-none rounded-t-2xl sm:rounded-t-3xl" />
-                <div className="relative z-10">
-                  <div className="flex items-center justify-between mb-4">
-                    <div className={`w-12 h-12 rounded-2xl ${colors.badgeBg} flex items-center justify-center shadow-xs border border-white/90 backdrop-blur-md transition-transform duration-300 group-hover:scale-105`}>
-                      {renderCardIcon(card.icon, 'w-5 h-5')}
-                    </div>
-                    <span className="text-[11px] font-bold uppercase tracking-wider text-slate-400 font-mono px-2.5 py-1 rounded-lg glass-pill">
-                      #{card.order}
-                    </span>
+                <div className="w-11 h-11 rounded-xl border border-[#C9D0D9]/25 bg-[#0B0E13]/80 group-hover:border-[#8BEAFF]/55 flex items-center justify-center text-[#F5F7FA] group-hover:text-[#8BEAFF] transition-colors">
+                  {mod.icon}
+                </div>
+                <div className="space-y-1">
+                  <div className="text-xs font-mono font-bold tracking-[0.22em] text-[#8BEAFF]">
+                    {mod.num}
                   </div>
-
-                  <h3 className="text-xs font-bold uppercase tracking-wider text-slate-500 mb-1.5">
-                    {card.title}
-                  </h3>
-
-                  <div className="font-display text-lg sm:text-xl font-extrabold text-slate-900 tracking-tight leading-snug">
-                    {card.description}
+                  <div className="text-[11px] font-bold uppercase tracking-[0.14em] text-[#F5F7FA] leading-snug">
+                    {mod.label}
                   </div>
                 </div>
+                {/* Luminous Ice-Blue Bottom Edge Architectural Glow */}
+                <span
+                  aria-hidden="true"
+                  className="absolute inset-x-5 bottom-0 h-[2px] bg-gradient-to-r from-transparent via-[#8BEAFF]/80 to-transparent opacity-70 group-hover:opacity-100 shadow-[0_0_12px_rgba(139,234,255,0.5)] transition-opacity"
+                />
+              </button>
+            ))}
+          </div>
+        </div>
 
-                {card.subDetail && (
-                  <div className="relative z-10 mt-5 pt-3.5 border-t border-slate-200/60 flex items-center text-xs text-slate-500 font-medium">
-                    <span>{card.subDetail}</span>
-                  </div>
-                )}
-              </motion.div>
-            );
-          })}
-        </motion.div>
+        {/* Batch Identity Pedestal + Dynamic Super Admin Event Information Details */}
+        <div
+          id="batch-identity"
+          className={isOneColumn ? 'max-w-2xl mx-auto space-y-6' : 'grid grid-cols-1 lg:grid-cols-12 gap-6 sm:gap-8 items-stretch'}
+        >
+          {/* Batch 27 Sculptural Monolith Pedestal */}
+          {!isOneColumn && (
+            <motion.div
+              variants={cardVariants}
+              className="lg:col-span-4 museum-frame rounded-2xl overflow-hidden flex flex-col justify-between"
+            >
+              <div className="relative aspect-[4/3] w-full overflow-hidden bg-[#08090D]">
+                <img
+                  src={batchPedestalImg}
+                  alt="NIC 27 Batch Sculptural Emblem"
+                  loading="lazy"
+                  className="w-full h-full object-cover object-center opacity-92"
+                />
+                <div
+                  aria-hidden="true"
+                  className="absolute inset-0 bg-gradient-to-t from-[#0C1119] via-transparent to-transparent"
+                />
+              </div>
+              <div className="relative p-5 sm:p-6 border-t border-[#C9D0D9]/18 flex-1 flex flex-col justify-center">
+                <div className="text-[10px] font-mono font-bold uppercase tracking-[0.28em] text-[#8BEAFF]">
+                  NIC 27 BATCH
+                </div>
+                <h3 className="font-display text-lg font-extrabold text-[#F5F7FA] mt-1 tracking-tight">
+                  NATIONAL IDEAL COLLEGE
+                </h3>
+                <p className="text-xs text-[#C9D0D9]/85 leading-relaxed mt-1.5">
+                  Official digital credential and commemorative details for all HSC Batch 2027 participants.
+                </p>
+                <div
+                  aria-hidden="true"
+                  className="absolute inset-x-8 bottom-0 h-[2px] bg-gradient-to-r from-transparent via-[#8BEAFF]/65 to-transparent shadow-[0_0_12px_rgba(139,234,255,0.45)]"
+                />
+              </div>
+            </motion.div>
+          )}
+
+          {/* Dynamic Super Admin Event Details Cards Grid */}
+          {visibleCards.length > 0 && (
+            <motion.div
+              id="event-details"
+              variants={sectionVariants}
+              className={
+                isOneColumn
+                  ? 'grid grid-cols-1 gap-4 sm:gap-5'
+                  : 'lg:col-span-8 grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-5'
+              }
+            >
+              {visibleCards.map((card, idx) => {
+                const accent = getModuleSurfaceConfig(idx);
+                const displayIndex = String(card.order || idx + 1).padStart(2, '0');
+                return (
+                  <motion.div
+                    key={card.id}
+                    variants={cardVariants}
+                    className={`relative p-5 sm:p-6 rounded-2xl glass-card border ${accent.border} flex flex-col justify-between overflow-hidden group`}
+                  >
+                    <div
+                      aria-hidden="true"
+                      className="absolute inset-x-6 bottom-0 h-[2px] bg-gradient-to-r from-transparent via-[#8BEAFF]/75 to-transparent opacity-65 group-hover:opacity-100 shadow-[0_0_14px_rgba(139,234,255,0.5)] transition-opacity"
+                    />
+
+                    <div className="relative z-10">
+                      <div className="flex items-center justify-between mb-4">
+                        <div className={`w-11 h-11 rounded-xl border ${accent.iconBox} flex items-center justify-center transition-all duration-300 group-hover:scale-105`}>
+                          {renderCardIcon(card.icon, 'w-5 h-5')}
+                        </div>
+                        <span className={`text-xs font-mono font-bold tracking-[0.22em] transition-colors ${accent.numText}`}>
+                          {displayIndex}
+                        </span>
+                      </div>
+
+                      <h3 className="text-[11px] font-mono font-bold uppercase tracking-[0.18em] text-[#8993A1] mb-1.5">
+                        {card.title}
+                      </h3>
+
+                      <div className="font-display text-lg sm:text-xl font-extrabold text-[#F5F7FA] tracking-tight leading-snug">
+                        {card.description}
+                      </div>
+                    </div>
+
+                    {card.subDetail && (
+                      <div className="relative z-10 mt-5 pt-3.5 border-t border-[#C9D0D9]/14 flex items-center text-xs text-[#C9D0D9]/80 font-normal">
+                        <span>{card.subDetail}</span>
+                      </div>
+                    )}
+                  </motion.div>
+                );
+              })}
+            </motion.div>
+          )}
+        </div>
       </div>
     </motion.section>
   );

@@ -80,24 +80,24 @@ class ApplicationErrorBoundary extends Component<Props, State> {
   render() {
     if (this.state.hasError) {
       return (
-        <main role="alert" className="min-h-screen grid place-items-center bg-[#F8F9FC] px-5 py-12 text-slate-900">
-          <section className="w-full max-w-md rounded-3xl border border-slate-200 bg-white p-7 text-center shadow-xl">
-            <h1 className="text-xl font-extrabold">Page could not be displayed</h1>
-            <p className="mt-3 text-sm leading-6 text-slate-600">
+        <main role="alert" className="min-h-screen grid place-items-center bg-[#08090D] px-5 py-12 text-[#F5F7FA]">
+          <section className="w-full max-w-md rounded-2xl border border-[#C9D0D9]/25 bg-[#10141B] p-7 text-center shadow-[0_28px_80px_rgba(0,0,0,0.85)]">
+            <h1 className="text-xl font-extrabold text-[#F5F7FA]">Page could not be displayed</h1>
+            <p className="mt-3 text-sm leading-6 text-[#C9D0D9]">
               Something interrupted this page. You can retry now or reload for a fresh page response.
             </p>
             <div className="mt-6 flex flex-wrap items-center justify-center gap-3">
               <button
                 type="button"
                 onClick={this.handleTryAgain}
-                className="rounded-xl border border-slate-200 bg-white px-5 py-3 text-sm font-bold text-slate-700 hover:bg-slate-50 cursor-pointer"
+                className="rounded-xl border border-[#C9D0D9]/25 bg-[#151B23] px-5 py-3 text-sm font-bold text-[#F5F7FA] hover:border-[#8BEAFF]/50 cursor-pointer transition-colors"
               >
                 Try Again
               </button>
               <button
                 type="button"
                 onClick={this.handleReload}
-                className="rounded-xl bg-indigo-600 px-5 py-3 text-sm font-bold text-white hover:bg-indigo-700 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600 cursor-pointer"
+                className="rounded-xl bg-[#8BEAFF] px-5 py-3 text-sm font-extrabold text-[#08090D] hover:brightness-105 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#8BEAFF] cursor-pointer transition-all"
               >
                 Reload website
               </button>

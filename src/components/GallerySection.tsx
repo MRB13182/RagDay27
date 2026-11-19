@@ -13,7 +13,6 @@ const bundledGallery: GalleryEntry[] = [{
   type: 'image',
   title: 'Rag Day Gallery',
   caption: 'Batch memories',
-  // Vite resolves this asset relative to the module for both root and /RagDay27/ deployments.
   url: new URL('../super-admin/gallery/file_00000000b180820783d44c1a5d04d553.png', import.meta.url).href,
 }];
 
@@ -137,13 +136,20 @@ export const GallerySection: React.FC = () => {
   };
 
   return (
-    <section className="rd-section min-h-[75vh] px-4 py-16 sm:px-6 sm:py-24">
+    <section className="rd-section min-h-[75vh] px-4 py-12 sm:px-6 sm:py-16">
       <div className="mx-auto max-w-7xl">
-        <header className="mb-8 flex flex-col gap-5 lg:flex-row lg:items-end lg:justify-between">
+        <header className="mb-8 flex flex-col gap-5 lg:flex-row lg:items-end lg:justify-between border-b border-[#C9D0D9]/15 pb-7">
           <div>
-            <span className="rd-eyebrow"><Images className="h-4 w-4" /> BATCH MEMORIES</span>
-            <h1 className="rd-heading mt-4">The <em>Rag Day</em> Gallery</h1>
-            <p className="mt-3 text-slate-500">Photos and videos from our batch celebration.</p>
+            <span className="rd-eyebrow">
+              <Images className="h-4 w-4" />
+              <span>Memory Archive · Batch 2027</span>
+            </span>
+            <h1 className="rd-heading mt-3">
+              Memories, <em>Encoded Forever.</em>
+            </h1>
+            <p className="mt-2.5 text-xs sm:text-sm text-[#C9D0D9]/80 max-w-xl">
+              Preserved moments from classrooms, courtyard echoes, and the Rag Day 27 celebration.
+            </p>
           </div>
           <div className="flex flex-wrap gap-2" aria-label="Filter gallery">
             {([
@@ -151,56 +157,154 @@ export const GallerySection: React.FC = () => {
               { id: 'image', label: 'Photos', Icon: ImageIcon },
               { id: 'video', label: 'Videos', Icon: Film },
             ] as const).map(({ id, label, Icon }) => (
-              <button key={id} type="button" aria-pressed={filter === id} onClick={() => { setFilter(id); setIndex(0); }} className={'rd-gallery-filter ' + (filter === id ? 'is-active' : '')}>
-                <Icon className="h-4 w-4" />{label}
+              <button
+                key={id}
+                type="button"
+                aria-pressed={filter === id}
+                onClick={() => { setFilter(id); setIndex(0); }}
+                className={'rd-gallery-filter ' + (filter === id ? 'is-active' : '')}
+              >
+                <Icon className="h-4 w-4" />
+                <span>{label}</span>
               </button>
             ))}
           </div>
         </header>
 
-        {storageWarning && <p role="status" className="mb-4 rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-900">{storageWarning}</p>}
+        {storageWarning && (
+          <p role="status" className="mb-4 rounded-xl border border-amber-400/35 bg-amber-500/10 px-4 py-3 text-sm text-amber-200">
+            {storageWarning}
+          </p>
+        )}
 
         {loading ? (
-          <div className="rd-gallery-empty" role="status">Loading media…</div>
+          <div className="rd-gallery-empty" role="status">Loading archive media…</div>
         ) : !visible.length ? (
-          <div className="rd-gallery-empty"><Images className="mb-3 h-8 w-8" />No media has been added yet.</div>
+          <div className="rd-gallery-empty">
+            <Images className="mb-3 h-8 w-8 text-[#8BEAFF]" />
+            <span>No media has been added yet.</span>
+          </div>
         ) : (
           <>
-            <div className="overflow-hidden rounded-[2rem] border border-white bg-slate-950 shadow-2xl">
-              <div className="relative grid min-h-[260px] place-items-center sm:min-h-[480px]">
+            <div className="overflow-hidden rounded-2xl museum-frame">
+              <div className="relative grid min-h-[280px] place-items-center bg-[#06070B] sm:min-h-[480px]">
                 {current?.type === 'image' ? (
                   failedMedia.has(current.id) ? (
-                    <div className="grid min-h-[260px] w-full place-items-center bg-slate-900 px-5 py-12 text-center text-white sm:min-h-[480px]">
-                      <div><ImageIcon className="mx-auto mb-3 h-10 w-10 text-slate-400" /><p className="font-semibold">This image is unavailable</p><p className="mt-1 text-sm text-slate-300">Try another gallery item.</p></div>
+                    <div className="grid min-h-[280px] w-full place-items-center bg-[#0A0C12] px-5 py-12 text-center text-[#F5F7FA] sm:min-h-[480px]">
+                      <div>
+                        <ImageIcon className="mx-auto mb-3 h-10 w-10 text-[#626B79]" />
+                        <p className="font-semibold">This image is unavailable</p>
+                        <p className="mt-1 text-sm text-[#C9D0D9]/70">Try another gallery item.</p>
+                      </div>
                     </div>
                   ) : (
-                    <img key={current.id} src={mediaSource(current) || undefined} alt={current.title} onError={() => markMediaFailed(current.id)} className="max-h-[72vh] w-full object-contain animate-fadeIn" />
+                    <img
+                      key={current.id}
+                      src={mediaSource(current) || undefined}
+                      alt={current.title}
+                      onError={() => markMediaFailed(current.id)}
+                      className="max-h-[72vh] w-full object-contain animate-fadeIn"
+                    />
                   )
                 ) : current?.type === 'video' ? (
                   failedMedia.has(current.id) ? (
-                    <div className="grid min-h-[260px] w-full place-items-center bg-slate-900 px-5 py-12 text-center text-white sm:min-h-[480px]">
-                      <div><Film className="mx-auto mb-3 h-10 w-10 text-slate-400" /><p className="font-semibold">This video is unavailable</p><p className="mt-1 text-sm text-slate-300">Try another gallery item.</p></div>
+                    <div className="grid min-h-[280px] w-full place-items-center bg-[#0A0C12] px-5 py-12 text-center text-[#F5F7FA] sm:min-h-[480px]">
+                      <div>
+                        <Film className="mx-auto mb-3 h-10 w-10 text-[#626B79]" />
+                        <p className="font-semibold">This video is unavailable</p>
+                        <p className="mt-1 text-sm text-[#C9D0D9]/70">Try another gallery item.</p>
+                      </div>
                     </div>
                   ) : (
-                    <video key={current.id} ref={videoRef} src={mediaSource(current) || undefined} muted autoPlay={playing} playsInline controls onEnded={next} onError={() => markMediaFailed(current.id)} className="max-h-[72vh] w-full" />
+                    <video
+                      key={current.id}
+                      ref={videoRef}
+                      src={mediaSource(current) || undefined}
+                      muted
+                      autoPlay={playing}
+                      playsInline
+                      controls
+                      onEnded={next}
+                      onError={() => markMediaFailed(current.id)}
+                      className="max-h-[72vh] w-full"
+                    />
                   )
                 ) : null}
-                <button type="button" onClick={previous} aria-label="Previous" className="absolute left-3 top-1/2 -translate-y-1/2 rounded-full bg-white/90 p-3 text-slate-900"><ArrowLeft /></button>
-                <button type="button" onClick={next} aria-label="Next" className="absolute right-3 top-1/2 -translate-y-1/2 rounded-full bg-white/90 p-3 text-slate-900"><ArrowRight /></button>
-                <button type="button" onClick={() => setPlaying((value) => !value)} aria-label="Pause or play slideshow" className="absolute bottom-4 right-4 rounded-full bg-white/90 p-3 text-slate-900">{playing ? <Pause /> : <Play />}</button>
-                <button type="button" onClick={() => current && !failedMedia.has(current.id) && setActive(current as GalleryMedia | GalleryEntry)} aria-label="Fullscreen preview" disabled={!current || failedMedia.has(current.id)} className="absolute bottom-4 left-4 rounded-full bg-white/90 p-3 text-slate-900 disabled:opacity-50"><Images /></button>
+
+                <button
+                  type="button"
+                  onClick={previous}
+                  aria-label="Previous"
+                  className="absolute left-3 top-1/2 -translate-y-1/2 rounded-full border border-[#C9D0D9]/30 bg-[#08090D]/80 p-3 text-[#F5F7FA] hover:border-[#8BEAFF] hover:text-[#8BEAFF] backdrop-blur-md transition-colors cursor-pointer"
+                >
+                  <ArrowLeft className="w-4 h-4" />
+                </button>
+
+                <button
+                  type="button"
+                  onClick={next}
+                  aria-label="Next"
+                  className="absolute right-3 top-1/2 -translate-y-1/2 rounded-full border border-[#C9D0D9]/30 bg-[#08090D]/80 p-3 text-[#F5F7FA] hover:border-[#8BEAFF] hover:text-[#8BEAFF] backdrop-blur-md transition-colors cursor-pointer"
+                >
+                  <ArrowRight className="w-4 h-4" />
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => setPlaying((value) => !value)}
+                  aria-label="Pause or play slideshow"
+                  className="absolute bottom-4 right-4 rounded-full border border-[#C9D0D9]/30 bg-[#08090D]/80 p-3 text-[#F5F7FA] hover:border-[#8BEAFF] hover:text-[#8BEAFF] backdrop-blur-md transition-colors cursor-pointer"
+                >
+                  {playing ? <Pause className="w-4 h-4" /> : <Play className="w-4 h-4" />}
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => current && !failedMedia.has(current.id) && setActive(current as GalleryMedia | GalleryEntry)}
+                  aria-label="Fullscreen preview"
+                  disabled={!current || failedMedia.has(current.id)}
+                  className="absolute bottom-4 left-4 rounded-full border border-[#C9D0D9]/30 bg-[#08090D]/80 p-3 text-[#F5F7FA] hover:border-[#8BEAFF] hover:text-[#8BEAFF] backdrop-blur-md transition-colors disabled:opacity-40 cursor-pointer"
+                >
+                  <Images className="w-4 h-4" />
+                </button>
               </div>
-              <div className="flex items-center justify-between gap-3 bg-slate-950 px-5 py-4 text-white">
-                <div className="min-w-0"><p className="truncate font-bold">{current?.title}</p><p className="truncate text-xs text-white/60">{current?.caption}</p></div>
-                <span className="text-xs text-white/60">{index + 1} / {visible.length}</span>
+
+              <div className="flex items-center justify-between gap-3 bg-[#0C0F16] border-t border-[#C9D0D9]/15 px-5 py-4 text-[#F5F7FA]">
+                <div className="min-w-0">
+                  <p className="truncate font-display font-bold">{current?.title}</p>
+                  <p className="truncate text-xs text-[#C9D0D9]/70">{current?.caption}</p>
+                </div>
+                <span className="font-mono text-xs text-[#8BEAFF] tabular-nums shrink-0">
+                  {String(index + 1).padStart(2, '0')} / {String(visible.length).padStart(2, '0')}
+                </span>
               </div>
             </div>
+
             <div className="mt-5 grid grid-cols-3 gap-3 sm:grid-cols-5 lg:grid-cols-7">
               {visible.map((item, itemIndex) => (
-                <button key={item.id} type="button" onClick={() => { setIndex(itemIndex); setPlaying(false); }} aria-label={'Open ' + item.title} className={'relative aspect-video overflow-hidden rounded-xl border-2 bg-slate-900 ' + (itemIndex === index ? 'border-indigo-500' : 'border-transparent')}>
+                <button
+                  key={item.id}
+                  type="button"
+                  onClick={() => { setIndex(itemIndex); setPlaying(false); }}
+                  aria-label={'Open ' + item.title}
+                  className={`relative aspect-video overflow-hidden rounded-xl border bg-[#0E121B] transition-all cursor-pointer ${
+                    itemIndex === index
+                      ? 'border-[#8BEAFF] shadow-[0_0_16px_rgba(139,234,255,0.3)]'
+                      : 'border-[#C9D0D9]/20 hover:border-[#C9D0D9]/50 opacity-75 hover:opacity-100'
+                  }`}
+                >
                   {item.type === 'image' && !failedMedia.has(item.id) ? (
-                    <img src={mediaSource(item) || undefined} alt="" onError={() => markMediaFailed(item.id)} className="h-full w-full object-cover" />
-                  ) : <span className="grid h-full place-items-center text-white">{item.type === 'video' ? <Film /> : <ImageIcon />}</span>}
+                    <img
+                      src={mediaSource(item) || undefined}
+                      alt=""
+                      onError={() => markMediaFailed(item.id)}
+                      className="h-full w-full object-cover"
+                    />
+                  ) : (
+                    <span className="grid h-full place-items-center text-[#C9D0D9]">
+                      {item.type === 'video' ? <Film className="w-5 h-5" /> : <ImageIcon className="w-5 h-5" />}
+                    </span>
+                  )}
                 </button>
               ))}
             </div>
@@ -209,13 +313,40 @@ export const GallerySection: React.FC = () => {
       </div>
 
       {active && (
-        <div className="fixed inset-0 z-[230] grid place-items-center bg-black/95 p-4" role="dialog" aria-modal="true" aria-label={active.title} onClick={() => setActive(null)}>
-          <button type="button" onClick={() => setActive(null)} aria-label="Close fullscreen" className="absolute right-5 top-5 rounded-full bg-white/15 p-3 text-white"><X /></button>
+        <div
+          className="fixed inset-0 z-[230] grid place-items-center bg-[#08090D]/95 backdrop-blur-xl p-4"
+          role="dialog"
+          aria-modal="true"
+          aria-label={active.title}
+          onClick={() => setActive(null)}
+        >
+          <button
+            type="button"
+            onClick={() => setActive(null)}
+            aria-label="Close fullscreen"
+            className="absolute right-5 top-5 rounded-full border border-[#C9D0D9]/30 bg-[#111521] p-3 text-[#F5F7FA] hover:border-[#8BEAFF] hover:text-[#8BEAFF] cursor-pointer"
+          >
+            <X className="w-5 h-5" />
+          </button>
           <div className="w-full max-w-6xl" onClick={(event) => event.stopPropagation()}>
             {active.type === 'image' ? (
-              <img src={mediaSource(active) || undefined} alt={active.title} onError={() => markMediaFailed(active.id)} className="mx-auto max-h-[85vh] object-contain" />
-            ) : <video src={mediaSource(active) || undefined} muted autoPlay controls playsInline className="mx-auto max-h-[85vh] w-full" />}
-            <p className="mt-3 text-center text-white">{active.title}</p>
+              <img
+                src={mediaSource(active) || undefined}
+                alt={active.title}
+                onError={() => markMediaFailed(active.id)}
+                className="mx-auto max-h-[85vh] rounded-lg object-contain"
+              />
+            ) : (
+              <video
+                src={mediaSource(active) || undefined}
+                muted
+                autoPlay
+                controls
+                playsInline
+                className="mx-auto max-h-[85vh] w-full rounded-lg"
+              />
+            )}
+            <p className="mt-3 text-center font-display font-bold text-[#F5F7FA]">{active.title}</p>
           </div>
         </div>
       )}

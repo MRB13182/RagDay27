@@ -23,62 +23,75 @@ export const Footer: React.FC<FooterProps> = ({
   onOpenAdmin,
   websiteSettings,
   brandingSettings,
-  themeGender,
 }) => {
-  const footerContent = websiteSettings?.footerText || '© 2027 Rag Day 27 Committee. All Rights Reserved.';
-
-  const isFemaleTheme = themeGender === 'female';
-  const isMaleTheme = themeGender === 'male' || themeGender === 'choose_one';
-
-  const footerClass = isFemaleTheme
-    ? 'w-full mt-auto py-6 px-4 sm:px-6 lg:px-8 border-t border-[#4A195E]/70 bg-[#15051B]/95 backdrop-blur-2xl shadow-[0_-8px_30px_rgba(0,0,0,0.4)] text-pink-200/60'
-    : isMaleTheme
-    ? 'w-full mt-auto py-6 px-4 sm:px-6 lg:px-8 border-t border-[#1E3A5F]/70 bg-[#070F1E]/95 backdrop-blur-2xl shadow-[0_-8px_30px_rgba(0,0,0,0.4)] text-slate-400'
-    : 'w-full mt-auto py-6 px-4 sm:px-6 lg:px-8 border-t border-white/85 bg-white/80 backdrop-blur-2xl shadow-[0_-8px_30px_rgba(15,23,42,0.03),inset_0_1px_1.5px_white] text-slate-500';
+  const footerContent =
+    websiteSettings?.footerText ||
+    '© 2027 Rag Day 27 Committee. All Rights Reserved. • Crafted with ❤️ by MD. Moshiur Rahman for NIC 27';
 
   return (
-    <footer className={footerClass}>
-      <div className="max-w-7xl mx-auto flex flex-col items-center justify-center gap-3 text-xs font-medium text-slate-500 py-2">
-        {/* Branding Logo (if available) */}
-        {brandingSettings?.footerLogo && (
-          <div className="flex items-center justify-center">
-            <img
-              src={brandingSettings.footerLogo}
-              alt="Footer Logo"
-              className="w-6 h-6 rounded object-contain"
-            />
+    <footer className="w-full mt-auto px-3 sm:px-6 lg:px-8 pb-5 pt-4">
+      <div className="max-w-7xl mx-auto rounded-2xl glass-surface px-5 sm:px-7 py-6 sm:py-7">
+        {/* Upper Footer Architecture */}
+        <div className="grid grid-cols-1 lg:grid-cols-12 items-center gap-5 lg:gap-6 text-center lg:text-left">
+          {/* Upper Identity */}
+          <div className="lg:col-span-4 flex items-center justify-center lg:justify-start gap-3">
+            {brandingSettings?.footerLogo && (
+              <div className="w-9 h-9 rounded-lg border border-[#C9D0D9]/24 bg-[#0B0E13]/85 p-1.5 shrink-0 flex items-center justify-center shadow-[inset_0_1px_0_rgba(245,247,250,0.10)]">
+                <img
+                  src={brandingSettings.footerLogo}
+                  alt="NIC Logo"
+                  className="w-full h-full object-contain"
+                />
+              </div>
+            )}
+            <div className="text-left">
+              <div className="font-display text-xs sm:text-sm font-extrabold uppercase tracking-[0.16em] text-[#F5F7FA] whitespace-nowrap">
+                National Ideal College
+              </div>
+              <div className="text-[10px] font-mono uppercase tracking-[0.26em] text-[#8BEAFF] mt-0.5">
+                Ragday 27
+              </div>
+            </div>
           </div>
-        )}
 
-        {/* Dynamic Single Source of Truth Footer Text */}
-        <div
-          className={`text-center font-medium leading-relaxed max-w-xl mx-auto [&_.footer-divider]:mx-1.5 ${
-            isFemaleTheme
-              ? 'text-pink-200/80 [&_a]:text-pink-400 [&_a]:font-semibold [&_a:hover]:underline [&_.footer-divider]:text-pink-400/40'
-              : isMaleTheme
-              ? 'text-slate-300/80 [&_a]:text-[#38BDF8] [&_a]:font-semibold [&_a:hover]:underline [&_.footer-divider]:text-slate-500'
-              : 'text-slate-600 [&_a]:text-[#7138F5] [&_a]:font-semibold [&_a:hover]:underline [&_.footer-divider]:text-slate-400'
-          }`}
-          dangerouslySetInnerHTML={{ __html: sanitizeFooterHtml(footerContent) }}
-        />
+          {/* Main Statement */}
+          <div className="lg:col-span-4 text-center border-y lg:border-y-0 lg:border-x border-[#C9D0D9]/18 py-3.5 lg:py-1 px-4">
+            <p className="text-[10px] sm:text-[11px] font-mono uppercase tracking-[0.22em] text-[#C9D0D9]/95 leading-relaxed">
+              We leave the classroom.
+              <br />
+              We keep the memories.
+            </p>
+          </div>
 
-        {/* Centered Glassmorphism Admin Lock Button matching Reference Screen 04 & 12 */}
-        <div className="flex items-center justify-center pt-1">
-          <button
-            type="button"
-            onClick={onOpenAdmin}
-            aria-label="Admin Portal"
-            className={`w-9 h-9 rounded-2xl flex items-center justify-center backdrop-blur-md transition-all duration-200 cursor-pointer active:scale-95 ${
-              isFemaleTheme
-                ? 'bg-[#240A2F]/90 hover:bg-[#381149] text-pink-300 hover:text-white border border-[#4A195E]/80 shadow-[0_2px_10px_rgba(0,0,0,0.3)]'
-                : isMaleTheme
-                ? 'bg-[#0E1A30]/90 hover:bg-[#162847] text-slate-300 hover:text-cyan-300 border border-[#1E3A5F]/80 shadow-[0_2px_10px_rgba(0,0,0,0.3)]'
-                : 'bg-white/80 hover:bg-white text-slate-500 hover:text-[#7138F5] border border-white/95 shadow-[0_4px_12px_rgba(15,23,42,0.05),inset_0_1px_1px_white]'
-            }`}
-            title="Admin Login & Committee Access"
-          >
-            <Lock className="w-4 h-4" />
-          </button>
+          {/* Brand Statement */}
+          <div className="lg:col-span-4 flex items-center justify-center lg:justify-end">
+            <span className="relative text-[10px] sm:text-[11px] font-mono uppercase tracking-[0.22em] text-[#F5F7FA] pb-1.5 whitespace-nowrap">
+              NIC 27 — Forever Connected.
+              <span
+                aria-hidden="true"
+                className="absolute bottom-0 left-0 right-0 h-[2px] bg-gradient-to-r from-[#8BEAFF] via-[#8BEAFF]/70 to-transparent shadow-[0_0_10px_rgba(139,234,255,0.5)]"
+              />
+            </span>
+          </div>
+        </div>
+
+        {/* Lower Copyright & Credit Row with Inline Minimal Admin Lock Icon */}
+        <div className="mt-5 pt-4 border-t border-[#C9D0D9]/14 flex items-center justify-center text-center">
+          <p className="text-[11px] sm:text-xs text-[#C9D0D9]/85 font-medium leading-relaxed">
+            <span
+              className="[&_a]:text-[#8BEAFF] [&_a]:font-semibold [&_a:hover]:underline [&_.footer-divider]:mx-1.5 [&_.footer-divider]:text-[#8993A1]"
+              dangerouslySetInnerHTML={{ __html: sanitizeFooterHtml(footerContent) }}
+            />
+            <button
+              type="button"
+              onClick={onOpenAdmin}
+              aria-label="Admin Panel Access"
+              title="Admin Login & Committee Access"
+              className="inline-flex items-center justify-center align-middle ml-2 p-1.5 text-[#C9D0D9]/85 hover:text-[#8BEAFF] bg-transparent border-0 rounded transition-colors cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-[#8BEAFF]"
+            >
+              <Lock className="w-4 h-4 sm:w-[17px] sm:h-[17px]" strokeWidth={1.75} aria-hidden="true" />
+            </button>
+          </p>
         </div>
       </div>
     </footer>

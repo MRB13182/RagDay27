@@ -218,28 +218,28 @@ export const InvitationCardPage: React.FC<InvitationCardPageProps> = ({
   };
 
   return (
-    <div className="public-glass-page relative isolate py-8 sm:py-12 max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 rounded-[2rem] overflow-hidden">
-      {/* Header matching Reference Image 2 Screen 10 */}
+    <div className="public-glass-page relative isolate py-8 sm:py-12 max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 overflow-hidden">
+      {/* Header */}
       <div className="text-center max-w-2xl mx-auto mb-8">
-        <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-white/80 border border-white/90 shadow-[0_4px_16px_rgba(113,56,245,0.06),inset_0_1px_1px_white] backdrop-blur-xl mb-3">
-          <ShieldCheck className="w-3.5 h-3.5 text-[#7138F5]" />
-          <span className="text-xs font-bold text-slate-800 tracking-wide uppercase">
+        <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-md bg-[#0C1018]/90 border border-[#C9D0D9]/20 mb-3">
+          <ShieldCheck className="w-3.5 h-3.5 text-[#8BEAFF]" />
+          <span className="text-[11px] font-mono font-bold text-[#C9D0D9] tracking-[0.2em] uppercase">
             Official Entry Pass
           </span>
         </div>
-        <h1 className="font-display text-3xl sm:text-4xl md:text-5xl font-extrabold text-[#10143C] tracking-tight leading-tight">
+        <h1 className="font-display text-3xl sm:text-4xl md:text-5xl font-extrabold text-[#F5F7FA] tracking-tight leading-tight">
           Verify & Download <br />
-          <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#7138F5] via-[#5224D8] to-[#11C8F4]">
+          <span className="chrome-text">
             Invitation Card
           </span>
         </h1>
-        <p className="text-xs sm:text-sm text-slate-600 mt-2.5 max-w-lg mx-auto font-medium leading-relaxed">
+        <p className="text-xs sm:text-sm text-[#94A0B2] mt-2.5 max-w-lg mx-auto font-medium leading-relaxed">
           Enter your Registration Number and Student Name to verify committee authorization and access your digital pass. Both fields are required for security verification.
         </p>
       </div>
 
-      {/* Search Layout (Form) matching Screen 10 */}
-      <div className="p-5 sm:p-7 rounded-3xl bg-white/85 backdrop-blur-2xl border border-white/95 shadow-[0_15px_35px_-10px_rgba(113,56,245,0.08),inset_0_1.5px_1px_white] mb-8">
+      {/* Search Form Card */}
+      <div className="p-5 sm:p-7 rounded-3xl museum-frame bg-[#0C1018]/92 border border-[#C9D0D9]/18 shadow-[0_24px_70px_rgba(0,0,0,0.6)] mb-8">
         <form
           onSubmit={e => {
             e.preventDefault();
@@ -249,30 +249,30 @@ export const InvitationCardPage: React.FC<InvitationCardPageProps> = ({
         >
           <div className="space-y-3.5">
             <div>
-              <label className="block text-xs font-extrabold uppercase tracking-wider text-slate-700 mb-1.5">
-                Registration Number <span className="text-rose-500">*</span>
+              <label className="block text-xs font-extrabold uppercase tracking-wider text-[#C9D0D9] mb-1.5">
+                Registration Number <span className="text-rose-400">*</span>
               </label>
               <div className="relative flex items-center">
-                <span className="absolute left-3.5 text-slate-400">
-                  <User className="w-4 h-4" />
+                <span className="absolute left-3.5 text-[#8BEAFF]">
+                  <Hash className="w-4 h-4" />
                 </span>
                 <input
                   type="text"
                   placeholder="e.g. RD27-01"
                   value={searchRegNo}
                   onChange={e => setSearchRegNo(e.target.value.toUpperCase())}
-                  className="w-full pl-10 pr-4 py-3.5 rounded-xl text-sm font-mono font-bold bg-white/90 border border-slate-200/90 text-slate-900 placeholder-slate-400 focus:border-[#7138F5] focus:ring-2 focus:ring-[#7138F5]/20 outline-none transition-all shadow-2xs"
+                  className="w-full pl-10 pr-4 py-3.5 rounded-xl text-sm font-mono font-bold bg-[#080B12]/95 border border-[#C9D0D9]/18 text-[#F5F7FA] placeholder-[#626B79] focus:border-[#8BEAFF] focus:ring-2 focus:ring-[#8BEAFF]/25 outline-none transition-all"
                   required
                 />
               </div>
             </div>
 
             <div>
-              <label className="block text-xs font-extrabold uppercase tracking-wider text-slate-700 mb-1.5">
-                Student Name <span className="text-rose-500">*</span>
+              <label className="block text-xs font-extrabold uppercase tracking-wider text-[#C9D0D9] mb-1.5">
+                Student Name <span className="text-rose-400">*</span>
               </label>
               <div className="relative flex items-center">
-                <span className="absolute left-3.5 text-slate-400">
+                <span className="absolute left-3.5 text-[#8BEAFF]">
                   <User className="w-4 h-4" />
                 </span>
                 <input
@@ -280,7 +280,7 @@ export const InvitationCardPage: React.FC<InvitationCardPageProps> = ({
                   placeholder="Enter student full name..."
                   value={searchStudentName}
                   onChange={e => setSearchStudentName(e.target.value)}
-                  className="w-full pl-10 pr-4 py-3.5 rounded-xl text-sm font-medium bg-white/90 border border-slate-200/90 text-slate-900 placeholder-slate-400 focus:border-[#7138F5] focus:ring-2 focus:ring-[#7138F5]/20 outline-none transition-all shadow-2xs"
+                  className="w-full pl-10 pr-4 py-3.5 rounded-xl text-sm font-medium bg-[#080B12]/95 border border-[#C9D0D9]/18 text-[#F5F7FA] placeholder-[#626B79] focus:border-[#8BEAFF] focus:ring-2 focus:ring-[#8BEAFF]/25 outline-none transition-all"
                   required
                 />
               </div>
@@ -291,7 +291,7 @@ export const InvitationCardPage: React.FC<InvitationCardPageProps> = ({
             <button
               type="submit"
               disabled={isSearching}
-              className="w-full py-3.5 px-7 rounded-xl bg-gradient-to-r from-[#7138F5] via-[#5224D8] to-[#11C8F4] text-white font-extrabold text-sm shadow-[0_12px_28px_-6px_rgba(113,56,245,0.36),inset_0_1px_1px_rgba(255,255,255,0.4)] hover:shadow-[0_16px_36px_-6px_rgba(113,56,245,0.48)] hover:-translate-y-0.5 active:translate-y-0 transition-all flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50"
+              className="w-full py-3.5 px-7 rounded-xl bg-gradient-to-r from-[#8BEAFF] to-[#B7F2FF] text-[#08090D] font-extrabold text-sm shadow-[0_12px_28px_rgba(139,234,255,0.22)] hover:brightness-105 hover:-translate-y-0.5 active:translate-y-0 transition-all flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50"
             >
               {isSearching ? (
                 <Loader2 className="w-4 h-4 animate-spin" />
@@ -309,19 +309,19 @@ export const InvitationCardPage: React.FC<InvitationCardPageProps> = ({
         <div className="transition-all duration-300">
           {/* STATE 1: Not Found */}
           {!matchedRecord && (
-            <div className="p-8 rounded-3xl glass-card shadow-[0_15px_35px_-10px_rgba(0,0,0,0.05),inset_0_1.5px_1px_white] text-center">
-              <div className="w-12 h-12 rounded-full bg-slate-100 text-slate-500 mx-auto flex items-center justify-center mb-3">
+            <div className="p-8 rounded-3xl glass-card text-center">
+              <div className="w-12 h-12 rounded-full bg-[#121824] border border-[#C9D0D9]/20 text-[#8BEAFF] mx-auto flex items-center justify-center mb-3">
                 <Search className="w-6 h-6" />
               </div>
-              <h3 className="font-display text-lg font-bold text-slate-900">
+              <h3 className="font-display text-lg font-bold text-[#F5F7FA]">
                 No Record Found
               </h3>
-              <p className="text-xs text-slate-500 max-w-md mx-auto mt-1 mb-4">
+              <p className="text-xs text-[#94A0B2] max-w-md mx-auto mt-1 mb-4">
                 {searchError || `We could not find any registration matching "${searchRegNo}". Please verify your registration number.`}
               </p>
               <button
                 onClick={() => onNavigateToRegister()}
-                className="px-5 py-2.5 rounded-xl glass-button-primary text-white text-xs font-bold shadow hover:brightness-105 transition-colors inline-flex items-center gap-2 cursor-pointer"
+                className="px-5 py-2.5 rounded-xl glass-button-primary text-xs font-bold transition-all inline-flex items-center gap-2 cursor-pointer"
               >
                 <span>Go to Registration</span>
                 <ArrowRight className="w-3.5 h-3.5" />
@@ -331,52 +331,52 @@ export const InvitationCardPage: React.FC<InvitationCardPageProps> = ({
 
           {/* STATE 2: PENDING APPROVAL */}
           {matchedRecord && matchedRecord.status === 'pending' && (
-            <div className="p-6 sm:p-8 rounded-3xl bg-amber-500/10 backdrop-blur-2xl border-2 border-amber-300/90 shadow-[0_15px_35px_-10px_rgba(245,158,11,0.15),inset_0_1.5px_2px_white] text-left">
-              <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 pb-5 border-b border-amber-200">
+            <div className="p-6 sm:p-8 rounded-3xl bg-amber-950/35 backdrop-blur-2xl border border-amber-400/35 shadow-[0_24px_60px_rgba(0,0,0,0.55)] text-left">
+              <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 pb-5 border-b border-amber-400/20">
                 <div className="flex items-center gap-3.5">
-                  <div className="w-12 h-12 rounded-2xl bg-amber-500 text-white flex items-center justify-center shadow-md shadow-amber-500/30">
+                  <div className="w-12 h-12 rounded-2xl bg-amber-500/20 border border-amber-400/40 text-amber-300 flex items-center justify-center">
                     <Clock className="w-6 h-6 animate-spin" style={{ animationDuration: '6s' }} />
                   </div>
                   <div>
-                    <span className="text-[11px] font-bold uppercase tracking-wider text-amber-800">
+                    <span className="text-[11px] font-mono font-bold uppercase tracking-wider text-amber-300">
                       Application Status
                     </span>
-                    <h3 className="font-display text-2xl font-extrabold text-amber-950">
+                    <h3 className="font-display text-2xl font-extrabold text-[#F5F7FA]">
                       Status: Pending Approval
                     </h3>
                   </div>
                 </div>
 
-                <div className="px-4 py-2 rounded-xl bg-amber-500/15 backdrop-blur-md text-amber-900 text-xs font-bold tracking-wider font-mono shadow-xs border border-amber-300/50">
+                <div className="px-4 py-2 rounded-xl bg-[#090C13]/95 text-amber-300 text-xs font-bold tracking-wider font-mono border border-amber-400/35 tabular-nums">
                   {matchedRecord.registration_no}
                 </div>
               </div>
 
               <div className="py-5 grid grid-cols-1 sm:grid-cols-3 gap-4 text-xs">
-                <div className="p-3.5 rounded-xl bg-white/85 backdrop-blur-md border border-amber-200/90 shadow-2xs">
-                  <span className="text-slate-500 font-semibold uppercase block text-[10px] tracking-wider">Applicant</span>
-                  <span className="text-sm font-bold text-slate-900 mt-0.5 block">{matchedRecord.full_name}</span>
+                <div className="p-3.5 rounded-xl bg-[#090C13]/95 border border-[#C9D0D9]/15">
+                  <span className="text-[#8B95A5] font-semibold uppercase block text-[10px] tracking-wider">Applicant</span>
+                  <span className="text-sm font-bold text-[#F5F7FA] mt-0.5 block">{matchedRecord.full_name}</span>
                 </div>
-                <div className="p-3.5 rounded-xl bg-white/85 backdrop-blur-md border border-amber-200/90 shadow-2xs">
-                  <span className="text-slate-500 font-semibold uppercase block text-[10px] tracking-wider">Roll & Student ID</span>
-                  <div className="text-sm font-bold text-slate-900 mt-0.5 space-y-0.5">
+                <div className="p-3.5 rounded-xl bg-[#090C13]/95 border border-[#C9D0D9]/15">
+                  <span className="text-[#8B95A5] font-semibold uppercase block text-[10px] tracking-wider">Roll & Student ID</span>
+                  <div className="text-sm font-bold text-[#F5F7FA] mt-0.5 space-y-0.5 tabular-nums">
                     <div>Roll: {matchedRecord.class_roll?.trim() || '—'}</div>
                     <div>Student ID: {matchedRecord.student_id?.trim() || '—'}</div>
                   </div>
                 </div>
-                <div className="p-3.5 rounded-xl bg-white/85 backdrop-blur-md border border-amber-200/90 shadow-2xs">
-                  <span className="text-slate-500 font-semibold uppercase block text-[10px] tracking-wider">Academic Details</span>
-                  <div className="text-sm font-bold text-slate-900 mt-0.5 space-y-0.5">
+                <div className="p-3.5 rounded-xl bg-[#090C13]/95 border border-[#C9D0D9]/15">
+                  <span className="text-[#8B95A5] font-semibold uppercase block text-[10px] tracking-wider">Academic Details</span>
+                  <div className="text-sm font-bold text-[#F5F7FA] mt-0.5 space-y-0.5">
                     <div>Group: {matchedRecord.academic_group?.trim() || '—'}</div>
                     <div>Section: {matchedRecord.academic_section?.trim() || '—'}</div>
                   </div>
                 </div>
               </div>
 
-              <div className="p-4 rounded-2xl bg-amber-500/10 backdrop-blur-xl border border-amber-300/60 text-xs text-amber-900 leading-relaxed flex items-start gap-3">
-                <AlertTriangle className="w-5 h-5 shrink-0 text-amber-700 mt-0.5" />
+              <div className="p-4 rounded-2xl bg-[#090C13]/90 border border-amber-400/25 text-xs text-amber-100 leading-relaxed flex items-start gap-3">
+                <AlertTriangle className="w-5 h-5 shrink-0 text-amber-300 mt-0.5" />
                 <div>
-                  <strong>Verification in Progress:</strong> Your payment and student records are currently pending authorization by the Rag Day 27 Admin committee. Once approved, your invitation card and official entry pass download will appear here automatically.
+                  <strong className="text-amber-300">Verification in Progress:</strong> Your payment and student records are currently pending authorization by the Rag Day 27 Admin committee. Once approved, your invitation card and official entry pass download will appear here automatically.
                 </div>
               </div>
             </div>
@@ -384,41 +384,41 @@ export const InvitationCardPage: React.FC<InvitationCardPageProps> = ({
 
           {/* STATE 3: REJECTED BY ADMIN */}
           {matchedRecord && matchedRecord.status === 'rejected' && (
-            <div className="p-6 sm:p-8 rounded-3xl bg-rose-500/10 backdrop-blur-2xl border-2 border-rose-300/90 shadow-[0_15px_35px_-10px_rgba(244,63,94,0.15),inset_0_1.5px_2px_white] text-left">
-              <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 pb-5 border-b border-rose-200">
+            <div className="p-6 sm:p-8 rounded-3xl bg-rose-950/40 backdrop-blur-2xl border border-rose-400/35 shadow-[0_24px_60px_rgba(0,0,0,0.55)] text-left">
+              <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 pb-5 border-b border-rose-400/20">
                 <div className="flex items-center gap-3.5">
-                  <div className="w-12 h-12 rounded-2xl bg-rose-600 text-white flex items-center justify-center shadow-md shadow-rose-600/30">
+                  <div className="w-12 h-12 rounded-2xl bg-rose-500/20 border border-rose-400/40 text-rose-300 flex items-center justify-center">
                     <XCircle className="w-7 h-7" />
                   </div>
                   <div>
-                    <span className="text-[11px] font-bold uppercase tracking-wider text-rose-700">
+                    <span className="text-[11px] font-mono font-bold uppercase tracking-wider text-rose-300">
                       Application Status
                     </span>
-                    <h3 className="font-display text-2xl font-extrabold text-rose-950">
+                    <h3 className="font-display text-2xl font-extrabold text-[#F5F7FA]">
                       Status: Rejected By Admin
                     </h3>
                   </div>
                 </div>
 
-                <div className="px-4 py-2 rounded-xl bg-rose-500/15 backdrop-blur-md text-rose-900 text-xs font-bold tracking-wider font-mono shadow-xs border border-rose-300/50">
+                <div className="px-4 py-2 rounded-xl bg-[#090C13]/95 text-rose-300 text-xs font-bold tracking-wider font-mono border border-rose-400/35 tabular-nums">
                   {matchedRecord.registration_no}
                 </div>
               </div>
 
               {/* Reason: show ONLY the reject_reason stored in the database */}
               <div className="py-5">
-                <div className="p-4 rounded-2xl bg-rose-500/5 backdrop-blur-xl border border-rose-200/70 shadow-sm">
-                  <div className="text-xs font-bold uppercase tracking-wider text-rose-600 mb-1">
+                <div className="p-4 rounded-2xl bg-[#090C13]/95 border border-rose-500/30">
+                  <div className="text-xs font-bold uppercase tracking-wider text-rose-300 mb-1">
                     Reason:
                   </div>
-                  <div className="text-sm font-extrabold text-rose-700 whitespace-pre-wrap">
+                  <div className="text-sm font-extrabold text-rose-100 whitespace-pre-wrap">
                     {matchedRecord.reject_reason || 'No specific reason provided.'}
                   </div>
                 </div>
               </div>
 
               <div className="flex flex-wrap items-center justify-between gap-3 pt-2">
-                <span className="text-xs text-rose-800">
+                <span className="text-xs text-rose-200/80">
                   Questions? Inquire directly with the Committee Admin.
                 </span>
                 <button
@@ -428,7 +428,7 @@ export const InvitationCardPage: React.FC<InvitationCardPageProps> = ({
                     setRecoveryError(null);
                     setShowRecoveryDialog(true);
                   }}
-                  className="px-5 py-2.5 rounded-xl bg-rose-600 text-white text-xs font-bold shadow-md hover:bg-rose-700 hover:-translate-y-0.5 active:translate-y-0 transition-all flex items-center gap-2 cursor-pointer disabled:opacity-60"
+                  className="px-5 py-2.5 rounded-xl bg-rose-600 text-white text-xs font-bold shadow-md hover:bg-rose-500 hover:-translate-y-0.5 active:translate-y-0 transition-all flex items-center gap-2 cursor-pointer disabled:opacity-60"
                   disabled={isRecoveringRejected}
                 >
                   <span>{isRecoveringRejected ? 'Verifying...' : 'Re-Submit Registration'}</span>
@@ -442,64 +442,64 @@ export const InvitationCardPage: React.FC<InvitationCardPageProps> = ({
           {matchedRecord && matchedRecord.status === 'approved' && (
             <div className="space-y-6">
               {/* Student Details / Registration Information */}
-              <div className="p-6 sm:p-7 rounded-3xl glass-card shadow-[0_15px_35px_-10px_rgba(91,95,239,0.08),inset_0_1.5px_1px_white] text-left">
-                <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 pb-4 border-b border-slate-100">
+              <div className="p-6 sm:p-7 rounded-3xl museum-frame bg-[#0C1018]/92 border border-[#C9D0D9]/18 text-left">
+                <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 pb-4 border-b border-[#C9D0D9]/12">
                   <div>
-                    <span className="text-[11px] font-bold uppercase tracking-wider text-slate-500">
+                    <span className="text-[11px] font-mono font-bold uppercase tracking-wider text-[#8B95A5]">
                       Registration Information
                     </span>
-                    <h3 className="font-display text-xl sm:text-2xl font-black text-[#10143C]">
+                    <h3 className="font-display text-xl sm:text-2xl font-black text-[#F5F7FA]">
                       {matchedRecord.full_name}
                     </h3>
                   </div>
-                  <div className="px-3.5 py-1.5 rounded-xl bg-[#7138F5] text-white text-xs font-mono font-bold tracking-wider shadow-sm">
+                  <div className="px-3.5 py-1.5 rounded-xl bg-[#8BEAFF] text-[#08090D] text-xs font-mono font-black tracking-wider tabular-nums">
                     {matchedRecord.registration_no}
                   </div>
                 </div>
 
                 <div className="pt-4 grid grid-cols-2 sm:grid-cols-4 gap-3 text-xs">
-                  <div className="p-3 rounded-2xl bg-white/90 border border-slate-200/80 shadow-2xs">
-                    <div className="flex items-center gap-1.5 text-slate-400 font-bold uppercase text-[10px]">
-                      <Lock className="w-3 h-3 text-[#7138F5]" />
+                  <div className="p-3 rounded-2xl bg-[#090C13]/95 border border-[#C9D0D9]/15">
+                    <div className="flex items-center gap-1.5 text-[#8B95A5] font-bold uppercase text-[10px]">
+                      <Lock className="w-3 h-3 text-[#8BEAFF]" />
                       <span>Class Roll</span>
                     </div>
-                    <span className="text-[#10143C] font-black text-base sm:text-lg mt-1 block">{matchedRecord.class_roll || '—'}</span>
+                    <span className="text-[#F5F7FA] font-black text-base sm:text-lg mt-1 block tabular-nums">{matchedRecord.class_roll || '—'}</span>
                   </div>
-                  <div className="p-3 rounded-2xl bg-white/90 border border-slate-200/80 shadow-2xs">
-                    <div className="flex items-center gap-1.5 text-slate-400 font-bold uppercase text-[10px]">
-                      <IdCard className="w-3 h-3 text-[#7138F5]" />
+                  <div className="p-3 rounded-2xl bg-[#090C13]/95 border border-[#C9D0D9]/15">
+                    <div className="flex items-center gap-1.5 text-[#8B95A5] font-bold uppercase text-[10px]">
+                      <IdCard className="w-3 h-3 text-[#8BEAFF]" />
                       <span>Student ID</span>
                     </div>
-                    <span className="text-[#10143C] font-black text-base sm:text-lg mt-1 block">{matchedRecord.student_id || matchedRecord.id || '—'}</span>
+                    <span className="text-[#F5F7FA] font-black text-base sm:text-lg mt-1 block tabular-nums">{matchedRecord.student_id || matchedRecord.id || '—'}</span>
                   </div>
-                  <div className="p-3 rounded-2xl bg-white/90 border border-slate-200/80 shadow-2xs">
-                    <div className="flex items-center gap-1.5 text-slate-400 font-bold uppercase text-[10px]">
-                      <GraduationCap className="w-3 h-3 text-[#7138F5]" />
+                  <div className="p-3 rounded-2xl bg-[#090C13]/95 border border-[#C9D0D9]/15">
+                    <div className="flex items-center gap-1.5 text-[#8B95A5] font-bold uppercase text-[10px]">
+                      <GraduationCap className="w-3 h-3 text-[#8BEAFF]" />
                       <span>Academic Group</span>
                     </div>
-                    <span className="text-[#10143C] font-black text-base sm:text-lg mt-1 block">{matchedRecord.academic_group?.trim() || '—'}</span>
+                    <span className="text-[#F5F7FA] font-black text-base sm:text-lg mt-1 block">{matchedRecord.academic_group?.trim() || '—'}</span>
                   </div>
-                  <div className="p-3 rounded-2xl bg-white/90 border border-slate-200/80 shadow-2xs">
-                    <div className="flex items-center gap-1.5 text-slate-400 font-bold uppercase text-[10px]">
-                      <Building2 className="w-3 h-3 text-[#7138F5]" />
+                  <div className="p-3 rounded-2xl bg-[#090C13]/95 border border-[#C9D0D9]/15">
+                    <div className="flex items-center gap-1.5 text-[#8B95A5] font-bold uppercase text-[10px]">
+                      <Building2 className="w-3 h-3 text-[#8BEAFF]" />
                       <span>Section</span>
                     </div>
-                    <span className="text-[#10143C] font-black text-base sm:text-lg mt-1 block">{matchedRecord.academic_section?.trim() || '—'}</span>
+                    <span className="text-[#F5F7FA] font-black text-base sm:text-lg mt-1 block">{matchedRecord.academic_section?.trim() || '—'}</span>
                   </div>
                 </div>
               </div>
 
               {/* Status: Approved Header with the single [ Download Pass ] button */}
-              <div className="p-5 sm:p-6 rounded-3xl bg-emerald-500/10 backdrop-blur-2xl border-2 border-emerald-300/90 shadow-[0_15px_35px_-10px_rgba(16,185,129,0.15),inset_0_1.5px_2px_white] flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+              <div className="p-5 sm:p-6 rounded-3xl bg-emerald-950/35 backdrop-blur-2xl border border-emerald-400/35 shadow-[0_24px_60px_rgba(0,0,0,0.55)] flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
                 <div className="flex items-center gap-3.5">
-                  <div className="w-12 h-12 rounded-2xl bg-emerald-500 text-white flex items-center justify-center shadow-md shadow-emerald-500/30">
+                  <div className="w-12 h-12 rounded-2xl bg-emerald-500/20 border border-emerald-400/40 text-emerald-300 flex items-center justify-center">
                     <CheckCircle2 className="w-7 h-7" />
                   </div>
                   <div>
-                    <span className="text-[11px] font-bold uppercase tracking-wider text-emerald-800">
+                    <span className="text-[11px] font-mono font-bold uppercase tracking-wider text-emerald-300">
                       Application Status
                     </span>
-                    <h3 className="font-display text-2xl font-extrabold text-emerald-950">
+                    <h3 className="font-display text-2xl font-extrabold text-[#F5F7FA]">
                       Status: Approved
                     </h3>
                   </div>
@@ -507,14 +507,14 @@ export const InvitationCardPage: React.FC<InvitationCardPageProps> = ({
 
                 {/* Download Pass Controls with PNG and JPG options */}
                 <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
-                  <div className="inline-flex items-center p-1 rounded-xl bg-white/90 border border-emerald-300/80 shadow-2xs self-center">
+                  <div className="inline-flex items-center p-1 rounded-xl bg-[#090C13] border border-[#C9D0D9]/20 self-center">
                     <button
                       type="button"
                       onClick={() => setDownloadFormat('png')}
                       className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer ${
                         downloadFormat === 'png'
-                          ? 'bg-[#0A2568] text-white shadow-xs'
-                          : 'text-slate-600 hover:text-slate-900'
+                          ? 'bg-[#8BEAFF] text-[#08090D]'
+                          : 'text-[#94A0B2] hover:text-[#F5F7FA]'
                       }`}
                     >
                       PNG
@@ -524,8 +524,8 @@ export const InvitationCardPage: React.FC<InvitationCardPageProps> = ({
                       onClick={() => setDownloadFormat('jpg')}
                       className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer ${
                         downloadFormat === 'jpg'
-                          ? 'bg-[#0A2568] text-white shadow-xs'
-                          : 'text-slate-600 hover:text-slate-900'
+                          ? 'bg-[#8BEAFF] text-[#08090D]'
+                          : 'text-[#94A0B2] hover:text-[#F5F7FA]'
                       }`}
                     >
                       JPG
@@ -536,7 +536,7 @@ export const InvitationCardPage: React.FC<InvitationCardPageProps> = ({
                     type="button"
                     onClick={() => handleDownloadPass(downloadFormat)}
                     disabled={isDownloading}
-                    className="w-full sm:w-auto px-8 py-3.5 rounded-2xl bg-gradient-to-r from-[#7138F5] via-[#5224D8] to-[#11C8F4] hover:brightness-105 text-white font-extrabold text-sm shadow-[0_12px_28px_-6px_rgba(113,56,245,0.36),inset_0_1px_1px_rgba(255,255,255,0.4)] hover:shadow-[0_16px_36px_-6px_rgba(113,56,245,0.48)] transition-all flex items-center justify-center gap-2 cursor-pointer hover:-translate-y-0.5 active:translate-y-0 disabled:opacity-60"
+                    className="w-full sm:w-auto px-8 py-3.5 rounded-2xl bg-gradient-to-r from-[#8BEAFF] to-[#B7F2FF] hover:brightness-105 text-[#08090D] font-extrabold text-sm shadow-[0_12px_28px_rgba(139,234,255,0.25)] transition-all flex items-center justify-center gap-2 cursor-pointer hover:-translate-y-0.5 active:translate-y-0 disabled:opacity-60"
                   >
                     {isDownloading ? (
                       <Loader2 className="w-4 h-4 animate-spin" />
@@ -548,29 +548,29 @@ export const InvitationCardPage: React.FC<InvitationCardPageProps> = ({
                 </div>
               </div>
 
-              {/* Institution Card matching Reference Image 2 Screen 11 */}
-              <div className="p-5 sm:p-6 rounded-3xl bg-white/85 backdrop-blur-2xl border border-white/95 shadow-[0_15px_35px_-10px_rgba(113,56,245,0.08),inset_0_1.5px_1px_white] flex flex-col items-center justify-center text-center space-y-2">
-                <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-[#7138F5]/15 to-[#11C8F4]/15 p-2 border border-white/95 flex items-center justify-center shadow-xs">
+              {/* Institution Card */}
+              <div className="p-5 sm:p-6 rounded-3xl museum-frame bg-[#0C1018]/92 border border-[#C9D0D9]/18 flex flex-col items-center justify-center text-center space-y-2">
+                <div className="w-12 h-12 rounded-2xl bg-[#080B12] p-2 border border-[#C9D0D9]/20 flex items-center justify-center">
                   {pdfSettings?.pdfLogo ? (
                     <img src={pdfSettings.pdfLogo} alt="NIC Logo" className="w-full h-full object-contain" />
                   ) : (
-                    <span className="font-extrabold text-[#7138F5] text-xs">NIC</span>
+                    <span className="font-extrabold text-[#8BEAFF] text-xs">NIC</span>
                   )}
                 </div>
                 <div>
-                  <h3 className="font-display text-lg sm:text-xl font-black text-[#10143C]">
+                  <h3 className="font-display text-lg sm:text-xl font-black text-[#F5F7FA]">
                     National Ideal College
                   </h3>
-                  <p className="text-xs sm:text-sm font-bold text-slate-600 mt-0.5">
+                  <p className="text-xs sm:text-sm font-bold text-[#94A0B2] mt-0.5">
                     Rag Day of NIC 27
                   </p>
                 </div>
-                <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-slate-100/90 border border-slate-200/80 text-[10px] font-extrabold text-slate-700 uppercase tracking-widest">
+                <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-md bg-[#090C13] border border-[#C9D0D9]/20 text-[10px] font-mono font-extrabold text-[#C9D0D9] uppercase tracking-widest">
                   BATCH 2027
                 </div>
                 <div className="pt-1">
-                  <span className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full bg-white/90 border border-slate-200/90 text-[10px] font-extrabold text-[#10143C] uppercase tracking-wider shadow-2xs font-mono">
-                    <ShieldCheck className="w-3.5 h-3.5 text-[#7138F5]" />
+                  <span className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-md bg-[#090C13] border border-[#8BEAFF]/25 text-[10px] font-extrabold text-[#F5F7FA] uppercase tracking-wider font-mono">
+                    <ShieldCheck className="w-3.5 h-3.5 text-[#8BEAFF]" />
                     NIC 2027 · OFFICIAL PASS
                   </span>
                 </div>
@@ -578,7 +578,7 @@ export const InvitationCardPage: React.FC<InvitationCardPageProps> = ({
 
               {/* Toast Feedback */}
               {downloadToast && (
-                <div className="p-3.5 rounded-2xl bg-emerald-600 text-white text-xs font-bold text-center shadow-lg animate-fadeIn flex items-center justify-center gap-2">
+                <div className="p-3.5 rounded-2xl bg-emerald-500 text-[#08090D] text-xs font-extrabold text-center shadow-lg animate-fadeIn flex items-center justify-center gap-2">
                   <CheckCircle2 className="w-4 h-4" />
                   <span>✓ Pass downloaded successfully</span>
                 </div>
@@ -592,7 +592,7 @@ export const InvitationCardPage: React.FC<InvitationCardPageProps> = ({
               )}
 
               {/* DISPLAYED INVITATION PASS */}
-              <div className="w-full" ref={displayCardRef}>
+              <div className="w-full rounded-2xl overflow-hidden shadow-[0_24px_70px_rgba(0,0,0,0.65)] ring-1 ring-[#C9D0D9]/20" ref={displayCardRef}>
                 <InvitationCard
                   record={matchedRecord}
                   websiteSettings={websiteSettings}
@@ -626,9 +626,9 @@ export const InvitationCardPage: React.FC<InvitationCardPageProps> = ({
         </div>
       )}
       {showRecoveryDialog && matchedRecord?.status === 'rejected' && (
-        <div className="fixed inset-0 z-[260] flex items-center justify-center bg-slate-950/65 backdrop-blur-md p-4 animate-fadeIn">
+        <div className="fixed inset-0 z-[260] flex items-center justify-center bg-[#08090D]/82 backdrop-blur-lg p-4 animate-fadeIn">
           <form
-            className="w-full max-w-md rounded-3xl glass-modal p-6 sm:p-7 shadow-[0_30px_80px_-15px_rgba(244,63,94,0.3),inset_0_1.5px_2px_white] border border-rose-300/60 space-y-4"
+            className="w-full max-w-md rounded-3xl glass-modal p-6 sm:p-7 shadow-[0_32px_90px_rgba(0,0,0,0.75)] border border-rose-400/35 space-y-4 text-[#F5F7FA]"
             onSubmit={async e => {
               e.preventDefault();
               setRecoveryError(null);
@@ -653,29 +653,29 @@ export const InvitationCardPage: React.FC<InvitationCardPageProps> = ({
             }}
           >
             <div>
-              <span className="text-[10px] font-extrabold uppercase tracking-widest text-rose-600 bg-rose-500/10 px-2.5 py-1 rounded-full border border-rose-300/40">
+              <span className="text-[10px] font-mono font-extrabold uppercase tracking-widest text-rose-300 bg-rose-500/15 px-2.5 py-1 rounded-md border border-rose-400/30">
                 Data Recovery
               </span>
-              <h3 className="text-xl font-display font-extrabold text-slate-900 mt-2">Recover Registration</h3>
-              <p className="mt-1 text-xs text-slate-600 leading-relaxed">Enter the Student ID from your original registration to verify your record and restore its saved details.</p>
+              <h3 className="text-xl font-display font-extrabold text-[#F5F7FA] mt-2">Recover Registration</h3>
+              <p className="mt-1 text-xs text-[#94A0B2] leading-relaxed">Enter the Student ID from your original registration to verify your record and restore its saved details.</p>
             </div>
-            <label className="block text-xs font-bold uppercase tracking-wide text-slate-700">
+            <label className="block text-xs font-bold uppercase tracking-wide text-[#C9D0D9]">
               Original Student ID
               <input
                 autoComplete="off"
                 inputMode="numeric"
                 value={recoveryStudentId}
                 onChange={e => setRecoveryStudentId(e.target.value.replace(/\D/g, ''))}
-                className="mt-1.5 w-full rounded-xl glass-input px-4 py-3 text-sm text-slate-900 outline-none focus:border-rose-500 focus:ring-2 focus:ring-rose-200/50"
+                className="mt-1.5 w-full rounded-xl glass-input px-4 py-3 text-sm text-[#F5F7FA] outline-none focus:border-rose-400 focus:ring-2 focus:ring-rose-500/25"
                 placeholder="Enter your original Student ID"
                 required
                 disabled={isRecoveringRejected}
               />
             </label>
-            {recoveryError && <p className="rounded-xl border border-rose-200/80 bg-rose-500/10 backdrop-blur-md p-3 text-xs font-bold text-rose-700" role="alert">{recoveryError}</p>}
+            {recoveryError && <p className="rounded-xl border border-rose-500/40 bg-rose-950/60 p-3 text-xs font-bold text-rose-200" role="alert">{recoveryError}</p>}
             <div className="flex gap-3 pt-2">
-              <button type="button" onClick={() => setShowRecoveryDialog(false)} className="flex-1 rounded-xl glass-button px-4 py-3 text-xs font-bold text-slate-700 cursor-pointer" disabled={isRecoveringRejected}>Cancel</button>
-              <button type="submit" className="flex-1 rounded-xl glass-button-primary bg-gradient-to-r from-rose-600 via-rose-500 to-red-600 text-white px-4 py-3 text-xs font-bold disabled:opacity-60 cursor-pointer" disabled={isRecoveringRejected || !recoveryStudentId.trim()}>{isRecoveringRejected ? 'Verifying...' : 'Verify & Continue'}</button>
+              <button type="button" onClick={() => setShowRecoveryDialog(false)} className="flex-1 rounded-xl glass-button px-4 py-3 text-xs font-bold text-[#C9D0D9] cursor-pointer" disabled={isRecoveringRejected}>Cancel</button>
+              <button type="submit" className="flex-1 rounded-xl bg-gradient-to-r from-rose-500 to-red-500 hover:brightness-110 text-white px-4 py-3 text-xs font-bold disabled:opacity-60 cursor-pointer" disabled={isRecoveringRejected || !recoveryStudentId.trim()}>{isRecoveringRejected ? 'Verifying...' : 'Verify & Continue'}</button>
             </div>
           </form>
         </div>
