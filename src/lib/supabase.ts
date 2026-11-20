@@ -31,10 +31,10 @@ const PLACEHOLDER_VALUES = new Set([
   'null',
 ]);
 
-export const SUPABASE_URL = String(ENV_SUPABASE_URL || '').trim().replace(/\/+$/, '');
+export const SUPABASE_URL = String(ENV_SUPABASE_URL || '').trim().replace(/\\/+$/, '');
 export const SUPABASE_PUBLISHABLE_KEY = String(ENV_SUPABASE_KEY || '').trim();
 export const isSupabaseConfigured =
-  /^https:\/\/[a-z0-9-]+\.supabase\.co$/i.test(SUPABASE_URL) &&
+  /^https:\\/\\/[a-z0-9-]+\\.supabase\\.co$/i.test(SUPABASE_URL) &&
   !PLACEHOLDER_VALUES.has(SUPABASE_PUBLISHABLE_KEY);
 
 const supabaseClient = isSupabaseConfigured
@@ -99,7 +99,9 @@ import { safeStorage } from './safeStorage';
 
 export const STORAGE_BUCKET = 'uploads';
 
-export type AdminRole = 'male_admin' | 'female_admin';
+// Female Admin records and roles remain in the database, but the web application
+// intentionally exposes only the existing Male Admin portal.
+export type AdminRole = 'male_admin';
 
 // In-memory active session credentials only (NEVER persisted to localStorage or sessionStorage)
 let activeSessionRole: AdminRole | null = null;
@@ -125,8 +127,8 @@ export async function getCurrentAdmin(): Promise<AdminProfile | null> {
       id: data.admin_id || `passcode:${data.role}`,
       auth_user_id: `passcode:${data.admin_id || data.role}`,
       username: null,
-      full_name: data.role === 'male_admin' ? 'Male Admin' : 'Female Admin',
-      role: data.role as AdminRole,
+      full_name: 'Male Admin',
+      role: 'male_admin',
       active: true,
       created_at: new Date().toISOString(),
       updated_at: new Date().toISOString(),
@@ -142,7 +144,7 @@ export async function signInAdmin(passcode: string): Promise<AdminProfile> {
   const cleanPasscode = passcode.trim();
   if (!cleanPasscode) throw new Error('Admin passcode is required.');
 
-  // Enforce server-side authentication via database RPC
+  // Enforce server-side authentication via the existing database RPC.
   const { data, error } = await supabase.rpc('verify_admin_passcode', {
     p_passcode: cleanPasscode,
   });
@@ -151,23 +153,25 @@ export async function signInAdmin(passcode: string): Promise<AdminProfile> {
     throw new Error(error.message || 'Unable to verify admin passcode.');
   }
 
-  if (!data || (data.role !== 'male_admin' && data.role !== 'female_admin')) {
+  // Female Admin remains a valid historical database role, but is not a
+  // supported web login. Reject it before creating a browser admin session.
+  if (!data || data.role !== 'male_admin') {
     throw new Error('Invalid Admin Passcode');
   }
 
   const profile: AdminProfile = {
-    id: data.admin_id || `passcode:${data.role}`,
+    id: data.admin_id || `passcode:${data.admin_id || data.role}`,
     auth_user_id: `passcode:${data.admin_id || data.role}`,
     username: null,
-    full_name: data.role === 'male_admin' ? 'Male Admin' : 'Female Admin',
-    role: data.role as AdminRole,
+    full_name: 'Male Admin',
+    role: 'male_admin',
     active: true,
     created_at: new Date().toISOString(),
     updated_at: new Date().toISOString(),
   };
 
   // Keep credentials only in memory for this active session.
-  activeSessionRole = data.role as AdminRole;
+  activeSessionRole = 'male_admin';
   activeSessionPasscode = cleanPasscode;
 
   // Clear any persistent storage to prevent leakage across browser restarts or other users
