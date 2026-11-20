@@ -222,10 +222,10 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
     setLoginError('');
     setIsLoggingIn(true);
     try {
-      // Convenience-only client gate. Vite embeds this value into public JS.
-      // Do not use it as authorization for sensitive backend operations.
-      const configuredSuperPasscode = import.meta.env.VITE_SUPER_ADMIN_PASSCODE as string | undefined;
-      if (configuredSuperPasscode && passcode === configuredSuperPasscode) {
+      // Simple frontend passcode gate, matching the existing Male Admin login flow.
+      // This is intentionally client-side and is not secure authentication.
+      const configuredSuperPasscode = 'admin.nic27';
+      if (passcode === configuredSuperPasscode) {
         setSuperAdminUnlocked(true);
         setPasscode('');
         return;
