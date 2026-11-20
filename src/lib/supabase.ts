@@ -31,10 +31,10 @@ const PLACEHOLDER_VALUES = new Set([
   'null',
 ]);
 
-export const SUPABASE_URL = String(ENV_SUPABASE_URL || '').trim().replace(/\\/+$/, '');
+export const SUPABASE_URL = String(ENV_SUPABASE_URL || '').trim().replace(/\/+$/, '');
 export const SUPABASE_PUBLISHABLE_KEY = String(ENV_SUPABASE_KEY || '').trim();
 export const isSupabaseConfigured =
-  /^https:\\/\\/[a-z0-9-]+\\.supabase\\.co$/i.test(SUPABASE_URL) &&
+  /^https:\/\/[a-z0-9-]+\.supabase\.co$/i.test(SUPABASE_URL) &&
   !PLACEHOLDER_VALUES.has(SUPABASE_PUBLISHABLE_KEY);
 
 const supabaseClient = isSupabaseConfigured
