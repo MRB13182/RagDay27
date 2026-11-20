@@ -49,4 +49,10 @@ export const SuperAdminDashboard:React.FC<Props>=({onLogout})=>{
   </main>
  </div>
 };
-const Metric:React.FC<{label:string;value:string;icon:React.ReactNode}>={({label,value,icon})=><div className="rounded-2xl border border-white/10 bg-[#0B1A2B] p-5"><div className="mb-4 inline-flex rounded-xl bg-cyan-400/10 p-3 text-cyan-300">{icon}</div><p className="text-xs text-slate-400">{label}</p><p className="mt-1 text-xl font-black">{value}</p></div>};
+const Metric: React.FC<{ label: string; value: string; icon: React.ReactNode }> = ({ label, value, icon }) => (
+  <div className="rounded-2xl border border-white/10 bg-[#0B1A2B] p-5">
+    <div className="mb-4 inline-flex rounded-xl bg-cyan-400/10 p-3 text-cyan-300">{icon}</div>
+    <p className="text-xs text-slate-400">{label}</p>
+    <p className="mt-1 text-xl font-black">{value}</p>
+  </div>
+);
