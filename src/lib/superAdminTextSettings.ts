@@ -13,7 +13,6 @@ export const EDITABLE_SUPER_ADMIN_TEXT_FILES: EditableSuperAdminTextFile[] = [
   { id: 'website-name', category: '01. Website Identity', label: 'Web name (web name.txt)', path: '01. website-identity/Text/web name.txt', defaultValue: 'NIC 27' },
   { id: 'web-header', category: '01. Website Identity', label: 'Web header (web header.txt)', path: '01. website-identity/Text/web header.txt', defaultValue: 'Annual Grand Farewell & Batch 27 Celebration' },
   { id: 'web-footer', category: '01. Website Identity', label: 'Web footer (web footer.txt)', path: '01. website-identity/Text/web footer.txt', defaultValue: '© 2027 Rag Day 27 Committee. All Rights Reserved.<span class="footer-divider">•</span>Crafted with ❤️ by<a href="https://moshiurr.ai.studio/certificates" target="_blank" rel="noopener noreferrer">MD. Moshiur Rahman</a>for Batch 27' },
-  { id: 'jersey-design-image', category: '02. Event Settings', label: 'Jersey showcase image (jersey-design.png)', path: '02. event-settings/Pic/jersey-design.png', defaultValue: '' },
   { id: 'event-name', category: '02. Event Settings', label: 'Event name (Event name.txt)', path: '02. event-settings/Text/Event name.txt', defaultValue: 'RAG DAY of NIC 27' },
   { id: 'event-card', category: '02. Event Settings', label: 'Event card (Event card.txt)', path: '02. event-settings/Text/Event card.txt', defaultValue: 'Title: Registration Start\nDescription: Registration starts from October 10. Complete your enrollment before time.\n\nTitle: Registration FEE\nDescription: 500 BDT for your all-inclusive batch pass.' },
   { id: 'event-date', category: '02. Event Settings', label: 'Event date (Event date.txt)', path: '02. event-settings/Text/Event date.txt', defaultValue: '2026-11-20T10:00:00' },
@@ -45,7 +44,6 @@ export function getSavedSuperAdminText(path: string, fallback: string): string {
   const safeFallback = typeof fallback === 'string' ? fallback : '';
   try {
     const stored = getLocalItem(`super_admin_${path}`);
-    if (safeFallback.trim() !== '') return safeFallback;
     if (typeof stored === 'string' && stored.trim() !== '') return stored;
     return safeFallback;
   } catch {
