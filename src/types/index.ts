@@ -217,7 +217,7 @@ export interface AdminProfile {
   auth_user_id: string;
   username: string | null;
   full_name: string;
-  role: 'male_admin' | 'female_admin';
+  role: 'male_admin';
   active: boolean;
   created_at: string;
   updated_at: string;
