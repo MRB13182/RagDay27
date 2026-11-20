@@ -19,9 +19,9 @@ const read=(path:string,fallback:string)=>{try{return localStorage.getItem('supe
 const toDateValue=(v:string)=>{const d=new Date(v);if(Number.isNaN(d.getTime()))return '';const z=new Date(d.getTime()-d.getTimezoneOffset()*60000);return z.toISOString().slice(0,16)};
 const isLong=(s:Setting)=>/footer|header|description|card|jersey|notice|section/i.test(s.id+' '+s.label);
 export const SuperAdminDashboard:React.FC<Props>=({onLogout})=>{
- const [active,setActive]=useState('overview'),[mobileOpen,setMobileOpen]=useState(false),[values,setValues]=useState<Record<string,string>>({}),[saving,setSaving]=useState(false),[message,setMessage]=useState(''),[messageType,setMessageType]=useState<'success'|'error'>('success'),[galleryCount,setGalleryCount]=useState(0),[clock,setClock]=useState('');
+ const [active,setActive]=useState('overview'),[mobileOpen,setMobileOpen]=useState(false),[values,setValues]=useState<Record<string,string>>({}),[saving,setSaving]=useState(false),[message,setMessage]=useState(''),[messageType,setMessageType]=useState<'success'|'error'>('success'),[galleryCount,setGalleryCount]=useState(0);
  useEffect(()=>{const next:Record<string,string>={};EDITABLE_SUPER_ADMIN_TEXT_FILES.filter(x=>x.id!=='jersey-design-image').forEach(x=>{next[x.path]=read(x.path,x.defaultValue)});setValues(next);void getGalleryMedia(true).then(x=>setGalleryCount(x.length)).catch(()=>setGalleryCount(0));},[]);
- const configSections=useMemo(()=>sections.filter(x=>x.id!=='overview').length,[sections.length]);
+ const configSections=sections.filter(x=>x.id!=='overview').length;
  const filtered=EDITABLE_SUPER_ADMIN_TEXT_FILES.filter(x=>x.category===active&&x.id!=='jersey-design-image');
  const save=async()=>{setSaving(true);setMessage('');try{await Promise.all(filtered.map(x=>saveEditableSuperAdminText(x.path,values[x.path]??x.defaultValue)));setMessage('Changes saved.');setMessageType('success')}catch(e){setMessage(e instanceof Error?e.message:'Unable to save changes.');setMessageType('error')}finally{setSaving(false)}};
  const toggle=(setting:Setting)=>setValues(v=>({...v,[setting.path]:(v[setting.path]||'').trim().toLowerCase()==='enable'?'disable':'enable'}));
