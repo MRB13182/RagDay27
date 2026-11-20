@@ -222,8 +222,8 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
     setLoginError('');
     setIsLoggingIn(true);
     try {
-      // Convenience-only client gate: this passcode is bundled into the public JS.
-      // It is not secure authentication and must not protect sensitive backend data.
+      // Convenience-only client gate. Vite embeds this value into public JS.
+      // Do not use it as authorization for sensitive backend operations.
       const configuredSuperPasscode = import.meta.env.VITE_SUPER_ADMIN_PASSCODE as string | undefined;
       if (configuredSuperPasscode && passcode === configuredSuperPasscode) {
         setSuperAdminUnlocked(true);
