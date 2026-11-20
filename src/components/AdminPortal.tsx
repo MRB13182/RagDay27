@@ -1,4 +1,5 @@
 import React, { useEffect, useMemo, useState } from 'react';
+import { SuperAdminDashboard } from './SuperAdminDashboard';
 import type { InvitationRecord, InvitationStatus, AdminProfile, PdfSettings, WebsiteSettings } from '../types';
 import { signInAdmin, signOutAdmin, getCurrentAdmin } from '../lib/supabase';
 import { getRegistrationList } from '../services/admin';
@@ -128,6 +129,8 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
 }) => {
   const [admin, setAdmin] = useState<AdminProfile | null>(null);
   const [passcode, setPasscode] = useState('');
+  const [showPasscode, setShowPasscode] = useState(false);
+  const [superAdminUnlocked, setSuperAdminUnlocked] = useState(false);
   const [loginError, setLoginError] = useState('');
   const [isLoggingIn, setIsLoggingIn] = useState(false);
 
@@ -219,6 +222,14 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
     setLoginError('');
     setIsLoggingIn(true);
     try {
+      // Convenience-only client gate: this passcode is bundled into the public JS.
+      // It is not secure authentication and must not protect sensitive backend data.
+      const configuredSuperPasscode = import.meta.env.VITE_SUPER_ADMIN_PASSCODE as string | undefined;
+      if (configuredSuperPasscode && passcode === configuredSuperPasscode) {
+        setSuperAdminUnlocked(true);
+        setPasscode('');
+        return;
+      }
       const profile = await signInAdmin(passcode);
       if (profile.role !== 'male_admin') {
         await signOutAdmin();
@@ -443,74 +454,34 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
   // --------------------------------------------------------------------------
   // LOGIN SCREEN (If not authenticated)
   // --------------------------------------------------------------------------
+  if (superAdminUnlocked) {
+    return <SuperAdminDashboard onLogout={async () => { setSuperAdminUnlocked(false); setPasscode(''); setLoginError(''); }} />;
+  }
+
   if (!admin) {
     return (
-      <div className="fixed inset-0 z-[300] bg-[#08090D]/82 backdrop-blur-lg flex items-center justify-center p-4 animate-fadeIn">
-        <div className="w-full max-w-md glass-modal rounded-3xl shadow-[0_32px_90px_rgba(0,0,0,0.75)] p-6 sm:p-8 relative border border-[#C9D0D9]/20 text-[#F5F7FA] animate-scaleUp">
-          <button
-            onClick={handleClose}
-            className="absolute top-4 right-4 p-2 rounded-xl text-[#8B95A5] hover:text-[#F5F7FA] hover:bg-white/10 transition-colors cursor-pointer"
-          >
-            <X className="w-5 h-5" />
-          </button>
-
-          <div className="flex items-center gap-3.5 mb-6">
-            <div className="w-12 h-12 rounded-2xl bg-[#8BEAFF]/12 border border-[#8BEAFF]/30 text-[#8BEAFF] grid place-items-center">
-              <Lock className="w-6 h-6" />
-            </div>
-            <div>
-              <h2 className="text-xl font-display font-extrabold text-[#F5F7FA] tracking-tight">Admin Access</h2>
-              <p className="text-xs text-[#94A0B2] mt-0.5">Enter committee passcode to unlock your admin panel.</p>
-            </div>
+      <div className="fixed inset-0 z-[300] bg-[#050B14]/95 backdrop-blur-xl flex items-center justify-center p-4 animate-fadeIn">
+        <div className="w-full max-w-md rounded-3xl border border-cyan-400/25 bg-[#0B1727] p-6 sm:p-8 shadow-[0_32px_90px_rgba(0,0,0,0.8)] relative text-white">
+          <button onClick={handleClose} className="absolute right-4 top-4 rounded-xl p-2 text-slate-400 hover:bg-white/10 hover:text-white" aria-label="Close admin access"><X className="h-5 w-5"/></button>
+          <div className="mb-7 text-center">
+            <div className="mx-auto mb-4 grid h-14 w-14 place-items-center rounded-2xl border border-cyan-400/30 bg-cyan-400/10 text-cyan-300"><Lock className="h-7 w-7"/></div>
+            <p className="text-[10px] font-black tracking-[.28em] text-cyan-300">RAG DAY 27</p>
+            <h2 className="mt-2 text-2xl font-black tracking-tight">ADMIN ACCESS</h2>
+            <p className="mt-2 text-xs text-slate-400">Enter your admin passcode to continue.</p>
           </div>
-
           <form onSubmit={handleLogin} className="space-y-4">
-            <div>
-              <label className="block text-xs font-bold uppercase tracking-wider text-[#C9D0D9] mb-1.5">
-                Passcode
-              </label>
-              <input
-                type="password"
-                value={passcode}
-                onChange={e => setPasscode(e.target.value)}
-                placeholder="Enter Male Admin passcode"
-                className="w-full px-4 py-3.5 rounded-xl glass-input text-sm font-mono font-medium outline-none transition-all"
-                autoFocus
-                required
-              />
-            </div>
-
-            {loginError && (
-              <div className="p-3 rounded-xl bg-rose-950/60 border border-rose-500/40 text-rose-200 text-xs font-semibold flex items-center gap-2">
-                <AlertCircle className="w-4 h-4 shrink-0 text-rose-400" />
-                <span>{loginError}</span>
+            <label className="block text-xs font-bold uppercase tracking-wider text-slate-300">Passcode
+              <div className="mt-2 flex overflow-hidden rounded-xl border border-white/10 bg-[#13263A] focus-within:border-cyan-400/60">
+                <input type={showPasscode?'text':'password'} value={passcode} onChange={e=>setPasscode(e.target.value)} placeholder="Enter passcode" className="min-w-0 flex-1 bg-transparent px-4 py-3.5 text-sm text-white outline-none" autoFocus required />
+                <button type="button" onClick={()=>setShowPasscode(v=>!v)} className="px-4 text-slate-400 hover:text-cyan-200" aria-label={showPasscode?'Hide passcode':'Show passcode'}>{showPasscode?'Hide':'Show'}</button>
               </div>
-            )}
-
-            <button
-              type="submit"
-              disabled={isLoggingIn || !passcode.trim()}
-              className="w-full py-3.5 rounded-xl glass-button-primary font-bold text-sm transition-all flex items-center justify-center gap-2 disabled:opacity-50 cursor-pointer"
-            >
-              {isLoggingIn ? (
-                <>
-                  <RefreshCw className="w-4 h-4 animate-spin" />
-                  <span>Verifying Passcode…</span>
-                </>
-              ) : (
-                <>
-                  <LogIn className="w-4 h-4" />
-                  <span>Sign In</span>
-                </>
-              )}
+            </label>
+            {loginError&&<div role="alert" className="rounded-xl border border-rose-400/30 bg-rose-500/10 p-3 text-xs font-semibold text-rose-200"><AlertCircle className="mr-2 inline h-4 w-4"/>{loginError}</div>}
+            <button type="submit" disabled={isLoggingIn||!passcode.trim()} className="flex w-full items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-cyan-500 to-blue-600 py-3.5 text-sm font-black text-white disabled:opacity-50">
+              {isLoggingIn?<><RefreshCw className="h-4 w-4 animate-spin"/>Verifying…</>:<><LogIn className="h-4 w-4"/>Sign In</>}
             </button>
           </form>
-
-          <div className="mt-6 pt-5 border-t border-[#C9D0D9]/12 text-center">
-            <span className="text-[11px] text-[#8B95A5] font-medium">
-              Admin access is restricted to the Boys Wing.
-            </span>
-          </div>
+          <p className="mt-6 border-t border-white/10 pt-4 text-center text-[10px] text-slate-500">Separate admin access · Rag Day 27</p>
         </div>
       </div>
     );
