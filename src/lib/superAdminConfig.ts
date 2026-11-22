@@ -31,7 +31,7 @@ import eventCardRaw from '../super-admin/02. event-settings/Text/Event card.txt?
 import eventDateRaw from '../super-admin/02. event-settings/Text/Event date.txt?raw';
 import countdownEnableDisableRaw from '../super-admin/02. event-settings/Text/Countedown enable disable.txt?raw';
 import eventFeesRaw from '../super-admin/02. event-settings/Text/Fees.txt?raw';
-import oldEventCountdownRaw from '../super-admin/02. event-settings/Text/Countedown enable disable.txt?raw';
+
 import venueRawText from '../super-admin/02. event-settings/Text/Venue.txt?raw';
 
 // 03. Registration Settings (Text/ is the sole canonical location)
@@ -619,7 +619,7 @@ export function getCountdownSettingsConfig() {
     const lastDateContent = String(lastRegistrationDateRaw || '').trim();
     const deadline = getSavedSuperAdminText('03. reg-settings/Text/Last Registration date.txt', lastDateContent) || '2027-01-25T23:59:59';
 
-    const enableRaw = getSavedSuperAdminText('02. event-settings/Text/Countedown enable disable.txt', String(oldEventCountdownRaw || countdownEnableDisableRaw || '').trim()).toLowerCase();
+    const enableRaw = getSavedSuperAdminText('02. event-settings/Text/Countedown enable disable.txt', String(countdownEnableDisableRaw || '').trim()).toLowerCase();
     const isCountdownEnabled = !/^(disable|disabled)$/i.test(enableRaw);
     const registrationToggle = getSavedSuperAdminText('03. reg-settings/Text/Countdown enable disable.txt', String(registrationToggleRaw || '').trim()).toLowerCase();
     const registrationCountdownEnabled = !/^(disable|disabled)$/i.test(registrationToggle);
