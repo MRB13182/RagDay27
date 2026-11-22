@@ -1,7 +1,7 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { ArrowLeft, ArrowRight, Film, Image as ImageIcon, Images, Pause, Play, X } from 'lucide-react';
 import type { GalleryMedia } from '../services/gallery';
-import { getGalleryMedia, subscribeToGalleryChanges } from '../services/gallery';
+import { getPublishedGalleryMedia, subscribeToGalleryChanges } from '../services/gallery';
 import nicBuildingImg from '../../nic.png';
 
 type Filter = 'all' | 'image' | 'video';
@@ -33,18 +33,17 @@ export const GallerySection: React.FC = () => {
   const [failedMedia, setFailedMedia] = useState<Set<string>>(() => new Set());
   const [filter, setFilter] = useState<Filter>('all');
   const [index, setIndex] = useState(0);
-  const [active, setActive] = useState<GalleryMedia | GalleryEntry | null>(null);
+  const [active, setActive] = useState<GalleryEntry | null>(null);
   const [playing, setPlaying] = useState(true);
   const videoRef = useRef<HTMLVideoElement>(null);
-  const objectUrls = useRef(new Map<string, string>());
 
   const refresh = useCallback(async () => {
     try {
-      setItems(await getGalleryMedia());
+      setItems(await getPublishedGalleryMedia());
       setStorageWarning('');
     } catch (error) {
-      console.error('Local Gallery storage unavailable:', error);
-      setStorageWarning('Device-local gallery uploads are unavailable in this browser. The published gallery is still available below.');
+      console.error('Shared gallery load failed:', error);
+      setStorageWarning('Unable to load shared gallery media right now. Showing featured archive items.');
     } finally {
       setLoading(false);
     }
@@ -54,15 +53,15 @@ export const GallerySection: React.FC = () => {
     let mounted = true;
     const load = async () => {
       try {
-        const media = await getGalleryMedia();
+        const media = await getPublishedGalleryMedia();
         if (mounted) {
           setItems(media);
           setStorageWarning('');
         }
       } catch (error) {
-        console.error('Local Gallery storage unavailable:', error);
+        console.error('Shared gallery load failed:', error);
         if (mounted) {
-          setStorageWarning('Device-local gallery uploads are unavailable in this browser. The published gallery is still available below.');
+          setStorageWarning('Unable to load shared gallery media right now. Showing featured archive items.');
         }
       } finally {
         if (mounted) setLoading(false);
@@ -80,22 +79,23 @@ export const GallerySection: React.FC = () => {
     return () => {
       mounted = false;
       unsubscribe();
-      objectUrls.current.forEach((url) => URL.revokeObjectURL(url));
-      objectUrls.current.clear();
     };
   }, [refresh]);
 
-  const localEntries = useMemo<GalleryEntry[]>(
-    () => items.map((item) => ({
-      id: item.id,
-      type: item.type,
-      title: item.title || 'Untitled media',
-      caption: item.caption || '',
-      url: '',
-    })),
+  const remoteEntries = useMemo<GalleryEntry[]>(
+    () =>
+      items
+        .filter(item => Boolean(item.image_url))
+        .map((item) => ({
+          id: item.id,
+          type: item.type,
+          title: item.title || 'Untitled media',
+          caption: item.caption || '',
+          url: item.image_url,
+        })),
     [items],
   );
-  const allEntries = useMemo(() => [...bundledGallery, ...localEntries], [localEntries]);
+  const allEntries = useMemo(() => [...remoteEntries, ...bundledGallery], [remoteEntries]);
   const visible = useMemo(() => allEntries.filter((item) => filter === 'all' || item.type === filter), [allEntries, filter]);
 
   useEffect(() => {
@@ -104,15 +104,7 @@ export const GallerySection: React.FC = () => {
 
   const current = visible[index] || null;
 
-  const src = useCallback((item: GalleryEntry | GalleryMedia): string => {
-    if ('url' in item && item.url) return item.url;
-    const media = item as GalleryMedia;
-    const existing = objectUrls.current.get(media.id);
-    if (existing) return existing;
-    const objectUrl = URL.createObjectURL(media.blob);
-    objectUrls.current.set(media.id, objectUrl);
-    return objectUrl;
-  }, []);
+  const src = useCallback((item: GalleryEntry): string => item.url, []);
 
   const markMediaFailed = (id: string) => setFailedMedia((currentFailures) => new Set(currentFailures).add(id));
 
@@ -135,11 +127,11 @@ export const GallerySection: React.FC = () => {
     }
   }, [current?.id, playing]);
 
-  const mediaSource = (entry: GalleryEntry | GalleryMedia) => {
+  const mediaSource = (entry: GalleryEntry) => {
     try {
       return src(entry);
     } catch (error) {
-      console.error('Could not create a gallery media URL:', error);
+      console.error('Could not resolve gallery media URL:', error);
       markMediaFailed(entry.id);
       return '';
     }
@@ -218,7 +210,7 @@ export const GallerySection: React.FC = () => {
               onClick={() => { setLoading(true); void refresh(); }}
               className="min-h-11 shrink-0 rounded-xl border border-amber-200/30 bg-amber-300/10 px-4 py-2 text-xs font-bold text-amber-100 transition-colors hover:bg-amber-300/20 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-amber-200"
             >
-              Retry local gallery
+              Retry gallery sync
             </button>
           </div>
         )}
@@ -306,7 +298,7 @@ export const GallerySection: React.FC = () => {
 
                 <button
                   type="button"
-                  onClick={() => current && !failedMedia.has(current.id) && setActive(current as GalleryMedia | GalleryEntry)}
+                  onClick={() => current && !failedMedia.has(current.id) && setActive(current)}
                   aria-label="Fullscreen preview"
                   disabled={!current || failedMedia.has(current.id)}
                   className="absolute bottom-4 left-4 rounded-full border border-[#C9D0D9]/30 bg-[#08090D]/80 p-3 text-[#F5F7FA] hover:border-[#8BEAFF] hover:text-[#8BEAFF] backdrop-blur-md transition-colors disabled:opacity-40 cursor-pointer"

@@ -99,16 +99,30 @@ import { safeStorage } from './safeStorage';
 
 export const STORAGE_BUCKET = 'uploads';
 
-// Female Admin records and roles remain in the database, but the web application
-// intentionally exposes only the existing Male Admin portal.
 export type AdminRole = 'male_admin';
+export type PortalAuthResult =
+  | { kind: 'male_admin'; profile: AdminProfile }
+  | { kind: 'super_admin' };
 
 // In-memory active session credentials only (NEVER persisted to localStorage or sessionStorage)
 let activeSessionRole: AdminRole | null = null;
 let activeSessionPasscode: string | null = null;
+let activeSuperAdminPasscode: string | null = null;
+
+function buildMaleAdminProfile(adminId?: string): AdminProfile {
+  return {
+    id: adminId || 'passcode:male_admin',
+    auth_user_id: `passcode:${adminId || 'male_admin'}`,
+    username: null,
+    full_name: 'Male Admin',
+    role: 'male_admin',
+    active: true,
+    created_at: new Date().toISOString(),
+    updated_at: new Date().toISOString(),
+  };
+}
 
 export async function getCurrentAdmin(): Promise<AdminProfile | null> {
-  // Never auto-authenticate from persistent storage without active session credentials
   if (!activeSessionRole || !activeSessionPasscode) {
     return null;
   }
@@ -123,16 +137,7 @@ export async function getCurrentAdmin(): Promise<AdminProfile | null> {
       return null;
     }
 
-    return {
-      id: data.admin_id || `passcode:${data.role}`,
-      auth_user_id: `passcode:${data.admin_id || data.role}`,
-      username: null,
-      full_name: 'Male Admin',
-      role: 'male_admin',
-      active: true,
-      created_at: new Date().toISOString(),
-      updated_at: new Date().toISOString(),
-    };
+    return buildMaleAdminProfile(data.admin_id);
   } catch {
     activeSessionRole = null;
     activeSessionPasscode = null;
@@ -140,45 +145,67 @@ export async function getCurrentAdmin(): Promise<AdminProfile | null> {
   }
 }
 
-export async function signInAdmin(passcode: string): Promise<AdminProfile> {
+export async function signInPortalAdmin(passcode: string): Promise<PortalAuthResult> {
   const cleanPasscode = passcode.trim();
-  if (!cleanPasscode) throw new Error('Admin passcode is required.');
+  if (!cleanPasscode) {
+    throw new Error('Admin passcode is required.');
+  }
+  if (!isSupabaseConfigured) {
+    throw new Error(unavailableBackendMessage);
+  }
 
-  // Enforce server-side authentication via the existing database RPC.
-  const { data, error } = await supabase.rpc('verify_admin_passcode', {
+  // 1. Check Male Admin / Admin table RPC first
+  const { data: adminData, error: adminError } = await supabase.rpc('verify_admin_passcode', {
     p_passcode: cleanPasscode,
   });
 
-  if (error) {
-    throw new Error(error.message || 'Unable to verify admin passcode.');
+  if (!adminError && adminData?.role === 'male_admin') {
+    activeSessionRole = 'male_admin';
+    activeSessionPasscode = cleanPasscode;
+    activeSuperAdminPasscode = null;
+    safeStorage.removeItem('rd27_admin_role');
+    safeStorage.removeItem('rd27_admin_passcode');
+    return { kind: 'male_admin', profile: buildMaleAdminProfile(adminData.admin_id) };
   }
 
-  // Female Admin remains a valid historical database role, but is not a
-  // supported web login. Reject it before creating a browser admin session.
-  if (!data || data.role !== 'male_admin') {
+  if (!adminError && adminData?.role === 'super_admin') {
+    activeSessionRole = null;
+    activeSessionPasscode = null;
+    activeSuperAdminPasscode = cleanPasscode;
+    safeStorage.removeItem('rd27_admin_role');
+    safeStorage.removeItem('rd27_admin_passcode');
+    return { kind: 'super_admin' };
+  }
+
+  // 2. Check dedicated Super Admin server-side RPC
+  const { data: superData, error: superError } = await supabase.rpc('verify_super_admin_passcode', {
+    p_passcode: cleanPasscode,
+  });
+
+  if (!superError && superData?.authorized) {
+    activeSessionRole = null;
+    activeSessionPasscode = null;
+    activeSuperAdminPasscode = cleanPasscode;
+    safeStorage.removeItem('rd27_admin_role');
+    safeStorage.removeItem('rd27_admin_passcode');
+    return { kind: 'super_admin' };
+  }
+
+  if (superError && (superError.code === 'PGRST202' || /could not find the function/i.test(superError.message || ''))) {
+    // Only if verify_admin_passcode also didn't recognize the code and Super Admin RPC is absent
     throw new Error('Invalid Admin Passcode');
   }
 
-  const profile: AdminProfile = {
-    id: data.admin_id || `passcode:${data.admin_id || data.role}`,
-    auth_user_id: `passcode:${data.admin_id || data.role}`,
-    username: null,
-    full_name: 'Male Admin',
-    role: 'male_admin',
-    active: true,
-    created_at: new Date().toISOString(),
-    updated_at: new Date().toISOString(),
-  };
+  throw new Error('Invalid Admin Passcode');
+}
 
-  // Keep credentials only in memory for this active session.
-  activeSessionRole = 'male_admin';
-  activeSessionPasscode = cleanPasscode;
-
-  // Clear any persistent storage to prevent leakage across browser restarts or other users
-  safeStorage.removeItem('rd27_admin_role');
-  safeStorage.removeItem('rd27_admin_passcode');
-
-  return profile;
+export async function signInAdmin(passcode: string): Promise<AdminProfile> {
+  const result = await signInPortalAdmin(passcode);
+  if (result.kind !== 'male_admin') {
+    activeSuperAdminPasscode = null;
+    throw new Error('Invalid Admin Passcode');
+  }
+  return result.profile;
 }
 
 export function getAdminPasscodeForGallery(): string | null {
@@ -197,6 +224,12 @@ export async function signOutAdmin(): Promise<void> {
   }
 }
 
+export async function signOutSuperAdmin(): Promise<void> {
+  activeSuperAdminPasscode = null;
+  safeStorage.removeItem('rd27_admin_role');
+  safeStorage.removeItem('rd27_admin_passcode');
+}
+
 export function getStoredAdminRole(): AdminRole | null {
   return activeSessionRole;
 }
@@ -204,3 +237,8 @@ export function getStoredAdminRole(): AdminRole | null {
 export function getStoredAdminPasscode(): string | null {
   return activeSessionPasscode;
 }
+
+export function getStoredSuperAdminPasscode(): string | null {
+  return activeSuperAdminPasscode;
+}
+

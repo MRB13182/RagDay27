@@ -1,13 +1,16 @@
 export type GalleryMediaType = 'image' | 'video';
+
 export interface GalleryMedia {
   id: string;
   type: GalleryMediaType;
   title: string;
   caption: string;
-  filename: string;
+  image_url: string;
+  storage_path: string;
   mime_type: string;
-  blob: Blob;
+  file_size: number;
   enabled: boolean;
   sort_order: number;
   created_at: string;
+  updated_at?: string;
 }

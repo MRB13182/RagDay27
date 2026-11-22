@@ -9,7 +9,6 @@ import type { EventCard, JerseyDesignCard } from '../types';
 import defaultLogo from '../assets/images/logo.png';
 import defaultFavicon from '../assets/images/favicon.png';
 import defaultMaleJersey from '../assets/images/male-jersey.png';
-import defaultFemaleJersey from '../assets/images/female-jersey.png';
 import defaultJerseyBg from '../assets/images/jersey-background.png';
 import defaultJerseyOne from '../assets/images/jersey-one.png';
 
@@ -26,29 +25,23 @@ import footerTextRaw from '../super-admin/01. website-identity/Text/web footer.t
 import websiteLogoPic from '../super-admin/01. website-identity/Pic/logo.png';
 import websiteFaviconPic from '../super-admin/01. website-identity/Pic/favicon.png';
 
-// 02. Event Settings
+// 02. Event Settings (including Event Countdown)
 import eventNameRaw from '../super-admin/02. event-settings/Text/Event name.txt?raw';
 import eventCardRaw from '../super-admin/02. event-settings/Text/Event card.txt?raw';
 import eventDateRaw from '../super-admin/02. event-settings/Text/Event date.txt?raw';
+import countdownEventRaw from '../super-admin/02. event-settings/Text/Event countdown.txt?raw';
+import countdownEnableDisableRaw from '../super-admin/02. event-settings/Text/Countdown enable disable.txt?raw';
 import venueRawText from '../super-admin/02. event-settings/Text/Venue.txt?raw';
 
-// 03. Registration Settings
+// 03. Registration Settings (Text/ is the sole canonical location)
 import sectionSettingsRaw from '../super-admin/03. reg-settings/Text/Section settings.txt?raw';
-import sectionSettingsDirectRaw from '../super-admin/03. reg-settings/Section settings.txt?raw';
 import paymentNumberRaw from '../super-admin/03. reg-settings/Text/Payment number.txt?raw';
-import paymentNumberDirectRaw from '../super-admin/03. reg-settings/Payment number.txt?raw';
 import paymentNumberSCRaw from '../super-admin/03. reg-settings/Text/Payment number SC.txt?raw';
 import paymentNumberBSRaw from '../super-admin/03. reg-settings/Text/Payment number BS.txt?raw';
 import paymentNumberHURaw from '../super-admin/03. reg-settings/Text/Payment number HU.txt?raw';
 import lastRegistrationDateRaw from '../super-admin/03. reg-settings/Text/Last registration date countdown.txt?raw';
-import lastRegistrationDateDirectRaw from '../super-admin/03. reg-settings/Last registration date countdown.txt?raw';
 import registrationToggleRaw from '../super-admin/03. reg-settings/Text/Enable Disable.txt?raw';
-import registrationToggleDirectRaw from '../super-admin/03. reg-settings/Enable Disable.txt?raw';
 import backJerseyPic from '../super-admin/03. reg-settings/Pic/back jersey preview.png';
-
-// 04. Countdown Settings
-import countdownEventRaw from '../super-admin/04. countdown-settings/Text/Countdown of Event.txt?raw';
-import countdownEnableDisableRaw from '../super-admin/04. countdown-settings/Text/Enable Disable.txt?raw';
 
 // 05. Important Notice
 import noticeBoardRaw from '../super-admin/05. important-notice/Text/Notice Board.txt?raw';
@@ -67,23 +60,24 @@ import jerseyDesignRaw02 from '../super-admin/02. event-settings/Text/Jersey des
 // ============================================================================
 
 function parsePaymentNumberFile(rawText: string): {
-  maleBkash: string; maleNagad: string; femaleBkash: string; femaleNagad: string;
+  maleBkash: string;
+  maleNagad: string;
   groups: Record<string, { bkash: string; nagad: string }>;
 } {
-  let maleBkash = '', maleNagad = '', femaleBkash = '', femaleNagad = '';
+  let maleBkash = '';
+  let maleNagad = '';
   const groups: Record<string, { bkash: string; nagad: string }> = {
     Science: { bkash: '', nagad: '' },
     'Business Studies': { bkash: '', nagad: '' },
     Humanities: { bkash: '', nagad: '' },
   };
   for (const line of rawText.split(/\r?\n/).map(value => value.trim()).filter(Boolean)) {
-    const legacy = line.match(/^(male|female)\s*(bkash|nagad)[:\s]+(.+)$/i);
+    const legacy = line.match(/^male\s*(bkash|nagad)[:\s]+(.+)$/i);
     if (legacy) {
-      const gender = legacy[1].toLowerCase(), provider = legacy[2].toLowerCase(), value = legacy[3].trim();
-      if (gender === 'male' && provider === 'bkash') maleBkash = value;
-      if (gender === 'male' && provider === 'nagad') maleNagad = value;
-      if (gender === 'female' && provider === 'bkash') femaleBkash = value;
-      if (gender === 'female' && provider === 'nagad') femaleNagad = value;
+      const provider = legacy[1].toLowerCase();
+      const value = legacy[2].trim();
+      if (provider === 'bkash') maleBkash = value;
+      if (provider === 'nagad') maleNagad = value;
       continue;
     }
     const match = line.match(/^(science|business studies|commerce|humanities|arts)\s+(bkash|nagad)[:\s]+(.+)$/i);
@@ -92,7 +86,7 @@ function parsePaymentNumberFile(rawText: string): {
       groups[group][match[2].toLowerCase() as 'bkash' | 'nagad'] = match[3].trim();
     }
   }
-  return { maleBkash, maleNagad, femaleBkash, femaleNagad, groups };
+  return { maleBkash, maleNagad, groups };
 }
 
 export function parseEventCardsContent(rawText: string): EventCard[] {
@@ -104,6 +98,7 @@ export function parseEventCardsContent(rawText: string): EventCard[] {
 
   let currentTitle = '';
   let currentDescLines: string[] = [];
+  let currentVisible = true;
   let cardCount = 0;
 
   const pushCurrentCard = () => {
@@ -111,7 +106,6 @@ export function parseEventCardsContent(rawText: string): EventCard[] {
       cardCount++;
       const colorIndex = (cardCount - 1) % colorPalette.length;
 
-      // Smart contextual icon matching
       let icon = iconPalette[(cardCount - 1) % iconPalette.length];
       const lower = (currentTitle + ' ' + currentDescLines.join(' ')).toLowerCase();
       if (/fee|cost|payment|amount|price|taka|bdt|\$/i.test(lower)) {
@@ -139,10 +133,11 @@ export function parseEventCardsContent(rawText: string): EventCard[] {
         icon,
         customColor: colorPalette[colorIndex],
         order: cardCount,
-        visible: true,
+        visible: currentVisible,
       });
       currentTitle = '';
       currentDescLines = [];
+      currentVisible = true;
     }
   };
 
@@ -152,12 +147,15 @@ export function parseEventCardsContent(rawText: string): EventCard[] {
 
     const titleMatch = line.match(/^title[:]\s*(.+)$/i);
     const descMatch = line.match(/^description[:]\s*(.+)$/i);
+    const visibleMatch = line.match(/^visible[:]\s*(.+)$/i);
 
     if (titleMatch) {
       pushCurrentCard();
       currentTitle = titleMatch[1].trim();
     } else if (descMatch) {
       currentDescLines.push(descMatch[1].trim());
+    } else if (visibleMatch && currentTitle) {
+      currentVisible = !/^(false|0|no|hide|hidden|disable|disabled)$/i.test(visibleMatch[1].trim());
     } else if (currentTitle) {
       currentDescLines.push(line);
     }
@@ -298,7 +296,7 @@ function dedupeStrings(values: string[]): string[] {
 }
 
 export function parseMaleSectionSettings(rawInput?: string): MaleSectionSettings {
-  const fileContent = (sectionSettingsRaw || sectionSettingsDirectRaw || '').trim();
+  const fileContent = String(sectionSettingsRaw || '').trim();
   const rawSetting = typeof rawInput === 'string'
     ? rawInput.trim()
     : getSavedSuperAdminText('03. reg-settings/Text/Section settings.txt', fileContent).trim();
@@ -528,7 +526,7 @@ export function calculateRegistrationOpenState(): {
   reason: 'active' | 'before_start' | 'after_end' | 'manual_enabled' | 'manual_disabled';
 } {
   try {
-    const toggleContent = String(registrationToggleRaw || registrationToggleDirectRaw || '').trim();
+    const toggleContent = String(registrationToggleRaw || '').trim();
     const regToggle = getSavedSuperAdminText('03. reg-settings/Text/Enable Disable.txt', toggleContent).toLowerCase().trim();
     const manualOverride = safeStorage.getItem('rd27_manual_reg_override');
 
@@ -541,11 +539,11 @@ export function calculateRegistrationOpenState(): {
     }
 
     // Automatic schedule check
-    const lastDateContent = String(lastRegistrationDateRaw || lastRegistrationDateDirectRaw || '').trim();
+    const lastDateContent = String(lastRegistrationDateRaw || '').trim();
     const deadlineStr = getSavedSuperAdminText(
       '03. reg-settings/Text/Last registration date countdown.txt',
       lastDateContent
-    ) || '2026-11-01T23:59:59';
+    ) || '2027-01-25T23:59:59';
 
     const deadlineDate = parseSafeDate(deadlineStr);
 
@@ -570,7 +568,7 @@ export function setManualRegistrationOverride(override: 'enable' | 'disable' | '
 export function getRegistrationSettingsConfig() {
   // Dedicated group files are the source of truth. Legacy file remains a
   // backward-compatible fallback for already-deployed configurations.
-  const legacyContent = (paymentNumberRaw || paymentNumberDirectRaw || '').trim();
+  const legacyContent = String(paymentNumberRaw || '').trim();
   const legacyRaw = getSavedSuperAdminText('03. reg-settings/Text/Payment number.txt', legacyContent);
   const legacyPayments = parsePaymentNumberFile(legacyRaw);
   const parseGroupFile = (path: string, bundled: string, groupName: string) => {
@@ -609,25 +607,26 @@ export function getRegistrationSettingsConfig() {
     malePaymentNumber: payments.maleBkash,
     maleBkashNumber: payments.maleBkash,
     maleNagadNumber: payments.maleNagad,
-    femalePaymentNumber: payments.femaleBkash,
-    femaleBkashNumber: payments.femaleBkash,
-    femaleNagadNumber: payments.femaleNagad,
     groupPaymentNumbers: payments.groups,
     maleJerseyDesign: jersey || defaultMaleJersey,
-    femaleJerseyDesign: defaultFemaleJersey,
     jerseyPreviewBackground: backJersey || defaultJerseyBg,
     maleInvitationSignature: 'Executive Convener (Boys Wing)',
-    femaleInvitationSignature: 'Executive Convener (Girls Wing)',
   };
 }
 
 export function getCountdownSettingsConfig() {
   try {
     const fallbackEventDate = String(countdownEventRaw || '').trim() || String(eventDateRaw || '').trim();
-    const eventDate = getSavedSuperAdminText('04. countdown-settings/Text/Countdown of Event.txt', fallbackEventDate) || '2026-11-20T10:00:00';
-    const lastDateContent = String(lastRegistrationDateRaw || lastRegistrationDateDirectRaw || '').trim();
-    const deadline = getSavedSuperAdminText('03. reg-settings/Text/Last registration date countdown.txt', lastDateContent) || '2026-11-01T23:59:59';
-    const enableRaw = getSavedSuperAdminText('04. countdown-settings/Text/Enable Disable.txt', String(countdownEnableDisableRaw || '').trim()).toLowerCase();
+    const canonicalEventDate = getSavedSuperAdminText('02. event-settings/Text/Event countdown.txt', '').trim();
+    const legacyEventDate = getSavedSuperAdminText('04. countdown-settings/Text/Countdown of Event.txt', '').trim();
+    const eventDate = canonicalEventDate || legacyEventDate || fallbackEventDate || '2027-02-01T10:00:00';
+
+    const lastDateContent = String(lastRegistrationDateRaw || '').trim();
+    const deadline = getSavedSuperAdminText('03. reg-settings/Text/Last registration date countdown.txt', lastDateContent) || '2027-01-25T23:59:59';
+
+    const canonicalEnable = getSavedSuperAdminText('02. event-settings/Text/Countdown enable disable.txt', '').trim();
+    const legacyEnable = getSavedSuperAdminText('04. countdown-settings/Text/Enable Disable.txt', '').trim();
+    const enableRaw = (canonicalEnable || legacyEnable || String(countdownEnableDisableRaw || '').trim()).toLowerCase();
     const isCountdownEnabled = !/^(disable|disabled)$/i.test(enableRaw);
 
     return {
@@ -637,8 +636,8 @@ export function getCountdownSettingsConfig() {
     };
   } catch {
     return {
-      eventDate: '2026-11-20T10:00:00',
-      registrationDeadline: '2026-11-01T23:59:59',
+      eventDate: '2027-02-01T10:00:00',
+      registrationDeadline: '2027-01-25T23:59:59',
       countdownEnabled: true,
     };
   }
@@ -647,6 +646,7 @@ export function getCountdownSettingsConfig() {
 export interface HeaderNoticeItem {
   id: string;
   text: string;
+  enabled?: boolean;
 }
 
 export interface HeaderNoticeConfig {
@@ -680,7 +680,7 @@ export function parseHeaderNoticeConfig(rawInput?: string): HeaderNoticeConfig {
     try {
       const parsed = JSON.parse(rawText) as {
         enabled?: unknown;
-        notices?: Array<{ id?: unknown; text?: unknown }>;
+        notices?: Array<{ id?: unknown; text?: unknown; enabled?: unknown }>;
       };
       const enabled = typeof parsed.enabled === 'boolean' ? parsed.enabled : true;
       const notices: HeaderNoticeItem[] = Array.isArray(parsed.notices)
@@ -688,6 +688,7 @@ export function parseHeaderNoticeConfig(rawInput?: string): HeaderNoticeConfig {
             .map((item, idx) => ({
               id: typeof item?.id === 'string' && item.id.trim() ? item.id.trim() : `header-${idx + 1}`,
               text: typeof item?.text === 'string' ? item.text.trim() : '',
+              enabled: item?.enabled !== false,
             }))
             .filter(item => item.text.length > 0)
         : [];
@@ -707,6 +708,7 @@ export function parseHeaderNoticeConfig(rawInput?: string): HeaderNoticeConfig {
     notices: lines.map((text, idx) => ({
       id: `header-${idx + 1}`,
       text,
+      enabled: true,
     })),
   };
 }
@@ -784,13 +786,19 @@ export function getImportantNoticeConfig() {
   try {
     const headerConfig = getHeaderNoticesConfig();
     const popupConfig = getPopupNoticesConfig();
+    const activeHeaderNotices = headerConfig.enabled
+      ? headerConfig.notices.filter(item => item.enabled !== false && item.text.trim())
+      : [];
     const activePopupItems = popupConfig.enabled
       ? popupConfig.items.filter(item => item.enabled !== false && (item.title.trim() || item.message.trim()))
       : [];
 
     return {
-      noticeEnabled: headerConfig.enabled && headerConfig.notices.length > 0,
-      headerNotices: headerConfig,
+      noticeEnabled: activeHeaderNotices.length > 0,
+      headerNotices: {
+        enabled: headerConfig.enabled,
+        notices: activeHeaderNotices,
+      },
       popupEnabled: activePopupItems.length > 0,
       popupNotices: {
         ...popupConfig,
@@ -798,7 +806,7 @@ export function getImportantNoticeConfig() {
       },
       popupTitle: activePopupItems[0]?.title || 'Important Notice',
       popupMessage: activePopupItems[0]?.message || '',
-      noticeContent: headerConfig.notices.map(n => n.text).join('  •  '),
+      noticeContent: activeHeaderNotices.map(n => n.text).join('  •  '),
       closeButtonText: 'I Understand',
     };
   } catch {
@@ -815,13 +823,12 @@ export function getImportantNoticeConfig() {
   }
 }
 
-// 06. Logo Related — retain existing logo/favicon settings only.
+// 06. Logo Related — branding only.
 export const logoRelatedConfig = {
   get websiteLogo() { return getWebsiteIdentityConfig().websiteLogo; },
   get favicon() { return getWebsiteIdentityConfig().favicon; },
   get registrationJerseyBackPreview() { return getRegistrationSettingsConfig().jerseyPreviewBackground; },
   get maleJersey() { return getRegistrationSettingsConfig().maleJerseyDesign; },
-  get femaleJersey() { return defaultFemaleJersey; },
   get eventJersey() { return getEventSettingsConfig().eventJersey; },
 };
 
@@ -891,18 +898,13 @@ export const registrationSettingsConfig = {
   get malePaymentNumber() { return getRegistrationSettingsConfig().malePaymentNumber; },
   get maleBkashNumber() { return getRegistrationSettingsConfig().maleBkashNumber; },
   get maleNagadNumber() { return getRegistrationSettingsConfig().maleNagadNumber; },
-  get femalePaymentNumber() { return getRegistrationSettingsConfig().femalePaymentNumber; },
-  get femaleBkashNumber() { return getRegistrationSettingsConfig().femaleBkashNumber; },
-  get femaleNagadNumber() { return getRegistrationSettingsConfig().femaleNagadNumber; },
   get groupPaymentNumbers() { return getRegistrationSettingsConfig().groupPaymentNumbers; },
   get maleJerseyDesign() { return getRegistrationSettingsConfig().maleJerseyDesign; },
-  get femaleJerseyDesign() { return getRegistrationSettingsConfig().femaleJerseyDesign; },
   get jerseyPreviewBackground() { return getRegistrationSettingsConfig().jerseyPreviewBackground; },
   get maleInvitationSignature() { return getRegistrationSettingsConfig().maleInvitationSignature; },
-  get femaleInvitationSignature() { return getRegistrationSettingsConfig().femaleInvitationSignature; },
 };
 
-// 04. Countdown Settings
+// 02. Event Settings (Countdown Compatibility Reader)
 export const countdownSettingsConfig = {
   get eventDate() { return getCountdownSettingsConfig().eventDate; },
   get registrationDeadline() { return getCountdownSettingsConfig().registrationDeadline; },

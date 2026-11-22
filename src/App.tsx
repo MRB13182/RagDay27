@@ -30,7 +30,6 @@ import {
   registrationSettingsConfig,
   countdownSettingsConfig,
   importantNoticeConfig,
-  logoRelatedConfig,
   getJerseyShowcaseCards,
 } from './config/eventConfig';
 import type {
@@ -279,8 +278,6 @@ export default function App() {
     nagadEnabled: true,
     maleBkashNumber: registrationSettingsConfig.maleBkashNumber,
     maleNagadNumber: registrationSettingsConfig.maleNagadNumber,
-    femaleBkashNumber: registrationSettingsConfig.maleBkashNumber,
-    femaleNagadNumber: registrationSettingsConfig.femaleNagadNumber,
     groupPaymentNumbers: registrationSettingsConfig.groupPaymentNumbers,
     instructions: eventSettingsConfig.importantInstructions,
     paymentInstructions: eventSettingsConfig.importantInstructions,

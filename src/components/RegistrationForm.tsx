@@ -287,7 +287,6 @@ export const RegistrationForm: React.FC<RegistrationFormProps> = ({
   };
 
   const isMale = formData.gender === 'male';
-  const isFemale = formData.gender === 'female';
   const isGenderChosen = formData.gender !== 'choose_one';
 
   // Container & styling classes aligned with Obsidian Black / Liquid Silver / Ice Blue system

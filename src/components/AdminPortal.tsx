@@ -1,7 +1,7 @@
 import React, { useEffect, useMemo, useState } from 'react';
-import { SuperAdminDashboard } from './SuperAdminDashboard';
+import { SuperAdminDashboard } from '../super-admin/SuperAdminDashboard';
 import type { InvitationRecord, InvitationStatus, AdminProfile, PdfSettings, WebsiteSettings } from '../types';
-import { signInAdmin, signOutAdmin, getCurrentAdmin } from '../lib/supabase';
+import { signInPortalAdmin, signOutAdmin, signOutSuperAdmin } from '../lib/supabase';
 import { getRegistrationList } from '../services/admin';
 import { resolveStudentPhotoUrl } from '../services/storage';
 import { calculateRegistrationOpenState, setManualRegistrationOverride } from '../lib/superAdminConfig';
@@ -150,6 +150,13 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
   const [hidingRegNo, setHidingRegNo] = useState<string | null>(null);
   const [exportingGroup, setExportingGroup] = useState<RegistrationGroupFilter | null>(null);
   const [actionMessage, setActionMessage] = useState<{ text: string; type: 'success' | 'error' } | null>(null);
+  const [confirmDialog, setConfirmDialog] = useState<{
+    title: string;
+    description: string;
+    confirmLabel: string;
+    danger?: boolean;
+    onConfirm: () => void | Promise<void>;
+  } | null>(null);
 
   // Expanded details drawer/modal
   const [selectedRecord, setSelectedRecord] = useState<InvitationRecord | null>(null);
@@ -159,17 +166,29 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
 
   const handleToggleRegistrationOpen = () => {
     if (regState.isOpen) {
-      const confirmDisable = window.confirm("Manually DISABLE registration? Students will not be able to register until re-enabled.");
-      if (!confirmDisable) return;
-      setManualRegistrationOverride('disable');
-      setRegState(calculateRegistrationOpenState());
-      setActionMessage({ text: 'Registration manually DISABLED by admin.', type: 'success' });
+      setConfirmDialog({
+        title: 'Disable Registration',
+        description: 'Manually DISABLE registration? Students will not be able to register until re-enabled.',
+        confirmLabel: 'Disable Registration',
+        danger: true,
+        onConfirm: () => {
+          setManualRegistrationOverride('disable');
+          setRegState(calculateRegistrationOpenState());
+          setActionMessage({ text: 'Registration manually DISABLED by admin.', type: 'success' });
+        },
+      });
     } else {
-      const confirmEnable = window.confirm("Manually ENABLE registration? Students will be able to register immediately.");
-      if (!confirmEnable) return;
-      setManualRegistrationOverride('enable');
-      setRegState(calculateRegistrationOpenState());
-      setActionMessage({ text: 'Registration manually ENABLED by admin.', type: 'success' });
+      setConfirmDialog({
+        title: 'Enable Registration',
+        description: 'Manually ENABLE registration? Students will be able to register immediately.',
+        confirmLabel: 'Enable Registration',
+        danger: false,
+        onConfirm: () => {
+          setManualRegistrationOverride('enable');
+          setRegState(calculateRegistrationOpenState());
+          setActionMessage({ text: 'Registration manually ENABLED by admin.', type: 'success' });
+        },
+      });
     }
   };
 
@@ -216,27 +235,19 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
     }
   }, [admin?.role]);
 
-  // Login handler
+  // Login handler (strictly server-side verified via Supabase RPCs)
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoginError('');
     setIsLoggingIn(true);
     try {
-      // Simple frontend passcode gate, matching the existing Male Admin login flow.
-      // This is intentionally client-side and is not secure authentication.
-      const configuredSuperPasscode = 'admin.nic27';
-      if (passcode === configuredSuperPasscode) {
+      const result = await signInPortalAdmin(passcode);
+      if (result.kind === 'super_admin') {
         setSuperAdminUnlocked(true);
         setPasscode('');
         return;
       }
-      const profile = await signInAdmin(passcode);
-      if (profile.role !== 'male_admin') {
-        await signOutAdmin();
-        setLoginError('Only Male Admin access is enabled for this website.');
-        return;
-      }
-      setAdmin(profile);
+      setAdmin(result.profile);
       setPasscode('');
     } catch (err: any) {
       setLoginError(err?.message || 'Invalid Admin Passcode');
@@ -248,6 +259,8 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
   // Secure close handler (ensures credentials and sensitive data are wiped)
   const handleClose = async () => {
     await signOutAdmin();
+    await signOutSuperAdmin();
+    setSuperAdminUnlocked(false);
     setAdmin(null);
     setAdminRegistrations([]);
     setRegistrationLoadError('');
@@ -255,12 +268,15 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
     setLoginError('');
     setSelectedRecord(null);
     setRejectingRecord(null);
+    setConfirmDialog(null);
     onClose();
   };
 
   // Logout handler
   const handleLogout = async () => {
     await signOutAdmin();
+    await signOutSuperAdmin();
+    setSuperAdminUnlocked(false);
     setAdmin(null);
     setAdminRegistrations([]);
     setRegistrationLoadError('');
@@ -268,6 +284,7 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
     setLoginError('');
     setSelectedRecord(null);
     setRejectingRecord(null);
+    setConfirmDialog(null);
   };
 
   // Filtered registrations
@@ -398,26 +415,33 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
   };
 
   // Hide / Delete action (Web-only soft delete)
-  const handleHide = async (regNo: string) => {
+  const handleHide = (regNo: string) => {
     if (!onDeleteRegistration) return;
-    const confirmed = window.confirm(`Are you sure you want to remove ${regNo} from the web view? This record will remain safely stored in the database.`);
-    if (!confirmed) return;
-
-    setHidingRegNo(regNo);
-    setActionMessage(null);
-    try {
-      await onDeleteRegistration(regNo);
-      // Remove from current admin view immediately as designed
-      setAdminRegistrations(prev => prev.filter(r => r.registration_no !== regNo));
-      if (selectedRecord?.registration_no === regNo) {
-        setSelectedRecord(null);
-      }
-      setActionMessage({ text: `Registration ${regNo} removed from view. (Database record preserved)`, type: 'success' });
-    } catch (err: any) {
-      setActionMessage({ text: err?.message || `Unable to remove ${regNo}`, type: 'error' });
-    } finally {
-      setHidingRegNo(null);
-    }
+    setConfirmDialog({
+      title: 'Remove Registration from Web View',
+      description: `Are you sure you want to remove ${regNo} from the web view? This record will remain safely stored in the database.`,
+      confirmLabel: 'Remove from View',
+      danger: true,
+      onConfirm: async () => {
+        setHidingRegNo(regNo);
+        setActionMessage(null);
+        try {
+          await onDeleteRegistration(regNo);
+          setAdminRegistrations(prev => prev.filter(r => r.registration_no !== regNo));
+          if (selectedRecord?.registration_no === regNo) {
+            setSelectedRecord(null);
+          }
+          setActionMessage({
+            text: `Registration ${regNo} removed from view. (Database record preserved)`,
+            type: 'success',
+          });
+        } catch (err: any) {
+          setActionMessage({ text: err?.message || `Unable to remove ${regNo}`, type: 'error' });
+        } finally {
+          setHidingRegNo(null);
+        }
+      },
+    });
   };
 
   // Export ledger to PDF
@@ -455,7 +479,16 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
   // LOGIN SCREEN (If not authenticated)
   // --------------------------------------------------------------------------
   if (superAdminUnlocked) {
-    return <SuperAdminDashboard onLogout={async () => { setSuperAdminUnlocked(false); setPasscode(''); setLoginError(''); }} />;
+    return (
+      <SuperAdminDashboard
+        onLogout={async () => {
+          await signOutSuperAdmin();
+          setSuperAdminUnlocked(false);
+          setPasscode('');
+          setLoginError('');
+        }}
+      />
+    );
   }
 
   if (!admin) {
@@ -490,9 +523,8 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
   // --------------------------------------------------------------------------
   // AUTHENTICATED MALE ADMIN PANEL
   // --------------------------------------------------------------------------
-  const isMaleAdmin = true;
   const panelTitle = 'Male Admin Panel';
-  const genderLabel = isMaleAdmin ? 'Male' : 'Female';
+  const genderLabel = 'Male';
   const genderSubtext = 'Boys Wing';
 
   return (
@@ -511,7 +543,7 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
                 aria-hidden="true"
                 className="w-5 h-5 sm:w-6 sm:h-6 rounded-full bg-[#8BEAFF]/20 text-[#8BEAFF] grid place-items-center text-xs sm:text-sm font-black shrink-0"
               >
-                {isMaleAdmin ? '♂' : '♀'}
+                ♂
               </span>
               <span className="text-xs sm:text-sm font-bold text-[#F5F7FA] leading-none">
                 {genderLabel}
@@ -1229,6 +1261,48 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
               </div>
             </footer>
 
+          </div>
+        </div>
+      )}
+
+      {/* ---------------------------------------------------------------------- */}
+      {/* IN-APP CONFIRMATION MODAL                                              */}
+      {/* ---------------------------------------------------------------------- */}
+      {confirmDialog && (
+        <div
+          role="dialog"
+          aria-modal="true"
+          className="fixed inset-0 z-[340] bg-[#08090D]/82 backdrop-blur-lg flex items-center justify-center p-4 animate-fadeIn"
+        >
+          <div className="w-full max-w-md glass-modal rounded-2xl p-6 border border-[#C9D0D9]/22 text-[#F5F7FA] shadow-[0_32px_90px_rgba(0,0,0,0.8)]">
+            <h3 className="text-base font-display font-bold text-[#F5F7FA]">{confirmDialog.title}</h3>
+            <p className="mt-2 text-xs sm:text-sm text-[#94A0B2] leading-relaxed">
+              {confirmDialog.description}
+            </p>
+            <div className="mt-5 flex items-center justify-end gap-2.5 border-t border-[#C9D0D9]/15 pt-4">
+              <button
+                type="button"
+                onClick={() => setConfirmDialog(null)}
+                className="px-4 py-2 rounded-xl glass-button text-xs font-bold text-[#C9D0D9] cursor-pointer"
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                onClick={async () => {
+                  const action = confirmDialog.onConfirm;
+                  setConfirmDialog(null);
+                  await action();
+                }}
+                className={`px-4 py-2 rounded-xl text-xs font-bold cursor-pointer ${
+                  confirmDialog.danger
+                    ? 'bg-rose-600 hover:bg-rose-500 text-white'
+                    : 'bg-[#8BEAFF] hover:brightness-110 text-[#08090D]'
+                }`}
+              >
+                {confirmDialog.confirmLabel}
+              </button>
+            </div>
           </div>
         </div>
       )}

@@ -1,73 +1,97 @@
-# RagDay27 Super Admin — Protected Configuration
+# RagDay27 Super Admin — Protected Configuration & Console
 
-IMPORTANT
+This directory is the protected Super Admin configuration and management layer for **NIC 27 / RagDay27**.
+The Super Admin console manages exactly **6 sections**, with zero duplicate settings files.
 
-READ FIRST. ANALYZE FIRST. UNDERSTAND FIRST.
+## Final Folder Structure & Sections
 
-This directory is the protected Super Admin configuration layer for RagDay27.
+```text
+src/super-admin/
+├── 01. website-identity/
+│   ├── Pic/
+│   │   ├── logo.png
+│   │   └── favicon.png
+│   └── Text/
+│       ├── web name.txt
+│       ├── web header.txt
+│       └── web footer.txt
+├── 02. event-settings/
+│   ├── Pic/
+│   │   └── jersey-design.png
+│   └── Text/
+│       ├── Event name.txt
+│       ├── Event date.txt
+│       ├── Event countdown.txt
+│       ├── Countdown enable disable.txt
+│       ├── Venue.txt
+│       ├── Jersey design.txt
+│       └── Event card.txt
+├── 03. reg-settings/
+│   ├── Pic/
+│   │   └── back jersey preview.png
+│   └── Text/                  # Sole canonical location for all Registration Settings text files
+│       ├── Enable Disable.txt
+│       ├── Last registration date countdown.txt
+│       ├── Section settings.txt
+│       ├── Payment number.txt
+│       ├── Payment number SC.txt
+│       ├── Payment number BS.txt
+│       └── Payment number HU.txt
+├── 05. important-notice/
+│   └── Text/
+│       ├── Notice Board.txt   # Header Notice ticker (independent)
+│       ├── Popup Notice.txt   # Popup Notice slideshow modal (independent)
+│       └── Enable Disable.txt
+├── 06. logo-related/
+│   ├── Pic/
+│   │   ├── logo.png
+│   │   └── favicon.png
+│   └── Text/
+│       └── logo-settings.txt
+├── components/
+│   └── SuperAdminUI.tsx
+├── gallery/
+│   ├── GalleryManagement.tsx
+│   ├── types.ts
+│   └── file_00000000b180820783d44c1a5d04d553.png
+├── sections/
+│   ├── WebsiteIdentitySection.tsx
+│   ├── EventSettingsSection.tsx
+│   ├── RegistrationSettingsSection.tsx
+│   ├── ImportantNoticeSection.tsx
+│   ├── LogoRelatedSection.tsx
+│   └── GallerySection.tsx
+├── .structure.json
+├── README.md
+├── SuperAdminDashboard.tsx
+└── types.ts
+```
 
-## Required Editable Configuration
+## Section Overview
 
-The following configuration files are intended to be editable from the protected Super Admin context:
+### 1. `01. website-identity`
+Manages site branding text (`web name.txt`, `web header.txt`, `web footer.txt`) and stores the default website logo and favicon assets (`Pic/logo.png`, `Pic/favicon.png`).
 
-### 01. Website Identity
-- `01. website-identity/Text/web name.txt`
-- `01. website-identity/Text/web header.txt`
-- `01. website-identity/Text/web footer.txt`
-- `01. website-identity/Pic/logo.png`
-- `01. website-identity/Pic/favicon.png`
+### 2. `02. event-settings` (Includes Event Countdown)
+Manages event title, date, venue, jersey showcase copy, and Event Information Cards.
+**Event Countdown** (`Event countdown.txt` and `Countdown enable disable.txt`) lives directly inside `02. event-settings/Text/`—there is no separate `04. countdown-settings` folder.
 
-### 02. Event Settings
-- `02. event-settings/Pic/jersey-design.png`
-- `02. event-settings/Text/Jersey design.txt`
-- `02. event-settings/Text/Event name.txt`
-- `02. event-settings/Text/Event card.txt`
-- `02. event-settings/Text/Event date.txt`
-- `02. event-settings/Text/Venue.txt`
+### 3. `03. reg-settings`
+All registration configuration files live exclusively inside `03. reg-settings/Text/` as the single canonical location: open/close toggle, closing deadline, male-only categories & sections (`Section settings.txt`), and group-wise bKash/Nagad numbers (`SC`, `BS`, `HU`).
 
-### 03. Registration Settings
-- `03. reg-settings/Pic/back jersey preview.png`
-- `03. reg-settings/Text/Section settings.txt`
-- `03. reg-settings/Text/Payment number.txt`
-- `03. reg-settings/Text/Last registration date countdown.txt`
-- `03. reg-settings/Text/Enable Disable.txt`
+### 4. `05. important-notice`
+Independently manages **Header Notice** (`Notice Board.txt`) and **Popup Notice** (`Popup Notice.txt`) with separate visibility toggles, ordering, multiple items, and Supabase database persistence.
 
-### 04. Countdown Settings
-- `04. countdown-settings/Text/Countdown of Event.txt`
-- `04. countdown-settings/Text/Enable Disable.txt`
+### 5. `06. logo-related`
+Provides live preview and replacement upload for the official Website Logo and Favicon via Supabase Storage and `site_settings`.
 
-### 05. Important Notice
-- `05. important-notice/Text/Notice Board.txt`
-- `05. important-notice/Text/Popup Notice.txt`
-- `05. important-notice/Text/Enable Disable.txt`
+### 6. `gallery`
+Manages cross-device image and video gallery uploads, captions, ordering, publish toggles, and deletion backed by Supabase Storage and `public.gallery_items`.
 
-Text files are UTF-8 plain text and must remain editable without introducing database-backed registration data.
+## Security & Execution Rules
 
-Image entries are image assets and must remain image assets. The application must use them as images, provide preview/upload/replacement behavior in the protected Super Admin context, and never reinterpret them as text.
-
-## Security Rules
-
-1. `src/super-admin/**` is SUPER ADMIN ONLY.
-2. By default this directory is READ-ONLY for normal development and normal admin roles.
-3. Normal admin roles remain only:
-   - `male_admin`
-   - `female_admin`
-4. Never create a new `super_admin` authentication role or any other admin role unless the user explicitly requests a role-model change.
-5. Normal admin code must not modify, delete, rename, move, refactor, replace, regenerate, or restructure protected files.
-6. Only an explicit Super Admin instruction authorizes changes inside this directory.
-7. Validation may verify the protected structure, but must never recreate missing protected files automatically.
-8. Supabase remains the source of truth for real registration records.
-
-## Execution Rules
-
-Apply approved changes directly to the existing codebase.
-
-Do NOT:
-- create a new branch
-- create a PR
-- fork the project
-- duplicate the application
-- create parallel implementations
-- fragment the architecture
-
-Preserve existing functionality and reuse existing code paths whenever possible.
+1. `src/super-admin/**` is SUPER ADMIN ONLY and requires explicit authorization before modification.
+2. Normal admin access uses server-verified `male_admin` authentication.
+3. No passcodes or secrets may be hardcoded in frontend source files or SQL migrations.
+4. Supabase remains the single source of truth for registrations, site settings, and gallery media.
+5. Apply approved work directly on `main`; do not create branches, PRs, or forks.

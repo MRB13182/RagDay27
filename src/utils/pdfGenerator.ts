@@ -111,15 +111,14 @@ export const generateRegistrationListPDF = async (
   records: InvitationRecord[],
   pdfSettings: PdfSettings,
   websiteSettings: WebsiteSettings,
-  adminRole: 'male_admin' | 'female_admin',
+  adminRole: 'male_admin',
   groupFilter?: RegistrationGroupFilter
 ) => {
-  const expectedGender =
-    adminRole === 'male_admin' ? 'male' : adminRole === 'female_admin' ? 'female' : null;
-
-  if (!expectedGender) {
+  if (adminRole !== 'male_admin') {
     throw new Error('Invalid admin role for registration ledger PDF.');
   }
+  const expectedGender = 'male' as const;
+
   if (records.some(record => record.gender !== expectedGender)) {
     throw new Error(`Registration ledger contains records outside the ${adminRole} scope.`);
   }

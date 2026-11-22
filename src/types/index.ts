@@ -144,8 +144,6 @@ export interface PaymentSettings {
   nagadEnabled: boolean;
   maleBkashNumber: string;
   maleNagadNumber: string;
-  femaleBkashNumber: string;
-  femaleNagadNumber: string;
   instructions?: string;
   paymentInstructions?: string;
   groupPaymentNumbers?: Record<string, { bkash: string; nagad: string }>;

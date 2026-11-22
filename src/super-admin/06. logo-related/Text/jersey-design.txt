@@ -1,4 +1,0 @@
--e Card:
-Title: Official Rag Day Jersey
-Description: Custom Squad Kit with Personalized Back Name & Number Print Included
-Image: jersey-design.png

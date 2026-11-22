@@ -427,13 +427,6 @@
   box-shadow: 0 0 0 3px rgba(139, 234, 255, 0.20);
 }
 
-.glass-female {
-  background: linear-gradient(155deg, rgba(21, 27, 35, 0.94) 0%, rgba(11, 14, 19, 0.96) 100%);
-  backdrop-filter: blur(24px);
-  -webkit-backdrop-filter: blur(24px);
-  border: 1px solid rgba(201, 208, 217, 0.32);
-  box-shadow: 0 28px 70px -16px rgba(0, 0, 0, 0.85);
-}
 
 .registration-page-shell {
   background:

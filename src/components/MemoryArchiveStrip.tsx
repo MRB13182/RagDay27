@@ -1,7 +1,7 @@
-import React, { useEffect, useMemo, useRef, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { ArrowRight, ChevronLeft, ChevronRight, Film, Image as ImageIcon, Images } from 'lucide-react';
 import type { GalleryMedia } from '../super-admin/gallery/types';
-import { getGalleryMedia, subscribeToGalleryChanges } from '../services/gallery';
+import { getPublishedGalleryMedia, subscribeToGalleryChanges } from '../services/gallery';
 import batchPedestalImg from '../assets/images/batch_pedestal_27_1795068445518.jpg';
 import jerseyStageBg from '../assets/images/jersey_stage_bg_1795068445588.jpg';
 import nicBuildingImg from '../../nic.png';
@@ -68,19 +68,18 @@ const BUNDLED_ARCHIVE_ENTRIES: PreviewItem[] = [
 ];
 
 export const MemoryArchiveStrip: React.FC<MemoryArchiveStripProps> = ({ onOpenGallery }) => {
-  const [localMedia, setLocalMedia] = useState<GalleryMedia[]>([]);
+  const [remoteMedia, setRemoteMedia] = useState<GalleryMedia[]>([]);
   const [activeIndex, setActiveIndex] = useState(0);
   const [failedIds, setFailedIds] = useState<Set<string>>(() => new Set());
-  const objectUrlsRef = useRef<Map<string, string>>(new Map());
 
   useEffect(() => {
     let mounted = true;
     const load = async () => {
       try {
-        const items = await getGalleryMedia();
-        if (mounted) setLocalMedia(items);
+        const items = await getPublishedGalleryMedia();
+        if (mounted) setRemoteMedia(items);
       } catch {
-        // Silently degrade to bundled archive entry when storage is unavailable
+        // Silently degrade to bundled archive entry when offline
       }
     };
     void load();
@@ -97,31 +96,20 @@ export const MemoryArchiveStrip: React.FC<MemoryArchiveStripProps> = ({ onOpenGa
     return () => {
       mounted = false;
       unsub();
-      objectUrlsRef.current.forEach((url) => URL.revokeObjectURL(url));
-      objectUrlsRef.current.clear();
     };
   }, []);
 
   const entries = useMemo<PreviewItem[]>(() => {
-    const locals: PreviewItem[] = localMedia.map((item, idx) => {
-      let url = objectUrlsRef.current.get(item.id) || '';
-      if (!url) {
-        try {
-          url = URL.createObjectURL(item.blob);
-          objectUrlsRef.current.set(item.id, url);
-        } catch {
-          url = '';
-        }
-      }
-      return {
+    const locals: PreviewItem[] = remoteMedia
+      .filter(item => Boolean(item.image_url))
+      .map((item, idx) => ({
         id: item.id,
         type: item.type,
         chapterLabel: CHAPTER_LABELS[idx % CHAPTER_LABELS.length],
         title: item.title || 'Batch Memory',
         caption: item.caption || 'Batch 2027 Archive',
-        url,
-      };
-    });
+        url: item.image_url,
+      }));
 
     if (locals.length >= 4) {
       return locals;
@@ -129,7 +117,7 @@ export const MemoryArchiveStrip: React.FC<MemoryArchiveStripProps> = ({ onOpenGa
 
     // Prioritize real uploaded items and bundled gallery image while maintaining 4 archive frames
     return [...locals, ...BUNDLED_ARCHIVE_ENTRIES].slice(0, Math.max(4, locals.length + 1));
-  }, [localMedia]);
+  }, [remoteMedia]);
 
   useEffect(() => {
     setActiveIndex((prev) => Math.min(prev, Math.max(entries.length - 1, 0)));

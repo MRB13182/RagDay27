@@ -1,0 +1,2 @@
+Website Logo: 01. website-identity/Pic/logo.png
+Website Favicon: 01. website-identity/Pic/favicon.png
