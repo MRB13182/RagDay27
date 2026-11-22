@@ -29,24 +29,23 @@ import websiteFaviconPic from '../super-admin/01. website-identity/Pic/favicon.p
 import eventNameRaw from '../super-admin/02. event-settings/Text/Event name.txt?raw';
 import eventCardRaw from '../super-admin/02. event-settings/Text/Event card.txt?raw';
 import eventDateRaw from '../super-admin/02. event-settings/Text/Event date.txt?raw';
-import countdownEventRaw from '../super-admin/02. event-settings/Text/Event countdown.txt?raw';
-import countdownEnableDisableRaw from '../super-admin/02. event-settings/Text/Countdown enable disable.txt?raw';
+import countdownEnableDisableRaw from '../super-admin/02. event-settings/Text/Countedown enable disable.txt?raw';
+import eventFeesRaw from '../super-admin/02. event-settings/Text/Fees.txt?raw';
 import venueRawText from '../super-admin/02. event-settings/Text/Venue.txt?raw';
 
 // 03. Registration Settings (Text/ is the sole canonical location)
 import sectionSettingsRaw from '../super-admin/03. reg-settings/Text/Section settings.txt?raw';
-import paymentNumberRaw from '../super-admin/03. reg-settings/Text/Payment number.txt?raw';
 import paymentNumberSCRaw from '../super-admin/03. reg-settings/Text/Payment number SC.txt?raw';
 import paymentNumberBSRaw from '../super-admin/03. reg-settings/Text/Payment number BS.txt?raw';
 import paymentNumberHURaw from '../super-admin/03. reg-settings/Text/Payment number HU.txt?raw';
-import lastRegistrationDateRaw from '../super-admin/03. reg-settings/Text/Last registration date countdown.txt?raw';
-import registrationToggleRaw from '../super-admin/03. reg-settings/Text/Enable Disable.txt?raw';
+import lastRegistrationDateRaw from '../super-admin/03. reg-settings/Text/Last Registration date.txt?raw';
+import registrationToggleRaw from '../super-admin/03. reg-settings/Text/Countdown enable disable.txt?raw';
 import backJerseyPic from '../super-admin/03. reg-settings/Pic/back jersey preview.png';
 
 // 05. Important Notice
-import noticeBoardRaw from '../super-admin/05. important-notice/Text/Notice Board.txt?raw';
-import popupNoticeRaw from '../super-admin/05. important-notice/Text/Popup Notice.txt?raw';
-import noticeEnableDisableRaw from '../super-admin/05. important-notice/Text/Enable Disable.txt?raw';
+import noticeBoardRaw from '../super-admin/04. important-notice/Text/Notice Board.txt?raw';
+import popupNoticeRaw from '../super-admin/04. important-notice/Text/Popup Notice.txt?raw';
+import noticeEnableDisableRaw from '../super-admin/04. important-notice/Text/Enable Disable.txt?raw';
 
 // 06. Logo Related — branding only; jersey showcase is managed in Section 02.
 import logoPic06 from '../super-admin/06. logo-related/Pic/logo.png';
@@ -527,7 +526,7 @@ export function calculateRegistrationOpenState(): {
 } {
   try {
     const toggleContent = String(registrationToggleRaw || '').trim();
-    const regToggle = getSavedSuperAdminText('03. reg-settings/Text/Enable Disable.txt', toggleContent).toLowerCase().trim();
+    const regToggle = getSavedSuperAdminText('03. reg-settings/Text/Countdown enable disable.txt', toggleContent).toLowerCase().trim();
     const manualOverride = safeStorage.getItem('rd27_manual_reg_override');
 
     // Manual admin control overrides automatic schedule
@@ -541,7 +540,7 @@ export function calculateRegistrationOpenState(): {
     // Automatic schedule check
     const lastDateContent = String(lastRegistrationDateRaw || '').trim();
     const deadlineStr = getSavedSuperAdminText(
-      '03. reg-settings/Text/Last registration date countdown.txt',
+      '03. reg-settings/Text/Last Registration date.txt',
       lastDateContent
     ) || '2027-01-25T23:59:59';
 
@@ -566,11 +565,8 @@ export function setManualRegistrationOverride(override: 'enable' | 'disable' | '
 }
 
 export function getRegistrationSettingsConfig() {
-  // Dedicated group files are the source of truth. Legacy file remains a
-  // backward-compatible fallback for already-deployed configurations.
-  const legacyContent = String(paymentNumberRaw || '').trim();
-  const legacyRaw = getSavedSuperAdminText('03. reg-settings/Text/Payment number.txt', legacyContent);
-  const legacyPayments = parsePaymentNumberFile(legacyRaw);
+  // The three group-specific files are the only payment-number sources.
+  const legacyPayments = { maleBkash: '', maleNagad: '', groups: { Science: { bkash: '', nagad: '' }, 'Business Studies': { bkash: '', nagad: '' }, Humanities: { bkash: '', nagad: '' } } };
   const parseGroupFile = (path: string, bundled: string, groupName: string) => {
     const raw = getSavedSuperAdminText(path, bundled.trim());
     const values = { bkash: '', nagad: '' };
@@ -596,8 +592,7 @@ export function getRegistrationSettingsConfig() {
   const jersey = getSuperAdminImageUrl('02. event-settings/Pic/jersey-design.png', eventJerseyDesignPic02 || defaultMaleJersey);
   const backJersey = getSuperAdminImageUrl('03. reg-settings/Pic/back jersey preview.png', backJerseyPic || defaultJerseyBg);
 
-  const cardRaw = getSavedSuperAdminText('02. event-settings/Text/Event card.txt', eventCardRaw.trim());
-  const customFee = extractFeeFromEventCards(cardRaw);
+  const customFee = getSavedSuperAdminText('02. event-settings/Text/Fees.txt', String(eventFeesRaw || '').trim() || '500 BDT').trim() || '500 BDT';
 
   return {
     registrationOpen: openState.isOpen,
@@ -616,29 +611,28 @@ export function getRegistrationSettingsConfig() {
 
 export function getCountdownSettingsConfig() {
   try {
-    const fallbackEventDate = String(countdownEventRaw || '').trim() || String(eventDateRaw || '').trim();
-    const canonicalEventDate = getSavedSuperAdminText('02. event-settings/Text/Event countdown.txt', '').trim();
-    const legacyEventDate = getSavedSuperAdminText('04. countdown-settings/Text/Countdown of Event.txt', '').trim();
-    const eventDate = canonicalEventDate || legacyEventDate || fallbackEventDate || '2027-02-01T10:00:00';
+    const eventDate = getSavedSuperAdminText('02. event-settings/Text/Event date.txt', String(eventDateRaw || '').trim()) || '2027-02-01T10:00:00';
 
     const lastDateContent = String(lastRegistrationDateRaw || '').trim();
-    const deadline = getSavedSuperAdminText('03. reg-settings/Text/Last registration date countdown.txt', lastDateContent) || '2027-01-25T23:59:59';
+    const deadline = getSavedSuperAdminText('03. reg-settings/Text/Last Registration date.txt', lastDateContent) || '2027-01-25T23:59:59';
 
-    const canonicalEnable = getSavedSuperAdminText('02. event-settings/Text/Countdown enable disable.txt', '').trim();
-    const legacyEnable = getSavedSuperAdminText('04. countdown-settings/Text/Enable Disable.txt', '').trim();
-    const enableRaw = (canonicalEnable || legacyEnable || String(countdownEnableDisableRaw || '').trim()).toLowerCase();
+    const enableRaw = getSavedSuperAdminText('02. event-settings/Text/Countedown enable disable.txt', String(countdownEnableDisableRaw || '').trim()).toLowerCase();
     const isCountdownEnabled = !/^(disable|disabled)$/i.test(enableRaw);
+    const registrationToggle = getSavedSuperAdminText('03. reg-settings/Text/Countdown enable disable.txt', String(registrationToggleRaw || '').trim()).toLowerCase();
+    const registrationCountdownEnabled = !/^(disable|disabled)$/i.test(registrationToggle);
 
     return {
       eventDate,
       registrationDeadline: deadline,
       countdownEnabled: isCountdownEnabled,
+      registrationCountdownEnabled,
     };
   } catch {
     return {
       eventDate: '2027-02-01T10:00:00',
       registrationDeadline: '2027-01-25T23:59:59',
       countdownEnabled: true,
+      registrationCountdownEnabled: true,
     };
   }
 }
@@ -680,7 +674,7 @@ function parseBooleanLike(value: unknown, fallback: boolean): boolean {
 
 function isLegacyNoticeBoardEnabled(): boolean {
   const enableRaw = getSavedSuperAdminText(
-    '05. important-notice/Text/Enable Disable.txt',
+    '04. important-notice/Text/Enable Disable.txt',
     String(noticeEnableDisableRaw || '').trim()
   ).trim().toLowerCase();
   if (!enableRaw) return false;
