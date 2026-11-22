@@ -73,10 +73,10 @@ Manages site branding text (`web name.txt`, `web header.txt`, `web footer.txt`) 
 
 ### 2. `02. event-settings` (Includes Event Countdown)
 Manages event title, date, venue, configurable event fee (`Fees.txt`), jersey showcase copy, and Event Information Cards.
-**Event Countdown** (`Countedown enable disable.txt`) uses the date in `Event date.txt`. lives directly inside `02. event-settings/Text/`—there is no separate `04. countdown-settings` folder.
+**Event Countdown** is independently enabled or disabled through `Countedown enable disable.txt` and uses the event date in `Event date.txt`.
 
 ### 3. `03. reg-settings`
-All registration configuration files live exclusively inside `03. reg-settings/Text/` as the single canonical location: open/close toggle, closing deadline, male-only categories & sections (`Section settings.txt`), and group-wise bKash/Nagad numbers (`SC`, `BS`, `HU`).
+All registration configuration files live exclusively inside `03. reg-settings/Text/`: the countdown toggle (`Countdown enable disable.txt`), last registration deadline (`Last Registration date.txt`), registration availability toggle (`Enable Disable.txt`), male-only categories & sections (`Section settings.txt`), and group-wise bKash/Nagad numbers (`SC`, `BS`, `HU`).
 
 ### 4. `04. important-notice`
 Independently manages **Header Notice** (`Notice Board.txt`) and **Popup Notice** (`Popup Notice.txt`) with separate visibility toggles, ordering, multiple items, and Supabase database persistence.
