@@ -593,21 +593,28 @@ export function getRegistrationSettingsConfig() {
 
 export function getCountdownSettingsConfig() {
   try {
-    const eventDate = getSavedSuperAdminText('02. event-settings/Text/Event date.txt', String(eventDateRaw || '').trim()) || '2027-02-01T10:00:00';
-
-    const lastDateContent = String(lastRegistrationDateRaw || '').trim();
-    const deadline = getSavedSuperAdminText('03. reg-settings/Text/Last Registration date.txt', lastDateContent) || '2027-01-25T23:59:59';
-
-    const enableRaw = getSavedSuperAdminText('02. event-settings/Text/Countedown enable disable.txt', String(countdownEnableDisableRaw || '').trim()).toLowerCase();
-    const isCountdownEnabled = !/^(disable|disabled)$/i.test(enableRaw);
-    const registrationToggle = getSavedSuperAdminText('03. reg-settings/Text/Countdown enable disable.txt', String(registrationToggleRaw || '').trim()).toLowerCase();
-    const registrationCountdownEnabled = !/^(disable|disabled)$/i.test(registrationToggle);
+    const eventDate = getSavedSuperAdminText(
+      '02. event-settings/Text/Event date.txt',
+      String(eventDateRaw || '').trim()
+    ) || '2027-02-01T10:00:00';
+    const deadline = getSavedSuperAdminText(
+      '03. reg-settings/Text/Last Registration date.txt',
+      String(lastRegistrationDateRaw || '').trim()
+    ) || '2027-01-25T23:59:59';
+    const eventToggle = getSavedSuperAdminText(
+      '02. event-settings/Text/Countedown enable disable.txt',
+      String(countdownEnableDisableRaw || '').trim()
+    ).toLowerCase();
+    const registrationToggle = getSavedSuperAdminText(
+      '03. reg-settings/Text/Countdown enable disable.txt',
+      String(registrationToggleRaw || '').trim()
+    ).toLowerCase();
 
     return {
       eventDate,
       registrationDeadline: deadline,
-      countdownEnabled: isCountdownEnabled,
-      registrationCountdownEnabled,
+      countdownEnabled: !/^(disable|disabled)$/i.test(eventToggle),
+      registrationCountdownEnabled: !/^(disable|disabled)$/i.test(registrationToggle),
     };
   } catch {
     return {
