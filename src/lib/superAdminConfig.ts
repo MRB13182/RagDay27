@@ -548,7 +548,7 @@ export function setManualRegistrationOverride(override: 'enable' | 'disable' | '
 
 export function getRegistrationSettingsConfig() {
   // The three group-specific files are the only payment-number sources.
-  const legacyPayments = { maleBkash: '', maleNagad: '', groups: { Science: { bkash: '', nagad: '' }, 'Business Studies': { bkash: '', nagad: '' }, Humanities: { bkash: '', nagad: '' } } };
+  const legacyPayments: { maleBkash: string; maleNagad: string; groups: Record<string, { bkash: string; nagad: string }> } = { maleBkash: '', maleNagad: '', groups: { Science: { bkash: '', nagad: '' }, 'Business Studies': { bkash: '', nagad: '' }, Humanities: { bkash: '', nagad: '' } } };
   const parseGroupFile = (path: string, bundled: string, groupName: string) => {
     const raw = getSavedSuperAdminText(path, bundled.trim());
     const values = { bkash: '', nagad: '' };
