@@ -64,7 +64,7 @@ const checkPaths = [
 const forbiddenLegacyPaths = [
   '04. countdown-settings',
   '03. reg-settings/Enable Disable.txt',
-  '03. reg-settings/Last Registration date.txt',
+  '03. reg-settings/Last registration date countdown.txt',
   '03. reg-settings/Payment number.txt',
   '03. reg-settings/Section settings.txt',
 ];
