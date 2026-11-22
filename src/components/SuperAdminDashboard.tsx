@@ -2,7 +2,7 @@ import React, { useEffect, useMemo, useState } from 'react';
 import {
   Bell, CalendarDays, Check, ChevronRight, CreditCard, Globe2,
   LayoutDashboard, LogOut, Menu, Plus, Save, ShieldCheck, SlidersHorizontal,
-  Trash2, Pencil, X, Clock3, Layers, AlertTriangle, Radio, MessageSquareText
+  Trash2, Pencil, X, Layers, AlertTriangle, Radio, MessageSquareText
 } from 'lucide-react';
 import {
   EDITABLE_SUPER_ADMIN_TEXT_FILES,
@@ -36,7 +36,6 @@ const sections = [
   { id: '01. Website Identity', title: 'Website Identity', icon: Globe2 },
   { id: '02. Event Settings', title: 'Event Settings', icon: CalendarDays },
   { id: '03. Registration Settings', title: 'Registration Settings', icon: SlidersHorizontal },
-  { id: '04. Countdown Settings', title: 'Countdown Settings', icon: Clock3 },
   { id: '05. Important Notice', title: 'Important Notice', icon: Bell },
 ];
 
@@ -483,7 +482,7 @@ export const SuperAdminDashboard: React.FC<Props> = ({ onLogout }) => {
               <section className="rounded-3xl border border-cyan-400/25 bg-gradient-to-r from-[#0B2946] to-[#10233A] p-6">
                 <p className="text-xs font-bold tracking-[.2em] text-cyan-300">WELCOME, SUPER ADMIN</p>
                 <h2 className="mt-2 text-2xl font-black">Rag Day 27 Control Center</h2>
-                <p className="mt-2 max-w-2xl text-sm text-slate-300">Manage website identity, event cards, male registration sections, payment channels, countdown and notices from one place.</p>
+                <p className="mt-2 max-w-2xl text-sm text-slate-300">Manage website identity, event cards, male registration sections, payment channels and notices from one place.</p>
               </section>
               <section className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
                 <Metric label="Configuration Sections" value={String(configSections)} icon={<SlidersHorizontal />} />
