@@ -405,27 +405,6 @@ export function getConfiguredCategories(): string[] {
   return categories.map(cat => cat.name);
 }
 
-function extractFeeFromEventCards(cardsText: string): string {
-  const lines = cardsText.split(/\r?\n/);
-  let isFeeCard = false;
-  for (const line of lines) {
-    const tMatch = line.match(/^title[:]\s*(.+)$/i);
-    if (tMatch) {
-      isFeeCard = /fee|cost|payment|amount|price/i.test(tMatch[1]);
-      continue;
-    }
-    if (isFeeCard) {
-      const dMatch = line.match(/^description[:]\s*(.+)$/i);
-      if (dMatch) {
-        const desc = dMatch[1].trim();
-        const m = desc.match(/(\d[\d,]*\s*(?:\$|BDT|TK|Taka)?|(?:\$|BDT|TK|Taka)\s*\d[\d,]*)/i);
-        if (m) return m[0].trim();
-        return desc;
-      }
-    }
-  }
-  return '500 BDT';
-}
 
 export function getConfiguredSections(gender: 'male' | 'female', group: string): string[] {
   // Strictly Male-Only sections system
@@ -740,7 +719,7 @@ export function getHeaderNoticesConfig(): HeaderNoticeConfig {
 
 export function parsePopupNoticeConfig(rawInput?: string, legacyEnabled?: boolean): PopupNoticeConfig {
   const enableRaw = getSavedSuperAdminText(
-    '05. important-notice/Text/Enable Disable.txt',
+    '04. important-notice/Text/Enable Disable.txt',
     String(noticeEnableDisableRaw || '').trim()
   ).toLowerCase().trim();
   const fallbackEnabled = typeof legacyEnabled === 'boolean'
@@ -749,7 +728,7 @@ export function parsePopupNoticeConfig(rawInput?: string, legacyEnabled?: boolea
 
   const rawText = typeof rawInput === 'string'
     ? rawInput.trim()
-    : getSavedSuperAdminText('05. important-notice/Text/Popup Notice.txt', String(popupNoticeRaw || '').trim()).trim();
+    : getSavedSuperAdminText('04. important-notice/Text/Popup Notice.txt', String(popupNoticeRaw || '').trim()).trim();
 
   if (!rawText) {
     return { enabled: false, intervalSeconds: 3, items: [] };
