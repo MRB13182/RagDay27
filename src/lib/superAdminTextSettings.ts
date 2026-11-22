@@ -27,7 +27,7 @@ export const EDITABLE_SUPER_ADMIN_TEXT_FILES: EditableSuperAdminTextFile[] = [
   { id: 'payment-number-legacy', category: '03. Registration Settings', label: 'Legacy payment number (Payment number.txt)', path: '03. reg-settings/Text/Payment number.txt', defaultValue: 'Male Bkash: 01712-345678\nMale Nagad: 01712-345678' },
   { id: 'last-registration-date', category: '03. Registration Settings', label: 'Last registration date countdown (Last registration date countdown.txt)', path: '03. reg-settings/Text/Last registration date countdown.txt', defaultValue: '2027-01-25T23:59:59' },
   { id: 'registration-enable-disable', category: '03. Registration Settings', label: 'Registration enable / disable (Enable Disable.txt)', path: '03. reg-settings/Text/Enable Disable.txt', defaultValue: 'enable' },
-  { id: 'notice-board', category: '05. Important Notice', label: 'Notice Board (Notice Board.txt)', path: '05. important-notice/Text/Notice Board.txt', defaultValue: 'Official Batch 27 Registration is now OPEN.' },
+  { id: 'notice-board', category: '05. Important Notice', label: 'Notice Board (Notice Board.txt)', path: '05. important-notice/Text/Notice Board.txt', defaultValue: '{"enabled":false,"notices":[{"id":"header-1","text":"Official Batch 27 Registration is now OPEN.","enabled":true}]}' },
   { id: 'popup-notice', category: '05. Important Notice', label: 'Popup Notice (Popup Notice.txt)', path: '05. important-notice/Text/Popup Notice.txt', defaultValue: 'Welcome Batch NIC 27! Registration is now OPEN.' },
   { id: 'notice-enable-disable', category: '05. Important Notice', label: 'Notice enable / disable (Enable Disable.txt)', path: '05. important-notice/Text/Enable Disable.txt', defaultValue: 'disable' },
 ];
@@ -72,6 +72,16 @@ function canonicalizeLegacySettingPath(normalizedPath: string): string {
   if (normalizedPath.startsWith('03. reg-settings/') && !normalizedPath.startsWith('03. reg-settings/Text/') && !normalizedPath.startsWith('03. reg-settings/Pic/')) {
     return normalizedPath.replace('03. reg-settings/', '03. reg-settings/Text/');
   }
+  const lower = normalizedPath.toLowerCase();
+  if (lower === '05. important-notice/text/notice board.txt' || lower === '05. important-notice/text/notice-content.txt') {
+    return '05. important-notice/Text/Notice Board.txt';
+  }
+  if (lower === '05. important-notice/text/popup notice.txt' || lower === '05. important-notice/text/popup-message.txt') {
+    return '05. important-notice/Text/Popup Notice.txt';
+  }
+  if (lower === '05. important-notice/text/enable disable.txt' || lower === '05. important-notice/text/notice-enable-disable.txt') {
+    return '05. important-notice/Text/Enable Disable.txt';
+  }
   return normalizedPath;
 }
 
@@ -105,6 +115,12 @@ export async function loadRemoteSuperAdminSettings(): Promise<boolean> {
 
     if (rows.length === 0) return false;
 
+    const exactKeys = new Set(
+      rows
+        .map(row => normalizeSuperAdminPath(String(row.key ?? row.setting_key ?? '')))
+        .filter(Boolean)
+    );
+
     let changed = false;
     for (const row of rows) {
       const rawKey = row.key ?? row.setting_key ?? '';
@@ -122,7 +138,12 @@ export async function loadRemoteSuperAdminSettings(): Promise<boolean> {
         continue;
       }
 
-      const normalizedPath = canonicalizeLegacySettingPath(normalizeSuperAdminPath(rawKey));
+      const rawNormalized = normalizeSuperAdminPath(rawKey);
+      const normalizedPath = canonicalizeLegacySettingPath(rawNormalized);
+      // Do not allow an older legacy key alias to overwrite an explicit canonical key present in DB
+      if (normalizedPath !== rawNormalized && exactKeys.has(normalizedPath)) {
+        continue;
+      }
       const storageKey = `super_admin_${normalizedPath}`;
       if (getLocalItem(storageKey) !== rawValue) {
         setLocalItem(storageKey, rawValue);

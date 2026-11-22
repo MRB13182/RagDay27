@@ -96,27 +96,30 @@ export const ImportantNoticeSection: React.FC<ImportantNoticeSectionProps> = ({
     });
   };
 
-  const handleSaveHeaderNotices = async () => {
-    const cleaned: HeaderNoticeConfig = {
-      enabled: headerConfig.enabled,
-      notices: headerConfig.notices
-        .map((item, idx) => ({
-          id: item.id || `header-${idx + 1}`,
-          text: item.text.trim(),
-          enabled: item.enabled !== false,
-        }))
-        .filter(item => item.text.length > 0),
-    };
+  const buildCleanedHeaderConfig = (source: HeaderNoticeConfig): HeaderNoticeConfig => ({
+    enabled: Boolean(source.enabled),
+    notices: source.notices
+      .map((item, idx) => ({
+        id: item.id || `header-${idx + 1}`,
+        text: item.text.trim(),
+        enabled: item.enabled !== false,
+      }))
+      .filter(item => item.text.length > 0),
+  });
 
+  const persistHeaderNotices = async (
+    nextConfig: HeaderNoticeConfig,
+    successMessage = 'Header notices saved independently to database.'
+  ) => {
+    const cleaned = buildCleanedHeaderConfig(nextConfig);
+    const previous = headerConfig;
+    setHeaderConfig(cleaned);
     setSavingHeader(true);
     try {
       await saveEditableSuperAdminText(PATH_HEADER_NOTICE, JSON.stringify(cleaned));
-      setHeaderConfig(cleaned);
-      onFeedback({
-        type: 'success',
-        text: 'Header notices saved independently to database.',
-      });
+      onFeedback({ type: 'success', text: successMessage });
     } catch (err) {
+      setHeaderConfig(previous);
       onFeedback({
         type: 'error',
         text: err instanceof Error ? err.message : 'Unable to save Header Notices.',
@@ -124,6 +127,19 @@ export const ImportantNoticeSection: React.FC<ImportantNoticeSectionProps> = ({
     } finally {
       setSavingHeader(false);
     }
+  };
+
+  const handleSaveHeaderNotices = () =>
+    persistHeaderNotices(headerConfig, 'Header notices saved independently to database.');
+
+  const handleToggleHeaderEnabled = () => {
+    const nextEnabled = !headerConfig.enabled;
+    void persistHeaderNotices(
+      { ...headerConfig, enabled: nextEnabled },
+      nextEnabled
+        ? 'Notice Board enabled and synced to database.'
+        : 'Notice Board disabled and hidden on public website.'
+    );
   };
 
   // --------------------------------------------------------------------------
@@ -168,33 +184,35 @@ export const ImportantNoticeSection: React.FC<ImportantNoticeSectionProps> = ({
     });
   };
 
-  const handleSavePopupNotices = async () => {
-    const safeInterval = Math.min(60, Math.max(1, Math.round(Number(popupConfig.intervalSeconds) || 4)));
-    const cleaned: PopupNoticeConfig = {
-      enabled: popupConfig.enabled,
-      intervalSeconds: safeInterval,
-      items: popupConfig.items
-        .map((item, idx) => ({
-          id: item.id || `popup-${idx + 1}`,
-          title: item.title.trim(),
-          message: item.message.trim(),
-          enabled: item.enabled !== false,
-        }))
-        .filter(item => item.title.length > 0 || item.message.length > 0),
-    };
+  const buildCleanedPopupConfig = (source: PopupNoticeConfig): PopupNoticeConfig => ({
+    enabled: Boolean(source.enabled),
+    intervalSeconds: Math.min(60, Math.max(1, Math.round(Number(source.intervalSeconds) || 4))),
+    items: source.items
+      .map((item, idx) => ({
+        id: item.id || `popup-${idx + 1}`,
+        title: item.title.trim(),
+        message: item.message.trim(),
+        enabled: item.enabled !== false,
+      }))
+      .filter(item => item.title.length > 0 || item.message.length > 0),
+  });
 
+  const persistPopupNotices = async (
+    nextConfig: PopupNoticeConfig,
+    successMessage = 'Popup notice slideshow saved independently to database.'
+  ) => {
+    const cleaned = buildCleanedPopupConfig(nextConfig);
+    const previous = popupConfig;
+    setPopupConfig(cleaned);
     setSavingPopup(true);
     try {
       await saveEditableSuperAdminBatch([
         { path: PATH_POPUP_NOTICE, content: JSON.stringify(cleaned) },
         { path: PATH_NOTICE_ENABLE, content: cleaned.enabled ? 'enable' : 'disable' },
       ]);
-      setPopupConfig(cleaned);
-      onFeedback({
-        type: 'success',
-        text: 'Popup notice slideshow saved independently to database.',
-      });
+      onFeedback({ type: 'success', text: successMessage });
     } catch (err) {
+      setPopupConfig(previous);
       onFeedback({
         type: 'error',
         text: err instanceof Error ? err.message : 'Unable to save Popup Notices.',
@@ -202,6 +220,19 @@ export const ImportantNoticeSection: React.FC<ImportantNoticeSectionProps> = ({
     } finally {
       setSavingPopup(false);
     }
+  };
+
+  const handleSavePopupNotices = () =>
+    persistPopupNotices(popupConfig, 'Popup notice slideshow saved independently to database.');
+
+  const handleTogglePopupEnabled = () => {
+    const nextEnabled = !popupConfig.enabled;
+    void persistPopupNotices(
+      { ...popupConfig, enabled: nextEnabled },
+      nextEnabled
+        ? 'Popup Notice enabled and synced to database.'
+        : 'Popup Notice disabled and hidden on public website.'
+    );
   };
 
   const activeHeaderTicker = headerConfig.notices.filter(
@@ -237,9 +268,8 @@ export const ImportantNoticeSection: React.FC<ImportantNoticeSectionProps> = ({
           <div className="flex flex-wrap items-center gap-2">
             <ToggleButton
               enabled={headerConfig.enabled}
-              onToggle={() =>
-                setHeaderConfig(prev => ({ ...prev, enabled: !prev.enabled }))
-              }
+              disabled={savingHeader}
+              onToggle={handleToggleHeaderEnabled}
               enabledLabel="Header Bar Enabled"
               disabledLabel="Header Bar Disabled"
               ariaLabel="Toggle Header Notice Bar"
@@ -402,9 +432,8 @@ export const ImportantNoticeSection: React.FC<ImportantNoticeSectionProps> = ({
           <div className="flex flex-wrap items-center gap-2">
             <ToggleButton
               enabled={popupConfig.enabled}
-              onToggle={() =>
-                setPopupConfig(prev => ({ ...prev, enabled: !prev.enabled }))
-              }
+              disabled={savingPopup}
+              onToggle={handleTogglePopupEnabled}
               enabledLabel="Popup Enabled"
               disabledLabel="Popup Disabled"
               ariaLabel="Toggle Popup Notice Modal"

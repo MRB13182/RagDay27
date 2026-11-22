@@ -667,13 +667,33 @@ export interface PopupNoticeConfig {
   items: PopupNoticeItem[];
 }
 
+function parseBooleanLike(value: unknown, fallback: boolean): boolean {
+  if (typeof value === 'boolean') return value;
+  if (typeof value === 'number') return value !== 0;
+  if (typeof value === 'string') {
+    const clean = value.trim().toLowerCase();
+    if (/^(false|0|no|off|disable|disabled)$/.test(clean)) return false;
+    if (/^(true|1|yes|on|enable|enabled)$/.test(clean)) return true;
+  }
+  return fallback;
+}
+
+function isLegacyNoticeBoardEnabled(): boolean {
+  const enableRaw = getSavedSuperAdminText(
+    '05. important-notice/Text/Enable Disable.txt',
+    String(noticeEnableDisableRaw || '').trim()
+  ).trim().toLowerCase();
+  if (!enableRaw) return false;
+  return !/^(disable|disabled|false|0|off|no)$/i.test(enableRaw);
+}
+
 export function parseHeaderNoticeConfig(rawInput?: string): HeaderNoticeConfig {
   const rawText = typeof rawInput === 'string'
     ? rawInput.trim()
     : getSavedSuperAdminText('05. important-notice/Text/Notice Board.txt', String(noticeBoardRaw || '').trim()).trim();
 
   if (!rawText) {
-    return { enabled: true, notices: [] };
+    return { enabled: false, notices: [] };
   }
 
   if (rawText.startsWith('{')) {
@@ -682,13 +702,13 @@ export function parseHeaderNoticeConfig(rawInput?: string): HeaderNoticeConfig {
         enabled?: unknown;
         notices?: Array<{ id?: unknown; text?: unknown; enabled?: unknown }>;
       };
-      const enabled = typeof parsed.enabled === 'boolean' ? parsed.enabled : true;
+      const enabled = parseBooleanLike(parsed.enabled, isLegacyNoticeBoardEnabled());
       const notices: HeaderNoticeItem[] = Array.isArray(parsed.notices)
         ? parsed.notices
             .map((item, idx) => ({
               id: typeof item?.id === 'string' && item.id.trim() ? item.id.trim() : `header-${idx + 1}`,
               text: typeof item?.text === 'string' ? item.text.trim() : '',
-              enabled: item?.enabled !== false,
+              enabled: parseBooleanLike(item?.enabled, true),
             }))
             .filter(item => item.text.length > 0)
         : [];
@@ -698,13 +718,17 @@ export function parseHeaderNoticeConfig(rawInput?: string): HeaderNoticeConfig {
     }
   }
 
+  if (/^(disable|disabled|false|0|off)$/i.test(rawText)) {
+    return { enabled: false, notices: [] };
+  }
+
   const lines = rawText
     .split(/\r?\n/)
     .map(line => line.trim())
     .filter(Boolean);
 
   return {
-    enabled: true,
+    enabled: isLegacyNoticeBoardEnabled(),
     notices: lines.map((text, idx) => ({
       id: `header-${idx + 1}`,
       text,
@@ -794,12 +818,12 @@ export function getImportantNoticeConfig() {
       : [];
 
     return {
-      noticeEnabled: activeHeaderNotices.length > 0,
+      noticeEnabled: Boolean(headerConfig.enabled) && activeHeaderNotices.length > 0,
       headerNotices: {
-        enabled: headerConfig.enabled,
+        enabled: Boolean(headerConfig.enabled),
         notices: activeHeaderNotices,
       },
-      popupEnabled: activePopupItems.length > 0,
+      popupEnabled: Boolean(popupConfig.enabled) && activePopupItems.length > 0,
       popupNotices: {
         ...popupConfig,
         items: activePopupItems,

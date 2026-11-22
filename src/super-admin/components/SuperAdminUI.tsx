@@ -69,20 +69,23 @@ export const ToggleButton: React.FC<{
   enabledLabel?: string;
   disabledLabel?: string;
   ariaLabel?: string;
+  disabled?: boolean;
 }> = ({
   enabled,
   onToggle,
   enabledLabel = 'Enabled',
   disabledLabel = 'Disabled',
   ariaLabel,
+  disabled = false,
 }) => (
   <button
     type="button"
     role="switch"
     aria-checked={enabled}
     aria-label={ariaLabel}
+    disabled={disabled}
     onClick={onToggle}
-    className={`inline-flex items-center gap-2 rounded-xl border px-3.5 py-2 text-xs font-semibold transition-colors whitespace-nowrap shrink-0 cursor-pointer ${
+    className={`inline-flex items-center gap-2 rounded-xl border px-3.5 py-2 text-xs font-semibold transition-colors whitespace-nowrap shrink-0 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed ${
       enabled
         ? 'border-emerald-400/40 bg-emerald-500/15 text-emerald-200 hover:bg-emerald-500/25'
         : 'border-[#C9D0D9]/20 bg-[#141B29] text-[#94A0B2] hover:bg-[#1A2334] hover:text-[#F5F7FA]'

@@ -142,8 +142,12 @@ export default function App() {
       }
     };
     window.addEventListener('superadmin-config-updated', handleConfigUpdate);
+    window.addEventListener('storage', handleConfigUpdate);
     void loadRemoteSuperAdminSettings();
-    return () => window.removeEventListener('superadmin-config-updated', handleConfigUpdate);
+    return () => {
+      window.removeEventListener('superadmin-config-updated', handleConfigUpdate);
+      window.removeEventListener('storage', handleConfigUpdate);
+    };
   }, []);
 
   // Clean up one-time reload query params once the app mounts cleanly
