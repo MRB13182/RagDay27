@@ -10,8 +10,8 @@ import { parseMaleSectionSettings, type SectionCategory } from '../../lib/superA
 import type { ConfirmModalState, GroupPaymentDraft, SuperAdminFeedback } from '../types';
 import { OrderControls, SectionHeader, ToggleButton, inputClass, panelClass } from '../components/SuperAdminUI';
 
-const PATH_REG_TOGGLE = '03. reg-settings/Text/Enable Disable.txt';
-const PATH_LAST_REG_DATE = '03. reg-settings/Text/Last registration date countdown.txt';
+const PATH_REG_TOGGLE = '03. reg-settings/Text/Countdown enable disable.txt';
+const PATH_LAST_REG_DATE = '03. reg-settings/Text/Last Registration date.txt';
 const PATH_SECTION_SETTINGS = '03. reg-settings/Text/Section settings.txt';
 
 const GROUP_PAYMENT_FILES = [
@@ -51,7 +51,7 @@ export const RegistrationSettingsSection: React.FC<RegistrationSettingsSectionPr
   onFeedback,
   onRequestConfirm,
 }) => {
-  const [registrationEnabled, setRegistrationEnabled] = useState(true);
+  const [registrationCountdownEnabled, setRegistrationCountdownEnabled] = useState(true);
   const [closingDeadline, setClosingDeadline] = useState('');
   const [groups, setGroups] = useState<GroupPaymentDraft[]>([]);
   const [savingMain, setSavingMain] = useState(false);
@@ -71,7 +71,7 @@ export const RegistrationSettingsSection: React.FC<RegistrationSettingsSectionPr
 
   const hydrate = () => {
     const toggleRaw = getSavedSuperAdminText(PATH_REG_TOGGLE, defaultFor(PATH_REG_TOGGLE));
-    setRegistrationEnabled(!/^(disable|disabled|close|closed|manual_disable|force_disable)$/i.test(toggleRaw.trim()));
+    setRegistrationCountdownEnabled(!/^(disable|disabled)$/i.test(toggleRaw.trim()));
 
     const deadlineRaw = getSavedSuperAdminText(PATH_LAST_REG_DATE, defaultFor(PATH_LAST_REG_DATE));
     setClosingDeadline(toLocalDateTimeInput(deadlineRaw) || deadlineRaw);
@@ -100,7 +100,7 @@ export const RegistrationSettingsSection: React.FC<RegistrationSettingsSectionPr
     setSavingMain(true);
     try {
       await saveEditableSuperAdminBatch([
-        { path: PATH_REG_TOGGLE, content: registrationEnabled ? 'enable' : 'disable' },
+        { path: PATH_REG_TOGGLE, content: registrationCountdownEnabled ? 'enable' : 'disable' },
         { path: PATH_LAST_REG_DATE, content: formattedDeadline },
         ...groups.map(group => ({
           path: group.path,
@@ -109,7 +109,7 @@ export const RegistrationSettingsSection: React.FC<RegistrationSettingsSectionPr
       ]);
       onFeedback({
         type: 'success',
-        text: 'Registration controls, closing date, and group payment numbers saved.',
+        text: 'Registration countdown controls, closing date, and group payment numbers saved.',
       });
     } catch (err) {
       onFeedback({
@@ -281,24 +281,24 @@ export const RegistrationSettingsSection: React.FC<RegistrationSettingsSectionPr
     <div className="space-y-6">
       <SectionHeader
         title="Registration Settings"
-        subtitle="Control registration availability, closing deadline, male-only academic sections, and group payment numbers."
+        subtitle="Control the registration countdown, closing deadline, male-only academic sections, and group payment numbers."
       />
 
       {/* Availability, Deadline & Group Payment Numbers */}
       <form onSubmit={handleSaveMain} className={`${panelClass} space-y-5`}>
         <div className="flex flex-wrap items-center justify-between gap-3 border-b border-[#C9D0D9]/12 pb-4">
           <div>
-            <h3 className="text-base font-bold text-[#F5F7FA]">Portal Status & Closing Date</h3>
+            <h3 className="text-base font-bold text-[#F5F7FA]">Registration Countdown & Closing Date</h3>
             <p className="text-xs text-[#8993A1]">
-              When disabled or past the closing deadline, new submissions are blocked automatically.
+              This toggle controls only the registration deadline countdown. Registration availability remains governed by its existing deadline and manual controls.
             </p>
           </div>
           <ToggleButton
-            enabled={registrationEnabled}
-            onToggle={() => setRegistrationEnabled(v => !v)}
-            enabledLabel="Registration Enabled"
-            disabledLabel="Registration Disabled"
-            ariaLabel="Toggle registration availability"
+            enabled={registrationCountdownEnabled}
+            onToggle={() => setRegistrationCountdownEnabled(v => !v)}
+            enabledLabel="Countdown Enabled"
+            disabledLabel="Countdown Disabled"
+            ariaLabel="Toggle registration countdown"
           />
         </div>
 
