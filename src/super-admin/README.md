@@ -21,8 +21,8 @@ src/super-admin/
 │   └── Text/
 │       ├── Event name.txt
 │       ├── Event date.txt
-│       ├── Event countdown.txt
-│       ├── Countdown enable disable.txt
+│       ├── Countedown enable disable.txt
+│       ├── Fees.txt
 │       ├── Venue.txt
 │       ├── Jersey design.txt
 │       └── Event card.txt
@@ -30,14 +30,13 @@ src/super-admin/
 │   ├── Pic/
 │   │   └── back jersey preview.png
 │   └── Text/                  # Sole canonical location for all Registration Settings text files
-│       ├── Enable Disable.txt
-│       ├── Last registration date countdown.txt
+│       ├── Countdown enable disable.txt
+│       ├── Last Registration date.txt
 │       ├── Section settings.txt
-│       ├── Payment number.txt
 │       ├── Payment number SC.txt
 │       ├── Payment number BS.txt
 │       └── Payment number HU.txt
-├── 05. important-notice/
+├── 04. important-notice/
 │   └── Text/
 │       ├── Notice Board.txt   # Header Notice ticker (independent)
 │       ├── Popup Notice.txt   # Popup Notice slideshow modal (independent)
@@ -73,13 +72,13 @@ src/super-admin/
 Manages site branding text (`web name.txt`, `web header.txt`, `web footer.txt`) and stores the default website logo and favicon assets (`Pic/logo.png`, `Pic/favicon.png`).
 
 ### 2. `02. event-settings` (Includes Event Countdown)
-Manages event title, date, venue, jersey showcase copy, and Event Information Cards.
-**Event Countdown** (`Event countdown.txt` and `Countdown enable disable.txt`) lives directly inside `02. event-settings/Text/`—there is no separate `04. countdown-settings` folder.
+Manages event title, date, venue, configurable event fee (`Fees.txt`), jersey showcase copy, and Event Information Cards.
+**Event Countdown** (`Countedown enable disable.txt`) uses the date in `Event date.txt`. lives directly inside `02. event-settings/Text/`—there is no separate `04. countdown-settings` folder.
 
 ### 3. `03. reg-settings`
 All registration configuration files live exclusively inside `03. reg-settings/Text/` as the single canonical location: open/close toggle, closing deadline, male-only categories & sections (`Section settings.txt`), and group-wise bKash/Nagad numbers (`SC`, `BS`, `HU`).
 
-### 4. `05. important-notice`
+### 4. `04. important-notice`
 Independently manages **Header Notice** (`Notice Board.txt`) and **Popup Notice** (`Popup Notice.txt`) with separate visibility toggles, ordering, multiple items, and Supabase database persistence.
 
 ### 5. `06. logo-related`
