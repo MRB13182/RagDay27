@@ -18,8 +18,8 @@ import {
 
 const PATH_EVENT_NAME = '02. event-settings/Text/Event name.txt';
 const PATH_EVENT_DATE = '02. event-settings/Text/Event date.txt';
-const PATH_COUNTDOWN_DATE = '02. event-settings/Text/Event countdown.txt';
-const PATH_COUNTDOWN_TOGGLE = '02. event-settings/Text/Countdown enable disable.txt';
+const PATH_COUNTDOWN_TOGGLE = '02. event-settings/Text/Countedown enable disable.txt';
+const PATH_EVENT_FEES = '02. event-settings/Text/Fees.txt';
 const PATH_VENUE = '02. event-settings/Text/Venue.txt';
 const PATH_JERSEY_TEXT = '02. event-settings/Text/Jersey design.txt';
 const PATH_EVENT_CARDS = '02. event-settings/Text/Event card.txt';
@@ -71,6 +71,7 @@ export const EventSettingsSection: React.FC<EventSettingsSectionProps> = ({
   const [eventName, setEventName] = useState('');
   const [eventDate, setEventDate] = useState('');
   const [countdownEnabled, setCountdownEnabled] = useState(true);
+  const [eventFee, setEventFee] = useState('500 BDT');
   const [venue, setVenue] = useState('');
   const [jerseyTitle, setJerseyTitle] = useState('');
   const [jerseyDescription, setJerseyDescription] = useState('');
@@ -84,20 +85,12 @@ export const EventSettingsSection: React.FC<EventSettingsSectionProps> = ({
   const hydrate = () => {
     setEventName(getSavedSuperAdminText(PATH_EVENT_NAME, defaultFor(PATH_EVENT_NAME)));
 
-    const countdownRaw = getSavedSuperAdminText(
-      PATH_COUNTDOWN_DATE,
-      getSavedSuperAdminText(
-        '04. countdown-settings/Text/Countdown of Event.txt',
-        getSavedSuperAdminText(PATH_EVENT_DATE, defaultFor(PATH_COUNTDOWN_DATE))
-      )
-    );
-    setEventDate(toLocalDateTimeInput(countdownRaw) || countdownRaw);
+    const eventDateRaw = getSavedSuperAdminText(PATH_EVENT_DATE, defaultFor(PATH_EVENT_DATE));
+    setEventDate(toLocalDateTimeInput(eventDateRaw) || eventDateRaw);
 
-    const toggleRaw = getSavedSuperAdminText(
-      PATH_COUNTDOWN_TOGGLE,
-      getSavedSuperAdminText('04. countdown-settings/Text/Enable Disable.txt', defaultFor(PATH_COUNTDOWN_TOGGLE))
-    );
+    const toggleRaw = getSavedSuperAdminText(PATH_COUNTDOWN_TOGGLE, defaultFor(PATH_COUNTDOWN_TOGGLE));
     setCountdownEnabled(!/^(disable|disabled)$/i.test(toggleRaw.trim()));
+    setEventFee(getSavedSuperAdminText(PATH_EVENT_FEES, defaultFor(PATH_EVENT_FEES)) || '500 BDT');
 
     setVenue(getSavedSuperAdminText(PATH_VENUE, defaultFor(PATH_VENUE)));
 
@@ -138,8 +131,8 @@ export const EventSettingsSection: React.FC<EventSettingsSectionProps> = ({
       await saveEditableSuperAdminBatch([
         { path: PATH_EVENT_NAME, content: eventName.trim() },
         { path: PATH_EVENT_DATE, content: formattedDate },
-        { path: PATH_COUNTDOWN_DATE, content: formattedDate },
         { path: PATH_COUNTDOWN_TOGGLE, content: countdownEnabled ? 'enable' : 'disable' },
+        { path: PATH_EVENT_FEES, content: eventFee.trim() },
         { path: PATH_VENUE, content: venue.trim() },
         {
           path: PATH_JERSEY_TEXT,
@@ -235,7 +228,7 @@ export const EventSettingsSection: React.FC<EventSettingsSectionProps> = ({
           <div>
             <h3 className="text-base font-bold text-[#F5F7FA]">General Event & Countdown</h3>
             <p className="text-xs text-[#8993A1]">
-              Event date automatically updates the hero countdown timer.
+              Event date is the countdown target. The countdown toggle is independent, and the event fee is configurable here.
             </p>
           </div>
           <ToggleButton
@@ -273,6 +266,11 @@ export const EventSettingsSection: React.FC<EventSettingsSectionProps> = ({
               className={inputClass}
               required
             />
+          </div>
+
+          <div>
+            <label className="block text-xs font-semibold text-[#C9D0D9] mb-2">Event Fee</label>
+            <input type="text" value={eventFee} onChange={e => setEventFee(e.target.value)} placeholder="500 BDT" className={inputClass} required />
           </div>
 
           <div className="md:col-span-2">
