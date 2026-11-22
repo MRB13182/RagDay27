@@ -546,6 +546,45 @@
   animation: spinSlow 24s linear infinite;
 }
 
+/* Continuous Right-to-Left TV News Ticker */
+@keyframes rd27TickerScroll {
+  0% {
+    transform: translate3d(0%, 0, 0);
+  }
+  100% {
+    transform: translate3d(-50%, 0, 0);
+  }
+}
+
+.rd27-ticker-viewport {
+  position: relative;
+  overflow: hidden;
+  width: 100%;
+  min-width: 0;
+  -webkit-mask-image: linear-gradient(90deg, transparent 0%, #000 3%, #000 97%, transparent 100%);
+  mask-image: linear-gradient(90deg, transparent 0%, #000 3%, #000 97%, transparent 100%);
+}
+
+.rd27-ticker-track {
+  display: flex;
+  align-items: center;
+  width: max-content;
+  will-change: transform;
+  animation: rd27TickerScroll var(--rd27-ticker-duration, 26s) linear infinite;
+}
+
+.rd27-ticker-viewport:hover .rd27-ticker-track,
+.rd27-ticker-viewport:focus-within .rd27-ticker-track {
+  animation-play-state: paused;
+}
+
+.rd27-ticker-group {
+  display: inline-flex;
+  align-items: center;
+  flex-shrink: 0;
+  white-space: nowrap;
+}
+
 /* Slim Obsidian Scrollbar */
 .custom-notice-scrollbar {
   scrollbar-width: thin;

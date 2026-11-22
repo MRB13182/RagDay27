@@ -10,6 +10,7 @@ import { ContactInformationSection } from './components/ContactInformationSectio
 import { SectionErrorBoundary } from './components/ErrorBoundary';
 import { lazyWithRetry, safeReplaceHistory, safeScrollToTop } from './lib/browserUtils';
 import { parseSafeDate } from './lib/dateUtils';
+import { loadRemoteSuperAdminSettings } from './lib/superAdminTextSettings';
 
 const RegistrationForm = lazyWithRetry(() =>
   import('./components/RegistrationForm').then(m => ({ default: m.RegistrationForm }))
@@ -67,6 +68,7 @@ export default function App() {
   const [invitationStudentNameTarget, setInvitationStudentNameTarget] = useState<string>('');
   const [reRegisterRecord, setReRegisterRecord] = useState<InvitationRecord | null>(null);
   const [isAdminOpen, setIsAdminOpen] = useState(false);
+  const hasDismissedPopupRef = React.useRef(false);
   const [isNoticePopupOpen, setIsNoticePopupOpen] = useState<boolean>(() => {
     try {
       return importantNoticeConfig.popupEnabled;
@@ -122,9 +124,13 @@ export default function App() {
   const [, setConfigVersion] = useState(0);
 
   useEffect(() => {
-    const handleConfigUpdate = () => {
+    const handleConfigUpdate = (event?: Event) => {
       setConfigVersion(v => v + 1);
       try {
+        const customDetail = (event as CustomEvent<{ source?: string }> | undefined)?.detail;
+        if (customDetail?.source === 'remote-sync' && !hasDismissedPopupRef.current) {
+          setIsNoticePopupOpen(importantNoticeConfig.popupEnabled);
+        }
         if (websiteIdentityConfig.websiteName) {
           document.title = websiteIdentityConfig.websiteName;
         }
@@ -137,6 +143,7 @@ export default function App() {
       }
     };
     window.addEventListener('superadmin-config-updated', handleConfigUpdate);
+    void loadRemoteSuperAdminSettings();
     return () => window.removeEventListener('superadmin-config-updated', handleConfigUpdate);
   }, []);
 
@@ -248,6 +255,7 @@ export default function App() {
     bannerText: importantNoticeConfig.noticeContent,
     bannerActive: importantNoticeConfig.noticeEnabled,
     countdownEnabled: countdownSettingsConfig.countdownEnabled,
+    targetEventIso: countdownSettingsConfig.eventDate,
   };
 
   const brandingSettings: BrandingSettings = {
@@ -454,7 +462,12 @@ export default function App() {
       <SectionErrorBoundary mode="silent" sectionName="Important Notice">
         <ImportantNoticeModal
           isOpen={isNoticePopupOpen}
-          onClose={() => setIsNoticePopupOpen(false)}
+          onClose={() => {
+            hasDismissedPopupRef.current = true;
+            setIsNoticePopupOpen(false);
+          }}
+          items={importantNoticeConfig.popupNotices.items}
+          intervalSeconds={importantNoticeConfig.popupNotices.intervalSeconds}
           title={importantNoticeConfig.popupTitle || 'Important Notice'}
           message={importantNoticeConfig.popupMessage}
           buttonText={importantNoticeConfig.closeButtonText || 'I Understand'}
@@ -509,20 +522,60 @@ export default function App() {
       />
 
       <div className="pt-[4.25rem] sm:pt-[4.75rem] flex-1 flex flex-col">
-        {importantNoticeConfig.noticeEnabled && importantNoticeConfig.noticeContent && (
-          <aside
-            aria-label="Announcement"
-            onClick={() => setIsNoticePopupOpen(true)}
-            className="w-full border-y border-[#C9D0D9]/18 bg-[rgba(12,17,25,0.68)] backdrop-blur-md text-[#F5F7FA] px-3 sm:px-4 py-2 text-xs font-semibold flex items-center justify-center gap-2 sm:gap-2.5 cursor-pointer hover:border-[#8BEAFF]/50 transition-colors select-none"
-            title="Click to view full Important Notice"
-          >
-            <Bell className="w-3.5 h-3.5 shrink-0 text-[#8BEAFF]" />
-            <span className="text-[#C9D0D9] text-center leading-snug line-clamp-1 sm:line-clamp-none">{importantNoticeConfig.noticeContent}</span>
-            <span className="hidden sm:inline text-[10px] tracking-[0.14em] uppercase text-[#8BEAFF] border-b border-[#8BEAFF]/50 font-bold ml-1 whitespace-nowrap shrink-0">
-              View Notice
-            </span>
-          </aside>
-        )}
+        {importantNoticeConfig.noticeEnabled && importantNoticeConfig.headerNotices.notices.length > 0 && (() => {
+          const headerItems = importantNoticeConfig.headerNotices.notices;
+          const unitNotices = headerItems.length === 1
+            ? [headerItems[0], headerItems[0], headerItems[0]]
+            : headerItems;
+          const totalChars = unitNotices.reduce((sum, item) => sum + item.text.length, 0);
+          const durationSec = Math.max(18, Math.min(48, Math.round(totalChars * 0.24)));
+
+          return (
+            <aside
+              aria-label="Announcement Ticker"
+              onClick={() => {
+                if (importantNoticeConfig.popupEnabled) setIsNoticePopupOpen(true);
+              }}
+              className={`w-full overflow-hidden border-y border-[#8BEAFF]/25 bg-[rgba(10,15,24,0.88)] backdrop-blur-md text-[#F5F7FA] py-2 flex items-center select-none ${
+                importantNoticeConfig.popupEnabled ? 'cursor-pointer hover:border-[#8BEAFF]/55' : ''
+              }`}
+              title={importantNoticeConfig.popupEnabled ? 'Click to open notice slideshow' : undefined}
+            >
+              <div className="shrink-0 pl-3 sm:pl-5 pr-2.5 sm:pr-3 border-r border-[#8BEAFF]/25 flex items-center gap-1.5 z-10 bg-[rgba(10,15,24,0.96)]">
+                <span className="relative flex h-2 w-2">
+                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-[#8BEAFF] opacity-75" />
+                  <span className="relative inline-flex rounded-full h-2 w-2 bg-[#8BEAFF]" />
+                </span>
+                <Bell className="w-3.5 h-3.5 text-[#8BEAFF] shrink-0" />
+                <span className="text-[10px] font-mono font-extrabold uppercase tracking-[0.18em] text-[#8BEAFF]">
+                  Notice
+                </span>
+              </div>
+
+              <div
+                className="rd27-ticker-viewport flex-1"
+                style={{ '--rd27-ticker-duration': `${durationSec}s` } as React.CSSProperties}
+              >
+                <div className="rd27-ticker-track">
+                  {[0, 1].map((copyIdx) => (
+                    <div key={copyIdx} className="rd27-ticker-group" aria-hidden={copyIdx === 1}>
+                      {unitNotices.map((notice, itemIdx) => (
+                        <React.Fragment key={`${copyIdx}-${notice.id}-${itemIdx}`}>
+                          <span className="px-4 sm:px-6 text-xs sm:text-[13px] font-semibold text-[#E6ECF3] tracking-wide">
+                            {notice.text}
+                          </span>
+                          <span className="text-[#8BEAFF] text-xs font-bold opacity-80" aria-hidden="true">
+                            ◆
+                          </span>
+                        </React.Fragment>
+                      ))}
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </aside>
+          );
+        })()}
 
         <main className="flex-1">
           {activeTab === 'home' && (

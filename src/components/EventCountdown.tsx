@@ -1,8 +1,9 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { Sparkles } from 'lucide-react';
 import { parseSafeDate } from '../lib/dateUtils';
 
 interface EventCountdownProps {
+  targetIso?: string;
   day?: number | string;
   month?: string | number;
   year?: number | string;
@@ -17,7 +18,6 @@ interface TimeLeft {
   minutes: number;
   seconds: number;
   isStarted: boolean;
-  targetDate: Date | null;
 }
 
 const MONTH_MAP: Record<string, number> = {
@@ -112,168 +112,122 @@ export function calculateTargetDate(
   return target;
 }
 
+function resolveTargetDate(
+  targetIso?: string,
+  day?: number | string,
+  month?: string | number,
+  year?: number | string,
+  time?: string,
+  fallbackDateStr?: string
+): Date {
+  if (targetIso && targetIso.trim()) {
+    const parsed = parseSafeDate(targetIso);
+    if (parsed && !Number.isNaN(parsed.getTime())) {
+      return parsed;
+    }
+  }
+  return calculateTargetDate(day, month, year, time, fallbackDateStr);
+}
+
+function computeTimeLeft(targetTimestamp: number): TimeLeft {
+  const diff = targetTimestamp - Date.now();
+  if (!Number.isFinite(diff) || diff <= 0) {
+    return {
+      days: 0,
+      hours: 0,
+      minutes: 0,
+      seconds: 0,
+      isStarted: true,
+    };
+  }
+
+  return {
+    days: Math.max(0, Math.floor(diff / (1000 * 60 * 60 * 24))),
+    hours: Math.max(0, Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60))),
+    minutes: Math.max(0, Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60))),
+    seconds: Math.max(0, Math.floor((diff % (1000 * 60)) / 1000)),
+    isStarted: false,
+  };
+}
+
 export const EventCountdown: React.FC<EventCountdownProps> = ({
+  targetIso,
   day,
   month,
   year,
   time,
   fallbackDateStr,
-  eventName = 'Rag Day 27',
 }) => {
-  const [timeLeft, setTimeLeft] = useState<TimeLeft>(() => {
-    const target = calculateTargetDate(day, month, year, time, fallbackDateStr);
-    const now = new Date().getTime();
-    const diff = target.getTime() - now;
+  const targetTimestamp = useMemo(
+    () => resolveTargetDate(targetIso, day, month, year, time, fallbackDateStr).getTime(),
+    [targetIso, day, month, year, time, fallbackDateStr]
+  );
 
-    if (diff <= 0) {
-      return {
-        days: 0,
-        hours: 0,
-        minutes: 0,
-        seconds: 0,
-        isStarted: true,
-        targetDate: target,
-      };
-    }
-
-    return {
-      days: Math.floor(diff / (1000 * 60 * 60 * 24)),
-      hours: Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60)),
-      minutes: Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60)),
-      seconds: Math.floor((diff % (1000 * 60)) / 1000),
-      isStarted: false,
-      targetDate: target,
-    };
-  });
+  const [timeLeft, setTimeLeft] = useState<TimeLeft>(() => computeTimeLeft(targetTimestamp));
 
   useEffect(() => {
-    const updateCountdown = () => {
-      const target = calculateTargetDate(day, month, year, time, fallbackDateStr);
-      const now = new Date().getTime();
-      const diff = target.getTime() - now;
+    const initial = computeTimeLeft(targetTimestamp);
+    setTimeLeft(initial);
+    if (initial.isStarted) {
+      return;
+    }
 
-      if (diff <= 0) {
-        setTimeLeft({
-          days: 0,
-          hours: 0,
-          minutes: 0,
-          seconds: 0,
-          isStarted: true,
-          targetDate: target,
-        });
-        return;
+    const interval = window.setInterval(() => {
+      const next = computeTimeLeft(targetTimestamp);
+      setTimeLeft(next);
+      if (next.isStarted) {
+        window.clearInterval(interval);
       }
+    }, 1000);
 
-      setTimeLeft({
-        days: Math.floor(diff / (1000 * 60 * 60 * 24)),
-        hours: Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60)),
-        minutes: Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60)),
-        seconds: Math.floor((diff % (1000 * 60)) / 1000),
-        isStarted: false,
-        targetDate: target,
-      });
-    };
-
-    updateCountdown();
-    const interval = setInterval(updateCountdown, 1000);
-    return () => clearInterval(interval);
-  }, [day, month, year, time, fallbackDateStr]);
-
-  const cleanEventTitle = eventName.split('(')[0].trim() || 'RAG DAY 27';
-
-  if (timeLeft.isStarted) {
-    return (
-      <div className="w-full max-w-2xl mx-auto animate-fadeIn">
-        <div className="relative overflow-hidden rounded-2xl p-6 sm:p-7 museum-frame border border-[#8BEAFF]/40 text-center">
-          <div className="inline-flex items-center gap-2 font-mono text-[11px] font-bold uppercase tracking-[0.26em] text-[#8BEAFF]">
-            <Sparkles className="w-4 h-4 text-[#8BEAFF]" />
-            <span>Celebration Live Now</span>
-          </div>
-
-          <h2 className="font-display text-2xl sm:text-3xl font-extrabold tracking-tight chrome-text mt-2.5">
-            {cleanEventTitle.toUpperCase()} IS LIVE
-          </h2>
-          <p className="text-xs sm:text-sm text-[#C9D0D9] mt-2 font-medium max-w-md mx-auto">
-            The grand celebration has officially begun. Welcome Batch 2027 students and faculty.
-          </p>
-        </div>
-      </div>
-    );
-  }
+    return () => window.clearInterval(interval);
+  }, [targetTimestamp]);
 
   const units = [
-    { label: 'DAYS', value: timeLeft.days < 10 ? `0${timeLeft.days}` : String(timeLeft.days) },
+    { label: 'DAYS', value: String(timeLeft.days).padStart(2, '0') },
     { label: 'HOURS', value: String(timeLeft.hours).padStart(2, '0') },
     { label: 'MINUTES', value: String(timeLeft.minutes).padStart(2, '0') },
     { label: 'SECONDS', value: String(timeLeft.seconds).padStart(2, '0') },
   ];
 
   return (
-    <div className="w-full max-w-3xl mx-auto">
-      {/* Architectural Header Divider */}
-      <div className="flex items-center justify-center gap-3 sm:gap-5 mb-6 sm:mb-8">
-        <div className="h-px flex-1 max-w-[160px] bg-gradient-to-r from-transparent via-[#C9D0D9]/35 to-[#8BEAFF]/55" />
-        <span className="text-[10px] sm:text-[11px] font-mono font-bold uppercase tracking-[0.32em] text-[#C9D0D9] whitespace-nowrap">
+    <div className="w-full max-w-2xl rounded-2xl border border-[#8BEAFF]/30 bg-[rgba(10,14,22,0.78)] backdrop-blur-xl p-4 sm:p-5 shadow-[0_18px_46px_rgba(0,0,0,0.52),0_0_28px_-10px_rgba(139,234,255,0.22)]">
+      {/* Subtle Header */}
+      <div className="flex items-center justify-center gap-3 mb-3.5 sm:mb-4">
+        <div className="h-px flex-1 bg-gradient-to-r from-transparent via-[#C9D0D9]/30 to-[#8BEAFF]/55" />
+        <span className="text-[10px] font-mono font-bold uppercase tracking-[0.26em] text-[#8BEAFF] whitespace-nowrap">
           The Digital Time Capsule
         </span>
-        <div className="h-px flex-1 max-w-[160px] bg-gradient-to-l from-transparent via-[#C9D0D9]/35 to-[#8BEAFF]/55" />
+        <div className="h-px flex-1 bg-gradient-to-l from-transparent via-[#C9D0D9]/30 to-[#8BEAFF]/55" />
       </div>
 
-      {/* 4 Orbital Metallic Capsule Modules */}
-      <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 sm:gap-6 items-center justify-items-center">
-        {units.map((unit) => (
-          <div
-            key={unit.label}
-            className="group relative w-full max-w-[164px] aspect-[1.28/1] flex items-center justify-center"
-          >
-            {/* Outer Orbital Silver Ring */}
-            <svg
-              viewBox="0 0 180 124"
-              aria-hidden="true"
-              className="absolute inset-0 w-full h-full pointer-events-none overflow-visible"
-            >
-              <defs>
-                <linearGradient id={`orbit-${unit.label}`} x1="0%" y1="0%" x2="100%" y2="100%">
-                  <stop offset="0%" stopColor="#F5F7FA" stopOpacity="0.72" />
-                  <stop offset="50%" stopColor="#8BEAFF" stopOpacity="0.90" />
-                  <stop offset="100%" stopColor="#626B79" stopOpacity="0.35" />
-                </linearGradient>
-              </defs>
-              <ellipse
-                cx="90"
-                cy="62"
-                rx="84"
-                ry="44"
-                transform="rotate(-14 90 62)"
-                fill="none"
-                stroke={`url(#orbit-${unit.label})`}
-                strokeWidth="1.25"
-                className="opacity-75 group-hover:opacity-100 transition-opacity duration-300"
-              />
-              <ellipse
-                cx="90"
-                cy="62"
-                rx="84"
-                ry="44"
-                transform="rotate(14 90 62)"
-                fill="none"
-                stroke="rgba(201,208,217,0.38)"
-                strokeWidth="0.95"
-              />
-            </svg>
-
-            {/* Core Metallic Sphere Face */}
-            <div className="relative z-10 w-[76%] h-[78%] rounded-full orbital-ring-card flex flex-col items-center justify-center px-3 py-2 text-center transition-transform duration-300 group-hover:scale-[1.03]">
-              <span className="font-mono text-2xl sm:text-3xl font-bold text-[#F5F7FA] tracking-tight tabular-nums leading-none">
-                {unit.value}
-              </span>
-              <span className="text-[9px] sm:text-[10px] font-bold uppercase tracking-[0.22em] text-[#8993A1] group-hover:text-[#C9D0D9] mt-1.5 leading-none transition-colors">
-                {unit.label}
-              </span>
-            </div>
+      {timeLeft.isStarted ? (
+        <div className="py-3 sm:py-4 text-center animate-fadeIn">
+          <div className="inline-flex items-center gap-2 font-mono text-[10px] sm:text-[11px] font-bold uppercase tracking-[0.24em] text-[#8BEAFF]">
+            <Sparkles className="w-3.5 h-3.5 text-[#8BEAFF]" />
+            <span>THE EVENT HAS STARTED!</span>
           </div>
-        ))}
-      </div>
+          <h2 className="font-display text-xl sm:text-2xl font-extrabold tracking-tight chrome-text mt-1.5">
+            RAG DAY 27 IS NOW LIVE!
+          </h2>
+        </div>
+      ) : (
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5 sm:gap-3">
+          {units.map((unit) => (
+            <div
+              key={unit.label}
+              className="group relative rounded-xl border border-[#8BEAFF]/25 bg-[linear-gradient(155deg,rgba(16,24,36,0.92),rgba(8,11,17,0.95))] px-3 py-3 sm:py-3.5 text-center shadow-[0_10px_24px_rgba(0,0,0,0.4),inset_0_1px_0_rgba(245,247,250,0.08)] hover:border-[#8BEAFF]/55 transition-colors"
+            >
+              <div className="font-mono text-2xl sm:text-[1.75rem] font-extrabold text-[#F5F7FA] tracking-tight tabular-nums leading-none drop-shadow-[0_0_12px_rgba(139,234,255,0.28)]">
+                {unit.value}
+              </div>
+              <div className="text-[9px] sm:text-[10px] font-mono font-bold uppercase tracking-[0.2em] text-[#8BEAFF]/80 group-hover:text-[#8BEAFF] mt-1.5 leading-none transition-colors">
+                {unit.label}
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
     </div>
   );
 };

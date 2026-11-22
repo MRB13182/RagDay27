@@ -123,6 +123,7 @@ export interface WebsiteSettings {
   bannerText: string;
   bannerActive: boolean;
   countdownEnabled?: boolean;
+  targetEventIso?: string;
 }
 
 export interface BrandingSettings {

@@ -8,7 +8,7 @@ import {
   PaymentSettings,
 } from '../types';
 import { DEFAULT_PAYMENT_SETTINGS } from '../data/mockData';
-import { getConfiguredSections } from '../lib/superAdminConfig';
+import { getConfiguredCategories, getConfiguredSections } from '../lib/superAdminConfig';
 import { parseSafeDate } from '../lib/dateUtils';
 import { safeCopyText } from '../lib/browserUtils';
 import {
@@ -80,91 +80,26 @@ function formatRegistrationClosingDate(dateStr: string): string {
   return dateStr;
 }
 
-const RegistrationCountdown: React.FC<{ deadline: string; theme?: 'light' | 'dark' }> = ({
+const RegistrationDeadlineBanner: React.FC<{ deadline: string }> = ({
   deadline,
-  theme = 'light',
 }) => {
-  const [timeLeft, setTimeLeft] = useState<{
-    days: number;
-    hours: number;
-    minutes: number;
-    seconds: number;
-    isExpired: boolean;
-  }>(() => {
-    const parsedTarget = parseSafeDate(deadline);
-    const target = parsedTarget ? parsedTarget.getTime() : NaN;
-    const diff = target - Date.now();
-    if (isNaN(target) || diff <= 0) {
-      return { days: 0, hours: 0, minutes: 0, seconds: 0, isExpired: true };
-    }
-    return {
-      days: Math.floor(diff / (1000 * 60 * 60 * 24)),
-      hours: Math.floor((diff / (1000 * 60 * 60)) % 24),
-      minutes: Math.floor((diff / (1000 * 60)) % 60),
-      seconds: Math.floor((diff / 1000) % 60),
-      isExpired: false,
-    };
-  });
-
-  useEffect(() => {
-    const updateCountdown = () => {
-      const parsedTarget = parseSafeDate(deadline);
-      const target = parsedTarget ? parsedTarget.getTime() : NaN;
-      const diff = target - Date.now();
-      if (isNaN(target) || diff <= 0) {
-        setTimeLeft({ days: 0, hours: 0, minutes: 0, seconds: 0, isExpired: true });
-        return;
-      }
-      setTimeLeft({
-        days: Math.floor(diff / (1000 * 60 * 60 * 24)),
-        hours: Math.floor((diff / (1000 * 60 * 60)) % 24),
-        minutes: Math.floor((diff / (1000 * 60)) % 60),
-        seconds: Math.floor((diff / 1000) % 60),
-        isExpired: false,
-      });
-    };
-
-    updateCountdown();
-    const timer = setInterval(updateCountdown, 1000);
-    return () => clearInterval(timer);
-  }, [deadline]);
-
+  const parsedTarget = parseSafeDate(deadline);
+  const isExpired = parsedTarget ? Date.now() > parsedTarget.getTime() : false;
   const formattedClosingDate = formatRegistrationClosingDate(deadline);
 
   return (
-    <div className="mb-6 p-4 sm:p-5 rounded-2xl bg-[#090C13]/95 backdrop-blur-md border border-[#C9D0D9]/15 shadow-inner text-center animate-fadeIn">
-      <div className="flex items-center justify-center gap-1.5 text-[11px] font-bold text-[#8BEAFF] uppercase tracking-[0.2em] mb-2.5 font-mono">
-        <Clock className="w-3.5 h-3.5 text-[#8BEAFF]" />
-        <span>{timeLeft.isExpired ? 'Registration Closed' : 'Registration Ends In'}</span>
-      </div>
-
-      {!timeLeft.isExpired ? (
-        <div className="flex items-center justify-center gap-1.5 sm:gap-2 font-mono font-bold text-[#F5F7FA] text-xs sm:text-sm flex-wrap tabular-nums">
-          <span className="px-2.5 py-1.5 rounded-lg bg-[#0E131E] border border-[#8BEAFF]/25 shadow-2xs">
-            {timeLeft.days} <span className="text-[10px] font-sans font-medium text-[#8B95A5]">Days</span>
+    <div className="mb-6 px-4 py-3.5 rounded-2xl bg-[#090C13]/95 backdrop-blur-md border border-[#C9D0D9]/15 shadow-inner text-center animate-fadeIn">
+      <div className="flex items-center justify-center gap-2 text-xs font-mono">
+        <Clock className="w-3.5 h-3.5 text-[#8BEAFF] shrink-0" />
+        {isExpired ? (
+          <span className="font-bold text-rose-400">
+            Registration Closed · Deadline Passed ({formattedClosingDate})
           </span>
-          <span className="text-[#626B79] font-sans font-normal">:</span>
-          <span className="px-2.5 py-1.5 rounded-lg bg-[#0E131E] border border-[#8BEAFF]/25 shadow-2xs">
-            {String(timeLeft.hours).padStart(2, '0')} <span className="text-[10px] font-sans font-medium text-[#8B95A5]">Hours</span>
+        ) : (
+          <span className="text-[#8B95A5]">
+            Closing Date: <strong className="text-[#F5F7FA]">{formattedClosingDate}</strong>
           </span>
-          <span className="text-[#626B79] font-sans font-normal">:</span>
-          <span className="px-2.5 py-1.5 rounded-lg bg-[#0E131E] border border-[#8BEAFF]/25 shadow-2xs">
-            {String(timeLeft.minutes).padStart(2, '0')} <span className="text-[10px] font-sans font-medium text-[#8B95A5]">Minutes</span>
-          </span>
-          <span className="text-[#626B79] font-sans font-normal">:</span>
-          <span className="px-2.5 py-1.5 rounded-lg bg-[#0E131E] border border-[#8BEAFF]/25 shadow-2xs">
-            {String(timeLeft.seconds).padStart(2, '0')} <span className="text-[10px] font-sans font-medium text-[#8B95A5]">Seconds</span>
-          </span>
-        </div>
-      ) : (
-        <p className="text-xs font-bold text-rose-400 py-0.5">
-          The registration deadline has passed.
-        </p>
-      )}
-
-      <div className="text-[11px] text-[#8B95A5] mt-2.5 font-mono">
-        <span>Closing Date: </span>
-        <strong className="text-[#C9D0D9]">{formattedClosingDate}</strong>
+        )}
       </div>
     </div>
   );
@@ -342,15 +277,17 @@ export const RegistrationForm: React.FC<RegistrationFormProps> = ({
 
   const subCardClasses = 'bg-[#090C13]/85 border border-[#C9D0D9]/15 backdrop-blur-xl';
 
-  // Resolve the payment account exclusively from the student's academic group.
+  // Resolve the payment account from the student's academic group (with fallback for custom categories).
   const normalizedGroup = formData.academic_group.trim().toLowerCase();
   const groupKey = /science/.test(normalizedGroup) ? 'Science'
     : /business|commerce/.test(normalizedGroup) ? 'Business Studies'
     : /humanities|arts/.test(normalizedGroup) ? 'Humanities'
-    : '';
-  const groupPayment = groupKey ? paymentSettings?.groupPaymentNumbers?.[groupKey] : undefined;
-  const activeBkashNumber = groupPayment?.bkash?.trim() || '';
-  const activeNagadNumber = groupPayment?.nagad?.trim() || '';
+    : formData.academic_group.trim();
+  const groupPayment = groupKey
+    ? (paymentSettings?.groupPaymentNumbers?.[formData.academic_group.trim()] || paymentSettings?.groupPaymentNumbers?.[groupKey])
+    : undefined;
+  const activeBkashNumber = groupPayment?.bkash?.trim() || (formData.academic_group.trim() ? (paymentSettings?.maleBkashNumber?.trim() || '') : '');
+  const activeNagadNumber = groupPayment?.nagad?.trim() || (formData.academic_group.trim() ? (paymentSettings?.maleNagadNumber?.trim() || '') : '');
   const hasGroupPayment = Boolean(activeBkashNumber || activeNagadNumber);
 
   const handleCopyAccount = async (number: string, label: string) => {
@@ -380,6 +317,7 @@ export const RegistrationForm: React.FC<RegistrationFormProps> = ({
     setSubmitErrorMessage(null);
   };
 
+  const availableCategories = getConfiguredCategories();
   const availableSections = getAvailableSections(formData.gender, formData.academic_group);
 
   // Perform Duplicate Detection Check
@@ -761,9 +699,9 @@ export const RegistrationForm: React.FC<RegistrationFormProps> = ({
           </p>
         </div>
 
-        {/* Compact Registration Countdown */}
+        {/* Static Registration Closing Date Banner */}
         {registrationDeadline && (
-          <RegistrationCountdown deadline={registrationDeadline} theme="dark" />
+          <RegistrationDeadlineBanner deadline={registrationDeadline} />
         )}
 
         {/* Step 1: Select Your Gender */}
@@ -1001,13 +939,13 @@ export const RegistrationForm: React.FC<RegistrationFormProps> = ({
                       className={`min-w-0 flex-1 px-4 py-3 rounded-xl text-sm font-medium transition-colors outline-none cursor-pointer ${inputClasses} ${getFieldHighlightClass('academic_group')}`}
                     >
                       <option value="" className="bg-[#0B0F17] text-[#F5F7FA]">
-                        Select Academic Group...
+                        {availableCategories.length > 0 ? 'Select Academic Group...' : 'No categories configured'}
                       </option>
-                      <option value="Science" className="bg-[#0B0F17] text-[#F5F7FA]">
-                        Science
-                      </option>
-                      <option value="Business Studies" className="bg-[#0B0F17] text-[#F5F7FA]">Commerce</option>
-                      <option value="Humanities" className="bg-[#0B0F17] text-[#F5F7FA]">Arts</option>
+                      {availableCategories.map(catName => (
+                        <option key={catName} value={catName} className="bg-[#0B0F17] text-[#F5F7FA]">
+                          {catName}
+                        </option>
+                      ))}
                     </select>
                     </div>
                     {formErrors.academic_group && (

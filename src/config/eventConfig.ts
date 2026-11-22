@@ -16,8 +16,21 @@ export {
   getCountdownSettingsConfig,
   getImportantNoticeConfig,
   getConfiguredSections,
+  getConfiguredCategories,
+  getMaleSectionSettings,
+  parseMaleSectionSettings,
+  getHeaderNoticesConfig,
+  parseHeaderNoticeConfig,
+  getPopupNoticesConfig,
+  parsePopupNoticeConfig,
   calculateRegistrationOpenState,
   setManualRegistrationOverride,
+  type HeaderNoticeItem,
+  type HeaderNoticeConfig,
+  type PopupNoticeItem,
+  type PopupNoticeConfig,
+  type SectionCategory,
+  type MaleSectionSettings,
 } from '../lib/superAdminConfig';
 
 export {

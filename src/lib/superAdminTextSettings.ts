@@ -1,4 +1,4 @@
-import { supabase } from './supabase';
+import { supabase, isSupabaseConfigured } from './supabase';
 import { safeStorage } from './safeStorage';
 
 export interface EditableSuperAdminTextFile {
@@ -18,18 +18,18 @@ export const EDITABLE_SUPER_ADMIN_TEXT_FILES: EditableSuperAdminTextFile[] = [
   { id: 'event-date', category: '02. Event Settings', label: 'Event date (Event date.txt)', path: '02. event-settings/Text/Event date.txt', defaultValue: '2026-11-20T10:00:00' },
   { id: 'jersey-design', category: '02. Event Settings', label: 'Jersey showcase design (Jersey design.txt)', path: '02. event-settings/Text/Jersey design.txt', defaultValue: 'Title: Official Rag Day Jersey\\nDescription: Custom Squad Kit with Personalized Back Name & Number Print Included\\nImage: jersey-design.png' },
   { id: 'venue', category: '02. Event Settings', label: 'Venue (Venue.txt)', path: '02. event-settings/Text/Venue.txt', defaultValue: 'Central Amphitheatre' },
-  { id: 'section-settings', category: '03. Registration Settings', label: 'Section settings (Section settings.txt)', path: '03. reg-settings/Text/Section settings.txt', defaultValue: 'Male Sections:\nScience: SCB (ScB1, ScB2, ScB3, ScB4, ScB5)\nBusiness Studies: BSB (BsB1, BsB2, BsB3, BsB4, BsB5)\nHumanities: HUB (HuB1, HuB2, HuB3, HuB4, HuB5)\n\nFemale Sections:\nScience: SCG (ScG1, ScG2, ScG3, ScG4, ScG5)\nBusiness Studies: BSG (BsG1, BsG2, BsG3, BsG4, BsG5)\nHumanities: HUG (HuG1, HuG2, HuG3, HuG4, HuG5)' },
+  { id: 'section-settings', category: '03. Registration Settings', label: 'Section settings (Section settings.txt)', path: '03. reg-settings/Text/Section settings.txt', defaultValue: 'Male Sections:\nScience: SCB (ScB1, ScB2, ScB3)\nBusiness Studies: BSB (BsB1, BsB2)\nHumanities: HUB (HuB1, HuB2)' },
   { id: 'payment-number-sc', category: '03. Registration Settings', label: 'Payment Number SC (Science)', path: '03. reg-settings/Text/Payment number SC.txt', defaultValue: 'Bkash: 01712-345678\nNagad: 01712-345678' },
   { id: 'payment-number-bs', category: '03. Registration Settings', label: 'Payment Number BS (Business Studies)', path: '03. reg-settings/Text/Payment number BS.txt', defaultValue: 'Bkash: 01712-345678\nNagad: 01712-345678' },
   { id: 'payment-number-hu', category: '03. Registration Settings', label: 'Payment Number HU (Humanities)', path: '03. reg-settings/Text/Payment number HU.txt', defaultValue: 'Bkash: 01712-345678\nNagad: 01712-345678' },
   { id: 'payment-number-legacy', category: '03. Registration Settings', label: 'Legacy payment number (Payment number.txt)', path: '03. reg-settings/Text/Payment number.txt', defaultValue: 'Male Bkash: 01712-345678\nMale Nagad: 01712-345678\nFemale Bkash: 01812-345678\nFemale Nagad: 01812-345678' },
   { id: 'last-registration-date', category: '03. Registration Settings', label: 'Last registration date countdown (Last registration date countdown.txt)', path: '03. reg-settings/Text/Last registration date countdown.txt', defaultValue: '2026-11-01T23:59:59' },
   { id: 'registration-enable-disable', category: '03. Registration Settings', label: 'Registration enable / disable (Enable Disable.txt)', path: '03. reg-settings/Text/Enable Disable.txt', defaultValue: 'enable' },
-  { id: 'event-countdown', category: '04. Countdown Settings', label: 'Countdown of Event (Countdown of Event.txt)', path: '04. countdown-settings/Text/Countdown of Event.txt', defaultValue: '2026-11-20T10:00:00' },
+  { id: 'event-countdown', category: '04. Countdown Settings', label: 'Countdown of Event (Countdown of Event.txt)', path: '04. countdown-settings/Text/Countdown of Event.txt', defaultValue: '2027-02-01T10:00:00' },
   { id: 'countdown-enable-disable', category: '04. Countdown Settings', label: 'Countdown enable / disable (Enable Disable.txt)', path: '04. countdown-settings/Text/Enable Disable.txt', defaultValue: 'enable' },
   { id: 'notice-board', category: '05. Important Notice', label: 'Notice Board (Notice Board.txt)', path: '05. important-notice/Text/Notice Board.txt', defaultValue: 'Official Batch 27 Registration is now OPEN.' },
-  { id: 'popup-notice', category: '05. Important Notice', label: 'Popup Notice (Popup Notice.txt)', path: '05. important-notice/Text/Popup Notice.txt', defaultValue: 'IMPORTANT NOTICE FOR RAG DAY 27\n\nWelcome Batch 27! Registration is open.' },
-  { id: 'notice-enable-disable', category: '05. Important Notice', label: 'Notice enable / disable (Enable Disable.txt)', path: '05. important-notice/Text/Enable Disable.txt', defaultValue: 'enable' },
+  { id: 'popup-notice', category: '05. Important Notice', label: 'Popup Notice (Popup Notice.txt)', path: '05. important-notice/Text/Popup Notice.txt', defaultValue: 'Welcome Batch NIC 27! Registration is now OPEN.' },
+  { id: 'notice-enable-disable', category: '05. Important Notice', label: 'Notice enable / disable (Enable Disable.txt)', path: '05. important-notice/Text/Enable Disable.txt', defaultValue: 'disable' },
 ];
 
 function getLocalItem(key: string): string | null {
@@ -40,20 +40,33 @@ function setLocalItem(key: string, value: string): void {
   safeStorage.setItem(key, value);
 }
 
+function dispatchConfigUpdated(detail?: Record<string, unknown>): void {
+  try {
+    if (typeof window !== 'undefined' && typeof window.dispatchEvent === 'function' && typeof CustomEvent !== 'undefined') {
+      window.dispatchEvent(new CustomEvent('superadmin-config-updated', { detail }));
+    }
+  } catch {
+    // Configuration persistence should not fail because an optional event API is unavailable.
+  }
+}
+
+export function normalizeSuperAdminPath(path: string): string {
+  return path.replace(/^src\/super-admin\//, '').replace(/^\/+/, '');
+}
+
 export function getSavedSuperAdminText(path: string, fallback: string): string {
   const safeFallback = typeof fallback === 'string' ? fallback : '';
   try {
-    const stored = getLocalItem(`super_admin_${path}`);
-    if (typeof stored === 'string' && stored.trim() !== '') return stored;
+    const normalizedPath = normalizeSuperAdminPath(path);
+    const stored = getLocalItem(`super_admin_${normalizedPath}`);
+    if (typeof stored === 'string') return stored;
     return safeFallback;
   } catch {
     return safeFallback;
   }
 }
 
-export async function saveEditableSuperAdminText(path: string, content: string): Promise<void> {
-  const normalizedPath = path.replace(/^src\/super-admin\//, '').replace(/^\/+/, '');
-  setLocalItem(`super_admin_${normalizedPath}`, content);
+function mirrorRegSettingsPath(normalizedPath: string, content: string): void {
   if (normalizedPath.startsWith('03. reg-settings/Text/')) {
     const altPath = normalizedPath.replace('03. reg-settings/Text/', '03. reg-settings/');
     setLocalItem(`super_admin_${altPath}`, content);
@@ -61,28 +74,83 @@ export async function saveEditableSuperAdminText(path: string, content: string):
     const altPath = normalizedPath.replace('03. reg-settings/', '03. reg-settings/Text/');
     setLocalItem(`super_admin_${altPath}`, content);
   }
+}
+
+export async function loadRemoteSuperAdminSettings(): Promise<boolean> {
+  if (!isSupabaseConfigured) return false;
+
   try {
-    if (typeof window !== 'undefined' && typeof window.dispatchEvent === 'function' && typeof CustomEvent !== 'undefined') {
-      window.dispatchEvent(new CustomEvent('superadmin-config-updated', { detail: { path: normalizedPath, content } }));
+    let rows: Array<{ key?: string; value?: string; setting_key?: string; setting_value?: string }> = [];
+
+    const rpcResult = await supabase.rpc('get_site_settings');
+    if (!rpcResult.error && Array.isArray(rpcResult.data)) {
+      rows = rpcResult.data;
+    } else {
+      const tableResult = await supabase.from('site_settings').select('key, value');
+      if (!tableResult.error && Array.isArray(tableResult.data)) {
+        rows = tableResult.data;
+      }
     }
+
+    if (rows.length === 0) return false;
+
+    let changed = false;
+    for (const row of rows) {
+      const rawKey = row.key ?? row.setting_key ?? '';
+      const rawValue = row.value ?? row.setting_value;
+      if (!rawKey || typeof rawValue !== 'string') continue;
+
+      const normalizedPath = normalizeSuperAdminPath(rawKey);
+      const storageKey = `super_admin_${normalizedPath}`;
+      if (getLocalItem(storageKey) !== rawValue) {
+        setLocalItem(storageKey, rawValue);
+        mirrorRegSettingsPath(normalizedPath, rawValue);
+        changed = true;
+      }
+    }
+
+    if (changed) {
+      dispatchConfigUpdated({ source: 'remote-sync' });
+    }
+    return true;
   } catch {
-    // Configuration persistence should not fail because an optional event API is unavailable.
+    return false;
   }
+}
+
+export async function saveEditableSuperAdminText(path: string, content: string): Promise<void> {
+  const normalizedPath = normalizeSuperAdminPath(path);
+  setLocalItem(`super_admin_${normalizedPath}`, content);
+  mirrorRegSettingsPath(normalizedPath, content);
+  dispatchConfigUpdated({ path: normalizedPath, content });
+
+  if (!isSupabaseConfigured) return;
 
   try {
     const { error } = await supabase.rpc('save_super_admin_text', {
       p_path: normalizedPath,
       p_content: content,
     });
-    if (error && error.code !== 'PGRST202') console.warn('Super Admin RPC error:', error.message);
+    if (error) {
+      if (error.code === 'PGRST202' || /could not find the function/i.test(error.message || '')) {
+        const { error: upsertError } = await supabase
+          .from('site_settings')
+          .upsert({ key: normalizedPath, value: content, updated_at: new Date().toISOString() }, { onConflict: 'key' });
+        if (upsertError) {
+          console.warn('Super Admin site_settings fallback unavailable:', upsertError.message);
+        }
+      } else {
+        console.warn('Super Admin RPC error:', error.message);
+      }
+    }
   } catch {
-    // Graceful fallback to client storage.
+    // Graceful fallback to client storage when database is unreachable.
   }
 }
 
 export function getSuperAdminImageUrl(path: string, defaultFallback: string): string {
   try {
-    const normalizedPath = path.replace(/^src\/super-admin\//, '').replace(/^\/+/, '');
+    const normalizedPath = normalizeSuperAdminPath(path);
     return getLocalItem(`super_admin_img_remote_${normalizedPath}`)
       || getLocalItem(`super_admin_img_${normalizedPath}`)
       || defaultFallback;
@@ -92,7 +160,7 @@ export function getSuperAdminImageUrl(path: string, defaultFallback: string): st
 }
 
 export async function saveEditableSuperAdminImage(path: string, file: File): Promise<string> {
-  const normalizedPath = path.replace(/^src\/super-admin\//, '').replace(/^\/+/, '');
+  const normalizedPath = normalizeSuperAdminPath(path);
   const dataUrl = await new Promise<string>((resolve, reject) => {
     const reader = new FileReader();
     reader.onload = () => resolve(reader.result as string);
@@ -101,13 +169,7 @@ export async function saveEditableSuperAdminImage(path: string, file: File): Pro
   });
 
   setLocalItem(`super_admin_img_${normalizedPath}`, dataUrl);
-  try {
-    if (typeof window !== 'undefined' && typeof window.dispatchEvent === 'function' && typeof CustomEvent !== 'undefined') {
-      window.dispatchEvent(new CustomEvent('superadmin-config-updated', { detail: { imagePath: normalizedPath, url: dataUrl } }));
-    }
-  } catch {
-    // Local previews are optional.
-  }
+  dispatchConfigUpdated({ imagePath: normalizedPath, url: dataUrl });
 
   try {
     const { error } = await supabase.storage.from('uploads').upload(`super-admin/${normalizedPath}`, file, {

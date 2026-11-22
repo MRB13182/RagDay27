@@ -1,13 +1,13 @@
 import React from 'react';
-import { ArrowRight, CalendarDays, MapPin, CreditCard } from 'lucide-react';
+import { CalendarDays, MapPin, CreditCard } from 'lucide-react';
 import { WebsiteSettings, BrandingSettings, JerseyShowcaseSettings } from '../types';
 import { EventCountdown } from './EventCountdown';
 import nicBuildingImg from '../../nic.png';
 import { InfoCard } from './ui';
 
 interface HeroSectionProps {
-  onRegisterClick: () => void;
-  onInvitationClick: () => void;
+  onRegisterClick?: () => void;
+  onInvitationClick?: () => void;
   onExploreBatchClick?: () => void;
   websiteSettings: WebsiteSettings;
   brandingSettings: BrandingSettings;
@@ -15,9 +15,6 @@ interface HeroSectionProps {
 }
 
 export const HeroSection: React.FC<HeroSectionProps> = ({
-  onRegisterClick,
-  onInvitationClick,
-  onExploreBatchClick,
   websiteSettings,
   brandingSettings,
 }) => {
@@ -117,7 +114,7 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
             </p>
 
             {/* Three independent event information glass cards */}
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5 sm:gap-3 mb-7 w-full max-w-2xl">
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5 sm:gap-3 mb-5 w-full max-w-2xl">
               <InfoCard
                 icon={<CalendarDays className="w-4 h-4" />}
                 label="Date"
@@ -138,25 +135,20 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
               />
             </div>
 
-            {/* Primary hero actions — invitation access remains in the navigation menu */}
-            <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 w-full sm:w-auto">
-              <button
-                type="button"
-                onClick={onRegisterClick}
-                className="w-full sm:w-auto px-6 py-3.5 rounded-lg glass-button-primary font-extrabold text-xs sm:text-sm uppercase tracking-[0.12em] flex items-center justify-center gap-2.5 group cursor-pointer whitespace-nowrap"
-              >
-                <span>Enter The Experience</span>
-                <ArrowRight className="w-4 h-4 transition-transform group-hover:translate-x-1" />
-              </button>
-
-              <button
-                type="button"
-                onClick={onExploreBatchClick || onInvitationClick}
-                className="w-full sm:w-auto px-5 py-3.5 rounded-lg glass-button font-bold text-xs sm:text-sm uppercase tracking-[0.12em] flex items-center justify-center gap-2 cursor-pointer whitespace-nowrap"
-              >
-                <span>Explore Our Batch</span>
-              </button>
-            </div>
+            {/* Single Dynamic Event Countdown positioned in place of removed CTA buttons */}
+            {websiteSettings.countdownEnabled !== false && (
+              <div className="w-full max-w-2xl">
+                <EventCountdown
+                  targetIso={websiteSettings.targetEventIso}
+                  day={websiteSettings.eventDay}
+                  month={websiteSettings.eventMonth}
+                  year={websiteSettings.eventYear}
+                  time={websiteSettings.eventTime}
+                  fallbackDateStr={websiteSettings.eventDate}
+                  eventName={websiteSettings.eventName}
+                />
+              </div>
+            )}
 
           </div>
 
@@ -199,22 +191,6 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
             </div>
           </div>
         </div>
-
-        {/* Dynamic Event Countdown ("THE DIGITAL TIME CAPSULE") */}
-        {websiteSettings.countdownEnabled !== false && (
-          <div className="pt-2 sm:pt-4 border-t border-[#C9D0D9]/18">
-            <div className="pt-8 sm:pt-10">
-              <EventCountdown
-                day={websiteSettings.eventDay}
-                month={websiteSettings.eventMonth}
-                year={websiteSettings.eventYear}
-                time={websiteSettings.eventTime}
-                fallbackDateStr={websiteSettings.eventDate}
-                eventName={websiteSettings.eventName}
-              />
-            </div>
-          </div>
-        )}
       </div>
     </section>
   );

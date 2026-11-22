@@ -252,13 +252,160 @@ export function getAssetByFilename(glob: Record<string, any>, filename: string):
 }
 
 // ============================================================================
-// 2. SECTIONS RESOLVER
+// 2. MALE-ONLY SECTIONS & CATEGORIES RESOLVER
 // ============================================================================
 
 export type RegistrationSectionConfig = Record<
   string,
   Record<string, Array<{ value: string; label: string; enabled?: boolean; sort_order?: number }>>
 >;
+
+export interface SectionCategory {
+  id: string;
+  name: string;
+  sections: string[];
+}
+
+export interface MaleSectionSettings {
+  categories: SectionCategory[];
+}
+
+export const DEFAULT_MALE_SECTION_CATEGORIES: SectionCategory[] = [
+  { id: 'cat-science', name: 'Science', sections: ['ScB1', 'ScB2', 'ScB3'] },
+  { id: 'cat-business-studies', name: 'Business Studies', sections: ['BsB1', 'BsB2'] },
+  { id: 'cat-humanities', name: 'Humanities', sections: ['HuB1', 'HuB2'] },
+];
+
+function cloneDefaultCategories(): SectionCategory[] {
+  return DEFAULT_MALE_SECTION_CATEGORIES.map(cat => ({
+    ...cat,
+    sections: [...cat.sections],
+  }));
+}
+
+function dedupeStrings(values: string[]): string[] {
+  const seen = new Set<string>();
+  const result: string[] = [];
+  for (const val of values) {
+    const clean = val.trim();
+    if (!clean) continue;
+    const key = clean.toLowerCase();
+    if (seen.has(key)) continue;
+    seen.add(key);
+    result.push(clean);
+  }
+  return result;
+}
+
+export function parseMaleSectionSettings(rawInput?: string): MaleSectionSettings {
+  const fileContent = (sectionSettingsRaw || sectionSettingsDirectRaw || '').trim();
+  const rawSetting = typeof rawInput === 'string'
+    ? rawInput.trim()
+    : getSavedSuperAdminText('03. reg-settings/Text/Section settings.txt', fileContent).trim();
+
+  if (!rawSetting) {
+    return { categories: [] };
+  }
+
+  try {
+    if (rawSetting.startsWith('{')) {
+      const parsed = JSON.parse(rawSetting) as Record<string, unknown>;
+      if (Array.isArray(parsed.categories)) {
+        const seenCats = new Set<string>();
+        const categories: SectionCategory[] = [];
+        parsed.categories.forEach((rawCat, idx) => {
+          if (!rawCat || typeof rawCat !== 'object') return;
+          const catObj = rawCat as Record<string, unknown>;
+          const name = typeof catObj.name === 'string' ? catObj.name.trim() : '';
+          if (!name || seenCats.has(name.toLowerCase())) return;
+          seenCats.add(name.toLowerCase());
+          const rawSections = Array.isArray(catObj.sections)
+            ? catObj.sections.filter((s): s is string => typeof s === 'string')
+            : [];
+          categories.push({
+            id: typeof catObj.id === 'string' && catObj.id.trim() ? catObj.id.trim() : `cat-${idx + 1}`,
+            name,
+            sections: dedupeStrings(rawSections),
+          });
+        });
+        return { categories };
+      }
+
+      // Legacy object format { male: { science: [{ value }] } }
+      if (parsed.male && typeof parsed.male === 'object') {
+        const maleObj = parsed.male as Record<string, Array<{ value?: string; enabled?: boolean; sort_order?: number }>>;
+        const categories: SectionCategory[] = [];
+        Object.entries(maleObj).forEach(([key, items], idx) => {
+          if (!Array.isArray(items)) return;
+          const prettyName = key
+            .split('_')
+            .map(part => part.charAt(0).toUpperCase() + part.slice(1))
+            .join(' ');
+          const sections = dedupeStrings(
+            items
+              .filter(item => item && item.enabled !== false && item.value)
+              .sort((a, b) => (a.sort_order ?? 0) - (b.sort_order ?? 0))
+              .map(item => String(item.value || ''))
+          );
+          categories.push({ id: `cat-${idx + 1}`, name: prettyName, sections });
+        });
+        if (categories.length > 0) return { categories };
+      }
+    }
+
+    // Plain text parser — strictly parses Male Sections only
+    const lines = rawSetting.split(/\r?\n/);
+    let scope: 'male' | 'female' | null = null;
+    const categories: SectionCategory[] = [];
+
+    for (const line of lines) {
+      const trimmed = line.trim();
+      if (!trimmed) continue;
+      if (/^male\s*sections?:/i.test(trimmed)) {
+        scope = 'male';
+        continue;
+      }
+      if (/^female\s*sections?:/i.test(trimmed)) {
+        scope = 'female';
+        continue;
+      }
+      if (scope === 'female') continue;
+
+      const matchGroup = trimmed.match(/^([^:]+):\s*(.+)$/);
+      if (matchGroup) {
+        const name = matchGroup[1].trim();
+        const rest = matchGroup[2].trim();
+        const parenMatch = rest.match(/\(([^)]+)\)/);
+        const listStr = parenMatch ? parenMatch[1] : rest;
+        const sections = dedupeStrings(listStr.split(/[,;]+/));
+        if (name) {
+          categories.push({
+            id: `cat-${categories.length + 1}-${name.toLowerCase().replace(/[^a-z0-9]+/g, '-')}`,
+            name,
+            sections,
+          });
+        }
+      }
+    }
+
+    if (categories.length > 0) {
+      return { categories };
+    }
+  } catch {
+    // Fall back to default male categories on parse error
+  }
+
+  return { categories: cloneDefaultCategories() };
+}
+
+export function getMaleSectionSettings(): MaleSectionSettings {
+  return parseMaleSectionSettings();
+}
+
+export function getConfiguredCategories(): string[] {
+  const { categories } = getMaleSectionSettings();
+  return categories.map(cat => cat.name);
+}
 
 function extractFeeFromEventCards(cardsText: string): string {
   const lines = cardsText.split(/\r?\n/);
@@ -283,78 +430,26 @@ function extractFeeFromEventCards(cardsText: string): string {
 }
 
 export function getConfiguredSections(gender: 'male' | 'female', group: string): string[] {
-  try {
-    const fileContent = (sectionSettingsRaw || sectionSettingsDirectRaw || '').trim();
-    const rawSetting = getSavedSuperAdminText(
-      '03. reg-settings/Text/Section settings.txt',
-      fileContent
+  // Strictly Male-Only sections system
+  if (gender !== 'male') return [];
+
+  const target = group.trim().toLowerCase();
+  if (!target) return [];
+
+  const { categories } = getMaleSectionSettings();
+  const exact = categories.find(cat => cat.name.trim().toLowerCase() === target);
+  if (exact) return exact.sections;
+
+  const fuzzy = categories.find(cat => {
+    const name = cat.name.trim().toLowerCase();
+    return (
+      (target.includes('science') && name.includes('science')) ||
+      ((target.includes('business') || target.includes('commerce')) && (name.includes('business') || name.includes('commerce'))) ||
+      ((target.includes('humanities') || target.includes('arts')) && (name.includes('humanities') || name.includes('arts')))
     );
+  });
 
-    // If setting is JSON formatted
-    if (rawSetting.startsWith('{')) {
-      const config = JSON.parse(rawSetting) as RegistrationSectionConfig;
-      const genderConfig = config[gender] || {};
-      const key = group.trim().toLowerCase().replace(/\s+/g, '_');
-      const sections = (genderConfig[key] || [])
-        .filter(item => item && item.enabled !== false && item.value)
-        .sort((a, b) => (a.sort_order ?? 0) - (b.sort_order ?? 0))
-        .map(item => item.value.trim())
-        .filter(Boolean);
-
-      if (sections.length > 0) return sections;
-    } else {
-      // Parse plain text representation:
-      // e.g. "Science: SCB (ScB1, ScB2, ScB3, ScB4, ScB5)"
-      const lines = rawSetting.split(/\r?\n/);
-      let currentGenderScope: 'male' | 'female' | null = null;
-      const groupLower = group.trim().toLowerCase();
-
-      for (const line of lines) {
-        const trimmed = line.trim();
-        if (/^male\s*sections?:/i.test(trimmed)) {
-          currentGenderScope = 'male';
-          continue;
-        }
-        if (/^female\s*sections?:/i.test(trimmed)) {
-          currentGenderScope = 'female';
-          continue;
-        }
-
-        if (currentGenderScope === gender || !currentGenderScope) {
-          const matchGroup = trimmed.match(/^([^:]+):\s*(.+)$/i);
-          if (matchGroup) {
-            const grpName = matchGroup[1].trim().toLowerCase();
-            const rest = matchGroup[2].trim();
-            if (
-              (groupLower.includes('science') && grpName.includes('science')) ||
-              (groupLower.includes('business') && grpName.includes('business')) ||
-              (groupLower.includes('humanities') && grpName.includes('humanities'))
-            ) {
-              const parenMatch = rest.match(/\(([^)]+)\)/);
-              const listStr = parenMatch ? parenMatch[1] : rest;
-              const extracted = listStr
-                .split(/[,;]+/)
-                .map(s => s.trim())
-                .filter(Boolean);
-              if (extracted.length > 0) return extracted;
-            }
-          }
-        }
-      }
-    }
-  } catch {
-    // Fallback to defaults below
-  }
-
-  if (gender === 'male') {
-    if (/science/i.test(group)) return ['ScB1', 'ScB2', 'ScB3'];
-    if (/business/i.test(group)) return ['BsB1', 'BsB2'];
-    if (/humanities/i.test(group)) return ['HuB1', 'HuB2'];
-  } else {
-    if (/science/i.test(group)) return ['ScG1', 'ScG2', 'ScG3'];
-    if (/business/i.test(group)) return ['BsG1', 'BsG2'];
-    if (/humanities/i.test(group)) return ['HuG1', 'HuG2'];
-  }
+  if (fuzzy) return fuzzy.sections;
   return [];
 }
 
@@ -549,25 +644,169 @@ export function getCountdownSettingsConfig() {
   }
 }
 
+export interface HeaderNoticeItem {
+  id: string;
+  text: string;
+}
+
+export interface HeaderNoticeConfig {
+  enabled: boolean;
+  notices: HeaderNoticeItem[];
+}
+
+export interface PopupNoticeItem {
+  id: string;
+  title: string;
+  message: string;
+  enabled: boolean;
+}
+
+export interface PopupNoticeConfig {
+  enabled: boolean;
+  intervalSeconds: number;
+  items: PopupNoticeItem[];
+}
+
+export function parseHeaderNoticeConfig(rawInput?: string): HeaderNoticeConfig {
+  const rawText = typeof rawInput === 'string'
+    ? rawInput.trim()
+    : getSavedSuperAdminText('05. important-notice/Text/Notice Board.txt', String(noticeBoardRaw || '').trim()).trim();
+
+  if (!rawText) {
+    return { enabled: true, notices: [] };
+  }
+
+  if (rawText.startsWith('{')) {
+    try {
+      const parsed = JSON.parse(rawText) as {
+        enabled?: unknown;
+        notices?: Array<{ id?: unknown; text?: unknown }>;
+      };
+      const enabled = typeof parsed.enabled === 'boolean' ? parsed.enabled : true;
+      const notices: HeaderNoticeItem[] = Array.isArray(parsed.notices)
+        ? parsed.notices
+            .map((item, idx) => ({
+              id: typeof item?.id === 'string' && item.id.trim() ? item.id.trim() : `header-${idx + 1}`,
+              text: typeof item?.text === 'string' ? item.text.trim() : '',
+            }))
+            .filter(item => item.text.length > 0)
+        : [];
+      return { enabled, notices };
+    } catch {
+      // Fallback to plain text parsing below
+    }
+  }
+
+  const lines = rawText
+    .split(/\r?\n/)
+    .map(line => line.trim())
+    .filter(Boolean);
+
+  return {
+    enabled: true,
+    notices: lines.map((text, idx) => ({
+      id: `header-${idx + 1}`,
+      text,
+    })),
+  };
+}
+
+export function getHeaderNoticesConfig(): HeaderNoticeConfig {
+  return parseHeaderNoticeConfig();
+}
+
+export function parsePopupNoticeConfig(rawInput?: string, legacyEnabled?: boolean): PopupNoticeConfig {
+  const enableRaw = getSavedSuperAdminText(
+    '05. important-notice/Text/Enable Disable.txt',
+    String(noticeEnableDisableRaw || '').trim()
+  ).toLowerCase().trim();
+  const fallbackEnabled = typeof legacyEnabled === 'boolean'
+    ? legacyEnabled
+    : !/^(disable|disabled)$/i.test(enableRaw);
+
+  const rawText = typeof rawInput === 'string'
+    ? rawInput.trim()
+    : getSavedSuperAdminText('05. important-notice/Text/Popup Notice.txt', String(popupNoticeRaw || '').trim()).trim();
+
+  if (!rawText) {
+    return { enabled: false, intervalSeconds: 3, items: [] };
+  }
+
+  if (rawText.startsWith('{')) {
+    try {
+      const parsed = JSON.parse(rawText) as {
+        enabled?: unknown;
+        intervalSeconds?: unknown;
+        items?: Array<{ id?: unknown; title?: unknown; message?: unknown; enabled?: unknown }>;
+      };
+      const enabled = typeof parsed.enabled === 'boolean' ? parsed.enabled : fallbackEnabled;
+      const rawInterval = Number(parsed.intervalSeconds);
+      const intervalSeconds = Number.isFinite(rawInterval)
+        ? Math.min(60, Math.max(1, Math.round(rawInterval)))
+        : 3;
+
+      const items: PopupNoticeItem[] = Array.isArray(parsed.items)
+        ? parsed.items
+            .map((item, idx) => ({
+              id: typeof item?.id === 'string' && item.id.trim() ? item.id.trim() : `popup-${idx + 1}`,
+              title: typeof item?.title === 'string' ? item.title.trim() : '',
+              message: typeof item?.message === 'string' ? item.message.trim() : '',
+              enabled: item?.enabled !== false,
+            }))
+            .filter(item => item.title.length > 0 || item.message.length > 0)
+        : [];
+
+      return { enabled, intervalSeconds, items };
+    } catch {
+      // Fallback to plain text parsing below
+    }
+  }
+
+  return {
+    enabled: fallbackEnabled,
+    intervalSeconds: 3,
+    items: [
+      {
+        id: 'popup-1',
+        title: 'Important Notice',
+        message: rawText,
+        enabled: true,
+      },
+    ],
+  };
+}
+
+export function getPopupNoticesConfig(): PopupNoticeConfig {
+  return parsePopupNoticeConfig();
+}
+
 export function getImportantNoticeConfig() {
   try {
-    const noticeBoard = getSavedSuperAdminText('05. important-notice/Text/Notice Board.txt', String(noticeBoardRaw || '').trim()) || 'Official Batch 27 Registration is now OPEN.';
-    const popupNotice = getSavedSuperAdminText('05. important-notice/Text/Popup Notice.txt', String(popupNoticeRaw || '').trim()) || 'Welcome Batch 27! Registration is open.';
-    const enableRaw = getSavedSuperAdminText('05. important-notice/Text/Enable Disable.txt', String(noticeEnableDisableRaw || '').trim()).toLowerCase();
-    const isNoticeEnabled = !/^(disable|disabled)$/i.test(enableRaw);
+    const headerConfig = getHeaderNoticesConfig();
+    const popupConfig = getPopupNoticesConfig();
+    const activePopupItems = popupConfig.enabled
+      ? popupConfig.items.filter(item => item.enabled !== false && (item.title.trim() || item.message.trim()))
+      : [];
 
     return {
-      noticeEnabled: isNoticeEnabled,
-      popupEnabled: isNoticeEnabled && Boolean(popupNotice && popupNotice.trim()),
-      popupTitle: 'Important Notice',
-      popupMessage: popupNotice,
-      noticeContent: noticeBoard,
+      noticeEnabled: headerConfig.enabled && headerConfig.notices.length > 0,
+      headerNotices: headerConfig,
+      popupEnabled: activePopupItems.length > 0,
+      popupNotices: {
+        ...popupConfig,
+        items: activePopupItems,
+      },
+      popupTitle: activePopupItems[0]?.title || 'Important Notice',
+      popupMessage: activePopupItems[0]?.message || '',
+      noticeContent: headerConfig.notices.map(n => n.text).join('  •  '),
       closeButtonText: 'I Understand',
     };
   } catch {
     return {
       noticeEnabled: false,
+      headerNotices: { enabled: false, notices: [] as HeaderNoticeItem[] },
       popupEnabled: false,
+      popupNotices: { enabled: false, intervalSeconds: 3, items: [] as PopupNoticeItem[] },
       popupTitle: 'Important Notice',
       popupMessage: '',
       noticeContent: '',
@@ -673,7 +912,9 @@ export const countdownSettingsConfig = {
 // 05. Important Notice
 export const importantNoticeConfig = {
   get noticeEnabled() { return getImportantNoticeConfig().noticeEnabled; },
+  get headerNotices() { return getImportantNoticeConfig().headerNotices; },
   get popupEnabled() { return getImportantNoticeConfig().popupEnabled; },
+  get popupNotices() { return getImportantNoticeConfig().popupNotices; },
   get popupTitle() { return getImportantNoticeConfig().popupTitle; },
   get popupMessage() { return getImportantNoticeConfig().popupMessage; },
   get noticeContent() { return getImportantNoticeConfig().noticeContent; },
