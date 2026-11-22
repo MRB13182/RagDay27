@@ -80,27 +80,51 @@ function formatRegistrationClosingDate(dateStr: string): string {
   return dateStr;
 }
 
-const RegistrationDeadlineBanner: React.FC<{ deadline: string }> = ({
-  deadline,
-}) => {
-  const parsedTarget = parseSafeDate(deadline);
-  const isExpired = parsedTarget ? Date.now() > parsedTarget.getTime() : false;
+const RegistrationDeadlineBanner: React.FC<{ deadline: string }> = ({ deadline }) => {
+  const target = parseSafeDate(deadline);
+  const targetTime = target?.getTime() ?? Number.NaN;
+  const [now, setNow] = useState(() => Date.now());
+
+  useEffect(() => {
+    if (!Number.isFinite(targetTime)) return;
+    const timer = window.setInterval(() => setNow(Date.now()), 1000);
+    return () => window.clearInterval(timer);
+  }, [targetTime]);
+
+  const remaining = Number.isFinite(targetTime) ? Math.max(0, targetTime - now) : 0;
+  const expired = !Number.isFinite(targetTime) || remaining <= 0;
+  const days = Math.floor(remaining / 86400000);
+  const hours = Math.floor((remaining % 86400000) / 3600000);
+  const minutes = Math.floor((remaining % 3600000) / 60000);
+  const seconds = Math.floor((remaining % 60000) / 1000);
   const formattedClosingDate = formatRegistrationClosingDate(deadline);
+  const units = [
+    { label: 'DAYS', value: days },
+    { label: 'HOURS', value: hours },
+    { label: 'MINUTES', value: minutes },
+    { label: 'SECONDS', value: seconds },
+  ];
 
   return (
-    <div className="mb-6 px-4 py-3.5 rounded-2xl bg-[#090C13]/95 backdrop-blur-md border border-[#C9D0D9]/15 shadow-inner text-center animate-fadeIn">
-      <div className="flex items-center justify-center gap-2 text-xs font-mono">
-        <Clock className="w-3.5 h-3.5 text-[#8BEAFF] shrink-0" />
-        {isExpired ? (
-          <span className="font-bold text-rose-400">
-            Registration Closed · Deadline Passed ({formattedClosingDate})
-          </span>
+    <div className="mb-6 rounded-2xl border border-[#C9D0D9]/15 bg-[#090C13]/95 px-4 py-4 sm:px-5 sm:py-5 shadow-inner animate-fadeIn">
+      <div className="flex flex-wrap items-center justify-center gap-x-2 gap-y-1 text-xs font-mono text-center">
+        <Clock className="h-4 w-4 shrink-0 text-[#8BEAFF]" />
+        {expired ? (
+          <span className="font-bold text-rose-400">Registration Closed · Deadline Passed ({formattedClosingDate})</span>
         ) : (
-          <span className="text-[#8B95A5]">
-            Closing Date: <strong className="text-[#F5F7FA]">{formattedClosingDate}</strong>
-          </span>
+          <span className="text-[#8B95A5]">Closing Date: <strong className="text-[#F5F7FA]">{formattedClosingDate}</strong></span>
         )}
       </div>
+      {!expired && (
+        <div className="mt-4 grid grid-cols-4 gap-2 sm:gap-3" aria-label="Time remaining until registration closes" aria-live="off">
+          {units.map(unit => (
+            <div key={unit.label} className="rounded-xl border border-[#8BEAFF]/20 bg-[#101722] px-2 py-3 text-center">
+              <div className="font-mono text-xl sm:text-2xl font-extrabold tabular-nums text-[#F5F7FA]">{String(unit.value).padStart(2, '0')}</div>
+              <div className="mt-1 text-[9px] sm:text-[10px] font-mono font-bold tracking-wider text-[#8BEAFF]">{unit.label}</div>
+            </div>
+          ))}
+        </div>
+      )}
     </div>
   );
 };
