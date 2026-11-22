@@ -289,11 +289,11 @@ export const RegistrationSettingsSection: React.FC<RegistrationSettingsSectionPr
         subtitle="Control the registration countdown, closing deadline, male-only academic sections, and group payment numbers."
       />
 
-      {/* Availability, Deadline & Group Payment Numbers */}
+      {/* Countdown, Availability, Deadline & Group Payment Numbers */}
       <form onSubmit={handleSaveMain} className={`${panelClass} space-y-5`}>
         <div className="flex flex-wrap items-center justify-between gap-3 border-b border-[#C9D0D9]/12 pb-4">
           <div>
-            <h3 className="text-base font-bold text-[#F5F7FA]">Registration Countdown & Closing Date</h3>
+            <h3 className="text-base font-bold text-[#F5F7FA]">Registration Countdown & Availability</h3>
             <p className="text-xs text-[#8993A1]">
               The countdown toggle controls the deadline timer. Registration availability has a separate control.
             </p>
