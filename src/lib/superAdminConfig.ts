@@ -507,8 +507,8 @@ export function calculateRegistrationOpenState(): {
   reason: 'active' | 'before_start' | 'after_end' | 'manual_enabled' | 'manual_disabled';
 } {
   try {
-    const toggleContent = String(registrationToggleRaw || '').trim();
-    const regToggle = getSavedSuperAdminText('03. reg-settings/Text/Enable Disable.txt', toggleContent).toLowerCase().trim();
+    const toggleContent = getSavedSuperAdminText('03. reg-settings/Text/Enable Disable.txt', 'enable').trim();
+    const regToggle = toggleContent.toLowerCase();
     const manualOverride = safeStorage.getItem('rd27_manual_reg_override');
 
     // Manual admin control overrides automatic schedule
