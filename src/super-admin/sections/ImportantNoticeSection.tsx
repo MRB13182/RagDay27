@@ -17,9 +17,9 @@ import {
   textareaClass,
 } from '../components/SuperAdminUI';
 
-const PATH_HEADER_NOTICE = '05. important-notice/Text/Notice Board.txt';
-const PATH_POPUP_NOTICE = '05. important-notice/Text/Popup Notice.txt';
-const PATH_NOTICE_ENABLE = '05. important-notice/Text/Enable Disable.txt';
+const PATH_HEADER_NOTICE = '04. important-notice/Text/Notice Board.txt';
+const PATH_POPUP_NOTICE = '04. important-notice/Text/Popup Notice.txt';
+const PATH_NOTICE_ENABLE = '04. important-notice/Text/Enable Disable.txt';
 
 interface ImportantNoticeSectionProps {
   syncVersion: number;
