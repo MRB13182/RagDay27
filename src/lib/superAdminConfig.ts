@@ -31,6 +31,7 @@ import eventCardRaw from '../super-admin/02. event-settings/Text/Event card.txt?
 import eventDateRaw from '../super-admin/02. event-settings/Text/Event date.txt?raw';
 import countdownEnableDisableRaw from '../super-admin/02. event-settings/Text/Countedown enable disable.txt?raw';
 import eventFeesRaw from '../super-admin/02. event-settings/Text/Fees.txt?raw';
+import oldEventCountdownRaw from '../super-admin/02. event-settings/Text/Countedown enable disable.txt?raw';
 import venueRawText from '../super-admin/02. event-settings/Text/Venue.txt?raw';
 
 // 03. Registration Settings (Text/ is the sole canonical location)
@@ -486,6 +487,8 @@ export function getEventSettingsConfig() {
   const venue = getSavedSuperAdminText('02. event-settings/Text/Venue.txt', venueRawText.trim()) || 'Central Amphitheatre';
   const jersey = getSuperAdminImageUrl('02. event-settings/Pic/jersey-design.png', eventJerseyDesignPic02 || defaultMaleJersey);
   const parsedCards = parseEventCardsContent(cardRaw);
+  const configuredFee = getSavedSuperAdminText('02. event-settings/Text/Fees.txt', String(eventFeesRaw || '').trim() || '500 BDT').trim() || '500 BDT';
+  const cardsWithConfiguredFee = parsedCards.map(card => /fee|cost|payment|amount|price/i.test(card.title) ? { ...card, description: configuredFee } : card);
 
   return {
     eventName: name,
@@ -493,7 +496,7 @@ export function getEventSettingsConfig() {
     welcomeMessage: 'Welcome to the official Rag Day 27 Portal!',
     eventCardLayout: 'two-column' as const,
     eventJersey: jersey,
-    eventCardsContent: parsedCards.length > 0 ? parsedCards : [
+    eventCardsContent: parsedCards.length > 0 ? cardsWithConfiguredFee : [
       {
         id: 'event-card-1',
         title: 'Registration Start',
@@ -506,7 +509,7 @@ export function getEventSettingsConfig() {
       {
         id: 'event-card-2',
         title: 'Registration FEE',
-        description: '500 BDT for your all-inclusive batch pass.',
+        description: configuredFee,
         icon: 'credit-card',
         customColor: 'emerald',
         order: 2,
@@ -616,7 +619,7 @@ export function getCountdownSettingsConfig() {
     const lastDateContent = String(lastRegistrationDateRaw || '').trim();
     const deadline = getSavedSuperAdminText('03. reg-settings/Text/Last Registration date.txt', lastDateContent) || '2027-01-25T23:59:59';
 
-    const enableRaw = getSavedSuperAdminText('02. event-settings/Text/Countedown enable disable.txt', String(countdownEnableDisableRaw || '').trim()).toLowerCase();
+    const enableRaw = getSavedSuperAdminText('02. event-settings/Text/Countedown enable disable.txt', String(oldEventCountdownRaw || countdownEnableDisableRaw || '').trim()).toLowerCase();
     const isCountdownEnabled = !/^(disable|disabled)$/i.test(enableRaw);
     const registrationToggle = getSavedSuperAdminText('03. reg-settings/Text/Countdown enable disable.txt', String(registrationToggleRaw || '').trim()).toLowerCase();
     const registrationCountdownEnabled = !/^(disable|disabled)$/i.test(registrationToggle);
@@ -684,7 +687,7 @@ function isLegacyNoticeBoardEnabled(): boolean {
 export function parseHeaderNoticeConfig(rawInput?: string): HeaderNoticeConfig {
   const rawText = typeof rawInput === 'string'
     ? rawInput.trim()
-    : getSavedSuperAdminText('05. important-notice/Text/Notice Board.txt', String(noticeBoardRaw || '').trim()).trim();
+    : getSavedSuperAdminText('04. important-notice/Text/Notice Board.txt', String(noticeBoardRaw || '').trim()).trim();
 
   if (!rawText) {
     return { enabled: false, notices: [] };
@@ -927,9 +930,10 @@ export const countdownSettingsConfig = {
   get eventDate() { return getCountdownSettingsConfig().eventDate; },
   get registrationDeadline() { return getCountdownSettingsConfig().registrationDeadline; },
   get countdownEnabled() { return getCountdownSettingsConfig().countdownEnabled; },
+  get registrationCountdownEnabled() { return getCountdownSettingsConfig().registrationCountdownEnabled; },
 };
 
-// 05. Important Notice
+// 04. Important Notice
 export const importantNoticeConfig = {
   get noticeEnabled() { return getImportantNoticeConfig().noticeEnabled; },
   get headerNotices() { return getImportantNoticeConfig().headerNotices; },
