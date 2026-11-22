@@ -16,20 +16,19 @@ export const EDITABLE_SUPER_ADMIN_TEXT_FILES: EditableSuperAdminTextFile[] = [
   { id: 'event-name', category: '02. Event Settings', label: 'Event name (Event name.txt)', path: '02. event-settings/Text/Event name.txt', defaultValue: 'RAG DAY of NIC 27' },
   { id: 'event-card', category: '02. Event Settings', label: 'Event card (Event card.txt)', path: '02. event-settings/Text/Event card.txt', defaultValue: 'Title: Registration Start\nDescription: Registration starts from October 10. Complete your enrollment before time.\n\nTitle: Registration FEE\nDescription: 500 BDT for your all-inclusive batch pass.' },
   { id: 'event-date', category: '02. Event Settings', label: 'Event date (Event date.txt)', path: '02. event-settings/Text/Event date.txt', defaultValue: '2027-02-01T10:00:00' },
-  { id: 'event-countdown', category: '02. Event Settings', label: 'Event countdown (Event countdown.txt)', path: '02. event-settings/Text/Event countdown.txt', defaultValue: '2027-02-01T10:00:00' },
-  { id: 'countdown-enable-disable', category: '02. Event Settings', label: 'Countdown enable / disable (Countdown enable disable.txt)', path: '02. event-settings/Text/Countdown enable disable.txt', defaultValue: 'enable' },
+  { id: 'event-countdown-enable-disable', category: '02. Event Settings', label: 'Event countdown enable / disable (Countedown enable disable.txt)', path: '02. event-settings/Text/Countedown enable disable.txt', defaultValue: 'enable' },
+  { id: 'event-fees', category: '02. Event Settings', label: 'Event fee (Fees.txt)', path: '02. event-settings/Text/Fees.txt', defaultValue: '500 BDT' },
   { id: 'jersey-design', category: '02. Event Settings', label: 'Jersey showcase design (Jersey design.txt)', path: '02. event-settings/Text/Jersey design.txt', defaultValue: 'Title: Official Rag Day Jersey\nDescription: Custom Squad Kit with Personalized Back Name & Number Print Included\nImage: jersey-design.png' },
   { id: 'venue', category: '02. Event Settings', label: 'Venue (Venue.txt)', path: '02. event-settings/Text/Venue.txt', defaultValue: 'Central Amphitheatre' },
   { id: 'section-settings', category: '03. Registration Settings', label: 'Section settings (Section settings.txt)', path: '03. reg-settings/Text/Section settings.txt', defaultValue: 'Male Sections:\nScience: SCB (ScB1, ScB2, ScB3)\nBusiness Studies: BSB (BsB1, BsB2)\nHumanities: HUB (HuB1, HuB2)' },
   { id: 'payment-number-sc', category: '03. Registration Settings', label: 'Payment Number SC (Science)', path: '03. reg-settings/Text/Payment number SC.txt', defaultValue: 'Bkash: 01712-345678\nNagad: 01712-345678' },
   { id: 'payment-number-bs', category: '03. Registration Settings', label: 'Payment Number BS (Business Studies)', path: '03. reg-settings/Text/Payment number BS.txt', defaultValue: 'Bkash: 01712-345678\nNagad: 01712-345678' },
   { id: 'payment-number-hu', category: '03. Registration Settings', label: 'Payment Number HU (Humanities)', path: '03. reg-settings/Text/Payment number HU.txt', defaultValue: 'Bkash: 01712-345678\nNagad: 01712-345678' },
-  { id: 'payment-number-legacy', category: '03. Registration Settings', label: 'Legacy payment number (Payment number.txt)', path: '03. reg-settings/Text/Payment number.txt', defaultValue: 'Male Bkash: 01712-345678\nMale Nagad: 01712-345678' },
-  { id: 'last-registration-date', category: '03. Registration Settings', label: 'Last registration date countdown (Last registration date countdown.txt)', path: '03. reg-settings/Text/Last registration date countdown.txt', defaultValue: '2027-01-25T23:59:59' },
-  { id: 'registration-enable-disable', category: '03. Registration Settings', label: 'Registration enable / disable (Enable Disable.txt)', path: '03. reg-settings/Text/Enable Disable.txt', defaultValue: 'enable' },
-  { id: 'notice-board', category: '05. Important Notice', label: 'Notice Board (Notice Board.txt)', path: '05. important-notice/Text/Notice Board.txt', defaultValue: '{"enabled":false,"notices":[{"id":"header-1","text":"Official Batch 27 Registration is now OPEN.","enabled":true}]}' },
-  { id: 'popup-notice', category: '05. Important Notice', label: 'Popup Notice (Popup Notice.txt)', path: '05. important-notice/Text/Popup Notice.txt', defaultValue: 'Welcome Batch NIC 27! Registration is now OPEN.' },
-  { id: 'notice-enable-disable', category: '05. Important Notice', label: 'Notice enable / disable (Enable Disable.txt)', path: '05. important-notice/Text/Enable Disable.txt', defaultValue: 'disable' },
+  { id: 'last-registration-date', category: '03. Registration Settings', label: 'Last registration date countdown (Last Registration date.txt)', path: '03. reg-settings/Text/Last Registration date.txt', defaultValue: '2027-01-25T23:59:59' },
+  { id: 'registration-enable-disable', category: '03. Registration Settings', label: 'Registration countdown enable / disable (Countdown enable disable.txt)', path: '03. reg-settings/Text/Countdown enable disable.txt', defaultValue: 'enable' },
+  { id: 'notice-board', category: '04. Important Notice', label: 'Notice Board (Notice Board.txt)', path: '04. important-notice/Text/Notice Board.txt', defaultValue: '{"enabled":false,"notices":[{"id":"header-1","text":"Official Batch 27 Registration is now OPEN.","enabled":true}]}' },
+  { id: 'popup-notice', category: '04. Important Notice', label: 'Popup Notice (Popup Notice.txt)', path: '04. important-notice/Text/Popup Notice.txt', defaultValue: 'Welcome Batch NIC 27! Registration is now OPEN.' },
+  { id: 'notice-enable-disable', category: '04. Important Notice', label: 'Notice enable / disable (Enable Disable.txt)', path: '04. important-notice/Text/Enable Disable.txt', defaultValue: 'disable' },
 ];
 
 const MAX_BRAND_IMAGE_BYTES = 10 * 1024 * 1024; // 10 MB
@@ -73,14 +72,14 @@ function canonicalizeLegacySettingPath(normalizedPath: string): string {
     return normalizedPath.replace('03. reg-settings/', '03. reg-settings/Text/');
   }
   const lower = normalizedPath.toLowerCase();
-  if (lower === '05. important-notice/text/notice board.txt' || lower === '05. important-notice/text/notice-content.txt') {
-    return '05. important-notice/Text/Notice Board.txt';
+  if (lower === '04. important-notice/text/notice board.txt' || lower === '04. important-notice/text/notice-content.txt') {
+    return '04. important-notice/Text/Notice Board.txt';
   }
-  if (lower === '05. important-notice/text/popup notice.txt' || lower === '05. important-notice/text/popup-message.txt') {
-    return '05. important-notice/Text/Popup Notice.txt';
+  if (lower === '04. important-notice/text/popup notice.txt' || lower === '04. important-notice/text/popup-message.txt') {
+    return '04. important-notice/Text/Popup Notice.txt';
   }
-  if (lower === '05. important-notice/text/enable disable.txt' || lower === '05. important-notice/text/notice-enable-disable.txt') {
-    return '05. important-notice/Text/Enable Disable.txt';
+  if (lower === '04. important-notice/text/enable disable.txt' || lower === '04. important-notice/text/notice-enable-disable.txt') {
+    return '04. important-notice/Text/Enable Disable.txt';
   }
   return normalizedPath;
 }
