@@ -67,6 +67,9 @@ const forbiddenLegacyPaths = [
   '03. reg-settings/Last registration date countdown.txt',
   '03. reg-settings/Payment number.txt',
   '03. reg-settings/Section settings.txt',
+  '05. important-notice',
+  '02. event-settings/Event countdown.txt',
+  '03. reg-settings/Last registration date countdown.txt',
 ];
 
 const missingDirs = checkDirectories.filter((p) => {
