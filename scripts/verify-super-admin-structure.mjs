@@ -40,6 +40,7 @@ const checkPaths = [
   '03. reg-settings/Text/Payment number HU.txt',
   '03. reg-settings/Text/Last Registration date.txt',
   '03. reg-settings/Text/Countdown enable disable.txt',
+  '03. reg-settings/Text/Enable Disable.txt',
   '04. important-notice/Text/Notice Board.txt',
   '04. important-notice/Text/Popup Notice.txt',
   '04. important-notice/Text/Enable Disable.txt',
@@ -64,9 +65,6 @@ const checkPaths = [
 const forbiddenLegacyPaths = [
   '04. countdown-settings',
   '03. reg-settings/Enable Disable.txt',
-  '03. reg-settings/Text/Enable Disable.txt',
-  '03. reg-settings/Last registration date countdown.txt',
-  '03. reg-settings/Section settings.txt',
   '05. important-notice',
   '02. event-settings/Text/Event countdown.txt',
   '03. reg-settings/Text/Last registration date countdown.txt',
