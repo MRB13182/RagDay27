@@ -35,7 +35,7 @@ const checkPaths = [
   '02. event-settings/Text/Jersey design.txt',
   '03. reg-settings/Pic/back jersey preview.png',
   '03. reg-settings/Text/Section settings.txt',
-    '03. reg-settings/Text/Payment number SC.txt',
+  '03. reg-settings/Text/Payment number SC.txt',
   '03. reg-settings/Text/Payment number BS.txt',
   '03. reg-settings/Text/Payment number HU.txt',
   '03. reg-settings/Text/Last Registration date.txt',
@@ -64,12 +64,13 @@ const checkPaths = [
 const forbiddenLegacyPaths = [
   '04. countdown-settings',
   '03. reg-settings/Enable Disable.txt',
+  '03. reg-settings/Text/Enable Disable.txt',
   '03. reg-settings/Last registration date countdown.txt',
-  '03. reg-settings/Payment number.txt',
   '03. reg-settings/Section settings.txt',
   '05. important-notice',
-  '02. event-settings/Event countdown.txt',
-  '03. reg-settings/Last registration date countdown.txt',
+  '02. event-settings/Text/Event countdown.txt',
+  '03. reg-settings/Text/Last registration date countdown.txt',
+  '03. reg-settings/Text/Payment number.txt',
 ];
 
 const missingDirs = checkDirectories.filter((p) => {
